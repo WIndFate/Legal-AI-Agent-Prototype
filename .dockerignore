@@ -1,0 +1,7 @@
+__pycache__
+*.pyc
+.env
+chroma_data
+frontend/node_modules
+frontend/dist
+.git
