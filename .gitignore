@@ -1,3 +1,16 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Node.js
+node_modules/
+dist/
+.vite/
+
+# Chroma DB data
+chroma_data/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
