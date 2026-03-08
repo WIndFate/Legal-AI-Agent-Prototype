@@ -15,11 +15,11 @@
 │  React UI   │───▶│  FastAPI 后端                             │
 └─────────────┘    │                                          │
                    │  LangGraph Agent 工作流:                   │
-┌─────────────┐    │  解析合同 → 知识检索 → 风险分析 → 生成报告    │
+┌─────────────┐    │  解析合同 → 风险分析 → 生成报告              │
 │ Claude       │    │                                          │
-│ Desktop     │───▶│  工具: search_legal_knowledge             │
-│ (MCP 客户端) │    │        analyze_clause_risk               │
-└─────────────┘    │        generate_suggestion               │
+│ Desktop     │───▶│  工具: analyze_clause_risk（内置RAG）      │
+│ (MCP 客户端) │    │        generate_suggestion（内置LLM）     │
+└─────────────┘    │                                          │
                    │                                          │
                    │  RAG: ChromaDB + OpenAI Embeddings       │
                    └──────────────────────────────────────────┘

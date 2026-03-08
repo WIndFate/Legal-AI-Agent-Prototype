@@ -15,12 +15,11 @@ AI-powered Japanese legal contract review agent system built with LangGraph, RAG
 │  React UI   │───▶│  FastAPI Backend                         │
 └─────────────┘    │                                          │
                    │  LangGraph Agent Workflow:                │
-┌─────────────┐    │  parse_contract → retrieve_knowledge     │
-│ Claude       │    │  → analyze_risks → generate_report      │
+┌─────────────┐    │  parse_contract → analyze_risks          │
+│ Claude       │    │  → generate_report                       │
 │ Desktop     │───▶│                                          │
-│ (MCP Client)│    │  Tools: search_legal_knowledge           │
-└─────────────┘    │         analyze_clause_risk              │
-                   │         generate_suggestion              │
+│ (MCP Client)│    │  Tools: analyze_clause_risk (RAG inside) │
+└─────────────┘    │         generate_suggestion (LLM inside) │
                    │                                          │
                    │  RAG: ChromaDB + OpenAI Embeddings       │
                    └──────────────────────────────────────────┘

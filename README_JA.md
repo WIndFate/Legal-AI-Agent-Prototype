@@ -15,11 +15,11 @@ LangGraph、RAG、MCP、Tool Calling を活用した日本語法律契約書の 
 │  React UI   │───▶│  FastAPI バックエンド                      │
 └─────────────┘    │                                          │
                    │  LangGraph Agent ワークフロー:              │
-┌─────────────┐    │  契約解析 → 知識検索 → リスク分析 → レポート生成│
+┌─────────────┐    │  契約解析 → リスク分析 → レポート生成          │
 │ Claude       │    │                                          │
-│ Desktop     │───▶│  ツール: search_legal_knowledge           │
-│ (MCPクライアント)│   │        analyze_clause_risk              │
-└─────────────┘    │        generate_suggestion               │
+│ Desktop     │───▶│  ツール: analyze_clause_risk（RAG内蔵）   │
+│ (MCPクライアント)│   │        generate_suggestion（LLM内蔵）   │
+└─────────────┘    │                                          │
                    │                                          │
                    │  RAG: ChromaDB + OpenAI Embeddings       │
                    └──────────────────────────────────────────┘
