@@ -74,7 +74,7 @@ generate_suggestion ツールが返したテキストをそのまま suggestion 
     ]
 
     tool_map = {
-        "clause": analyze_clause_risk,
+        "analyze_clause_risk": analyze_clause_risk,
         "generate_suggestion": generate_suggestion,
     }
 
