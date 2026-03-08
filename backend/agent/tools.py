@@ -1,59 +1,61 @@
+from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_core.tools import tool
+from langchain_openai import ChatOpenAI
 
 from backend.rag.store import get_store
 
 
 @tool
-def search_legal_knowledge(query: str) -> str:
-    """Search relevant Japanese legal knowledge from the RAG knowledge base.
-
-    Args:
-        query: The search query text, typically a contract clause or legal concept.
-    """
-    store = get_store()
-    results = store.search(query, n_results=3)
-    if not results:
-        return "関連する法律知識が見つかりませんでした。"
-
-    output_parts = []
-    for r in results:
-        output_parts.append(
-            f"【{r['metadata']['title']}】\n{r['content']}"
-        )
-    return "\n\n---\n\n".join(output_parts)
-
-
-@tool
-def analyze_clause_risk(clause_text: str, legal_context: str) -> str:
-    """Analyze the risk level of a single contract clause.
+def analyze_clause_risk(clause_text: str) -> str:
+    """Analyze the risk level of a single contract clause by searching
+    relevant Japanese legal knowledge from the RAG knowledge base internally.
 
     Args:
         clause_text: The text of the contract clause to analyze.
-        legal_context: Relevant legal knowledge retrieved from RAG.
     """
-    # This tool is invoked by the LLM via tool calling.
-    # The actual analysis is done by the LLM in the analyze_risks node,
-    # so this serves as a structured input/output interface.
+    store = get_store()
+    results = store.search(clause_text[:300], n_results=3)
+
+    if not results:
+        return (
+            f"条項「{clause_text[:30]}...」: "
+            "関連法律知識が見つかりませんでした。一般的な契約法原則に基づいてリスクを判定してください。"
+        )
+
+    knowledge_parts = []
+    for r in results:
+        knowledge_parts.append(f"【{r['metadata']['title']}】\n{r['content']}")
+
     return (
-        f"条項分析対象:\n{clause_text}\n\n"
-        f"参照法律知識:\n{legal_context}\n\n"
-        "上記の情報に基づいてリスク分析を実行してください。"
+        f"条項「{clause_text[:30]}...」に関連する法律知識:\n\n"
+        + "\n\n---\n\n".join(knowledge_parts)
+        + "\n\n上記に基づきリスクレベルと理由を判定してください。"
     )
 
 
 @tool
 def generate_suggestion(clause_text: str, risk_reason: str) -> str:
-    """Generate a modification suggestion for a risky contract clause.
+    """Generate a concrete modification suggestion for a risky contract clause
+    by calling a dedicated LLM internally.
 
     Args:
         clause_text: The original clause text that has identified risks.
         risk_reason: The reason why this clause is considered risky.
     """
-    return (
-        f"修正対象条項:\n{clause_text}\n\n"
-        f"リスク理由:\n{risk_reason}\n\n"
-        "上記に基づいて具体的な修正案を生成してください。"
-    )
+    llm = ChatOpenAI(model="gpt-4o", temperature=0)
+    response = llm.invoke([
+        SystemMessage(content="あなたは日本法に精通した法律専門家です。リスクのある契約条項に対して、具体的かつ実務的な修正案を提案してください。"),
+        HumanMessage(content=f"""以下のリスクある契約条項に対して、具体的な修正案を生成してください。
+
+条項本文:
+{clause_text}
+
+リスクの理由:
+{risk_reason}
+
+修正案のみを出力してください。前置きや説明は不要です。"""),
+    ])
+    return response.content
 
 
-ALL_TOOLS = [search_legal_knowledge, analyze_clause_risk, generate_suggestion]
+ALL_TOOLS = [analyze_clause_risk, generate_suggestion]
