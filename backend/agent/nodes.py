@@ -1,12 +1,13 @@
 import json
+import queue as _queue
 
-from langchain_core.messages import HumanMessage, SystemMessage
+from langchain_core.messages import HumanMessage, SystemMessage, ToolMessage
 from langchain_openai import ChatOpenAI
 
 from backend.agent.state import AgentState
-from backend.agent.tools import search_legal_knowledge, ALL_TOOLS
+from backend.agent.tools import analyze_clause_risk, generate_suggestion, ALL_TOOLS
 
-llm = ChatOpenAI(model="gpt-4o", temperature=0)
+llm = ChatOpenAI(model="gpt-4o", temperature=0, streaming=True)
 llm_with_tools = llm.bind_tools(ALL_TOOLS)
 
 SYSTEM_PROMPT = """あなたは日本法に精通した法律AI契約審査アシスタントです。
@@ -43,55 +44,61 @@ JSON配列形式で出力してください:
     return {"clauses": clauses, "messages": [response]}
 
 
-def retrieve_knowledge(state: AgentState) -> dict:
-    """Retrieve relevant legal knowledge for each clause via RAG."""
-    rag_results = []
-    for clause in state["clauses"]:
-        query = f"{clause['title']} {clause['text'][:200]}"
-        result_text = search_legal_knowledge.invoke({"query": query})
-        rag_results.append({
-            "clause_number": clause["number"],
-            "knowledge": result_text,
-        })
-    return {"rag_results": rag_results}
-
-
 def analyze_risks(state: AgentState) -> dict:
-    """Analyze risks for each clause using LLM with tool calling."""
+    """Analyze risks for each clause using real LLM tool calling (2-3 rounds)."""
     clauses = state["clauses"]
-    rag_results = state["rag_results"]
 
-    clauses_with_knowledge = []
-    for i, clause in enumerate(clauses):
-        knowledge = rag_results[i]["knowledge"] if i < len(rag_results) else ""
-        clauses_with_knowledge.append(
+    clauses_list = []
+    for clause in clauses:
+        clauses_list.append(
             f"【{clause['number']} {clause['title']}】\n"
-            f"条項本文: {clause['text']}\n"
-            f"関連法律知識:\n{knowledge}"
+            f"条項本文: {clause['text']}"
         )
 
-    analysis_prompt = f"""以下の各契約条項を分析し、リスク評価を行ってください。
+    analysis_prompt = f"""以下の各契約条項を分析してください。
 
-各条項について以下を判定してください:
-- risk_level: "高" / "中" / "低"
-- risk_reason: リスクの具体的な理由（リスクが低い場合は簡潔に）
-- suggestion: 修正案（リスクが中以上の場合のみ）
-- referenced_law: 参照した法律知識
+まず、各条項について analyze_clause_risk ツールを呼び出してください。
+ツールが返す法律知識に基づいてリスクレベルを判定してください。
+その後、リスクが高または中の条項については generate_suggestion ツールで修正案を生成してください。
+generate_suggestion ツールが返したテキストをそのまま suggestion フィールドに使用してください。自分で修正案を考えないでください。
 
-JSON配列形式で出力してください:
-[{{"clause_number": "第X条", "risk_level": "高/中/低", "risk_reason": "理由", "suggestion": "修正案または空文字", "referenced_law": "参照法律"}}]
+最終的に、全条項のリスク評価を以下のJSON配列形式で出力してください:
+[{{"clause_number": "第X条", "risk_level": "高/中/低", "risk_reason": "理由", "suggestion": "generate_suggestionツールの返り値をそのまま使用、低リスクは空文字", "referenced_law": "参照法律"}}]
 
 条項一覧:
-{chr(10).join(clauses_with_knowledge)}"""
+{chr(10).join(clauses_list)}"""
 
     messages = [
         SystemMessage(content=SYSTEM_PROMPT),
         HumanMessage(content=analysis_prompt),
     ]
-    response = llm.invoke(messages)
+
+    tool_map = {
+        "clause": analyze_clause_risk,
+        "generate_suggestion": generate_suggestion,
+    }
+
+    # Agentic loop: keep calling tools until LLM returns a final text response
+    final_content = ""
+    for _ in range(5):  # max 5 rounds to avoid infinite loops
+        response = llm_with_tools.invoke(messages)
+        messages.append(response)
+
+        if not response.tool_calls:
+            final_content = response.content
+            break
+
+        # Execute all tool calls returned in this round
+        for tool_call in response.tool_calls:
+            tool_fn = tool_map.get(tool_call["name"])
+            if tool_fn:
+                result = tool_fn.invoke(tool_call["args"])
+            else:
+                result = f"Unknown tool: {tool_call['name']}"
+            messages.append(ToolMessage(content=str(result), tool_call_id=tool_call["id"]))
 
     try:
-        content = response.content.strip()
+        content = final_content.strip()
         if "```json" in content:
             content = content.split("```json")[1].split("```")[0].strip()
         elif "```" in content:
@@ -109,7 +116,7 @@ JSON配列形式で出力してください:
             for c in clauses
         ]
 
-    return {"risk_analysis": risk_analysis, "messages": [response]}
+    return {"risk_analysis": risk_analysis, "messages": messages[2:]}
 
 
 def generate_report(state: AgentState) -> dict:
@@ -142,11 +149,88 @@ def generate_report(state: AgentState) -> dict:
     return {"review_report": report}
 
 
-def should_skip_detailed_analysis(state: AgentState) -> str:
-    """Conditional edge: skip detailed analysis if no risky clauses found."""
-    # After initial risk analysis, check if there are high risks
-    risk_analysis = state.get("risk_analysis", [])
-    has_high_risk = any(r.get("risk_level") == "高" for r in risk_analysis)
-    if has_high_risk:
-        return "generate_report"
-    return "generate_report"
+def analyze_risks_streaming(state: AgentState, event_queue: _queue.Queue) -> dict:
+    """Same as analyze_risks but emits tool_call/tool_result events to event_queue."""
+    clauses = state["clauses"]
+
+    clauses_list = []
+    for clause in clauses:
+        clauses_list.append(
+            f"【{clause['number']} {clause['title']}】\n"
+            f"条項本文: {clause['text']}"
+        )
+
+    analysis_prompt = f"""以下の各契約条項を分析してください。
+
+まず、各条項について analyze_clause_risk ツールを呼び出してください。
+ツールが返す法律知識に基づいてリスクレベルを判定してください。
+その後、リスクが高または中の条項については generate_suggestion ツールで修正案を生成してください。
+generate_suggestion ツールが返したテキストをそのまま suggestion フィールドに使用してください。自分で修正案を考えないでください。
+
+最終的に、全条項のリスク評価を以下のJSON配列形式で出力してください:
+[{{"clause_number": "第X条", "risk_level": "高/中/低", "risk_reason": "理由", "suggestion": "generate_suggestionツールの返り値をそのまま使用、低リスクは空文字", "referenced_law": "参照法律"}}]
+
+条項一覧:
+{chr(10).join(clauses_list)}"""
+
+    messages = [
+        SystemMessage(content=SYSTEM_PROMPT),
+        HumanMessage(content=analysis_prompt),
+    ]
+
+    tool_map = {
+        "analyze_clause_risk": analyze_clause_risk,
+        "generate_suggestion": generate_suggestion,
+    }
+
+    final_content = ""
+    for _ in range(5):
+        event_queue.put({"type": "thinking"})
+        response = llm_with_tools.invoke(messages)
+        messages.append(response)
+
+        if not response.tool_calls:
+            final_content = response.content
+            break
+
+        for tool_call in response.tool_calls:
+            clause_hint = ""
+            if "clause_text" in tool_call["args"]:
+                clause_hint = tool_call["args"]["clause_text"][:40]
+
+            event_queue.put({
+                "type": "tool_call",
+                "tool": tool_call["name"],
+                "clause": clause_hint,
+            })
+
+            tool_fn = tool_map.get(tool_call["name"])
+            result = tool_fn.invoke(tool_call["args"]) if tool_fn else f"Unknown tool: {tool_call['name']}"
+
+            event_queue.put({
+                "type": "tool_result",
+                "tool": tool_call["name"],
+                "clause": clause_hint,
+            })
+            messages.append(ToolMessage(content=str(result), tool_call_id=tool_call["id"]))
+
+    try:
+        content = final_content.strip()
+        if "```json" in content:
+            content = content.split("```json")[1].split("```")[0].strip()
+        elif "```" in content:
+            content = content.split("```")[1].split("```")[0].strip()
+        risk_analysis = json.loads(content)
+    except (json.JSONDecodeError, IndexError):
+        risk_analysis = [
+            {
+                "clause_number": c["number"],
+                "risk_level": "不明",
+                "risk_reason": "分析に失敗しました",
+                "suggestion": "",
+                "referenced_law": "",
+            }
+            for c in clauses
+        ]
+
+    return {"risk_analysis": risk_analysis, "messages": messages[2:]}
