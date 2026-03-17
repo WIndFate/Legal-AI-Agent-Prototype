@@ -12,7 +12,7 @@ load_dotenv()
 
 from backend.agent.graph import run_review, run_review_stream
 from backend.eval.evaluator import run_rag_eval
-from backend.rag.loader import load_legal_knowledge
+from backend.rag.loader import load_legal_knowledge, load_text_documents
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +22,9 @@ async def lifespan(app: FastAPI):
     logger.info("Loading legal knowledge into RAG store...")
     try:
         count = load_legal_knowledge()
-        logger.info(f"Loaded {count} legal knowledge documents.")
+        logger.info(f"Loaded {count} JSON knowledge documents.")
+        chunk_count = load_text_documents()
+        logger.info(f"Loaded {chunk_count} text chunks from .txt files.")
     except Exception as e:
         logger.warning(f"Failed to load legal knowledge (will retry on first request): {e}")
     yield

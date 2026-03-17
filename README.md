@@ -34,6 +34,7 @@ AI-powered Japanese legal contract review agent system built with LangGraph, RAG
 - **Backend**: FastAPI
 - **Frontend**: React + Vite + TypeScript
 - **Deployment**: Docker Compose
+- **Text Splitting**: langchain-text-splitters for document chunking
 
 ## Quick Start
 
@@ -100,40 +101,14 @@ Add to Claude Desktop config:
 }
 ```
 
-## Project Structure
-
-```
-backend/
-├── main.py              # FastAPI entry point
-├── Dockerfile           # Backend container image
-├── agent/
-│   ├── graph.py         # LangGraph workflow
-│   ├── nodes.py         # Agent node functions
-│   ├── state.py         # Agent state definition
-│   └── tools.py         # LangChain tools
-├── rag/
-│   ├── store.py         # ChromaDB vector store
-│   └── loader.py        # Knowledge loader
-├── mcp/
-│   └── server.py        # MCP server
-└── data/
-    └── legal_knowledge.json  # Legal knowledge (20 entries)
-
-frontend/
-├── Dockerfile           # Frontend container image
-└── src/
-    ├── App.tsx           # Main UI
-    └── App.css           # Styles
-
-docker-compose.yml       # Container orchestration
-```
-
 ## Key Design Decisions
 
 - **LangGraph over simple chain**: Supports conditional branching, state management, and is extensible for multi-agent collaboration
 - **RAG**: Grounds agent responses in reliable legal knowledge rather than relying solely on LLM memory
 - **MCP**: Standardized AI tool protocol enabling any client (Claude Desktop, etc.) to invoke contract review capabilities
 - **Tool Calling**: Agent autonomously decides when to invoke which tool, demonstrating autonomous decision-making
+- **TXT Chunking**: Long `.txt` documents are split by `RecursiveCharacterTextSplitter` (chunk_size=200, overlap=40) and stored alongside JSON knowledge. Both are retrieved uniformly by `store.search()`.
+- **Contracts are query-only**: User contract text is never stored in the vector database — only the curated knowledge base is indexed.
 
 ## RAG Evaluation
 
@@ -198,13 +173,3 @@ curl "http://localhost:8000/api/eval/rag?k=5"
 }
 ```
 
-### File locations
-
-```
-backend/
-  eval/
-    __init__.py      # Package init
-    evaluator.py     # Recall@K and MRR logic
-  data/
-    eval_dataset.json    # Hand-labeled test set (5 samples)
-```

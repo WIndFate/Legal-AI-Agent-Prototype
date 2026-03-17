@@ -34,6 +34,7 @@
 - **后端**: FastAPI
 - **前端**: React + Vite + TypeScript
 - **部署**: Docker Compose
+- **文本分块**: langchain-text-splitters for document chunking
 
 ## 快速开始
 
@@ -100,40 +101,14 @@ python -m backend.mcp.server
 }
 ```
 
-## 项目结构
-
-```
-backend/
-├── main.py              # FastAPI 入口
-├── Dockerfile           # 后端容器镜像
-├── agent/
-│   ├── graph.py         # LangGraph 工作流定义
-│   ├── nodes.py         # Agent 节点逻辑
-│   ├── state.py         # Agent 状态定义
-│   └── tools.py         # LangChain 工具
-├── rag/
-│   ├── store.py         # ChromaDB 向量存储
-│   └── loader.py        # 知识加载器
-├── mcp/
-│   └── server.py        # MCP 服务端
-└── data/
-    └── legal_knowledge.json  # 法律知识库（20条）
-
-frontend/
-├── Dockerfile           # 前端容器镜像
-└── src/
-    ├── App.tsx           # 主页面
-    └── App.css           # 样式
-
-docker-compose.yml       # 容器编排
-```
-
 ## 核心设计思路
 
 - **为什么用 LangGraph 而不是简单的 Chain**：支持条件分支、状态管理，可扩展为多 Agent 协作
 - **RAG 的价值**：让 Agent 的回答基于可靠的法律知识库，而非纯靠 LLM 记忆
 - **MCP 的意义**：标准化 AI 工具协议，任意客户端（Claude Desktop 等）都能调用合同审查能力
 - **Tool Calling**：Agent 自主决定何时调用什么工具，体现自主决策能力
+- **TXT 分块加载**：长文本 `.txt` 文档通过 `RecursiveCharacterTextSplitter` 分块（chunk_size=200, overlap=40），与 JSON 知识库存入同一 ChromaDB，统一检索。
+- **用户合同不存库**：合同文本仅作为 query，不写入向量库。
 
 ## RAG 评估模块
 
@@ -198,13 +173,3 @@ curl "http://localhost:8000/api/eval/rag?k=5"
 }
 ```
 
-### 文件位置
-
-```
-backend/
-  eval/
-    __init__.py          # 包初始化
-    evaluator.py         # Recall@K 与 MRR 计算逻辑
-  data/
-    eval_dataset.json    # 手工标注测试集（5条样本）
-```

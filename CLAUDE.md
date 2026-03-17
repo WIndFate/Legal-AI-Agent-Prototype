@@ -48,11 +48,16 @@ backend/
     nodes.py      # Node functions: parse_contract, analyze_risks, generate_report
     graph.py      # LangGraph workflow + run_review / run_review_stream
   rag/
-    store.py      # ChromaDB singleton (get_store())
-    loader.py     # Loads legal knowledge JSON into ChromaDB on startup
+    store.py      # ChromaDB singleton (get_store()); add_documents() for JSON, add_chunks() for TXT
+    loader.py     # load_legal_knowledge() for JSON + load_text_documents() for TXT chunks
+  eval/
+    evaluator.py  # Recall@K and MRR evaluation logic
   mcp/
     server.py     # FastMCP server exposing review_contract + search_legal_reference
   main.py         # FastAPI app entry point
+  data/
+    eval_dataset.json  # Hand-labeled eval test set (5 samples)
+    civil_law.txt      # Civil law TXT source for chunk ingestion
 frontend/
   src/
     App.tsx       # Single-page UI consuming SSE stream
@@ -82,6 +87,16 @@ Do NOT add `rag_results` or `current_clause_index` back — they were removed as
 ### Streaming
 `run_review_stream` uses `astream_events(version="v2")` from LangGraph. The frontend consumes SSE events of types: `node_start`, `token`, `tool_call`, `complete`, `error`.
 
+### TXT documents are chunked alongside JSON knowledge
+`load_text_documents()` scans `data/*.txt`, splits with `RecursiveCharacterTextSplitter`
+(chunk_size=200, chunk_overlap=40, separators=["\n\n", "\n", "。", "、", ""]),
+calls `store.add_chunks()`. Both live in the same ChromaDB collection; `store.search()`
+retrieves from both uniformly. User contracts are NEVER stored — query-only.
+
+### RAG evaluation
+`GET /api/eval/rag` runs Recall@K and MRR against `eval_dataset.json`.
+Eval only references JSON document IDs; TXT chunk auto-generated IDs do not affect eval.
+
 ---
 
 ## Environment
@@ -101,3 +116,4 @@ ChromaDB data is persisted in Docker volume `chroma_data`. RAG knowledge is load
 - Backend hot-reload: add `--reload` flag to uvicorn in `backend/Dockerfile` if needed
 - MCP server runs as a separate process: `python -m backend.mcp.server`
 - Code comments in English; user-facing messages in Japanese
+- Git commit messages must NOT include any Co-Authored-By or Claude signature lines

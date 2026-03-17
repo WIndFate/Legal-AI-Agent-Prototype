@@ -36,6 +36,17 @@ class LegalKnowledgeStore:
             ],
         )
 
+    def add_chunks(self, chunks: list[str], source: str) -> None:
+        """Add plain text chunks (from txt documents) to the vector store.
+
+        IDs are auto-generated as '{source}_{index:03d}'.
+        """
+        if not chunks:
+            return
+        ids = [f"{source}_{i:03d}" for i in range(len(chunks))]
+        metadatas = [{"category": "text_document", "title": source} for _ in chunks]
+        self.collection.upsert(ids=ids, documents=chunks, metadatas=metadatas)
+
     def search(self, query: str, n_results: int = 5) -> list[dict]:
         """Search for relevant legal knowledge."""
         results = self.collection.query(query_texts=[query], n_results=n_results)
