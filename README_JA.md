@@ -134,3 +134,77 @@ docker-compose.yml       # コンテナオーケストレーション
 - **RAG の価値**：エージェントの回答を信頼できる法律知識に基づかせ、LLM の記憶のみに依存しない
 - **MCP の意義**：標準化された AI ツールプロトコルにより、任意のクライアント（Claude Desktop 等）から契約審査機能を呼び出し可能
 - **Tool Calling**：エージェントがどのツールをいつ呼び出すかを自律的に判断し、自律的意思決定能力を実現
+
+## RAG 評価モジュール
+
+RAG 検索パイプラインの品質を定量化するための eval モジュールを内蔵しています。
+
+### 評価対象
+
+`analyze_clause_risk` ツールは ChromaDB 検索を通じて、各契約条項に関連する法律知識を取得します。eval モジュールはこの検索ステップの精度を計測します。
+
+### 評価指標
+
+| 指標 | 説明 |
+|------|------|
+| **Recall@K** | 上位 K 件の結果に関連文書が含まれる割合 |
+| **MRR** | 平均相互順位 —— 最初の関連結果の順位の逆数の平均 |
+
+### テストデータセット
+
+`backend/data/eval_dataset.json` に手動でラベル付けした 5 件のサンプルを用意。典型的な契約リスクシナリオを網羅：
+
+| ID | シナリオ |
+|----|----------|
+| eval_001 | 損害賠償上限なし条項 |
+| eval_002 | 競業避止期間過長（5年） |
+| eval_003 | 一方的解除権 |
+| eval_004 | 知的財産権・著作権帰属 |
+| eval_005 | 秘密保持期間の定めなし |
+
+各サンプルにはクエリテキストと、`legal_knowledge.json` から取得されるべき関連文書 ID が含まれます。
+
+### 評価の実行方法
+
+```bash
+# まずバックエンドを起動
+docker compose up --build backend
+
+# デフォルト k=3 で評価実行
+curl http://localhost:8000/api/eval/rag
+
+# k を指定して実行
+curl "http://localhost:8000/api/eval/rag?k=5"
+```
+
+### レスポンス例
+
+```json
+{
+  "k": 3,
+  "num_samples": 5,
+  "mean_recall_at_k": 0.72,
+  "mrr": 0.85,
+  "per_sample": [
+    {
+      "id": "eval_001",
+      "description": "損害賠償無制限条項",
+      "recall_at_k": 0.667,
+      "reciprocal_rank": 1.0,
+      "retrieved_ids": ["civil_code_415", "risk_liability_unlimited", "civil_code_416"],
+      "relevant_ids": ["civil_code_415", "civil_code_416", "risk_liability_unlimited"]
+    }
+  ]
+}
+```
+
+### ファイル構成
+
+```
+backend/
+  eval/
+    __init__.py          # パッケージ初期化
+    evaluator.py         # Recall@K・MRR 計算ロジック
+  data/
+    eval_dataset.json    # 手動ラベル付きテストセット（5件）
+```

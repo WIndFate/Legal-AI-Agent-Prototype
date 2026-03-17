@@ -1,0 +1,32 @@
+[
+  {
+    "id": "eval_001",
+    "query": "損害賠償の上限を設けず、甲は乙に対して全ての損害を賠償する義務を負う。",
+    "relevant_ids": ["civil_code_415", "civil_code_416", "risk_liability_unlimited"],
+    "description": "損害賠償無制限条項"
+  },
+  {
+    "id": "eval_002",
+    "query": "契約終了後5年間、乙は競合する事業を行ってはならない。",
+    "relevant_ids": ["risk_non_compete", "risk_non_compete_duration"],
+    "description": "競業避止期間超過"
+  },
+  {
+    "id": "eval_003",
+    "query": "甲は理由を問わず、いつでも本契約を解除することができる。",
+    "relevant_ids": ["civil_code_541", "civil_code_542", "risk_termination_unilateral"],
+    "description": "一方的解除権"
+  },
+  {
+    "id": "eval_004",
+    "query": "本業務において乙が作成した成果物の著作権は全て甲に帰属する。",
+    "relevant_ids": ["intellectual_property"],
+    "description": "著作権帰属条項"
+  },
+  {
+    "id": "eval_005",
+    "query": "乙は業務上知り得た秘密情報を第三者に開示してはならない。期間の定めなし。",
+    "relevant_ids": ["risk_confidentiality", "risk_confidentiality_period"],
+    "description": "秘密保持期間無制限"
+  }
+]

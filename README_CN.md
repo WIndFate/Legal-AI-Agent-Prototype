@@ -134,3 +134,77 @@ docker-compose.yml       # 容器编排
 - **RAG 的价值**：让 Agent 的回答基于可靠的法律知识库，而非纯靠 LLM 记忆
 - **MCP 的意义**：标准化 AI 工具协议，任意客户端（Claude Desktop 等）都能调用合同审查能力
 - **Tool Calling**：Agent 自主决定何时调用什么工具，体现自主决策能力
+
+## RAG 评估模块
+
+项目内置了一个 eval 模块，用于量化 RAG 检索管道的质量。
+
+### 评估对象
+
+`analyze_clause_risk` 工具依赖 ChromaDB 搜索，为每条合同条款检索相关法律知识。eval 模块衡量这一检索步骤的准确性。
+
+### 评估指标
+
+| 指标 | 说明 |
+|------|------|
+| **Recall@K** | Top-K 结果中命中相关文档的比例 |
+| **MRR** | 平均倒数排名 —— 第一条相关结果排名倒数的均值 |
+
+### 测试集
+
+`backend/data/eval_dataset.json` 包含 5 条手工标注样本，覆盖典型合同风险场景：
+
+| ID | 场景 |
+|----|------|
+| eval_001 | 损害赔偿无上限条款 |
+| eval_002 | 竞业禁止期过长（5年） |
+| eval_003 | 一方单方解除权 |
+| eval_004 | 知识产权/著作权归属 |
+| eval_005 | 保密协议无时间限制 |
+
+每条样本包含查询文本，以及应当被检索到的 `legal_knowledge.json` 文档 ID。
+
+### 运行评估
+
+```bash
+# 先启动后端
+docker compose up --build backend
+
+# 使用默认 k=3 运行评估
+curl http://localhost:8000/api/eval/rag
+
+# 自定义 k 值
+curl "http://localhost:8000/api/eval/rag?k=5"
+```
+
+### 返回示例
+
+```json
+{
+  "k": 3,
+  "num_samples": 5,
+  "mean_recall_at_k": 0.72,
+  "mrr": 0.85,
+  "per_sample": [
+    {
+      "id": "eval_001",
+      "description": "損害賠償無制限条項",
+      "recall_at_k": 0.667,
+      "reciprocal_rank": 1.0,
+      "retrieved_ids": ["civil_code_415", "risk_liability_unlimited", "civil_code_416"],
+      "relevant_ids": ["civil_code_415", "civil_code_416", "risk_liability_unlimited"]
+    }
+  ]
+}
+```
+
+### 文件位置
+
+```
+backend/
+  eval/
+    __init__.py          # 包初始化
+    evaluator.py         # Recall@K 与 MRR 计算逻辑
+  data/
+    eval_dataset.json    # 手工标注测试集（5条样本）
+```
