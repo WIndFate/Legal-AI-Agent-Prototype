@@ -134,3 +134,77 @@ docker-compose.yml       # Container orchestration
 - **RAG**: Grounds agent responses in reliable legal knowledge rather than relying solely on LLM memory
 - **MCP**: Standardized AI tool protocol enabling any client (Claude Desktop, etc.) to invoke contract review capabilities
 - **Tool Calling**: Agent autonomously decides when to invoke which tool, demonstrating autonomous decision-making
+
+## RAG Evaluation
+
+The project includes a built-in eval module to measure the retrieval quality of the RAG pipeline.
+
+### What it evaluates
+
+The `analyze_clause_risk` tool relies on `ChromaDB` search to retrieve relevant legal knowledge for each contract clause. The eval module measures how well this retrieval performs.
+
+### Metrics
+
+| Metric | Description |
+|--------|-------------|
+| **Recall@K** | Fraction of relevant documents found in the top-K results |
+| **MRR** | Mean Reciprocal Rank — average of 1/rank of the first relevant result |
+
+### Dataset
+
+5 hand-labeled evaluation samples in `backend/data/eval_dataset.json`, covering typical contract risk scenarios:
+
+| ID | Scenario |
+|----|----------|
+| eval_001 | Unlimited liability clause |
+| eval_002 | Excessive non-compete period (5 years) |
+| eval_003 | Unilateral termination right |
+| eval_004 | IP / copyright assignment |
+| eval_005 | NDA with no time limit |
+
+Each sample contains the query text and the expected relevant document IDs from `legal_knowledge.json`.
+
+### Run the eval
+
+```bash
+# Start backend first
+docker compose up --build backend
+
+# Run evaluation with default k=3
+curl http://localhost:8000/api/eval/rag
+
+# Run with custom k
+curl "http://localhost:8000/api/eval/rag?k=5"
+```
+
+### Example response
+
+```json
+{
+  "k": 3,
+  "num_samples": 5,
+  "mean_recall_at_k": 0.72,
+  "mrr": 0.85,
+  "per_sample": [
+    {
+      "id": "eval_001",
+      "description": "損害賠償無制限条項",
+      "recall_at_k": 0.667,
+      "reciprocal_rank": 1.0,
+      "retrieved_ids": ["civil_code_415", "risk_liability_unlimited", "civil_code_416"],
+      "relevant_ids": ["civil_code_415", "civil_code_416", "risk_liability_unlimited"]
+    }
+  ]
+}
+```
+
+### File locations
+
+```
+backend/
+  eval/
+    __init__.py      # Package init
+    evaluator.py     # Recall@K and MRR logic
+  data/
+    eval_dataset.json    # Hand-labeled test set (5 samples)
+```
