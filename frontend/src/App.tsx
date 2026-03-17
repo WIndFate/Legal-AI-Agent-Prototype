@@ -18,6 +18,17 @@ interface ReviewReport {
   total_clauses: number;
 }
 
+interface StreamEvent {
+  type: "node_start" | "token" | "tool_call" | "complete" | "error";
+  node?: string;
+  label?: string;
+  text?: string;
+  tool?: string;
+  clause?: string;
+  report?: ReviewReport;
+  message?: string;
+}
+
 const SAMPLE_CONTRACT = `業務委託契約書
 
 委託者 株式会社テック・ソリューションズ（以下「甲」という）と受託者 山田太郎（以下「乙」という）は、以下のとおり業務委託契約（以下「本契約」という）を締結する。
@@ -80,25 +91,55 @@ export default function App() {
   const [report, setReport] = useState<ReviewReport | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [recentLines, setRecentLines] = useState<string[]>([]);
+
+  const pushLine = (line: string) =>
+    setRecentLines((prev) => [...prev, line].slice(-3));
 
   const handleReview = async () => {
     if (!contractText.trim()) return;
     setLoading(true);
     setError(null);
     setReport(null);
+    setRecentLines([]);
 
     try {
-      const res = await fetch("/api/review", {
+      const res = await fetch("/api/review/stream", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ contract_text: contractText }),
       });
       if (!res.ok) throw new Error(`API error: ${res.status}`);
-      const data: ReviewReport = await res.json();
-      setReport(data);
+
+      const reader = res.body!.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() ?? "";
+        for (const line of lines) {
+          if (!line.startsWith("data: ")) continue;
+          const evt: StreamEvent = JSON.parse(line.slice(6));
+          if (evt.type === "node_start") {
+            pushLine(evt.label!);
+          } else if (evt.type === "tool_call") {
+            const icon = evt.tool === "analyze_clause_risk" ? "🔍" : "💡";
+            pushLine(`${icon} ${evt.clause}`);
+          } else if (evt.type === "complete") {
+            setReport(evt.report!);
+            setLoading(false);
+          } else if (evt.type === "error") {
+            setError(evt.message!);
+            setLoading(false);
+          }
+        }
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Unknown error");
-    } finally {
       setLoading(false);
     }
   };
@@ -131,7 +172,11 @@ export default function App() {
           {loading && (
             <div className="loading">
               <div className="spinner" />
-              <p>AI が契約書を分析しています...</p>
+              <div className="recent-log">
+                {recentLines.map((line, i) => (
+                  <p key={i} className="recent-log-line">{line}</p>
+                ))}
+              </div>
             </div>
           )}
           {error && <div className="error">エラー: {error}</div>}

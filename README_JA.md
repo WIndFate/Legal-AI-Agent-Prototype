@@ -34,6 +34,7 @@ LangGraph、RAG、MCP、Tool Calling を活用した日本語法律契約書の 
 - **バックエンド**: FastAPI
 - **フロントエンド**: React + Vite + TypeScript
 - **デプロイ**: Docker Compose
+- **テキスト分割**: langchain-text-splitters for document chunking
 
 ## クイックスタート
 
@@ -100,40 +101,14 @@ Claude Desktop の設定に追加：
 }
 ```
 
-## プロジェクト構成
-
-```
-backend/
-├── main.py              # FastAPI エントリーポイント
-├── Dockerfile           # バックエンドコンテナイメージ
-├── agent/
-│   ├── graph.py         # LangGraph ワークフロー定義
-│   ├── nodes.py         # エージェントノードロジック
-│   ├── state.py         # エージェント状態定義
-│   └── tools.py         # LangChain ツール
-├── rag/
-│   ├── store.py         # ChromaDB ベクトルストア
-│   └── loader.py        # ナレッジローダー
-├── mcp/
-│   └── server.py        # MCP サーバー
-└── data/
-    └── legal_knowledge.json  # 法律ナレッジベース（20件）
-
-frontend/
-├── Dockerfile           # フロントエンドコンテナイメージ
-└── src/
-    ├── App.tsx           # メイン UI
-    └── App.css           # スタイル
-
-docker-compose.yml       # コンテナオーケストレーション
-```
-
 ## 設計上の主要判断
 
 - **シンプルな Chain ではなく LangGraph を採用した理由**：条件分岐、状態管理をサポートし、マルチエージェント協調への拡張が可能
 - **RAG の価値**：エージェントの回答を信頼できる法律知識に基づかせ、LLM の記憶のみに依存しない
 - **MCP の意義**：標準化された AI ツールプロトコルにより、任意のクライアント（Claude Desktop 等）から契約審査機能を呼び出し可能
 - **Tool Calling**：エージェントがどのツールをいつ呼び出すかを自律的に判断し、自律的意思決定能力を実現
+- **TXT チャンク分割**：長文 `.txt` は `RecursiveCharacterTextSplitter`（chunk_size=200, overlap=40）で分割し、JSON 知識と同一 ChromaDB に格納。`store.search()` で統合検索。
+- **契約書は保存しない**：ユーザーの契約テキストはクエリ専用。ベクトル DB には保存しない。
 
 ## RAG 評価モジュール
 
@@ -198,13 +173,3 @@ curl "http://localhost:8000/api/eval/rag?k=5"
 }
 ```
 
-### ファイル構成
-
-```
-backend/
-  eval/
-    __init__.py          # パッケージ初期化
-    evaluator.py         # Recall@K・MRR 計算ロジック
-  data/
-    eval_dataset.json    # 手動ラベル付きテストセット（5件）
-```
