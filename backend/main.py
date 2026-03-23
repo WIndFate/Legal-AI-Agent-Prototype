@@ -44,7 +44,18 @@ async def lifespan(app: FastAPI):
         posthog.host = settings.POSTHOG_HOST
         logger.info("PostHog initialized.")
 
+    # Start scheduled cleanup (expired reports + contract text nullification)
+    from apscheduler.schedulers.asyncio import AsyncIOScheduler
+    from backend.services.cleanup import run_cleanup
+
+    scheduler = AsyncIOScheduler()
+    scheduler.add_job(run_cleanup, "interval", hours=1, id="cleanup")
+    scheduler.start()
+    logger.info("APScheduler cleanup job started (every 1h).")
+
     yield
+
+    scheduler.shutdown()
 
 
 def _filter_pii(event, hint):
