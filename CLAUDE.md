@@ -1,18 +1,23 @@
 # CLAUDE.md — 契約チェッカー (Contract Checker)
 
-## ⚠️ MANDATORY: Read DESIGN.md First
+## ⚠️ MANDATORY: Read DESIGN.md and SPEC.md First
 
-**Before starting ANY task, you MUST read `DESIGN.md` in the project root.** This file contains the full business plan, product vision, target users, pricing, go-to-market strategy, and development roadmap. All implementation decisions must align with the product direction described in DESIGN.md.
+**Before starting ANY task, you MUST read these two files in the project root:**
+1. **`DESIGN.md`** — Product design: business plan, target users, pricing, go-to-market strategy, development roadmap. Answers "WHAT to build and WHY".
+2. **`SPEC.md`** — Technical specification: architecture, API design, database schema, file structure, development phases. Answers "HOW to build it".
+
+All implementation decisions must align with both documents. When in doubt, DESIGN.md takes precedence on product decisions, SPEC.md takes precedence on technical decisions.
 
 ## ⚠️ MANDATORY: Sync Docs on Git Commit
 
 **When committing code changes, you MUST also update the following files to reflect the new code:**
 1. **`CLAUDE.md`** — Update project overview, key files, architecture decisions, and any other sections affected by the code changes.
-2. **`README.md`** (English) — Update to reflect new features, architecture changes, or usage instructions.
-3. **`README_CN.md`** (Chinese) — Keep in sync with README.md content, translated to Chinese.
-4. **`README_JA.md`** (Japanese) — Keep in sync with README.md content, translated to Japanese.
+2. **`SPEC.md`** — Update implementation status (mark completed items, add new discoveries, adjust plans). This is the living technical spec — keep it in sync with reality.
+3. **`README.md`** (English) — Update to reflect new features, architecture changes, or usage instructions.
+4. **`README_CN.md`** (Chinese) — Keep in sync with README.md content, translated to Chinese.
+5. **`README_JA.md`** (Japanese) — Keep in sync with README.md content, translated to Japanese.
 
-All four docs must stay consistent with the actual codebase. Do not commit code-only changes without updating relevant documentation.
+All five docs must stay consistent with the actual codebase. Do not commit code-only changes without updating relevant documentation.
 
 ---
 
@@ -150,7 +155,7 @@ ChromaDB data is persisted in Docker volume `chroma_data`. RAG knowledge is load
 - **No user registration/login** — payment email serves as identity
 - **No history feature** — report link is sent via email
 - **Mobile-first web** — no native app in V1
-- **Chinese-only UI** — no multi-language support in V1
+- **Multi-language UI (9 languages)** — ja (default/fallback), en, zh-CN, zh-TW, pt-BR, id, ko, vi, ne. Auto-detect via `navigator.language`, manual switch stored in `localStorage`. Reports also output in user's selected language.
 - **Pay-per-use only** — no subscriptions
 - **Contracts are never stored** — deleted immediately after analysis, reports cached 24h then auto-deleted
 - **Legal disclaimer required** on every page: 「本サービスは法律相談ではありません。具体的な法的判断は弁護士にご相談ください」
