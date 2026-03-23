@@ -1,6 +1,7 @@
 import logging
 
 from fastapi import APIRouter, Depends, HTTPException, Request
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.db.session import get_db
@@ -62,6 +63,23 @@ async def payment_webhook(
     if event is None:
         raise HTTPException(status_code=401, detail="Invalid webhook signature")
 
-    # TODO: Update order payment_status based on event type
-    logger.info(f"Payment webhook received: {event.get('type')}")
+    event_type = event.get("type", "")
+    logger.info("Payment webhook received: %s", event_type)
+
+    if event_type == "payment.captured":
+        payment_data = event.get("data", {})
+        order_id = payment_data.get("metadata", {}).get("order_id")
+        if order_id:
+            from datetime import datetime, timezone
+            result = await db.execute(
+                select(Order).where(Order.id == order_id)
+            )
+            order = result.scalar_one_or_none()
+            if order and order.payment_status != "paid":
+                order.payment_status = "paid"
+                order.paid_at = datetime.now(timezone.utc)
+                order.komoju_session_id = payment_data.get("id", "")
+                await db.commit()
+                logger.info("Order %s marked as paid", order_id)
+
     return {"ok": True}
