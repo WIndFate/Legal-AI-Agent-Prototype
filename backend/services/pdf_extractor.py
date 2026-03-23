@@ -1,7 +1,7 @@
 import io
 import logging
 
-from PyPDF2 import PdfReader
+from pypdf import PdfReader
 
 from backend.services.ocr import extract_text_from_image
 

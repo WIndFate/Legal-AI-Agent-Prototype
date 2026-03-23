@@ -1,6 +1,6 @@
 import logging
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -22,7 +22,7 @@ async def get_report(
     report = result.scalar_one_or_none()
 
     if report is None:
-        return {"error": "Report not found or expired", "status": 404}
+        raise HTTPException(status_code=404, detail="Report not found or expired")
 
     return {
         "order_id": str(report.order_id),

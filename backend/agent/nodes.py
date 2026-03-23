@@ -1,8 +1,11 @@
 import json
+import logging
 import queue as _queue
 
 from langchain_core.messages import HumanMessage, SystemMessage, ToolMessage
 from langchain_openai import ChatOpenAI
+
+logger = logging.getLogger(__name__)
 
 from backend.agent.state import AgentState
 from backend.agent.tools import analyze_clause_risk, generate_suggestion, ALL_TOOLS
@@ -216,7 +219,10 @@ def _translate_report(
             translated.get("overall_risk", overall_risk),
         )
     except (json.JSONDecodeError, KeyError):
-        # Translation failed, return original Japanese
+        logger.warning(
+            "Translation to %s failed, falling back to Japanese. Response: %s",
+            target_lang, response.content[:200],
+        )
         return summary, risk_analysis, overall_risk
 
 

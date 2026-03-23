@@ -1,7 +1,7 @@
 import json
 import logging
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -27,11 +27,13 @@ async def review_contract_stream(
     order = result.scalar_one_or_none()
 
     if order is None:
-        return {"error": "Order not found"}
+        raise HTTPException(status_code=404, detail="Order not found")
     if order.payment_status != "paid":
-        return {"error": "Payment required"}
+        raise HTTPException(status_code=402, detail="Payment required")
     if order.analysis_status != "waiting":
-        return {"error": "Analysis already started or completed"}
+        raise HTTPException(status_code=409, detail="Analysis already started or completed")
+    if not order.contract_text:
+        raise HTTPException(status_code=422, detail="No contract text associated with this order")
 
     # Mark as processing
     order.analysis_status = "processing"
