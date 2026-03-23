@@ -119,9 +119,13 @@ generate_suggestion ツールが返したテキストをそのまま suggestion 
     return {"risk_analysis": risk_analysis, "messages": messages[2:]}
 
 
+llm_translator = ChatOpenAI(model="gpt-4o-mini", temperature=0)
+
+
 def generate_report(state: AgentState) -> dict:
-    """Generate the final structured review report."""
+    """Generate the final structured review report, translated if target_language != 'ja'."""
     risk_analysis = state["risk_analysis"]
+    target_lang = state.get("target_language", "ja")
 
     high_risks = [r for r in risk_analysis if r.get("risk_level") == "高"]
     medium_risks = [r for r in risk_analysis if r.get("risk_level") == "中"]
@@ -134,11 +138,21 @@ def generate_report(state: AgentState) -> dict:
     else:
         overall_risk = "低"
 
+    summary = (
+        f"契約書の審査が完了しました。全{len(risk_analysis)}条項中、"
+        f"高リスク{len(high_risks)}件、中リスク{len(medium_risks)}件、"
+        f"低リスク{len(low_risks)}件が検出されました。"
+    )
+
+    # Translate report if target language is not Japanese
+    if target_lang != "ja":
+        summary, risk_analysis, overall_risk = _translate_report(
+            summary, risk_analysis, overall_risk, target_lang
+        )
+
     report = {
         "overall_risk_level": overall_risk,
-        "summary": f"契約書の審査が完了しました。全{len(risk_analysis)}条項中、"
-                   f"高リスク{len(high_risks)}件、中リスク{len(medium_risks)}件、"
-                   f"低リスク{len(low_risks)}件が検出されました。",
+        "summary": summary,
         "clause_analyses": risk_analysis,
         "high_risk_count": len(high_risks),
         "medium_risk_count": len(medium_risks),
@@ -147,6 +161,63 @@ def generate_report(state: AgentState) -> dict:
     }
 
     return {"review_report": report}
+
+
+def _translate_report(
+    summary: str,
+    risk_analysis: list[dict],
+    overall_risk: str,
+    target_lang: str,
+) -> tuple[str, list[dict], str]:
+    """Translate report content to target language using GPT-4o-mini."""
+    # Build translation payload
+    translate_payload = json.dumps({
+        "summary": summary,
+        "overall_risk": overall_risk,
+        "clauses": [
+            {
+                "clause_number": r.get("clause_number", ""),
+                "risk_level": r.get("risk_level", ""),
+                "risk_reason": r.get("risk_reason", ""),
+                "suggestion": r.get("suggestion", ""),
+                "referenced_law": r.get("referenced_law", ""),
+            }
+            for r in risk_analysis
+        ],
+    }, ensure_ascii=False)
+
+    lang_names = {
+        "en": "English", "zh-CN": "Simplified Chinese", "zh-TW": "Traditional Chinese",
+        "ko": "Korean", "vi": "Vietnamese", "pt-BR": "Brazilian Portuguese",
+        "id": "Indonesian", "ne": "Nepali",
+    }
+    lang_name = lang_names.get(target_lang, target_lang)
+
+    response = llm_translator.invoke([
+        SystemMessage(content=(
+            f"Translate the following JSON content to {lang_name}. "
+            "Translate all text values (summary, risk_level, risk_reason, suggestion, referenced_law, overall_risk). "
+            "Keep clause_number as-is (e.g. 第1条). Keep JSON structure exactly the same. "
+            "Output only valid JSON, no markdown."
+        )),
+        HumanMessage(content=translate_payload),
+    ])
+
+    try:
+        content = response.content.strip()
+        if "```json" in content:
+            content = content.split("```json")[1].split("```")[0].strip()
+        elif "```" in content:
+            content = content.split("```")[1].split("```")[0].strip()
+        translated = json.loads(content)
+        return (
+            translated.get("summary", summary),
+            translated.get("clauses", risk_analysis),
+            translated.get("overall_risk", overall_risk),
+        )
+    except (json.JSONDecodeError, KeyError):
+        # Translation failed, return original Japanese
+        return summary, risk_analysis, overall_risk
 
 
 def analyze_risks_streaming(state: AgentState, event_queue: _queue.Queue) -> dict:

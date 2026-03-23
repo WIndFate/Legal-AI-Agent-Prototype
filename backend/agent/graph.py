@@ -30,7 +30,7 @@ def build_graph() -> StateGraph:
 review_agent = build_graph()
 
 
-async def run_review(contract_text: str) -> dict:
+async def run_review(contract_text: str, target_language: str = "ja") -> dict:
     """Run the contract review agent and return the report."""
     initial_state = {
         "contract_text": contract_text,
@@ -38,12 +38,13 @@ async def run_review(contract_text: str) -> dict:
         "risk_analysis": [],
         "review_report": {},
         "messages": [],
+        "target_language": target_language,
     }
     result = await review_agent.ainvoke(initial_state)
     return result["review_report"]
 
 
-async def run_review_stream(contract_text: str):
+async def run_review_stream(contract_text: str, target_language: str = "ja"):
     """Yield SSE-ready dicts using LangGraph astream_events."""
     initial_state = {
         "contract_text": contract_text,
@@ -51,6 +52,7 @@ async def run_review_stream(contract_text: str):
         "risk_analysis": [],
         "review_report": {},
         "messages": [],
+        "target_language": target_language,
     }
 
     NODE_LABELS = {

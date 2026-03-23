@@ -7,8 +7,9 @@ services:
       - "8000:8000"
     env_file:
       - .env
-    volumes:
-      - chroma_data:/app/chroma_data
+    depends_on:
+      - postgres
+      - redis
 
   frontend:
     build:
@@ -21,5 +22,21 @@ services:
     depends_on:
       - backend
 
+  postgres:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: contract_checker
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
 volumes:
-  chroma_data:
+  pgdata:
