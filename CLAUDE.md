@@ -19,6 +19,29 @@ All implementation decisions must align with both documents. When in doubt, DESI
 
 All five docs must stay consistent with the actual codebase. Do not commit code-only changes without updating relevant documentation.
 
+**注意：文档同步不需要每次微小提交都更新全部 5 个文档。仅在功能里程碑（完成一个完整功能模块）时同步更新文档。**
+
+## ⚠️ MANDATORY: Granular Git Commits
+
+**每完成一个最小逻辑单元，就立即提交。禁止攒一大批改动一次提交。**
+
+提交粒度规范：
+- **一个新文件 = 一次提交**（例：创建 config.py 后立即提交）
+- **一个功能模块 = 一次提交**（例：创建 models/order.py + models/report.py + models/referral.py 可以合并为一次 "Add database models" 提交）
+- **一个 bug 修复 = 一次提交**
+- **文档更新 = 单独提交**（不要和代码变更混在一起）
+- **依赖/配置变更 = 单独提交**（例：pyproject.toml、docker-compose.yml）
+
+禁止的做法：
+- ❌ 完成整个 Day 1-2 工作后一次提交 37 个文件
+- ❌ 把不相关的改动放在同一个提交里
+- ❌ 提交消息写 "Update multiple files" 这样模糊的描述
+
+正确的做法：
+- ✅ 每 1-5 个相关文件一次提交
+- ✅ 提交消息清晰描述做了什么（例："Add SQLAlchemy Order/Report/Referral models"）
+- ✅ 代码审查修复单独提交（例："Fix HTTP error responses per code review"）
+
 ---
 
 ## Project Overview
@@ -149,6 +172,7 @@ ChromaDB data is persisted in Docker volume `chroma_data`. RAG knowledge is load
 - Code comments in English; user-facing UI messages in Chinese (target users are Chinese residents in Japan)
 - Legal disclaimers and compliance text in Japanese (required by 弁護士法72条)
 - Git commit messages must NOT include any Co-Authored-By or Claude signature lines
+- Git commits must be granular: one logical unit per commit, never batch large changes
 
 ### Product Constraints (from DESIGN.md)
 
