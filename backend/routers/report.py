@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
@@ -6,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.db.session import get_db
 from backend.models.report import Report
+from backend.services.report_cache import get_cached_report
 
 logger = logging.getLogger(__name__)
 
@@ -17,12 +19,22 @@ async def get_report(
     order_id: str,
     db: AsyncSession = Depends(get_db),
 ):
-    """Get analysis report by order ID. Returns 404 if expired or not found."""
+    """Get analysis report by order ID. Checks Redis cache first, then DB."""
+    # Try Redis cache first
+    cached = await get_cached_report(order_id)
+    if cached:
+        return cached
+
+    # Fallback to DB
     result = await db.execute(select(Report).where(Report.order_id == order_id))
     report = result.scalar_one_or_none()
 
     if report is None:
         raise HTTPException(status_code=404, detail="Report not found or expired")
+
+    # Check expiry
+    if report.expires_at < datetime.now(timezone.utc):
+        raise HTTPException(status_code=404, detail="Report expired")
 
     return {
         "order_id": str(report.order_id),
