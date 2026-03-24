@@ -100,7 +100,7 @@
     "original_contract_title": "元契約の参照",
     "original_contract_session_note": "この端末の現在セッションでのみ表示され、分析結果との見比べに使えます。サーバー側では元契約本文はすでに削除されています。",
     "original_contract_shared_note": "契約書をアップロードした同じ端末の現在セッションでのみ表示されます。プライバシー保護のため、共有リンクやメールリンクには元契約本文は含まれません。",
-    "executive_kicker": "分析レポート",
+    "executive_kicker": "リスクサマリー",
     "comparison_hint": "各条項の分析カード内で元の条項と比較できます",
     "clause_count": "条項数"
   },

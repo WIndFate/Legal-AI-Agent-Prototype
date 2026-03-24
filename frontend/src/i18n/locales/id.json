@@ -100,7 +100,7 @@
     "original_contract_title": "Perbandingan kontrak asli",
     "original_contract_session_note": "Hanya terlihat pada sesi saat ini di perangkat ini agar Anda bisa membandingkannya dengan hasil analisis. Server sudah menghapus teks kontrak asli.",
     "original_contract_shared_note": "Hanya terlihat pada sesi saat ini di perangkat yang sama yang mengunggah kontrak. Demi privasi, tautan bagikan dan tautan email tidak pernah menyertakan teks kontrak asli.",
-    "executive_kicker": "Laporan Analisis",
+    "executive_kicker": "Ringkasan Risiko",
     "comparison_hint": "Bandingkan dengan klausul asli di dalam setiap kartu analisis",
     "clause_count": "Jumlah pasal"
   },

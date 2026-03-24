@@ -100,7 +100,7 @@
     "original_contract_title": "原合同对照",
     "original_contract_session_note": "仅在本设备当前会话中可见，方便与分析结果对照阅读；服务端已删除原合同文本。",
     "original_contract_shared_note": "仅在上传合同的同一设备当前会话中可见。出于隐私保护，分享链接和邮件链接都不会带出原合同全文。",
-    "executive_kicker": "分析报告",
+    "executive_kicker": "风险概要",
     "comparison_hint": "可在各条款分析卡内查看对应原文对比",
     "clause_count": "条款数"
   },

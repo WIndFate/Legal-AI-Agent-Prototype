@@ -100,7 +100,7 @@
     "original_contract_title": "Original Contract Reference",
     "original_contract_session_note": "Visible only in the current session on this device so you can compare it with the analysis. The server has already deleted the original contract text.",
     "original_contract_shared_note": "Visible only in the current session on the device that uploaded the contract. For privacy reasons, shared links and emailed links never include the original contract text.",
-    "executive_kicker": "Analysis Report",
+    "executive_kicker": "Risk Summary",
     "comparison_hint": "Compare with the original clause inside each analysis card",
     "clause_count": "Clauses"
   },

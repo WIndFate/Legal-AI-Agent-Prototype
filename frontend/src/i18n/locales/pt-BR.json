@@ -100,7 +100,7 @@
     "original_contract_title": "Referência do contrato original",
     "original_contract_session_note": "Visível apenas na sessão atual deste dispositivo para comparação com a análise. O servidor já excluiu o texto original do contrato.",
     "original_contract_shared_note": "Visível apenas na sessão atual do mesmo dispositivo que enviou o contrato. Por privacidade, links compartilhados e links por e-mail nunca incluem o texto original do contrato.",
-    "executive_kicker": "Relatório de Análise",
+    "executive_kicker": "Resumo de Riscos",
     "comparison_hint": "Compare com a cláusula original dentro de cada cartão de análise",
     "clause_count": "Cláusulas"
   },
