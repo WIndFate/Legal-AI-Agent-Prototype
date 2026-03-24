@@ -11,7 +11,7 @@
 - `upload -> payment/create -> review/stream -> report -> 契約本文削除`
 - `pgvector` RAG は PostgreSQL 上で稼働
 - フロントエンドの 9 言語 UI は実装済み
-- `KOMOJU_SECRET_KEY` が未設定の場合、ローカル開発では自動的に支払い済み扱いになります
+- `APP_ENV=development` かつ `KOMOJU_SECRET_KEY` 未設定の場合のみ、ローカル開発では自動的に支払い済み扱いになります
 
 リポジトリ外で未完了の項目:
 
@@ -64,6 +64,7 @@ RAG:
 ```bash
 cp .env.example .env
 # .env に OPENAI_API_KEY を設定
+# ローカル Docker 実行では APP_ENV=development のままにする
 
 docker compose up --build
 ```
@@ -79,7 +80,7 @@ docker compose up --build
 1. フロントエンドでテキスト、画像、または PDF 契約書をアップロードします。
 2. token 見積もり、価格、PII 警告を確認します。
 3. 支払い注文を作成します。
-4. ローカル開発では `KOMOJU_SECRET_KEY` が空なら自動的に支払い済みになります。
+4. ローカル開発では `APP_ENV=development` かつ `KOMOJU_SECRET_KEY` が空なら自動的に支払い済みになります。
 5. `/review/:orderId` で SSE ストリーミング分析を確認します。
 6. `/report/:orderId` で保存済みレポートを取得します。
 
@@ -89,6 +90,7 @@ docker compose up --build
 - 分析完了後、`orders.contract_text` は `NULL` に更新されます。
 - レポートは Redis に 24 時間キャッシュされ、PostgreSQL に期限付きで保存されます。
 - ローカル Docker 開発を即時実行できるよう、バックエンド起動時に関係テーブルを自動作成します。本番では Alembic migration を明示的に実行してください。
+- 本番環境で KOMOJU / Resend の必須設定が不足している場合、または `FRONTEND_URL` が `localhost` のままの場合は起動時に失敗します。
 - `analyze_clause_risk` ツールが内部で直接 RAG 検索を行うため、独立した retrieval node はありません。
 
 ## 主要ファイル

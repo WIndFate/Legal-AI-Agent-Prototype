@@ -11,7 +11,7 @@ As of 2026-03-24, the local MVP flow is working in Docker:
 - `upload -> payment/create -> review/stream -> report retrieval -> contract deletion`
 - `pgvector` RAG is running in PostgreSQL
 - 9-language frontend is implemented
-- Dev-mode payment works when `KOMOJU_SECRET_KEY` is absent
+- Dev-mode payment works only when `APP_ENV=development` and `KOMOJU_SECRET_KEY` is absent
 
 Still pending outside the repo:
 
@@ -64,6 +64,7 @@ Setup:
 ```bash
 cp .env.example .env
 # fill OPENAI_API_KEY in .env
+# keep APP_ENV=development for local Docker runs
 
 docker compose up --build
 ```
@@ -79,7 +80,7 @@ Endpoints:
 1. Open the frontend and upload contract text, image, or PDF.
 2. Review token estimate, pricing, and PII warnings.
 3. Create payment.
-4. In local dev, if `KOMOJU_SECRET_KEY` is empty, the order is auto-marked as paid and redirected to review.
+4. In local dev, if `APP_ENV=development` and `KOMOJU_SECRET_KEY` is empty, the order is auto-marked as paid and redirected to review.
 5. Watch SSE analysis on `/review/:orderId`.
 6. Retrieve the saved report on `/report/:orderId`.
 
@@ -89,6 +90,7 @@ Endpoints:
 - After analysis completes, `orders.contract_text` is set to `NULL`.
 - Reports are cached in Redis for 24 hours and stored in PostgreSQL with expiry metadata.
 - The backend bootstraps relational tables on startup for local Docker development. Production should still run Alembic migrations explicitly.
+- Production startup now fails fast if KOMOJU/Resend credentials are missing or `FRONTEND_URL` still points to `localhost`.
 - `analyze_clause_risk` performs RAG lookup internally; there is no separate retrieval node.
 
 ## Repo Pointers

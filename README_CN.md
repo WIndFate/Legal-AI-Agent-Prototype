@@ -11,7 +11,7 @@
 - `upload -> payment/create -> review/stream -> report -> 合同文本删除`
 - `pgvector` RAG 已运行在 PostgreSQL 中
 - 前端 9 语言界面已实现
-- 当 `KOMOJU_SECRET_KEY` 为空时，本地开发可走自动支付
+- 仅当 `APP_ENV=development` 且 `KOMOJU_SECRET_KEY` 为空时，本地开发可走自动支付
 
 仓库外仍待完成：
 
@@ -64,6 +64,7 @@ RAG：
 ```bash
 cp .env.example .env
 # 在 .env 中填写 OPENAI_API_KEY
+# 本地 Docker 保持 APP_ENV=development
 
 docker compose up --build
 ```
@@ -79,7 +80,7 @@ docker compose up --build
 1. 打开前端并上传文本、图片或 PDF 合同。
 2. 查看 token 估算、定价和 PII 提示。
 3. 创建支付订单。
-4. 本地开发时如果 `KOMOJU_SECRET_KEY` 为空，订单会自动标记为已支付并跳到审查页。
+4. 本地开发时如果 `APP_ENV=development` 且 `KOMOJU_SECRET_KEY` 为空，订单会自动标记为已支付并跳到审查页。
 5. 在 `/review/:orderId` 观看 SSE 流式分析。
 6. 在 `/report/:orderId` 获取已保存报告。
 
@@ -89,6 +90,7 @@ docker compose up --build
 - 分析完成后，`orders.contract_text` 会被置为 `NULL`。
 - 报告会缓存到 Redis 24 小时，并在 PostgreSQL 中保存带过期时间的记录。
 - 为了本地 Docker 开发可直接运行，后端启动时会自动补齐关系表。生产环境仍应显式执行 Alembic migration。
+- 生产环境如果缺少 KOMOJU / Resend 关键配置，或 `FRONTEND_URL` 仍指向 `localhost`，启动会直接失败。
 - `analyze_clause_risk` 工具内部直接做 RAG 检索，没有单独的 retrieval node。
 
 ## 仓库入口

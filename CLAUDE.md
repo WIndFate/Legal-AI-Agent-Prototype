@@ -69,6 +69,7 @@ Built with LangGraph (agentic loop), PostgreSQL pgvector (RAG), FastAPI (REST + 
 
 Current status as of 2026-03-24:
 - Local Docker end-to-end flow is verified through upload, payment creation, SSE review, report retrieval, and contract deletion.
+- `APP_ENV=development` enables local-only conveniences such as auto table bootstrap and dev payment bypass.
 - Production deployment and third-party production credentials are still pending.
 
 ---
@@ -216,8 +217,14 @@ Embeddings are generated via OpenAI API (httpx direct call, not langchain).
 - Nullifies `contract_text` for completed orders (defense in depth)
 
 ### Local startup bootstrap
-- `main.py` calls `init_db()` during startup so local Docker development can create `orders`, `reports`, and `referrals` automatically.
+- `main.py` calls `init_db()` only when `APP_ENV=development`, so local Docker development can create `orders`, `reports`, and `referrals` automatically.
 - Production environments should still run Alembic migrations explicitly rather than relying on implicit table creation.
+
+### Environment safety rails
+- `APP_ENV` must be either `development` or `production`; default is `development`.
+- Dev payment bypass is allowed only in `development` when KOMOJU is not configured.
+- In `production`, startup fails if KOMOJU or Resend credentials are missing, or if `FRONTEND_URL` points to `localhost`.
+- In `production`, CORS is restricted to `FRONTEND_URL` only.
 
 ### RAG evaluation
 `GET /api/eval/rag` runs Recall@K and MRR against `eval_dataset.json`.
