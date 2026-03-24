@@ -101,6 +101,7 @@ docker compose up -d backend postgres redis
 7. During the live review, the UI now shows user-facing progress text instead of raw internal tool names.
 8. The saved report keeps the language chosen at payment time; switching the site language later only changes the page chrome.
 9. On the same device session that uploaded the contract, each clause analysis can expand its matching original clause inline for direct comparison. Shared links and emailed links do not include that original text.
+10. Expanded clause comparison is optimized for readability: mobile keeps a stacked reading flow, while larger screens place the original clause beside the analysis content.
 
 ## Important Implementation Notes
 

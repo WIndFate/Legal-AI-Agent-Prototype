@@ -255,6 +255,7 @@ Embeddings are generated via OpenAI API (httpx direct call, not langchain).
 - `/api/report/{order_id}` must return the same payload shape whether data comes from Redis or PostgreSQL.
 - Report content is fixed in the language chosen at payment time; later UI language switches only affect surrounding page chrome unless an explicit re-translation feature is implemented.
 - Same-session original contract comparison should be clause-level and inline with each analysis card, not as a full-document dump at the bottom of the page.
+- On larger screens, inline clause comparison can use a split layout, but mobile should preserve a single-column reading flow.
 - Original clause text may be present in the SSE completion payload and same-session frontend storage, but must be stripped before database persistence, Redis caching, shared-link rendering, and email delivery.
 
 ### RAG evaluation
