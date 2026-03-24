@@ -16,7 +16,19 @@
     "pdf": "Upload PDF",
     "paste": "Paste Text",
     "placeholder": "Paste your contract text here...",
-    "submit": "Start Analysis"
+    "submit": "Start Analysis",
+    "hero_kicker": "AI Contract Risk Analysis",
+    "hero_body": "Upload a Japanese contract — photo, PDF, or text. AI analyzes each clause for risk and delivers improvement suggestions in your language.",
+    "how_it_works": "How It Works",
+    "flow_upload_title": "Upload Your Contract",
+    "flow_upload_desc": "Photo, PDF, or pasted text",
+    "flow_review_title": "AI Analyzes Risks",
+    "flow_review_desc": "Each clause checked against relevant laws",
+    "flow_report_title": "Get Your Report",
+    "flow_report_desc": "Delivered instantly in your language",
+    "trust_privacy": "Contract deleted after analysis",
+    "trust_no_account": "No account required",
+    "trust_payg": "Pay per use, no subscription"
   },
   "pii": {
     "warning": "Personal information detected. Please review before submitting.",
@@ -33,7 +45,12 @@
     "tier_basic": "Basic (1–3 pages)",
     "tier_standard": "Standard (4–10 pages)",
     "tier_detailed": "Detailed Analysis (11–30 pages)",
-    "tier_complex": "Complex Contract (31+ pages)"
+    "tier_complex": "Complex Contract (31+ pages)",
+    "estimated_tokens": "Estimated tokens",
+    "assurance_privacy_title": "Privacy Protected",
+    "assurance_privacy_desc": "Your contract is deleted from the server immediately after analysis",
+    "assurance_delivery_title": "Instant Delivery",
+    "assurance_delivery_desc": "Report link sent to your email as soon as analysis completes"
   },
   "payment": {
     "title": "Payment",
@@ -42,7 +59,10 @@
     "referral_label": "Referral code (optional)",
     "referral_placeholder": "Enter referral code",
     "pay_button": "Pay ¥{{price}}",
-    "processing": "Processing..."
+    "processing": "Processing...",
+    "secure_note": "Secure payment via SSL encryption",
+    "waiting_note": "Processing payment. Please do not close this page.",
+    "success_note": "Payment successful. Analysis will begin shortly."
   },
   "review": {
     "title": "Analyzing",
@@ -52,7 +72,14 @@
     "step_generating": "Generating report...",
     "tool_analyze_clause_risk": "Checking relevant laws and risk grounds...",
     "tool_generate_suggestion": "Drafting clearer revision suggestions...",
-    "tool_processing_clause": "Processing this clause..."
+    "tool_processing_clause": "Processing this clause...",
+    "live_label": "Live Analysis",
+    "phase_parsing_title": "Parsing Contract Clauses",
+    "phase_parsing_desc": "Reading the contract structure and clauses...",
+    "phase_analyzing_title": "Evaluating Risks",
+    "phase_analyzing_desc": "Analyzing each clause against relevant laws...",
+    "phase_generating_title": "Generating Report",
+    "phase_generating_desc": "Compiling analysis results into a clear report..."
   },
   "report": {
     "title": "Analysis Report",
@@ -72,7 +99,10 @@
     "original_clause_label": "Original clause",
     "original_contract_title": "Original Contract Reference",
     "original_contract_session_note": "Visible only in the current session on this device so you can compare it with the analysis. The server has already deleted the original contract text.",
-    "original_contract_shared_note": "Visible only in the current session on the device that uploaded the contract. For privacy reasons, shared links and emailed links never include the original contract text."
+    "original_contract_shared_note": "Visible only in the current session on the device that uploaded the contract. For privacy reasons, shared links and emailed links never include the original contract text.",
+    "executive_kicker": "Analysis Report",
+    "comparison_hint": "Compare with the original clause inside each analysis card",
+    "clause_count": "Clauses"
   },
   "errors": {
     "upload_failed": "Upload failed. Please try again.",

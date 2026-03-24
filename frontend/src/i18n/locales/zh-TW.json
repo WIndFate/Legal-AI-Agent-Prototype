@@ -16,7 +16,19 @@
     "pdf": "上傳PDF",
     "paste": "貼上文字",
     "placeholder": "請將合約文字貼到此處…",
-    "submit": "開始分析"
+    "submit": "開始分析",
+    "hero_kicker": "AI合約風險分析",
+    "hero_body": "上傳日語合約（拍照、PDF或文字），AI逐條分析風險並以您的語言給出改善建議。一杯咖啡的價格，即刻獲得專業級分析。",
+    "how_it_works": "使用流程",
+    "flow_upload_title": "上傳合約",
+    "flow_upload_desc": "支援拍照、PDF、文字貼上",
+    "flow_review_title": "AI分析風險",
+    "flow_review_desc": "對照相關法條逐條評估",
+    "flow_report_title": "取得報告",
+    "flow_report_desc": "以選定語言即時送達",
+    "trust_privacy": "分析後立即刪除合約",
+    "trust_no_account": "無需註冊帳號",
+    "trust_payg": "按次付費，無訂閱"
   },
   "pii": {
     "warning": "偵測到個人資料，請在提交前確認。",
@@ -33,7 +45,12 @@
     "tier_basic": "基礎版（1~3頁）",
     "tier_standard": "標準版（4~10頁）",
     "tier_detailed": "詳細分析（11~30頁）",
-    "tier_complex": "複雜合約（31頁以上）"
+    "tier_complex": "複雜合約（31頁以上）",
+    "estimated_tokens": "預估Token數",
+    "assurance_privacy_title": "隱私保護",
+    "assurance_privacy_desc": "合約文本在分析完成後立即從伺服器刪除",
+    "assurance_delivery_title": "即時送達",
+    "assurance_delivery_desc": "分析完成後報告連結立即寄送至您的信箱"
   },
   "payment": {
     "title": "付款",
@@ -42,7 +59,10 @@
     "referral_label": "推薦碼（選填）",
     "referral_placeholder": "請輸入推薦碼",
     "pay_button": "支付 ¥{{price}}",
-    "processing": "處理中…"
+    "processing": "處理中…",
+    "secure_note": "SSL加密安全付款",
+    "waiting_note": "正在處理付款，請勿關閉此頁面。",
+    "success_note": "付款成功，即將開始分析。"
   },
   "review": {
     "title": "正在分析",
@@ -52,7 +72,14 @@
     "step_generating": "正在產生報告…",
     "tool_analyze_clause_risk": "正在檢索相關法條與風險依據…",
     "tool_generate_suggestion": "正在產生更容易理解的修改建議…",
-    "tool_processing_clause": "正在處理目前條款…"
+    "tool_processing_clause": "正在處理目前條款…",
+    "live_label": "即時分析",
+    "phase_parsing_title": "正在解析合約條款",
+    "phase_parsing_desc": "正在識別合約結構和各條款內容…",
+    "phase_analyzing_title": "正在評估風險",
+    "phase_analyzing_desc": "正在對照相關法條分析各條款風險…",
+    "phase_generating_title": "正在產生報告",
+    "phase_generating_desc": "正在將分析結果整理為易讀報告…"
   },
   "report": {
     "title": "分析報告",
@@ -72,7 +99,10 @@
     "original_clause_label": "對應原條款",
     "original_contract_title": "原合約對照",
     "original_contract_session_note": "僅在本裝置目前工作階段中可見，方便與分析結果對照閱讀；伺服器端已刪除原合約文本。",
-    "original_contract_shared_note": "僅在上傳合約的同一裝置目前工作階段中可見。基於隱私保護，分享連結與郵件連結都不會帶出原合約全文。"
+    "original_contract_shared_note": "僅在上傳合約的同一裝置目前工作階段中可見。基於隱私保護，分享連結與郵件連結都不會帶出原合約全文。",
+    "executive_kicker": "分析報告",
+    "comparison_hint": "可在各條款分析卡內查看對應原文對比",
+    "clause_count": "條款數"
   },
   "errors": {
     "upload_failed": "上傳失敗，請重試。",

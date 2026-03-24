@@ -16,7 +16,19 @@
     "pdf": "上传PDF",
     "paste": "粘贴文本",
     "placeholder": "请将合同文本粘贴到此处…",
-    "submit": "开始分析"
+    "submit": "开始分析",
+    "hero_kicker": "AI合同风险分析",
+    "hero_body": "上传日语合同（拍照、PDF或文本），AI逐条分析风险并以你的语言给出改善建议。一杯咖啡的价格，即刻获得专业级分析。",
+    "how_it_works": "使用流程",
+    "flow_upload_title": "上传合同",
+    "flow_upload_desc": "支持拍照、PDF、文本粘贴",
+    "flow_review_title": "AI分析风险",
+    "flow_review_desc": "对照相关法条逐条评估",
+    "flow_report_title": "获取报告",
+    "flow_report_desc": "以选定语言即时送达",
+    "trust_privacy": "分析后立即删除合同",
+    "trust_no_account": "无需注册账号",
+    "trust_payg": "按次付费，无订阅"
   },
   "pii": {
     "warning": "检测到个人信息，请在提交前确认。",
@@ -33,7 +45,12 @@
     "tier_basic": "基础版（1~3页）",
     "tier_standard": "标准版（4~10页）",
     "tier_detailed": "详细分析（11~30页）",
-    "tier_complex": "复杂合同（31页以上）"
+    "tier_complex": "复杂合同（31页以上）",
+    "estimated_tokens": "预估Token数",
+    "assurance_privacy_title": "隐私保护",
+    "assurance_privacy_desc": "合同文本在分析完成后立即从服务器删除",
+    "assurance_delivery_title": "即时送达",
+    "assurance_delivery_desc": "分析完成后报告链接立即发送至您的邮箱"
   },
   "payment": {
     "title": "支付",
@@ -42,7 +59,10 @@
     "referral_label": "推荐码（可选）",
     "referral_placeholder": "请输入推荐码",
     "pay_button": "支付 ¥{{price}}",
-    "processing": "处理中…"
+    "processing": "处理中…",
+    "secure_note": "SSL加密安全支付",
+    "waiting_note": "正在处理支付，请勿关闭此页面。",
+    "success_note": "支付成功，即将开始分析。"
   },
   "review": {
     "title": "正在分析",
@@ -52,7 +72,14 @@
     "step_generating": "正在生成报告…",
     "tool_analyze_clause_risk": "正在检索相关法条与风险依据…",
     "tool_generate_suggestion": "正在生成更易理解的修改建议…",
-    "tool_processing_clause": "正在处理当前条款…"
+    "tool_processing_clause": "正在处理当前条款…",
+    "live_label": "实时分析",
+    "phase_parsing_title": "正在解析合同条款",
+    "phase_parsing_desc": "正在识别合同结构和各条款内容…",
+    "phase_analyzing_title": "正在评估风险",
+    "phase_analyzing_desc": "正在对照相关法条分析各条款风险…",
+    "phase_generating_title": "正在生成报告",
+    "phase_generating_desc": "正在将分析结果整理为易读报告…"
   },
   "report": {
     "title": "分析报告",
@@ -72,7 +99,10 @@
     "original_clause_label": "对应原条款",
     "original_contract_title": "原合同对照",
     "original_contract_session_note": "仅在本设备当前会话中可见，方便与分析结果对照阅读；服务端已删除原合同文本。",
-    "original_contract_shared_note": "仅在上传合同的同一设备当前会话中可见。出于隐私保护，分享链接和邮件链接都不会带出原合同全文。"
+    "original_contract_shared_note": "仅在上传合同的同一设备当前会话中可见。出于隐私保护，分享链接和邮件链接都不会带出原合同全文。",
+    "executive_kicker": "分析报告",
+    "comparison_hint": "可在各条款分析卡内查看对应原文对比",
+    "clause_count": "条款数"
   },
   "errors": {
     "upload_failed": "上传失败，请重试。",

@@ -16,7 +16,19 @@
     "pdf": "Tải lên PDF",
     "paste": "Dán văn bản",
     "placeholder": "Dán nội dung hợp đồng vào đây…",
-    "submit": "Bắt đầu phân tích"
+    "submit": "Bắt đầu phân tích",
+    "hero_kicker": "Phân tích rủi ro hợp đồng bằng AI",
+    "hero_body": "Tải lên hợp đồng tiếng Nhật — ảnh, PDF hoặc văn bản. AI phân tích từng điều khoản về rủi ro và đưa ra đề xuất cải thiện bằng ngôn ngữ của bạn.",
+    "how_it_works": "Cách hoạt động",
+    "flow_upload_title": "Tải lên hợp đồng",
+    "flow_upload_desc": "Hỗ trợ ảnh, PDF, dán văn bản",
+    "flow_review_title": "AI phân tích rủi ro",
+    "flow_review_desc": "Đối chiếu từng điều khoản với luật liên quan",
+    "flow_report_title": "Nhận báo cáo",
+    "flow_report_desc": "Gửi ngay bằng ngôn ngữ bạn chọn",
+    "trust_privacy": "Hợp đồng xóa ngay sau phân tích",
+    "trust_no_account": "Không cần đăng ký tài khoản",
+    "trust_payg": "Trả theo lần, không đăng ký thuê bao"
   },
   "pii": {
     "warning": "Phát hiện thông tin cá nhân. Vui lòng kiểm tra trước khi gửi.",
@@ -33,7 +45,12 @@
     "tier_basic": "Cơ bản (1–3 trang)",
     "tier_standard": "Tiêu chuẩn (4–10 trang)",
     "tier_detailed": "Phân tích chi tiết (11–30 trang)",
-    "tier_complex": "Hợp đồng phức tạp (trên 31 trang)"
+    "tier_complex": "Hợp đồng phức tạp (trên 31 trang)",
+    "estimated_tokens": "Số token ước tính",
+    "assurance_privacy_title": "Bảo vệ quyền riêng tư",
+    "assurance_privacy_desc": "Hợp đồng được xóa khỏi máy chủ ngay sau khi phân tích xong",
+    "assurance_delivery_title": "Gửi báo cáo ngay",
+    "assurance_delivery_desc": "Liên kết báo cáo được gửi tới email của bạn ngay khi phân tích hoàn tất"
   },
   "payment": {
     "title": "Thanh toán",
@@ -42,7 +59,10 @@
     "referral_label": "Mã giới thiệu (tùy chọn)",
     "referral_placeholder": "Nhập mã giới thiệu",
     "pay_button": "Thanh toán ¥{{price}}",
-    "processing": "Đang xử lý…"
+    "processing": "Đang xử lý…",
+    "secure_note": "Thanh toán an toàn qua mã hóa SSL",
+    "waiting_note": "Đang xử lý thanh toán. Vui lòng không đóng trang này.",
+    "success_note": "Thanh toán thành công. Phân tích sẽ bắt đầu ngay."
   },
   "review": {
     "title": "Đang phân tích",
@@ -52,7 +72,14 @@
     "step_generating": "Đang tạo báo cáo…",
     "tool_analyze_clause_risk": "Đang kiểm tra căn cứ pháp luật và cơ sở rủi ro liên quan…",
     "tool_generate_suggestion": "Đang soạn đề xuất chỉnh sửa dễ hiểu hơn…",
-    "tool_processing_clause": "Đang xử lý điều khoản này…"
+    "tool_processing_clause": "Đang xử lý điều khoản này…",
+    "live_label": "Phân tích trực tiếp",
+    "phase_parsing_title": "Đang phân tách điều khoản",
+    "phase_parsing_desc": "Đang đọc cấu trúc và các điều khoản hợp đồng…",
+    "phase_analyzing_title": "Đang đánh giá rủi ro",
+    "phase_analyzing_desc": "Đang phân tích từng điều khoản theo luật liên quan…",
+    "phase_generating_title": "Đang tạo báo cáo",
+    "phase_generating_desc": "Đang tổng hợp kết quả phân tích thành báo cáo rõ ràng…"
   },
   "report": {
     "title": "Báo cáo phân tích",
@@ -72,7 +99,10 @@
     "original_clause_label": "Điều khoản gốc",
     "original_contract_title": "Đối chiếu hợp đồng gốc",
     "original_contract_session_note": "Chỉ hiển thị trong phiên hiện tại trên thiết bị này để bạn đối chiếu với kết quả phân tích. Máy chủ đã xóa văn bản hợp đồng gốc.",
-    "original_contract_shared_note": "Chỉ hiển thị trong phiên hiện tại trên đúng thiết bị đã tải hợp đồng lên. Vì lý do riêng tư, liên kết chia sẻ và liên kết email không bao gồm toàn văn hợp đồng gốc."
+    "original_contract_shared_note": "Chỉ hiển thị trong phiên hiện tại trên đúng thiết bị đã tải hợp đồng lên. Vì lý do riêng tư, liên kết chia sẻ và liên kết email không bao gồm toàn văn hợp đồng gốc.",
+    "executive_kicker": "Báo cáo phân tích",
+    "comparison_hint": "So sánh với điều khoản gốc trong mỗi thẻ phân tích",
+    "clause_count": "Số điều khoản"
   },
   "errors": {
     "upload_failed": "Tải lên thất bại. Vui lòng thử lại.",

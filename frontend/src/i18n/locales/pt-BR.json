@@ -16,7 +16,19 @@
     "pdf": "Enviar PDF",
     "paste": "Colar texto",
     "placeholder": "Cole o texto do contrato aqui…",
-    "submit": "Iniciar análise"
+    "submit": "Iniciar análise",
+    "hero_kicker": "Análise de Riscos Contratuais com IA",
+    "hero_body": "Envie um contrato em japonês — foto, PDF ou texto. A IA analisa cada cláusula quanto a riscos e entrega sugestões de melhoria no seu idioma.",
+    "how_it_works": "Como funciona",
+    "flow_upload_title": "Envie seu contrato",
+    "flow_upload_desc": "Foto, PDF ou texto colado",
+    "flow_review_title": "IA analisa os riscos",
+    "flow_review_desc": "Cada cláusula verificada com a legislação relevante",
+    "flow_report_title": "Receba seu relatório",
+    "flow_report_desc": "Entregue instantaneamente no seu idioma",
+    "trust_privacy": "Contrato excluído após análise",
+    "trust_no_account": "Sem necessidade de cadastro",
+    "trust_payg": "Pague por uso, sem assinatura"
   },
   "pii": {
     "warning": "Informações pessoais detectadas. Verifique antes de enviar.",
@@ -33,7 +45,12 @@
     "tier_basic": "Básico (1–3 páginas)",
     "tier_standard": "Padrão (4–10 páginas)",
     "tier_detailed": "Análise detalhada (11–30 páginas)",
-    "tier_complex": "Contrato complexo (31+ páginas)"
+    "tier_complex": "Contrato complexo (31+ páginas)",
+    "estimated_tokens": "Tokens estimados",
+    "assurance_privacy_title": "Privacidade protegida",
+    "assurance_privacy_desc": "Seu contrato é excluído do servidor imediatamente após a análise",
+    "assurance_delivery_title": "Entrega instantânea",
+    "assurance_delivery_desc": "Link do relatório enviado ao seu e-mail assim que a análise for concluída"
   },
   "payment": {
     "title": "Pagamento",
@@ -42,7 +59,10 @@
     "referral_label": "Código de indicação (opcional)",
     "referral_placeholder": "Digite o código de indicação",
     "pay_button": "Pagar ¥{{price}}",
-    "processing": "Processando…"
+    "processing": "Processando…",
+    "secure_note": "Pagamento seguro via criptografia SSL",
+    "waiting_note": "Processando pagamento. Não feche esta página.",
+    "success_note": "Pagamento realizado. A análise começará em breve."
   },
   "review": {
     "title": "Analisando",
@@ -52,7 +72,14 @@
     "step_generating": "Gerando relatório…",
     "tool_analyze_clause_risk": "Verificando fundamentos legais e bases de risco relacionadas…",
     "tool_generate_suggestion": "Criando sugestões de revisão mais fáceis de entender…",
-    "tool_processing_clause": "Processando esta cláusula…"
+    "tool_processing_clause": "Processando esta cláusula…",
+    "live_label": "Análise ao vivo",
+    "phase_parsing_title": "Analisando cláusulas do contrato",
+    "phase_parsing_desc": "Lendo a estrutura e as cláusulas do contrato…",
+    "phase_analyzing_title": "Avaliando riscos",
+    "phase_analyzing_desc": "Analisando cada cláusula com base na legislação relevante…",
+    "phase_generating_title": "Gerando relatório",
+    "phase_generating_desc": "Compilando os resultados em um relatório claro…"
   },
   "report": {
     "title": "Relatório de Análise",
@@ -72,7 +99,10 @@
     "original_clause_label": "Cláusula original",
     "original_contract_title": "Referência do contrato original",
     "original_contract_session_note": "Visível apenas na sessão atual deste dispositivo para comparação com a análise. O servidor já excluiu o texto original do contrato.",
-    "original_contract_shared_note": "Visível apenas na sessão atual do mesmo dispositivo que enviou o contrato. Por privacidade, links compartilhados e links por e-mail nunca incluem o texto original do contrato."
+    "original_contract_shared_note": "Visível apenas na sessão atual do mesmo dispositivo que enviou o contrato. Por privacidade, links compartilhados e links por e-mail nunca incluem o texto original do contrato.",
+    "executive_kicker": "Relatório de Análise",
+    "comparison_hint": "Compare com a cláusula original dentro de cada cartão de análise",
+    "clause_count": "Cláusulas"
   },
   "errors": {
     "upload_failed": "Falha no envio. Tente novamente.",

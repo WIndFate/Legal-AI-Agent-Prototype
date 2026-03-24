@@ -16,7 +16,19 @@
     "pdf": "PDFをアップロード",
     "paste": "テキストを貼り付け",
     "placeholder": "契約書のテキストをここに貼り付けてください…",
-    "submit": "分析を開始"
+    "submit": "分析を開始",
+    "hero_kicker": "AI契約リスク分析",
+    "hero_body": "日本語の契約書を写真・PDF・テキストでアップロードするだけ。AIが条項ごとのリスクと改善案をあなたの言語でお届けします。",
+    "how_it_works": "ご利用の流れ",
+    "flow_upload_title": "契約書をアップロード",
+    "flow_upload_desc": "写真・PDF・テキストに対応",
+    "flow_review_title": "AIがリスクを分析",
+    "flow_review_desc": "関連法令に照らして条項ごとに評価",
+    "flow_report_title": "レポートを受け取る",
+    "flow_report_desc": "選択した言語で即時にお届け",
+    "trust_privacy": "契約書は分析後すぐに削除",
+    "trust_no_account": "アカウント登録不要",
+    "trust_payg": "都度払い・サブスク無し"
   },
   "pii": {
     "warning": "個人情報が検出されました。送信前にご確認ください。",
@@ -33,7 +45,12 @@
     "tier_basic": "ベーシック（1〜3ページ）",
     "tier_standard": "スタンダード（4〜10ページ）",
     "tier_detailed": "詳細分析（11〜30ページ）",
-    "tier_complex": "複雑な契約（31ページ以上）"
+    "tier_complex": "複雑な契約（31ページ以上）",
+    "estimated_tokens": "推定トークン数",
+    "assurance_privacy_title": "プライバシー保護",
+    "assurance_privacy_desc": "契約書は分析完了後にサーバーから即時削除されます",
+    "assurance_delivery_title": "即時レポート配信",
+    "assurance_delivery_desc": "分析完了後すぐにメールでレポートリンクをお届けします"
   },
   "payment": {
     "title": "お支払い",
@@ -42,7 +59,10 @@
     "referral_label": "紹介コード（任意）",
     "referral_placeholder": "紹介コードを入力",
     "pay_button": "¥{{price}} で支払う",
-    "processing": "処理中…"
+    "processing": "処理中…",
+    "secure_note": "SSL暗号化で安全にお支払い",
+    "waiting_note": "決済処理中です。このページを閉じないでください。",
+    "success_note": "お支払い完了。まもなく分析を開始します。"
   },
   "review": {
     "title": "分析中",
@@ -52,7 +72,14 @@
     "step_generating": "レポートを作成中…",
     "tool_analyze_clause_risk": "関連法令とリスク根拠を確認しています…",
     "tool_generate_suggestion": "より分かりやすい修正文案を作成しています…",
-    "tool_processing_clause": "この条項を処理しています…"
+    "tool_processing_clause": "この条項を処理しています…",
+    "live_label": "リアルタイム分析",
+    "phase_parsing_title": "契約条項を解析中",
+    "phase_parsing_desc": "契約書の構造と条項を読み取っています…",
+    "phase_analyzing_title": "リスクを評価中",
+    "phase_analyzing_desc": "各条項を関連法令に照らして分析しています…",
+    "phase_generating_title": "レポートを作成中",
+    "phase_generating_desc": "分析結果を分かりやすいレポートにまとめています…"
   },
   "report": {
     "title": "分析レポート",
@@ -72,7 +99,10 @@
     "original_clause_label": "元の条項",
     "original_contract_title": "元契約の参照",
     "original_contract_session_note": "この端末の現在セッションでのみ表示され、分析結果との見比べに使えます。サーバー側では元契約本文はすでに削除されています。",
-    "original_contract_shared_note": "契約書をアップロードした同じ端末の現在セッションでのみ表示されます。プライバシー保護のため、共有リンクやメールリンクには元契約本文は含まれません。"
+    "original_contract_shared_note": "契約書をアップロードした同じ端末の現在セッションでのみ表示されます。プライバシー保護のため、共有リンクやメールリンクには元契約本文は含まれません。",
+    "executive_kicker": "分析レポート",
+    "comparison_hint": "各条項の分析カード内で元の条項と比較できます",
+    "clause_count": "条項数"
   },
   "errors": {
     "upload_failed": "アップロードに失敗しました。もう一度お試しください。",

@@ -16,7 +16,19 @@
     "pdf": "Unggah PDF",
     "paste": "Tempel teks",
     "placeholder": "Tempel teks kontrak di sini…",
-    "submit": "Mulai analisis"
+    "submit": "Mulai analisis",
+    "hero_kicker": "Analisis Risiko Kontrak dengan AI",
+    "hero_body": "Unggah kontrak berbahasa Jepang — foto, PDF, atau teks. AI menganalisis setiap pasal untuk risiko dan memberikan saran perbaikan dalam bahasa Anda.",
+    "how_it_works": "Cara Kerja",
+    "flow_upload_title": "Unggah kontrak Anda",
+    "flow_upload_desc": "Foto, PDF, atau teks yang ditempel",
+    "flow_review_title": "AI menganalisis risiko",
+    "flow_review_desc": "Setiap pasal diperiksa terhadap hukum terkait",
+    "flow_report_title": "Terima laporan Anda",
+    "flow_report_desc": "Dikirim langsung dalam bahasa Anda",
+    "trust_privacy": "Kontrak dihapus setelah analisis",
+    "trust_no_account": "Tanpa perlu mendaftar",
+    "trust_payg": "Bayar per penggunaan, tanpa langganan"
   },
   "pii": {
     "warning": "Informasi pribadi terdeteksi. Harap periksa sebelum mengirim.",
@@ -33,7 +45,12 @@
     "tier_basic": "Dasar (1–3 halaman)",
     "tier_standard": "Standar (4–10 halaman)",
     "tier_detailed": "Analisis detail (11–30 halaman)",
-    "tier_complex": "Kontrak kompleks (31+ halaman)"
+    "tier_complex": "Kontrak kompleks (31+ halaman)",
+    "estimated_tokens": "Perkiraan token",
+    "assurance_privacy_title": "Privasi terlindungi",
+    "assurance_privacy_desc": "Kontrak Anda dihapus dari server segera setelah analisis",
+    "assurance_delivery_title": "Pengiriman instan",
+    "assurance_delivery_desc": "Tautan laporan dikirim ke email Anda segera setelah analisis selesai"
   },
   "payment": {
     "title": "Pembayaran",
@@ -42,7 +59,10 @@
     "referral_label": "Kode referral (opsional)",
     "referral_placeholder": "Masukkan kode referral",
     "pay_button": "Bayar ¥{{price}}",
-    "processing": "Memproses…"
+    "processing": "Memproses…",
+    "secure_note": "Pembayaran aman melalui enkripsi SSL",
+    "waiting_note": "Memproses pembayaran. Jangan tutup halaman ini.",
+    "success_note": "Pembayaran berhasil. Analisis akan segera dimulai."
   },
   "review": {
     "title": "Menganalisis",
@@ -52,7 +72,14 @@
     "step_generating": "Membuat laporan…",
     "tool_analyze_clause_risk": "Memeriksa dasar hukum dan alasan risiko yang relevan…",
     "tool_generate_suggestion": "Menyusun saran revisi yang lebih mudah dipahami…",
-    "tool_processing_clause": "Memproses klausul ini…"
+    "tool_processing_clause": "Memproses klausul ini…",
+    "live_label": "Analisis langsung",
+    "phase_parsing_title": "Mengurai pasal-pasal kontrak",
+    "phase_parsing_desc": "Membaca struktur dan pasal-pasal kontrak…",
+    "phase_analyzing_title": "Mengevaluasi risiko",
+    "phase_analyzing_desc": "Menganalisis setiap pasal berdasarkan hukum terkait…",
+    "phase_generating_title": "Membuat laporan",
+    "phase_generating_desc": "Menyusun hasil analisis menjadi laporan yang jelas…"
   },
   "report": {
     "title": "Laporan Analisis",
@@ -72,7 +99,10 @@
     "original_clause_label": "Klausul asli",
     "original_contract_title": "Perbandingan kontrak asli",
     "original_contract_session_note": "Hanya terlihat pada sesi saat ini di perangkat ini agar Anda bisa membandingkannya dengan hasil analisis. Server sudah menghapus teks kontrak asli.",
-    "original_contract_shared_note": "Hanya terlihat pada sesi saat ini di perangkat yang sama yang mengunggah kontrak. Demi privasi, tautan bagikan dan tautan email tidak pernah menyertakan teks kontrak asli."
+    "original_contract_shared_note": "Hanya terlihat pada sesi saat ini di perangkat yang sama yang mengunggah kontrak. Demi privasi, tautan bagikan dan tautan email tidak pernah menyertakan teks kontrak asli.",
+    "executive_kicker": "Laporan Analisis",
+    "comparison_hint": "Bandingkan dengan klausul asli di dalam setiap kartu analisis",
+    "clause_count": "Jumlah pasal"
   },
   "errors": {
     "upload_failed": "Gagal mengunggah. Silakan coba lagi.",
