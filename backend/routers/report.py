@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from backend.db.session import get_db
 from backend.models.report import Report
 from backend.services.report_cache import get_cached_report
+from backend.services.analytics import capture as posthog_capture
 
 logger = logging.getLogger(__name__)
 
@@ -20,6 +21,8 @@ async def get_report(
     db: AsyncSession = Depends(get_db),
 ):
     """Get analysis report by order ID. Checks Redis cache first, then DB."""
+    posthog_capture("anonymous", "report_viewed", {"order_id": order_id})
+
     # Try Redis cache first
     cached = await get_cached_report(order_id)
     if cached:

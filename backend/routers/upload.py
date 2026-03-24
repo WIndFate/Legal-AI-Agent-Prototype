@@ -8,6 +8,7 @@ from backend.services.token_estimator import estimate_tokens_and_price
 from backend.services.pii_detector import detect_pii
 from backend.services.ocr import extract_text_from_image
 from backend.services.pdf_extractor import extract_text_from_pdf
+from backend.services.analytics import capture as posthog_capture
 
 logger = logging.getLogger(__name__)
 
@@ -49,6 +50,18 @@ async def upload_contract(
 
     # Detect PII
     pii_warnings = detect_pii(contract_text)
+
+    posthog_capture(
+        "anonymous",
+        "contract_uploaded",
+        {
+            "input_type": input_type,
+            "estimated_tokens": estimation["estimated_tokens"],
+            "price_tier": estimation["price_tier"],
+            "price_jpy": estimation["price_jpy"],
+            "has_pii": len(pii_warnings) > 0,
+        },
+    )
 
     return UploadResponse(
         contract_text=contract_text,

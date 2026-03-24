@@ -8,6 +8,7 @@ from backend.db.session import get_db
 from backend.models.order import Order
 from backend.schemas.payment import PaymentCreateRequest, PaymentCreateResponse
 from backend.services.payment import create_payment_session, verify_webhook
+from backend.services.analytics import capture as posthog_capture
 
 logger = logging.getLogger(__name__)
 
@@ -41,6 +42,17 @@ async def create_payment(
         order_id=str(order.id),
         amount_jpy=request.price_jpy,
         email=request.email,
+    )
+
+    posthog_capture(
+        request.email,
+        "payment_created",
+        {
+            "order_id": str(order.id),
+            "price_jpy": request.price_jpy,
+            "price_tier": request.price_tier,
+            "has_referral": request.referral_code is not None,
+        },
     )
 
     return PaymentCreateResponse(
@@ -81,5 +93,10 @@ async def payment_webhook(
                 order.komoju_session_id = payment_data.get("id", "")
                 await db.commit()
                 logger.info("Order %s marked as paid", order_id)
+                posthog_capture(
+                    order.email or order_id,
+                    "payment_captured",
+                    {"order_id": order_id, "price_jpy": order.price_jpy},
+                )
 
     return {"ok": True}

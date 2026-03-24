@@ -14,6 +14,7 @@ from backend.schemas.order import ReviewStreamRequest
 from backend.agent.graph import run_review_stream
 from backend.services.report_cache import cache_report
 from backend.services.email import send_report_email
+from backend.services.analytics import capture as posthog_capture
 
 logger = logging.getLogger(__name__)
 
@@ -43,6 +44,12 @@ async def review_contract_stream(
     order.analysis_status = "processing"
     await db.commit()
 
+    posthog_capture(
+        order.email or str(order.id),
+        "review_started",
+        {"order_id": str(order.id), "target_language": order.target_language},
+    )
+
     contract_text = order.contract_text
     target_language = order.target_language
     order_id = str(order.id)
@@ -69,6 +76,15 @@ async def review_contract_stream(
                 await cache_report(order_id, final_report)
                 await send_report_email(email, order_id, target_language)
                 await _finalize_order(order_id, db)
+                posthog_capture(
+                    email or order_id,
+                    "review_completed",
+                    {
+                        "order_id": order_id,
+                        "overall_risk": final_report.get("overall_risk_level"),
+                        "total_clauses": final_report.get("total_clauses", 0),
+                    },
+                )
             except Exception as e:
                 logger.error("Post-analysis error for order %s: %s", order_id, e)
 
