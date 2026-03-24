@@ -17,8 +17,17 @@ logger = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    settings = get_settings()
+    settings.validate_runtime()
+
+    if settings.is_production and not settings.SENTRY_DSN:
+        logger.warning("APP_ENV=production but SENTRY_DSN is not configured.")
+    if settings.is_production and not settings.POSTHOG_API_KEY:
+        logger.warning("APP_ENV=production but POSTHOG_API_KEY is not configured.")
+
     # Bootstrap relational tables for local/dev startup.
-    await init_db()
+    if settings.should_bootstrap_db():
+        await init_db()
 
     # Initialize RAG knowledge base
     logger.info("Loading legal knowledge into RAG store...")
@@ -31,7 +40,6 @@ async def lifespan(app: FastAPI):
         logger.warning(f"Failed to load legal knowledge (will retry on first request): {e}")
 
     # Initialize Sentry
-    settings = get_settings()
     if settings.SENTRY_DSN:
         import sentry_sdk
         sentry_sdk.init(
@@ -82,11 +90,11 @@ app = FastAPI(
 settings = get_settings()
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        settings.FRONTEND_URL,
-        "http://localhost:5173",
-        "http://localhost:3000",
-    ],
+    allow_origins=(
+        [settings.FRONTEND_URL, "http://localhost:5173", "http://localhost:3000"]
+        if settings.is_development
+        else [settings.FRONTEND_URL]
+    ),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
