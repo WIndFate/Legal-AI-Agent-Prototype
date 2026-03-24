@@ -71,6 +71,7 @@ export default function PaymentPage() {
           <div className="loading-state">
             <div className="spinner" />
             <p className="status-text">{t('payment.processing')}</p>
+            <p className="status-subtext">{t('payment.waiting_note')}</p>
           </div>
         )}
 
@@ -78,6 +79,7 @@ export default function PaymentPage() {
           <div className="success-state">
             <div className="check-icon">&#10003;</div>
             <p className="status-text">{t('review.analyzing')}</p>
+            <p className="status-subtext">{t('payment.success_note')}</p>
           </div>
         )}
 

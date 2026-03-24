@@ -102,6 +102,45 @@ export default function HomePage() {
 
   return (
     <div className="page home-page">
+      <section className="hero-card">
+        <p className="section-kicker">{t('upload.hero_kicker')}</p>
+        <h2 className="hero-title">{t('app.title')}</h2>
+        <p className="hero-subtitle">{t('upload.hero_body')}</p>
+        <div className="trust-strip">
+          <span className="trust-pill">{t('upload.trust_privacy')}</span>
+          <span className="trust-pill">{t('upload.trust_no_account')}</span>
+          <span className="trust-pill">{t('upload.trust_payg')}</span>
+        </div>
+      </section>
+
+      <section className="flow-card">
+        <p className="section-kicker">{t('upload.how_it_works')}</p>
+        <div className="flow-steps">
+          <div className="flow-step">
+            <span className="flow-index">1</span>
+            <div>
+              <strong>{t('upload.flow_upload_title')}</strong>
+              <p>{t('upload.flow_upload_desc')}</p>
+            </div>
+          </div>
+          <div className="flow-step">
+            <span className="flow-index">2</span>
+            <div>
+              <strong>{t('upload.flow_review_title')}</strong>
+              <p>{t('upload.flow_review_desc')}</p>
+            </div>
+          </div>
+          <div className="flow-step">
+            <span className="flow-index">3</span>
+            <div>
+              <strong>{t('upload.flow_report_title')}</strong>
+              <p>{t('upload.flow_report_desc')}</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="upload-shell">
       <h2>{t('upload.title')}</h2>
 
       {/* Input mode tabs */}
@@ -174,12 +213,32 @@ export default function HomePage() {
 
       {/* Pricing estimate */}
       {uploadResult && uploadResult.price_jpy > 0 && (
-        <div className="pricing-card">
+        <div className="pricing-card polished-card">
           <h3>{t('pricing.title')}</h3>
-          <div className="pricing-details">
-            <p>{t('pricing.estimated_pages')}: {uploadResult.page_estimate}</p>
-            <p className="price-tier">{tierLabel(uploadResult.price_tier)}</p>
-            <p className="price-amount">¥{uploadResult.price_jpy.toLocaleString()}</p>
+          <div className="pricing-details pricing-summary-grid">
+            <div className="pricing-summary-item">
+              <span>{t('pricing.estimated_pages')}</span>
+              <strong>{uploadResult.page_estimate}</strong>
+            </div>
+            <div className="pricing-summary-item">
+              <span>{t('pricing.estimated_tokens')}</span>
+              <strong>{uploadResult.estimated_tokens.toLocaleString()}</strong>
+            </div>
+            <div className="pricing-summary-item pricing-summary-item-wide">
+              <span>{tierLabel(uploadResult.price_tier)}</span>
+              <p className="price-amount">¥{uploadResult.price_jpy.toLocaleString()}</p>
+            </div>
+          </div>
+
+          <div className="pricing-assurance">
+            <div className="assurance-item">
+              <strong>{t('pricing.assurance_privacy_title')}</strong>
+              <p>{t('pricing.assurance_privacy_desc')}</p>
+            </div>
+            <div className="assurance-item">
+              <strong>{t('pricing.assurance_delivery_title')}</strong>
+              <p>{t('pricing.assurance_delivery_desc')}</p>
+            </div>
           </div>
 
           {/* Payment form */}
@@ -210,9 +269,11 @@ export default function HomePage() {
             >
               {paying ? t('payment.processing') : t('payment.pay_button', { price: uploadResult.price_jpy.toLocaleString() })}
             </button>
+            <p className="payment-note">{t('payment.secure_note')}</p>
           </div>
         </div>
       )}
+      </section>
     </div>
   );
 }

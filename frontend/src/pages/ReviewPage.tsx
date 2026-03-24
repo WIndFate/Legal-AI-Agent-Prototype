@@ -68,6 +68,7 @@ export default function ReviewPage() {
   const [currentStep, setCurrentStep] = useState<AnalysisStep>('parsing');
   const [logLines, setLogLines] = useState<string[]>([]);
   const [expandedClauses, setExpandedClauses] = useState<Record<string, boolean>>({});
+  const [phaseText, setPhaseText] = useState('');
   const started = useRef(false);
 
   const toolLabel = (toolName?: string) => {
@@ -84,6 +85,16 @@ export default function ReviewPage() {
       ...prev,
       [clauseNumber]: !prev[clauseNumber],
     }));
+  };
+
+  const phaseMeta = (step: AnalysisStep) => {
+    if (step === 'parsing') {
+      return { title: t('review.phase_parsing_title'), desc: t('review.phase_parsing_desc') };
+    }
+    if (step === 'analyzing') {
+      return { title: t('review.phase_analyzing_title'), desc: t('review.phase_analyzing_desc') };
+    }
+    return { title: t('review.phase_generating_title'), desc: t('review.phase_generating_desc') };
   };
 
   useEffect(() => {
@@ -146,14 +157,24 @@ export default function ReviewPage() {
                   const matchedStep = STEP_DEFS.find(
                     (s) => evt.node && evt.node.includes(s.nodeMatch)
                   );
-                  if (matchedStep) setCurrentStep(matchedStep.key);
+                  if (matchedStep) {
+                    setCurrentStep(matchedStep.key);
+                    setPhaseText(phaseMeta(matchedStep.key).desc);
+                  }
                   break;
                 }
                 case 'tool_call':
-                  pushLog(toolLabel(evt.tool));
+                  {
+                    const line = toolLabel(evt.tool);
+                    pushLog(line);
+                    setPhaseText(line);
+                  }
                   break;
                 case 'tool_result':
-                  if (evt.text) pushLog(evt.text);
+                  if (evt.text) {
+                    pushLog(evt.text);
+                    setPhaseText(evt.text);
+                  }
                   break;
                 case 'complete':
                   if (evt.report) {
@@ -198,35 +219,39 @@ export default function ReviewPage() {
       {/* Streaming progress section */}
       {loading && (
         <div className="analyzing-section">
-          <h2>{t('review.title')}</h2>
+          <div className="review-live-card">
+            <p className="section-kicker">{t('review.live_label')}</p>
+            <h2>{phaseMeta(currentStep).title}</h2>
+            <p className="review-phase-text">{phaseText || phaseMeta(currentStep).desc}</p>
 
-          {/* Step progress indicator */}
-          <div className="step-progress">
-            {STEP_DEFS.map((step, idx) => {
-              let stepStatus: 'done' | 'active' | 'pending' = 'pending';
-              if (idx < currentStepIdx) stepStatus = 'done';
-              else if (idx === currentStepIdx) stepStatus = 'active';
+            {/* Step progress indicator */}
+            <div className="step-progress">
+              {STEP_DEFS.map((step, idx) => {
+                let stepStatus: 'done' | 'active' | 'pending' = 'pending';
+                if (idx < currentStepIdx) stepStatus = 'done';
+                else if (idx === currentStepIdx) stepStatus = 'active';
 
-              const labelKey = `review.step_${step.key}` as const;
-              return (
-                <div key={step.key} className={`step-item step-${stepStatus}`}>
-                  <div className="step-circle">
-                    {stepStatus === 'done' ? '\u2713' : idx + 1}
+                const labelKey = `review.step_${step.key}` as const;
+                return (
+                  <div key={step.key} className={`step-item step-${stepStatus}`}>
+                    <div className="step-circle">
+                      {stepStatus === 'done' ? '\u2713' : idx + 1}
+                    </div>
+                    <span className="step-label">{t(labelKey)}</span>
                   </div>
-                  <span className="step-label">{t(labelKey)}</span>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
 
-          {/* Spinner and live log */}
-          <div className="stream-log">
-            <div className="spinner" />
-            <p className="analyzing-text">{t('review.analyzing')}</p>
-            <div className="recent-log">
-              {logLines.map((line, i) => (
-                <p key={i} className="recent-log-line">{line}</p>
-              ))}
+            {/* Spinner and live log */}
+            <div className="stream-log polished-stream-log">
+              <div className="spinner" />
+              <p className="analyzing-text">{t('review.analyzing')}</p>
+              <div className="recent-log">
+                {logLines.map((line, i) => (
+                  <p key={i} className="recent-log-line">{line}</p>
+                ))}
+              </div>
             </div>
           </div>
         </div>
@@ -238,7 +263,11 @@ export default function ReviewPage() {
       {/* Report display */}
       {report && (
         <div className="report-section">
-          <h2>{t('report.title')}</h2>
+          <div className="report-summary-shell">
+            <p className="section-kicker">{t('report.executive_kicker')}</p>
+            <h2>{t('report.title')}</h2>
+            <p className="report-comparison-hint">{t('report.comparison_hint')}</p>
+          </div>
 
           {/* Overall risk card */}
           <div
@@ -255,16 +284,23 @@ export default function ReviewPage() {
               {t('report.overall_risk')}: {report.overall_risk_level}
             </span>
             <p className="summary">{report.summary}</p>
-            <div className="risk-stats">
-              <span className="stat high">
-                {t('report.high_risk')}: {report.high_risk_count}
-              </span>
-              <span className="stat medium">
-                {t('report.medium_risk')}: {report.medium_risk_count}
-              </span>
-              <span className="stat low">
-                {t('report.low_risk')}: {report.low_risk_count}
-              </span>
+            <div className="summary-metrics">
+              <div className="summary-metric">
+                <span>{t('report.clause_count')}</span>
+                <strong>{report.total_clauses}</strong>
+              </div>
+              <div className="summary-metric">
+                <span>{t('report.high_risk')}</span>
+                <strong className="stat high">{report.high_risk_count}</strong>
+              </div>
+              <div className="summary-metric">
+                <span>{t('report.medium_risk')}</span>
+                <strong className="stat medium">{report.medium_risk_count}</strong>
+              </div>
+              <div className="summary-metric">
+                <span>{t('report.low_risk')}</span>
+                <strong className="stat low">{report.low_risk_count}</strong>
+              </div>
             </div>
           </div>
 

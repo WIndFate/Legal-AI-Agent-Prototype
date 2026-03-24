@@ -173,8 +173,10 @@ export default function ReportPage() {
 
   return (
     <div className="page report-page">
-      <div className="report-header-bar">
+      <div className="report-summary-shell report-header-bar">
+        <p className="section-kicker">{t('report.executive_kicker')}</p>
         <h2>{t('report.title')}</h2>
+        <p className="report-comparison-hint">{t('report.comparison_hint')}</p>
         <p className="report-language-note">
           {t('report.language_locked_note', { language: reportLanguageLabel })}
         </p>
@@ -200,16 +202,23 @@ export default function ReportPage() {
           {t('report.overall_risk')}: {report.overall_risk_level}
         </span>
         <p className="summary">{report.summary}</p>
-        <div className="risk-stats">
-          <span className="stat high">
-            {t('report.high_risk')}: {report.high_risk_count}
-          </span>
-          <span className="stat medium">
-            {t('report.medium_risk')}: {report.medium_risk_count}
-          </span>
-          <span className="stat low">
-            {t('report.low_risk')}: {report.low_risk_count}
-          </span>
+        <div className="summary-metrics">
+          <div className="summary-metric">
+            <span>{t('report.clause_count')}</span>
+            <strong>{report.total_clauses}</strong>
+          </div>
+          <div className="summary-metric">
+            <span>{t('report.high_risk')}</span>
+            <strong className="stat high">{report.high_risk_count}</strong>
+          </div>
+          <div className="summary-metric">
+            <span>{t('report.medium_risk')}</span>
+            <strong className="stat medium">{report.medium_risk_count}</strong>
+          </div>
+          <div className="summary-metric">
+            <span>{t('report.low_risk')}</span>
+            <strong className="stat low">{report.low_risk_count}</strong>
+          </div>
         </div>
       </div>
 
