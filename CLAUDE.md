@@ -1,4 +1,7 @@
-# CLAUDE.md — 契約チェッカー (Contract Checker)
+# Repository Agent Instructions — 契約チェッカー (Contract Checker)
+
+This document is intentionally mirrored in both `CLAUDE.md` and `AGENTS.md` for tool compatibility.
+Keep the two files in sync whenever these instructions change.
 
 ## ⚠️ MANDATORY: Read DESIGN.md and SPEC.md First
 
