@@ -97,26 +97,61 @@ curl -X POST http://localhost:8000/api/review/stream \
 ```
 backend/
   agent/
-    state.py      # AgentState TypedDict
+    state.py      # AgentState TypedDict (+target_language field)
     tools.py      # LangChain tools: analyze_clause_risk (RAG inside), generate_suggestion
-    nodes.py      # Node functions: parse_contract, analyze_risks, generate_report
+    nodes.py      # Node functions: parse_contract, analyze_risks, generate_report (+translation)
     graph.py      # LangGraph workflow + run_review / run_review_stream
   rag/
-    store.py      # ChromaDB singleton (get_store()); add_documents() for JSON, add_chunks() for TXT
-    loader.py     # load_legal_knowledge() for JSON + load_text_documents() for TXT chunks
+    store.py      # pgvector store (get_store()); OpenAI embeddings + cosine similarity search
+    loader.py     # async load_legal_knowledge() for JSON + load_text_documents() for TXT chunks
   eval/
     evaluator.py  # Recall@K and MRR evaluation logic
   mcp/
     server.py     # FastMCP server exposing review_contract + search_legal_reference
-  main.py         # FastAPI app entry point
+  config.py       # pydantic-settings (OPENAI_API_KEY, DATABASE_URL, REDIS_URL, KOMOJU, etc.)
+  dependencies.py # FastAPI deps: get_redis()
+  main.py         # FastAPI app (router-based, lifespan: RAG load + Sentry + PostHog + APScheduler)
+  db/
+    session.py    # Async SQLAlchemy engine + session factory + get_db() dep
+    migrations/   # Alembic async migrations (env.py + versions/)
+  models/
+    order.py      # Order model (UUID pk, payment_status, analysis_status, contract_deleted_at)
+    report.py     # Report model (JSONB clause_analyses, 24h expires_at)
+    referral.py   # Referral model (referral_code, uses_count, discount_jpy)
+  schemas/
+    order.py      # ReviewStreamRequest, etc.
+    payment.py    # PaymentCreateRequest/Response
+    report.py     # Report response schema
+    upload.py     # UploadResponse
+  routers/
+    health.py     # GET /api/health
+    upload.py     # POST /api/upload (image/PDF/text + OCR + PII + pricing)
+    payment.py    # POST /api/payment/create + /api/payment/webhook
+    review.py     # POST /api/review/stream (SSE, saves report + cache + email + cleanup)
+    report.py     # GET /api/report/{order_id} (Redis cache → DB fallback)
+    referral.py   # POST /api/referral/generate + GET /api/referral/{code}
+    eval.py       # GET /api/eval/rag
+  services/
+    ocr.py            # GPT-4o Vision OCR
+    pdf_extractor.py  # pypdf + OCR fallback
+    token_estimator.py # tiktoken + 4 price tiers
+    pii_detector.py   # Regex PII detection (phone, email, mynumber, address, postal)
+    payment.py        # KOMOJU API client + HMAC webhook verification
+    email.py          # Resend API client (9-language subjects)
+    report_cache.py   # Redis report cache (24h TTL)
+    cleanup.py        # APScheduler: expired reports + contract nullification
   data/
     eval_dataset.json  # Hand-labeled eval test set (5 samples)
     civil_law.txt      # Civil law TXT source for chunk ingestion
+tests/
+  test_token_estimator.py  # Token estimation + pricing unit tests
+  test_pii_detector.py     # PII detection unit tests
 frontend/
   src/
     App.tsx       # Single-page UI consuming SSE stream
-docker-compose.yml
+docker-compose.yml  # backend + frontend + pgvector/pg16 + redis:7-alpine
 pyproject.toml
+alembic.ini
 ```
 
 ---
@@ -135,7 +170,7 @@ Do NOT add a `retrieve_knowledge` node back. Do NOT pre-inject RAG results into 
 - `generate_suggestion` is responsible for producing modification text: internally invokes a dedicated `gpt-4o` LLM and returns the concrete suggestion. The outer LLM must use the return value directly as the `suggestion` field — do NOT have the outer LLM write suggestions itself.
 
 ### State fields
-`AgentState` has exactly: `contract_text`, `clauses`, `risk_analysis`, `review_report`, `messages`.
+`AgentState` has exactly: `contract_text`, `clauses`, `risk_analysis`, `review_report`, `messages`, `target_language`.
 Do NOT add `rag_results` or `current_clause_index` back — they were removed as dead fields.
 
 ### Streaming
@@ -144,8 +179,26 @@ Do NOT add `rag_results` or `current_clause_index` back — they were removed as
 ### TXT documents are chunked alongside JSON knowledge
 `load_text_documents()` scans `data/*.txt`, splits with `RecursiveCharacterTextSplitter`
 (chunk_size=200, chunk_overlap=40, separators=["\n\n", "\n", "。", "、", ""]),
-calls `store.add_chunks()`. Both live in the same ChromaDB collection; `store.search()`
-retrieves from both uniformly. User contracts are NEVER stored — query-only.
+calls `store.add_chunks()`. Both live in the same pgvector table `legal_knowledge_embeddings`;
+`store.search()` retrieves from both uniformly via cosine distance. User contracts are NEVER stored — query-only.
+
+### RAG vector store: pgvector (not ChromaDB)
+`store.py` uses PostgreSQL pgvector extension with `text-embedding-3-small` (1536 dims).
+Embeddings are generated via OpenAI API (httpx direct call, not langchain).
+`search()` is sync-compatible (uses thread pool when called from sync LangChain tools).
+`loader.py` is async and called with `await` from lifespan startup.
+
+### Payment + Report flow
+1. User uploads contract → gets pricing → creates order + KOMOJU session
+2. KOMOJU webhook marks order as `paid`
+3. User starts SSE review → report saved to DB + cached in Redis + emailed
+4. Contract text nullified immediately after analysis (privacy)
+5. Redis cache expires in 24h; APScheduler cleans DB hourly
+
+### Cleanup and privacy
+- `cleanup.py` runs every hour via APScheduler in lifespan
+- Deletes expired reports (past `expires_at`)
+- Nullifies `contract_text` for completed orders (defense in depth)
 
 ### RAG evaluation
 `GET /api/eval/rag` runs Recall@K and MRR against `eval_dataset.json`.
@@ -160,7 +213,7 @@ Requires `.env` at project root:
 OPENAI_API_KEY=sk-...
 ```
 
-ChromaDB data is persisted in Docker volume `chroma_data`. RAG knowledge is loaded from `backend/data/` on startup.
+PostgreSQL data is persisted in Docker volume `pgdata`. RAG knowledge (pgvector embeddings) is loaded from `backend/data/` on startup. Redis is used for report caching (24h TTL).
 
 ---
 
