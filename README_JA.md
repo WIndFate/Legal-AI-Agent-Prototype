@@ -69,6 +69,11 @@ cp .env.example .env
 docker compose up --build
 ```
 
+Docker メモ:
+
+- 起動中サービスの中でコマンドを実行する場合は、`docker compose run` ではなく `docker compose exec` を優先してください。
+- `docker compose run` は一時的な `*-run-*` コンテナを残し、`docker compose down` 時に network 解放を妨げることがあります。
+
 エンドポイント:
 
 - Frontend: `http://localhost:5173`

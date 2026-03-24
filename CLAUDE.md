@@ -78,6 +78,12 @@ Current status as of 2026-03-24:
 
 **All services run via Docker. Never try to run Python directly for verification.**
 
+**Docker execution discipline for humans and AI tools:**
+- Prefer `docker compose exec` for commands inside existing services.
+- Avoid `docker compose run` unless there is no running service that can be reused.
+- If `docker compose run` is unavoidable, use `--rm` and clean up immediately after use.
+- If `docker compose down` reports that the network is still in use, inspect and remove leftover `*-run-*` containers before retrying cleanup.
+
 ```bash
 # Start all services
 docker compose up --build
@@ -270,6 +276,7 @@ PostgreSQL data is persisted in Docker volume `pgdata`. RAG knowledge (pgvector 
 - Python 3.11+, dependencies in `pyproject.toml`
 - Backend hot-reload: add `--reload` flag to uvicorn in `backend/Dockerfile` if needed
 - MCP server runs as a separate process: `python -m backend.mcp.server`
+- Docker commands should prefer `docker compose exec`; avoid `docker compose run` because it can leave orphan `*-run-*` containers that block `docker compose down`
 - Code comments in English; user-facing UI messages in Chinese (target users are Chinese residents in Japan)
 - Legal disclaimers and compliance text in Japanese (required by 弁護士法72条)
 - Git commit messages must NOT include any Co-Authored-By or Claude signature lines

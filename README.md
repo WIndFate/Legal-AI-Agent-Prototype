@@ -69,6 +69,11 @@ cp .env.example .env
 docker compose up --build
 ```
 
+Docker note:
+
+- Prefer `docker compose exec` over `docker compose run` for local commands inside running services.
+- `docker compose run` can leave temporary `*-run-*` containers behind and block `docker compose down`.
+
 Endpoints:
 
 - Frontend: `http://localhost:5173`

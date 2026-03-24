@@ -69,6 +69,11 @@ cp .env.example .env
 docker compose up --build
 ```
 
+Docker 说明：
+
+- 本地进入已启动服务时优先使用 `docker compose exec`，不要默认使用 `docker compose run`。
+- `docker compose run` 容易留下 `*-run-*` 临时容器，导致 `docker compose down` 时 network 无法释放。
+
 访问地址：
 
 - 前端：`http://localhost:5173`
