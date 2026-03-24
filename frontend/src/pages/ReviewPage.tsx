@@ -67,7 +67,7 @@ export default function ReviewPage() {
   const [error, setError] = useState('');
   const [currentStep, setCurrentStep] = useState<AnalysisStep>('parsing');
   const [logLines, setLogLines] = useState<string[]>([]);
-  const [originalContractText, setOriginalContractText] = useState('');
+  const [expandedClauses, setExpandedClauses] = useState<Record<string, boolean>>({});
   const started = useRef(false);
 
   const toolLabel = (toolName?: string) => {
@@ -79,10 +79,16 @@ export default function ReviewPage() {
   const pushLog = (line: string) =>
     setLogLines((prev) => [...prev, line].slice(-5));
 
+  const toggleClause = (clauseNumber: string) => {
+    setExpandedClauses((prev) => ({
+      ...prev,
+      [clauseNumber]: !prev[clauseNumber],
+    }));
+  };
+
   useEffect(() => {
     if (started.current) return;
     started.current = true;
-    setOriginalContractText(sessionStorage.getItem(`contract-text:${orderId}`) || '');
 
     const startReview = async () => {
       try {
@@ -97,7 +103,16 @@ export default function ReviewPage() {
           const reportRes = await fetch(`/api/report/${orderId}`);
           if (reportRes.ok) {
             const data = await reportRes.json();
-            setReport(data.report || data);
+            const savedOriginals = sessionStorage.getItem(`report-originals:${orderId}`);
+            const originalByClause = savedOriginals ? JSON.parse(savedOriginals) as Record<string, string> : {};
+            const persistedReport = data.report || data;
+            setReport({
+              ...persistedReport,
+              clause_analyses: (persistedReport.clause_analyses || []).map((clause: ClauseAnalysis) => ({
+                ...clause,
+                original_text: originalByClause[clause.clause_number] || '',
+              })),
+            });
           }
           setLoading(false);
           return;
@@ -142,6 +157,12 @@ export default function ReviewPage() {
                   break;
                 case 'complete':
                   if (evt.report) {
+                    const originalByClause = Object.fromEntries(
+                      evt.report.clause_analyses
+                        .filter((clause) => clause.original_text)
+                        .map((clause) => [clause.clause_number, clause.original_text as string])
+                    );
+                    sessionStorage.setItem(`report-originals:${orderId}`, JSON.stringify(originalByClause));
                     setReport(evt.report);
                     setLoading(false);
                   }
@@ -267,6 +288,26 @@ export default function ReviewPage() {
                     {clause.risk_level}
                   </span>
                 </div>
+                {clause.original_text && (
+                  <div className="clause-original-toggle">
+                    <button
+                      type="button"
+                      className="inline-toggle-btn"
+                      onClick={() => toggleClause(clause.clause_number)}
+                    >
+                      {expandedClauses[clause.clause_number]
+                        ? t('report.hide_original_clause')
+                        : t('report.show_original_clause')}
+                    </button>
+                    {expandedClauses[clause.clause_number] && (
+                      <div className="inline-original-panel">
+                        <p className="inline-original-label">{t('report.original_clause_label')}</p>
+                        <pre className="inline-original-text">{clause.original_text}</pre>
+                        <p className="inline-original-note">{t('report.original_contract_session_note')}</p>
+                      </div>
+                    )}
+                  </div>
+                )}
                 <p className="risk-reason">{clause.risk_reason}</p>
                 {clause.suggestion && (
                   <div className="suggestion">
@@ -283,16 +324,6 @@ export default function ReviewPage() {
               </div>
             ))}
           </div>
-
-          {originalContractText && (
-            <div className="original-contract-card">
-              <h3>{t('report.original_contract_title')}</h3>
-              <p className="original-contract-note">
-                {t('report.original_contract_session_note')}
-              </p>
-              <pre className="original-contract-text">{originalContractText}</pre>
-            </div>
-          )}
 
           {/* Navigate to shareable report page */}
           <button

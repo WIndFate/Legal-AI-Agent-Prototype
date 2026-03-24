@@ -67,6 +67,9 @@
     "share_text": "Analisei meu contrato com o Verificador de Contrato",
     "language_locked_note": "O conteúdo deste relatório foi fixado em {{language}} no momento da geração. Alterar o idioma do site muda apenas a interface, não retraduz o relatório.",
     "share_note": "Ao compartilhar, apenas o link do relatório é enviado. O texto original do contrato nunca é incluído, e o link também expira em até 24 horas.",
+    "show_original_clause": "Mostrar cláusula original",
+    "hide_original_clause": "Ocultar cláusula original",
+    "original_clause_label": "Cláusula original",
     "original_contract_title": "Referência do contrato original",
     "original_contract_session_note": "Visível apenas na sessão atual deste dispositivo para comparação com a análise. O servidor já excluiu o texto original do contrato.",
     "original_contract_shared_note": "Visível apenas na sessão atual do mesmo dispositivo que enviou o contrato. Por privacidade, links compartilhados e links por e-mail nunca incluem o texto original do contrato."

@@ -67,6 +67,9 @@
     "share_text": "Tôi đã phân tích rủi ro hợp đồng bằng Kiểm Tra Hợp Đồng",
     "language_locked_note": "Nội dung báo cáo này đã được cố định bằng {{language}} khi tạo. Việc đổi ngôn ngữ trang chỉ thay đổi giao diện, không dịch lại nội dung báo cáo.",
     "share_note": "Khi chia sẻ, chỉ có liên kết báo cáo được gửi đi. Văn bản hợp đồng gốc không bao giờ được kèm theo, và liên kết cũng hết hạn trong vòng 24 giờ.",
+    "show_original_clause": "Xem điều khoản gốc",
+    "hide_original_clause": "Ẩn điều khoản gốc",
+    "original_clause_label": "Điều khoản gốc",
     "original_contract_title": "Đối chiếu hợp đồng gốc",
     "original_contract_session_note": "Chỉ hiển thị trong phiên hiện tại trên thiết bị này để bạn đối chiếu với kết quả phân tích. Máy chủ đã xóa văn bản hợp đồng gốc.",
     "original_contract_shared_note": "Chỉ hiển thị trong phiên hiện tại trên đúng thiết bị đã tải hợp đồng lên. Vì lý do riêng tư, liên kết chia sẻ và liên kết email không bao gồm toàn văn hợp đồng gốc."

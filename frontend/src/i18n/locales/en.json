@@ -67,6 +67,9 @@
     "share_text": "I analyzed my contract with Contract Checker",
     "language_locked_note": "This report was generated in {{language}}. Changing the site language only updates the interface, not the report content itself.",
     "share_note": "Sharing only sends the report link. The original contract text is never included, and the link expires within 24 hours.",
+    "show_original_clause": "Show original clause",
+    "hide_original_clause": "Hide original clause",
+    "original_clause_label": "Original clause",
     "original_contract_title": "Original Contract Reference",
     "original_contract_session_note": "Visible only in the current session on this device so you can compare it with the analysis. The server has already deleted the original contract text.",
     "original_contract_shared_note": "Visible only in the current session on the device that uploaded the contract. For privacy reasons, shared links and emailed links never include the original contract text."

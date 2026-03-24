@@ -26,6 +26,22 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
+def _strip_clause_originals(report_data: dict) -> dict:
+    """Remove original clause text before persistence or sharing."""
+    sanitized = {
+        **report_data,
+        "clause_analyses": [
+            {
+                key: value
+                for key, value in clause.items()
+                if key != "original_text"
+            }
+            for clause in report_data.get("clause_analyses", [])
+        ],
+    }
+    return sanitized
+
+
 @router.post("/api/review/stream")
 async def review_contract_stream(
     request: ReviewStreamRequest,
@@ -100,7 +116,8 @@ async def review_contract_stream(
         # Post-analysis: save report, cache, email, clean up contract
         if final_report:
             try:
-                report_payload = await _save_report(order_id, final_report, target_language, db)
+                persisted_report = _strip_clause_originals(final_report)
+                report_payload = await _save_report(order_id, persisted_report, target_language, db)
                 await cache_report(order_id, report_payload)
                 email_sent = await send_report_email(email, order_id, target_language)
                 await _finalize_order(order_id, db)
@@ -109,16 +126,16 @@ async def review_contract_stream(
                     "review_completed",
                     {
                         "order_id": order_id,
-                        "overall_risk": final_report.get("overall_risk_level"),
-                        "total_clauses": final_report.get("total_clauses", 0),
+                        "overall_risk": persisted_report.get("overall_risk_level"),
+                        "total_clauses": persisted_report.get("total_clauses", 0),
                         "email_sent": email_sent,
                     },
                 )
                 logger.info(
                     "Review completed: order_id=%s overall_risk=%s total_clauses=%s email_sent=%s",
                     order_id,
-                    final_report.get("overall_risk_level"),
-                    final_report.get("total_clauses", 0),
+                    persisted_report.get("overall_risk_level"),
+                    persisted_report.get("total_clauses", 0),
                     email_sent,
                 )
             except Exception as e:

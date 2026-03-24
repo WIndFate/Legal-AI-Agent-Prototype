@@ -439,43 +439,61 @@ a {
   padding-top: 8px;
 }
 
-.original-contract-card {
-  margin-top: 24px;
-  padding: 16px;
-  background: #fff;
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
-}
-
-.original-contract-card h3 {
-  font-size: 1rem;
-  margin-bottom: 8px;
-  color: #111827;
-}
-
-.original-contract-note {
-  font-size: 0.8125rem;
-  color: #6b7280;
-  margin-bottom: 12px;
-}
-
-.original-contract-text {
-  white-space: pre-wrap;
-  word-break: break-word;
-  background: #f9fafb;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  padding: 12px;
-  font-size: 0.875rem;
-  line-height: 1.7;
-  color: #1f2937;
-}
-
 .share-note {
   margin-top: 10px;
   font-size: 0.8125rem;
   color: #6b7280;
   line-height: 1.6;
+}
+
+.clause-original-toggle {
+  margin-bottom: 10px;
+}
+
+.inline-toggle-btn {
+  appearance: none;
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  color: #1d4ed8;
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.inline-toggle-btn:hover {
+  background: #eff6ff;
+}
+
+.inline-original-panel {
+  margin-top: 10px;
+  padding: 12px;
+  border: 1px solid #dbeafe;
+  background: #f8fbff;
+  border-radius: 10px;
+}
+
+.inline-original-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #1d4ed8;
+  margin-bottom: 8px;
+}
+
+.inline-original-text {
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-size: 0.875rem;
+  line-height: 1.7;
+  color: #1f2937;
+}
+
+.inline-original-note {
+  margin-top: 10px;
+  font-size: 0.75rem;
+  color: #64748b;
+  line-height: 1.5;
 }
 
 /* === Analyzing === */

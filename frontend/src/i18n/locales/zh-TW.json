@@ -67,6 +67,9 @@
     "share_text": "我用合約檢查器分析了合約風險",
     "language_locked_note": "本報告正文在生成時已固定為{{language}}。切換網站語言只會影響介面文案，不會重新翻譯報告內容。",
     "share_note": "分享時只會帶出報告連結，不會包含原合約全文；連結也會在 24 小時內失效。",
+    "show_original_clause": "查看對應原條款",
+    "hide_original_clause": "收起原條款",
+    "original_clause_label": "對應原條款",
     "original_contract_title": "原合約對照",
     "original_contract_session_note": "僅在本裝置目前工作階段中可見，方便與分析結果對照閱讀；伺服器端已刪除原合約文本。",
     "original_contract_shared_note": "僅在上傳合約的同一裝置目前工作階段中可見。基於隱私保護，分享連結與郵件連結都不會帶出原合約全文。"

@@ -55,7 +55,14 @@ export default function ReportPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
   const [hoursLeft, setHoursLeft] = useState(0);
-  const [originalContractText, setOriginalContractText] = useState('');
+  const [expandedClauses, setExpandedClauses] = useState<Record<string, boolean>>({});
+
+  const toggleClause = (clauseNumber: string) => {
+    setExpandedClauses((prev) => ({
+      ...prev,
+      [clauseNumber]: !prev[clauseNumber],
+    }));
+  };
 
   useEffect(() => {
     const fetchReport = async () => {
@@ -74,8 +81,18 @@ export default function ReportPage() {
           created_at: new Date().toISOString(),
           expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
         };
-        setData(json);
-        setOriginalContractText(sessionStorage.getItem(`contract-text:${orderId}`) || '');
+        const savedOriginals = sessionStorage.getItem(`report-originals:${orderId}`);
+        const originalByClause = savedOriginals ? JSON.parse(savedOriginals) as Record<string, string> : {};
+        setData({
+          ...json,
+          report: {
+            ...json.report,
+            clause_analyses: json.report.clause_analyses.map((clause) => ({
+              ...clause,
+              original_text: clause.original_text || originalByClause[clause.clause_number] || '',
+            })),
+          },
+        });
 
         // Calculate initial hours remaining
         const expires = new Date(json.expires_at).getTime();
@@ -216,6 +233,26 @@ export default function ReportPage() {
                 {clause.risk_level}
               </span>
             </div>
+            {clause.original_text && (
+              <div className="clause-original-toggle">
+                <button
+                  type="button"
+                  className="inline-toggle-btn"
+                  onClick={() => toggleClause(clause.clause_number)}
+                >
+                  {expandedClauses[clause.clause_number]
+                    ? t('report.hide_original_clause')
+                    : t('report.show_original_clause')}
+                </button>
+                {expandedClauses[clause.clause_number] && (
+                  <div className="inline-original-panel">
+                    <p className="inline-original-label">{t('report.original_clause_label')}</p>
+                    <pre className="inline-original-text">{clause.original_text}</pre>
+                    <p className="inline-original-note">{t('report.original_contract_shared_note')}</p>
+                  </div>
+                )}
+              </div>
+            )}
             <p className="risk-reason">{clause.risk_reason}</p>
             {clause.suggestion && (
               <div className="suggestion">
@@ -232,16 +269,6 @@ export default function ReportPage() {
           </div>
         ))}
       </div>
-
-      {originalContractText && (
-        <div className="original-contract-card">
-          <h3>{t('report.original_contract_title')}</h3>
-          <p className="original-contract-note">
-            {t('report.original_contract_shared_note')}
-          </p>
-          <pre className="original-contract-text">{originalContractText}</pre>
-        </div>
-      )}
 
       {/* Share button */}
       <button className="btn-primary btn-share" onClick={handleShare}>

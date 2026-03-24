@@ -128,6 +128,7 @@ llm_translator = ChatOpenAI(model="gpt-4o-mini", temperature=0)
 def generate_report(state: AgentState) -> dict:
     """Generate the final structured review report, translated if target_language != 'ja'."""
     risk_analysis = state["risk_analysis"]
+    clauses = state["clauses"]
     target_lang = state.get("target_language", "ja")
 
     high_risks = [r for r in risk_analysis if r.get("risk_level") == "高"]
@@ -153,14 +154,26 @@ def generate_report(state: AgentState) -> dict:
             summary, risk_analysis, overall_risk, target_lang
         )
 
+    clause_text_by_number = {
+        clause.get("number", ""): clause.get("text", "")
+        for clause in clauses
+    }
+    risk_analysis_with_originals = [
+        {
+            **analysis,
+            "original_text": clause_text_by_number.get(analysis.get("clause_number", ""), ""),
+        }
+        for analysis in risk_analysis
+    ]
+
     report = {
         "overall_risk_level": overall_risk,
         "summary": summary,
-        "clause_analyses": risk_analysis,
+        "clause_analyses": risk_analysis_with_originals,
         "high_risk_count": len(high_risks),
         "medium_risk_count": len(medium_risks),
         "low_risk_count": len(low_risks),
-        "total_clauses": len(risk_analysis),
+        "total_clauses": len(risk_analysis_with_originals),
     }
 
     return {"review_report": report}
