@@ -1,6 +1,7 @@
 import logging
 import os
 
+import asyncpg
 import httpx
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
@@ -96,7 +97,7 @@ class LegalKnowledgeStore:
                 await session.execute(
                     text("""
                         INSERT INTO legal_knowledge_embeddings (id, content, embedding, metadata)
-                        VALUES (:id, :content, :embedding::vector, :metadata::jsonb)
+                        VALUES (:id, :content, CAST(:embedding AS vector), CAST(:metadata AS jsonb))
                         ON CONFLICT (id) DO UPDATE SET
                             content = EXCLUDED.content,
                             embedding = EXCLUDED.embedding,
@@ -132,7 +133,7 @@ class LegalKnowledgeStore:
                 await session.execute(
                     text("""
                         INSERT INTO legal_knowledge_embeddings (id, content, embedding, metadata)
-                        VALUES (:id, :content, :embedding::vector, :metadata::jsonb)
+                        VALUES (:id, :content, CAST(:embedding AS vector), CAST(:metadata AS jsonb))
                         ON CONFLICT (id) DO UPDATE SET
                             content = EXCLUDED.content,
                             embedding = EXCLUDED.embedding,
@@ -154,12 +155,12 @@ class LegalKnowledgeStore:
         try:
             loop = asyncio.get_event_loop()
             if loop.is_running():
-                # We're inside an async context — use a new thread
+                # LangChain tools are sync, but may be called from an async graph.
+                # Use a fresh store inside a worker thread so asyncpg connections
+                # are created and consumed on the same event loop.
                 import concurrent.futures
                 with concurrent.futures.ThreadPoolExecutor() as pool:
-                    return pool.submit(
-                        asyncio.run, self._search_async(query, n_results)
-                    ).result()
+                    return pool.submit(_search_with_fresh_store, query, n_results).result()
             return loop.run_until_complete(self._search_async(query, n_results))
         except RuntimeError:
             return asyncio.run(self._search_async(query, n_results))
@@ -168,27 +169,36 @@ class LegalKnowledgeStore:
         await self._ensure_table()
         query_embedding = _get_embedding_sync(query)
         emb_str = "[" + ",".join(str(x) for x in query_embedding) + "]"
+        dsn = get_settings().DATABASE_URL.replace("+asyncpg", "")
 
-        async with self._session_factory() as session:
-            result = await session.execute(
-                text("""
+        conn = await asyncpg.connect(dsn)
+        try:
+            rows = await conn.fetch(
+                """
                     SELECT id, content, metadata,
-                           embedding <-> :query_emb::vector AS distance
+                           embedding <-> $1::vector AS distance
                     FROM legal_knowledge_embeddings
                     ORDER BY distance
-                    LIMIT :limit
-                """),
-                {"query_emb": emb_str, "limit": n_results},
+                    LIMIT $2
+                """,
+                emb_str,
+                n_results,
             )
-            rows = result.fetchall()
+        finally:
+            await conn.close()
 
         output = []
         for row in rows:
+            metadata = row["metadata"]
+            if isinstance(metadata, str):
+                import json
+
+                metadata = json.loads(metadata)
             output.append({
-                "id": row[0],
-                "content": row[1],
-                "metadata": row[2],
-                "distance": float(row[3]),
+                "id": row["id"],
+                "content": row["content"],
+                "metadata": metadata,
+                "distance": float(row["distance"]),
             })
         return output
 
@@ -202,3 +212,11 @@ def get_store() -> LegalKnowledgeStore:
     if _store is None:
         _store = LegalKnowledgeStore()
     return _store
+
+
+def _search_with_fresh_store(query: str, n_results: int) -> list[dict]:
+    """Run search on a fresh store bound to the worker thread's event loop."""
+    import asyncio
+
+    fresh_store = LegalKnowledgeStore()
+    return asyncio.run(fresh_store._search_async(query, n_results))
