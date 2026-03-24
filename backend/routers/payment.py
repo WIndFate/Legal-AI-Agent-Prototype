@@ -10,6 +10,11 @@ from backend.schemas.payment import PaymentCreateRequest, PaymentCreateResponse
 from backend.services.payment import create_payment_session, verify_webhook
 from backend.services.analytics import capture as posthog_capture
 
+try:
+    import sentry_sdk
+except ImportError:
+    sentry_sdk = None  # type: ignore[assignment]
+
 logger = logging.getLogger(__name__)
 
 router = APIRouter()

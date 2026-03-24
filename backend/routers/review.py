@@ -16,6 +16,11 @@ from backend.services.report_cache import cache_report
 from backend.services.email import send_report_email
 from backend.services.analytics import capture as posthog_capture
 
+try:
+    import sentry_sdk
+except ImportError:
+    sentry_sdk = None  # type: ignore[assignment]
+
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
@@ -67,6 +72,9 @@ async def review_contract_stream(
                 yield f"data: {json.dumps(evt, ensure_ascii=False)}\n\n"
         except Exception as e:
             logger.error("Review stream error for order %s: %s", order_id, e)
+            if sentry_sdk:
+                sentry_sdk.set_tag("order_id", order_id)
+                sentry_sdk.capture_exception(e)
             yield f"data: {json.dumps({'type': 'error', 'message': str(e)})}\n\n"
 
         # Post-analysis: save report, cache, email, clean up contract
@@ -87,6 +95,9 @@ async def review_contract_stream(
                 )
             except Exception as e:
                 logger.error("Post-analysis error for order %s: %s", order_id, e)
+                if sentry_sdk:
+                    sentry_sdk.set_tag("order_id", order_id)
+                    sentry_sdk.capture_exception(e)
 
     return StreamingResponse(
         generate(),
