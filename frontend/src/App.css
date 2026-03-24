@@ -372,13 +372,29 @@ a {
   padding: 16px;
   border-left: 4px solid;
   border-radius: 8px;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
+  transition: box-shadow 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
+}
+
+.clause-card:hover {
+  box-shadow: 0 14px 32px rgba(15, 23, 42, 0.08);
+}
+
+.clause-card-expanded {
+  box-shadow: 0 16px 36px rgba(29, 78, 216, 0.12);
 }
 
 .clause-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 8px;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.clause-heading strong {
+  font-size: 1rem;
+  color: #0f172a;
 }
 
 .risk-tag {
@@ -394,6 +410,25 @@ a {
   font-size: 0.875rem;
   line-height: 1.6;
   color: #374151;
+}
+
+.clause-toolbar {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.clause-toolbar-spacer {
+  height: 34px;
+}
+
+.clause-content {
+  display: block;
+}
+
+.clause-analysis-panel {
+  min-width: 0;
 }
 
 .suggestion, .reference {
@@ -444,6 +479,7 @@ a {
   font-size: 0.8125rem;
   color: #6b7280;
   line-height: 1.6;
+  text-align: center;
 }
 
 .clause-original-toggle {
@@ -456,22 +492,29 @@ a {
   background: #fff;
   color: #1d4ed8;
   border-radius: 999px;
-  padding: 6px 12px;
+  padding: 7px 14px;
   font-size: 0.8125rem;
   font-weight: 600;
   cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 }
 
 .inline-toggle-btn:hover {
   background: #eff6ff;
 }
 
+.inline-toggle-btn-active {
+  background: #dbeafe;
+  border-color: #93c5fd;
+  color: #1e40af;
+}
+
 .inline-original-panel {
-  margin-top: 10px;
-  padding: 12px;
+  min-width: 0;
+  padding: 14px;
   border: 1px solid #dbeafe;
-  background: #f8fbff;
-  border-radius: 10px;
+  background: linear-gradient(180deg, #f8fbff 0%, #eff6ff 100%);
+  border-radius: 12px;
 }
 
 .inline-original-label {
@@ -487,6 +530,8 @@ a {
   font-size: 0.875rem;
   line-height: 1.7;
   color: #1f2937;
+  max-height: 18rem;
+  overflow-y: auto;
 }
 
 .inline-original-note {
@@ -494,6 +539,15 @@ a {
   font-size: 0.75rem;
   color: #64748b;
   line-height: 1.5;
+}
+
+.report-actions {
+  margin-top: 28px;
+  padding: 16px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
 }
 
 /* === Analyzing === */
@@ -704,5 +758,12 @@ a {
   .disclaimer-banner {
     font-size: 0.8125rem;
     padding: 10px 24px;
+  }
+
+  .clause-content-split {
+    display: grid;
+    grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.25fr);
+    gap: 16px;
+    align-items: start;
   }
 }

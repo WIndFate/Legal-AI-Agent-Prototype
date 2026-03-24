@@ -218,14 +218,16 @@ export default function ReportPage() {
         {report.clause_analyses.map((clause, idx) => (
           <div
             key={idx}
-            className="clause-card"
+            className={`clause-card ${expandedClauses[clause.clause_number] ? 'clause-card-expanded' : ''}`}
             style={{
               borderLeftColor: riskColor(clause.risk_level),
               background: riskBg(clause.risk_level),
             }}
           >
             <div className="clause-header">
-              <strong>{clause.clause_number}</strong>
+              <div className="clause-heading">
+                <strong>{clause.clause_number}</strong>
+              </div>
               <span
                 className="risk-tag"
                 style={{ background: riskColor(clause.risk_level) }}
@@ -233,48 +235,56 @@ export default function ReportPage() {
                 {clause.risk_level}
               </span>
             </div>
-            {clause.original_text && (
-              <div className="clause-original-toggle">
+            <div className="clause-toolbar">
+              {clause.original_text ? (
                 <button
                   type="button"
-                  className="inline-toggle-btn"
+                  className={`inline-toggle-btn ${expandedClauses[clause.clause_number] ? 'inline-toggle-btn-active' : ''}`}
                   onClick={() => toggleClause(clause.clause_number)}
                 >
                   {expandedClauses[clause.clause_number]
                     ? t('report.hide_original_clause')
                     : t('report.show_original_clause')}
                 </button>
-                {expandedClauses[clause.clause_number] && (
-                  <div className="inline-original-panel">
-                    <p className="inline-original-label">{t('report.original_clause_label')}</p>
-                    <pre className="inline-original-text">{clause.original_text}</pre>
-                    <p className="inline-original-note">{t('report.original_contract_shared_note')}</p>
+              ) : (
+                <span className="clause-toolbar-spacer" />
+              )}
+            </div>
+            <div className={`clause-content ${expandedClauses[clause.clause_number] && clause.original_text ? 'clause-content-split' : ''}`}>
+              {expandedClauses[clause.clause_number] && clause.original_text && (
+                <div className="inline-original-panel">
+                  <p className="inline-original-label">{t('report.original_clause_label')}</p>
+                  <pre className="inline-original-text">{clause.original_text}</pre>
+                  <p className="inline-original-note">{t('report.original_contract_shared_note')}</p>
+                </div>
+              )}
+              <div className="clause-analysis-panel">
+                <p className="risk-reason">{clause.risk_reason}</p>
+                {clause.suggestion && (
+                  <div className="suggestion">
+                    <strong>{t('report.suggestion')}:</strong>
+                    <p>{clause.suggestion}</p>
+                  </div>
+                )}
+                {clause.referenced_law && (
+                  <div className="reference">
+                    <strong>{t('report.referenced_law')}:</strong>
+                    <p>{clause.referenced_law}</p>
                   </div>
                 )}
               </div>
-            )}
-            <p className="risk-reason">{clause.risk_reason}</p>
-            {clause.suggestion && (
-              <div className="suggestion">
-                <strong>{t('report.suggestion')}:</strong>
-                <p>{clause.suggestion}</p>
-              </div>
-            )}
-            {clause.referenced_law && (
-              <div className="reference">
-                <strong>{t('report.referenced_law')}:</strong>
-                <p>{clause.referenced_law}</p>
-              </div>
-            )}
+            </div>
           </div>
         ))}
       </div>
 
       {/* Share button */}
-      <button className="btn-primary btn-share" onClick={handleShare}>
-        {t('report.share')}
-      </button>
-      <p className="share-note">{t('report.share_note')}</p>
+      <div className="report-actions">
+        <button className="btn-primary btn-share" onClick={handleShare}>
+          {t('report.share')}
+        </button>
+        <p className="share-note">{t('report.share_note')}</p>
+      </div>
     </div>
   );
 }
