@@ -80,6 +80,9 @@ docker compose up --build
 ```bash
 docker compose up -d backend postgres redis
 ./scripts/smoke_local_flow.sh
+./scripts/check_locale_keys.sh
+./scripts/check_rag_eval.sh
+./scripts/run_backend_pytests.sh
 ```
 
 ## ローカル確認フロー
@@ -101,13 +104,20 @@ docker compose up -d backend postgres redis
 - 支払い、審査、メール、レポート取得の主要経路では、構造化アプリケーションログと PostHog イベントを出力し、外部連携時の切り分けをしやすくしています。
 - `analyze_clause_risk` ツールが内部で直接 RAG 検索を行うため、独立した retrieval node はありません。
 - `scripts/smoke_local_flow.sh` は `health -> upload -> payment -> review -> report -> contract deletion` を検証する標準ローカル回帰入口です。
+- `scripts/check_locale_keys.sh` は 9 言語の locale ファイルが `ja.json` と同じキー集合を保っているかを確認します。
+- `scripts/check_rag_eval.sh` は `/api/eval/rag` を現在のローカル基準値（`Recall@3 >= 0.5`、`MRR >= 0.6`）でチェックします。
+- `scripts/run_backend_pytests.sh` は Docker 内で backend の dev 依存を入れて回帰テストを実行します。
 
 ## 主要ファイル
 
 - [`backend/main.py`](./backend/main.py): 起動処理、ルーター登録、Sentry/PostHog、クリーンアップ
 - [`backend/routers/review.py`](./backend/routers/review.py): SSE 審査、レポート保存、プライバシー削除
 - [`backend/rag/store.py`](./backend/rag/store.py): pgvector 保存と検索
+- [`backend/eval/evaluator.py`](./backend/eval/evaluator.py): RAG 評価指標とデータセット実行
 - [`scripts/smoke_local_flow.sh`](./scripts/smoke_local_flow.sh): ローカル end-to-end smoke/regression スクリプト
+- [`scripts/check_locale_keys.sh`](./scripts/check_locale_keys.sh): locale キー整合性チェック
+- [`scripts/check_rag_eval.sh`](./scripts/check_rag_eval.sh): ローカル RAG 回帰チェック
+- [`scripts/run_backend_pytests.sh`](./scripts/run_backend_pytests.sh): Docker ベースの backend pytest 実行スクリプト
 - [`frontend/src/main.tsx`](./frontend/src/main.tsx): ルーター、i18n、分析初期化
 - [`SPEC.md`](./SPEC.md): 詳細な進捗、未完了項目、リスク
 - [`DESIGN.md`](./DESIGN.md): プロダクト設計とビジネス方針

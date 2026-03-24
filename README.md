@@ -80,6 +80,9 @@ Smoke regression:
 ```bash
 docker compose up -d backend postgres redis
 ./scripts/smoke_local_flow.sh
+./scripts/check_locale_keys.sh
+./scripts/check_rag_eval.sh
+./scripts/run_backend_pytests.sh
 ```
 
 ## Local Flow
@@ -101,13 +104,20 @@ docker compose up -d backend postgres redis
 - Payment, review, email, and report retrieval paths now emit structured application logs and PostHog events for easier integration debugging.
 - `analyze_clause_risk` performs RAG lookup internally; there is no separate retrieval node.
 - `scripts/smoke_local_flow.sh` is the repeatable local regression entrypoint for `health -> upload -> payment -> review -> report -> contract deletion`.
+- `scripts/check_locale_keys.sh` verifies that all 9 locale files keep the same translation key set as `ja.json`.
+- `scripts/check_rag_eval.sh` checks `/api/eval/rag` against the current local baseline thresholds (`Recall@3 >= 0.5`, `MRR >= 0.6`).
+- `scripts/run_backend_pytests.sh` runs the backend regression tests inside Docker after installing dev dependencies in the running backend container.
 
 ## Repo Pointers
 
 - [`backend/main.py`](./backend/main.py): app startup, routers, Sentry/PostHog, cleanup scheduler
 - [`backend/routers/review.py`](./backend/routers/review.py): SSE review, report persistence, privacy cleanup
 - [`backend/rag/store.py`](./backend/rag/store.py): pgvector storage and search
+- [`backend/eval/evaluator.py`](./backend/eval/evaluator.py): RAG evaluation metrics and dataset runner
 - [`scripts/smoke_local_flow.sh`](./scripts/smoke_local_flow.sh): end-to-end local smoke/regression flow
+- [`scripts/check_locale_keys.sh`](./scripts/check_locale_keys.sh): locale key consistency check
+- [`scripts/check_rag_eval.sh`](./scripts/check_rag_eval.sh): local RAG metric regression check
+- [`scripts/run_backend_pytests.sh`](./scripts/run_backend_pytests.sh): Docker-based backend pytest runner
 - [`frontend/src/main.tsx`](./frontend/src/main.tsx): router entry, i18n, analytics bootstrap
 - [`SPEC.md`](./SPEC.md): detailed implementation status, pending work, and risks
 - [`DESIGN.md`](./DESIGN.md): product rationale and go-to-market plan

@@ -99,6 +99,9 @@ curl -X POST http://localhost:8000/api/upload \
 # Local smoke regression
 docker compose up -d backend postgres redis
 ./scripts/smoke_local_flow.sh
+./scripts/check_locale_keys.sh
+./scripts/check_rag_eval.sh
+./scripts/run_backend_pytests.sh
 ```
 
 - Backend: `http://localhost:8000`
@@ -172,6 +175,9 @@ frontend/
 docker-compose.yml  # backend + frontend + pgvector/pg16 + redis:7-alpine
 scripts/
   smoke_local_flow.sh  # local end-to-end regression script
+  check_locale_keys.sh # locale key consistency check
+  check_rag_eval.sh    # local RAG metric regression check
+  run_backend_pytests.sh # docker-based backend pytest runner
 pyproject.toml
 alembic.ini
 ```
@@ -240,6 +246,11 @@ Embeddings are generated via OpenAI API (httpx direct call, not langchain).
 ### RAG evaluation
 `GET /api/eval/rag` runs Recall@K and MRR against `eval_dataset.json`.
 Eval only references JSON document IDs; TXT chunk auto-generated IDs do not affect eval.
+- `scripts/check_rag_eval.sh` wraps the endpoint with the current local baseline thresholds (`Recall@3 >= 0.5`, `MRR >= 0.6`).
+
+### Regression checks
+- `scripts/check_locale_keys.sh` ensures all 9 locale files keep the same translation key set as `frontend/src/i18n/locales/ja.json`.
+- `scripts/run_backend_pytests.sh` installs backend dev dependencies in Docker and runs the backend regression tests.
 
 ---
 
