@@ -100,8 +100,8 @@ async def review_contract_stream(
         # Post-analysis: save report, cache, email, clean up contract
         if final_report:
             try:
-                await _save_report(order_id, final_report, target_language, db)
-                await cache_report(order_id, final_report)
+                report_payload = await _save_report(order_id, final_report, target_language, db)
+                await cache_report(order_id, report_payload)
                 email_sent = await send_report_email(email, order_id, target_language)
                 await _finalize_order(order_id, db)
                 posthog_capture(
@@ -141,7 +141,7 @@ async def review_contract_stream(
 
 async def _save_report(
     order_id: str, report_data: dict, language: str, db: AsyncSession
-) -> None:
+) -> dict:
     """Persist the analysis report to the database."""
     now = datetime.now(timezone.utc)
     report = Report(
@@ -160,6 +160,21 @@ async def _save_report(
     db.add(report)
     await db.commit()
     logger.info("Report saved: order_id=%s language=%s total_clauses=%s", order_id, language, report.total_clauses)
+    return {
+        "order_id": str(report.order_id),
+        "report": {
+            "overall_risk_level": report.overall_risk_level,
+            "summary": report.summary,
+            "clause_analyses": report.clause_analyses,
+            "high_risk_count": report.high_risk_count,
+            "medium_risk_count": report.medium_risk_count,
+            "low_risk_count": report.low_risk_count,
+            "total_clauses": report.total_clauses,
+        },
+        "language": report.language,
+        "created_at": report.created_at.isoformat(),
+        "expires_at": report.expires_at.isoformat(),
+    }
 
 
 async def _finalize_order(order_id: str, db: AsyncSession) -> None:

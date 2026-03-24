@@ -9,6 +9,7 @@ interface ClauseAnalysis {
   risk_reason: string;
   suggestion: string;
   referenced_law: string;
+  original_text?: string;
 }
 
 interface ReportData {
@@ -44,11 +45,12 @@ function riskBg(level: string): string {
 
 export default function ReportPage() {
   const { orderId } = useParams<{ orderId: string }>();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [data, setData] = useState<ReportData | null>(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
   const [hoursLeft, setHoursLeft] = useState(0);
+  const [originalContractText, setOriginalContractText] = useState('');
 
   useEffect(() => {
     const fetchReport = async () => {
@@ -59,8 +61,19 @@ export default function ReportPage() {
           return;
         }
         if (!res.ok) throw new Error(`Failed: ${res.status}`);
-        const json: ReportData = await res.json();
+        const raw = await res.json();
+        const json: ReportData = raw.report ? raw : {
+          order_id: orderId || '',
+          report: raw,
+          language: sessionStorage.getItem(`report-language:${orderId}`) || i18n.language,
+          created_at: new Date().toISOString(),
+          expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+        };
         setData(json);
+        setOriginalContractText(sessionStorage.getItem(`contract-text:${orderId}`) || '');
+        if (json.language) {
+          void i18n.changeLanguage(json.language);
+        }
 
         // Calculate initial hours remaining
         const expires = new Date(json.expires_at).getTime();
@@ -73,7 +86,7 @@ export default function ReportPage() {
       }
     };
     fetchReport();
-  }, [orderId, t]);
+  }, [i18n, orderId, t]);
 
   // Update expiry countdown every minute
   useEffect(() => {
@@ -142,6 +155,9 @@ export default function ReportPage() {
     <div className="page report-page">
       <div className="report-header-bar">
         <h2>{t('report.title')}</h2>
+        <p className="report-language-note">
+          本报告内容已按生成时选择的语言固定为 {data.language}。切换页面语言只影响界面文案，不会重新翻译已生成报告。
+        </p>
         {hoursLeft > 0 && (
           <p className="expiry-notice">
             {t('report.expires_in', { hours: hoursLeft })}
@@ -213,6 +229,16 @@ export default function ReportPage() {
           </div>
         ))}
       </div>
+
+      {originalContractText && (
+        <div className="original-contract-card">
+          <h3>原日文合同对照</h3>
+          <p className="original-contract-note">
+            仅在上传合同的同一设备当前会话中可见。若通过分享链接或邮件打开，出于隐私保护不会再显示原合同全文。
+          </p>
+          <pre className="original-contract-text">{originalContractText}</pre>
+        </div>
+      )}
 
       {/* Share button */}
       <button className="btn-primary btn-share" onClick={handleShare}>

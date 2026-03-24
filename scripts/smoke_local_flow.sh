@@ -99,11 +99,18 @@ curl -sS "${API_BASE_URL}/api/payment/status/${ORDER_ID}" >"$STATUS_JSON"
 jq -e '.status == "paid"' "$STATUS_JSON" >/dev/null || fail "Order is not paid in local dev mode"
 
 log "Starting review stream"
+set +e
 jq -n --arg order_id "$ORDER_ID" '{order_id: $order_id}' \
   | curl -N -sS -X POST "${API_BASE_URL}/api/review/stream" \
       -H "Content-Type: application/json" \
       -d @- \
       >"$REVIEW_SSE"
+REVIEW_STREAM_EXIT_CODE=$?
+set -e
+
+if [ "$REVIEW_STREAM_EXIT_CODE" -ne 0 ] && [ "$REVIEW_STREAM_EXIT_CODE" -ne 18 ]; then
+  fail "Review stream request failed with curl exit code ${REVIEW_STREAM_EXIT_CODE}"
+fi
 
 grep -q '"type": "complete"' "$REVIEW_SSE" || fail "Review stream did not complete"
 if grep -q '"type": "error"' "$REVIEW_SSE"; then

@@ -80,9 +80,13 @@ export default function HomePage() {
 
       const data = await res.json();
       if (data.komoju_session_url) {
+        sessionStorage.setItem(`report-language:${data.order_id}`, i18n.language);
+        sessionStorage.setItem(`contract-text:${data.order_id}`, uploadResult.contract_text);
         // Redirect to KOMOJU payment page
         window.location.href = data.komoju_session_url;
       } else {
+        sessionStorage.setItem(`report-language:${data.order_id}`, i18n.language);
+        sessionStorage.setItem(`contract-text:${data.order_id}`, uploadResult.contract_text);
         // Dev mode: skip payment, go directly to review
         navigate(`/review/${data.order_id}`);
       }

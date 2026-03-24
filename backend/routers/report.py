@@ -23,10 +23,12 @@ async def get_report(
     """Get analysis report by order ID. Checks Redis cache first, then DB."""
     # Try Redis cache first
     cached = await get_cached_report(order_id)
-    if cached:
+    if cached and "report" in cached:
         logger.info("Report cache hit: order_id=%s", order_id)
         posthog_capture("anonymous", "report_viewed", {"order_id": order_id, "source": "redis"})
         return cached
+    if cached:
+        logger.warning("Legacy report cache shape detected: order_id=%s; falling back to database", order_id)
     logger.info("Report cache miss: order_id=%s", order_id)
     posthog_capture("anonymous", "report_cache_miss", {"order_id": order_id})
 

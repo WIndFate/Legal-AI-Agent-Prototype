@@ -14,7 +14,7 @@ def _cache_key(order_id: str) -> str:
 
 
 async def cache_report(order_id: str, report_data: dict) -> None:
-    """Store report in Redis with 24h TTL."""
+    """Store serialized report payload in Redis with 24h TTL."""
     redis = await get_redis()
     key = _cache_key(order_id)
     await redis.set(key, json.dumps(report_data, ensure_ascii=False), ex=REPORT_TTL_SECONDS)

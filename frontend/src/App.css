@@ -211,7 +211,9 @@ a {
   border: 1px solid #d1d5db;
   border-radius: 8px;
   background: #fff;
+  color: #1f2937;
   font-size: 1rem;
+  font-weight: 600;
   cursor: pointer;
   transition: background 0.15s;
 }
@@ -421,6 +423,12 @@ a {
   margin-bottom: 16px;
 }
 
+.report-language-note {
+  font-size: 0.8125rem;
+  color: #6b7280;
+  margin-top: 6px;
+}
+
 .expiry-notice {
   font-size: 0.8125rem;
   color: #d97706;
@@ -429,6 +437,38 @@ a {
 
 .report-section {
   padding-top: 8px;
+}
+
+.original-contract-card {
+  margin-top: 24px;
+  padding: 16px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+}
+
+.original-contract-card h3 {
+  font-size: 1rem;
+  margin-bottom: 8px;
+  color: #111827;
+}
+
+.original-contract-note {
+  font-size: 0.8125rem;
+  color: #6b7280;
+  margin-bottom: 12px;
+}
+
+.original-contract-text {
+  white-space: pre-wrap;
+  word-break: break-word;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 12px;
+  font-size: 0.875rem;
+  line-height: 1.7;
+  color: #1f2937;
 }
 
 /* === Analyzing === */

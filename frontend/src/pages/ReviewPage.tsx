@@ -9,6 +9,7 @@ interface ClauseAnalysis {
   risk_reason: string;
   suggestion: string;
   referenced_law: string;
+  original_text?: string;
 }
 
 interface ReviewReport {
@@ -31,6 +32,11 @@ interface StreamEvent {
   report?: ReviewReport;
   message?: string;
 }
+
+const TOOL_LABELS: Record<string, string> = {
+  analyze_clause_risk: '正在检索相关法条与风险依据…',
+  generate_suggestion: '正在生成更易理解的修改建议…',
+};
 
 type AnalysisStep = 'parsing' | 'analyzing' | 'generating';
 
@@ -59,13 +65,14 @@ const STEP_DEFS: { key: AnalysisStep; nodeMatch: string }[] = [
 export default function ReviewPage() {
   const { orderId } = useParams<{ orderId: string }>();
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   const [report, setReport] = useState<ReviewReport | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [currentStep, setCurrentStep] = useState<AnalysisStep>('parsing');
   const [logLines, setLogLines] = useState<string[]>([]);
+  const [originalContractText, setOriginalContractText] = useState('');
   const started = useRef(false);
 
   const pushLog = (line: string) =>
@@ -74,6 +81,7 @@ export default function ReviewPage() {
   useEffect(() => {
     if (started.current) return;
     started.current = true;
+    setOriginalContractText(sessionStorage.getItem(`contract-text:${orderId}`) || '');
 
     const startReview = async () => {
       try {
@@ -88,6 +96,9 @@ export default function ReviewPage() {
           const reportRes = await fetch(`/api/report/${orderId}`);
           if (reportRes.ok) {
             const data = await reportRes.json();
+            if (data.language) {
+              void i18n.changeLanguage(data.language);
+            }
             setReport(data.report || data);
           }
           setLoading(false);
@@ -126,7 +137,7 @@ export default function ReviewPage() {
                   break;
                 }
                 case 'tool_call':
-                  pushLog(`${evt.tool}: ${evt.clause || ''}`);
+                  pushLog(TOOL_LABELS[evt.tool || ''] || '正在处理条款分析步骤…');
                   break;
                 case 'tool_result':
                   if (evt.text) pushLog(evt.text);
@@ -157,7 +168,7 @@ export default function ReviewPage() {
     };
 
     startReview();
-  }, [orderId, t]);
+  }, [i18n, orderId, t]);
 
   // Determine step status for progress indicator
   const stepOrder: AnalysisStep[] = ['parsing', 'analyzing', 'generating'];
@@ -274,6 +285,16 @@ export default function ReviewPage() {
               </div>
             ))}
           </div>
+
+          {originalContractText && (
+            <div className="original-contract-card">
+              <h3>原日文合同对照</h3>
+              <p className="original-contract-note">
+                仅在本设备当前会话中保留，便于与分析结果对照阅读；服务端完成分析后已删除原合同文本。
+              </p>
+              <pre className="original-contract-text">{originalContractText}</pre>
+            </div>
+          )}
 
           {/* Navigate to shareable report page */}
           <button
