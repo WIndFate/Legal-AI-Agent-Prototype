@@ -1,6 +1,6 @@
 {
   "app": {
-    "title": "Verificador de Contrato",
+    "title": "ContractGuard",
     "subtitle": "Serviço de análise de riscos contratuais com IA"
   },
   "disclaimer": {
@@ -8,7 +8,8 @@
   },
   "nav": {
     "home": "Início",
-    "language": "Idioma"
+    "language": "Idioma",
+    "examples": "Exemplos"
   },
   "upload": {
     "title": "Enviar contrato",
@@ -91,7 +92,7 @@
     "referenced_law": "Legislação referenciada",
     "expires_in": "Este relatório será excluído automaticamente em {{hours}} horas",
     "share": "Compartilhar",
-    "share_text": "Analisei meu contrato com o Verificador de Contrato",
+    "share_text": "Analisei meu contrato com o ContractGuard",
     "language_locked_note": "O conteúdo deste relatório foi fixado em {{language}} no momento da geração. Alterar o idioma do site muda apenas a interface, não retraduz o relatório.",
     "share_note": "Ao compartilhar, apenas o link do relatório é enviado. O texto original do contrato nunca é incluído, e o link também expira em até 24 horas.",
     "show_original_clause": "Mostrar cláusula original",
@@ -114,6 +115,33 @@
   "footer": {
     "disclaimer": "本サービスは法律相談ではありません。具体的な法的判断は弁護士にご相談ください (Este serviço não constitui assessoria jurídica. Consulte um advogado para decisões legais específicas.)",
     "privacy": "Política de Privacidade",
-    "terms": "Termos de Serviço"
+    "terms": "Termos de Serviço",
+    "copyright": "© 2026 ContractGuard"
+  },
+  "privacy": {
+    "page_title": "Política de Privacidade",
+    "summary": "O ContractGuard prioriza sua privacidade. O texto do contrato é excluído do servidor imediatamente após a análise — nunca armazenamos. Coletamos apenas seu e-mail, usado exclusivamente para enviar o link do relatório.",
+    "last_updated": "Última atualização: {{date}}"
+  },
+  "terms": {
+    "page_title": "Termos de Serviço",
+    "summary": "O ContractGuard é um serviço de análise de riscos contratuais com IA. Não constitui assessoria jurídica — consulte um advogado para decisões legais. Sem reembolso após o início da análise. Relatórios são excluídos automaticamente após 24 horas.",
+    "last_updated": "Última atualização: {{date}}"
+  },
+  "examples": {
+    "section_kicker": "Relatórios de exemplo",
+    "section_title": "Veja o que você recebe",
+    "section_desc": "Confira exemplos de análise de IA baseados em cenários reais de contrato",
+    "tab_rental": "Aluguel",
+    "tab_employment": "Emprego",
+    "tab_parttime": "Meio período",
+    "badge": "EXEMPLO",
+    "cta": "Analise seu contrato",
+    "rental_title": "Análise de contrato de aluguel",
+    "rental_desc": "Contrato padrão de 1LDK em Tóquio",
+    "employment_title": "Análise de contrato de trabalho",
+    "employment_desc": "Contrato de emprego em empresa de TI",
+    "parttime_title": "Análise de contrato de meio período",
+    "parttime_desc": "Contrato de trabalho parcial em restaurante"
   }
 }

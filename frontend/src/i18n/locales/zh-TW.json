@@ -1,6 +1,6 @@
 {
   "app": {
-    "title": "合約檢查器",
+    "title": "ContractGuard",
     "subtitle": "AI合約風險分析服務"
   },
   "disclaimer": {
@@ -8,7 +8,8 @@
   },
   "nav": {
     "home": "首頁",
-    "language": "語言"
+    "language": "語言",
+    "examples": "案例展示"
   },
   "upload": {
     "title": "上傳合約",
@@ -91,7 +92,7 @@
     "referenced_law": "參考法條",
     "expires_in": "本報告將在{{hours}}小時後自動刪除",
     "share": "分享",
-    "share_text": "我用合約檢查器分析了合約風險",
+    "share_text": "我用ContractGuard分析了合約風險",
     "language_locked_note": "本報告正文在生成時已固定為{{language}}。切換網站語言只會影響介面文案，不會重新翻譯報告內容。",
     "share_note": "分享時只會帶出報告連結，不會包含原合約全文；連結也會在 24 小時內失效。",
     "show_original_clause": "查看對應原條款",
@@ -114,6 +115,33 @@
   "footer": {
     "disclaimer": "本サービスは法律相談ではありません。具体的な法的判断は弁護士にご相談ください（本服務不構成法律諮詢。具體法律判斷請諮詢專業律師。）",
     "privacy": "隱私權政策",
-    "terms": "服務條款"
+    "terms": "服務條款",
+    "copyright": "© 2026 ContractGuard"
+  },
+  "privacy": {
+    "page_title": "隱私權政策",
+    "summary": "ContractGuard 將您的隱私放在首位。合約文本在分析完成後立即從伺服器刪除，不做任何保存。我們僅收集電子信箱，且僅用於寄送報告連結。",
+    "last_updated": "最後更新：{{date}}"
+  },
+  "terms": {
+    "page_title": "服務條款",
+    "summary": "ContractGuard 是基於AI技術的合約風險分析服務，不構成法律諮詢。具體法律判斷請諮詢專業律師。分析開始後不支援退款。報告在24小時後自動刪除。",
+    "last_updated": "最後更新：{{date}}"
+  },
+  "examples": {
+    "section_kicker": "分析示例",
+    "section_title": "看看分析報告長什麼樣",
+    "section_desc": "以下是基於真實合約場景的AI分析示例",
+    "tab_rental": "租屋合約",
+    "tab_employment": "勞動合約",
+    "tab_parttime": "兼職合約",
+    "badge": "示例",
+    "cta": "分析你的合約",
+    "rental_title": "租屋合約分析示例",
+    "rental_desc": "東京都內1LDK標準租賃合約",
+    "employment_title": "勞動合約分析示例",
+    "employment_desc": "IT企業正式員工僱用合約",
+    "parttime_title": "兼職合約分析示例",
+    "parttime_desc": "餐飲店兼職僱用合約"
   }
 }

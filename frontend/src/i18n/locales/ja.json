@@ -1,6 +1,6 @@
 {
   "app": {
-    "title": "契約チェッカー",
+    "title": "ContractGuard",
     "subtitle": "AI契約書リスク分析サービス"
   },
   "disclaimer": {
@@ -8,7 +8,8 @@
   },
   "nav": {
     "home": "ホーム",
-    "language": "言語"
+    "language": "言語",
+    "examples": "事例紹介"
   },
   "upload": {
     "title": "契約書をアップロード",
@@ -91,7 +92,7 @@
     "referenced_law": "参照法令",
     "expires_in": "このレポートは{{hours}}時間後に自動削除されます",
     "share": "共有",
-    "share_text": "契約チェッカーで契約書のリスク分析を行いました",
+    "share_text": "ContractGuardで契約書のリスク分析を行いました",
     "language_locked_note": "このレポート本文は生成時に{{language}}で確定しています。サイトの表示言語を切り替えても、レポート本文自体は再翻訳されません。",
     "share_note": "共有されるのはレポートリンクのみです。元の契約本文は含まれず、リンクも 24 時間以内に失効します。",
     "show_original_clause": "元の条項を表示",
@@ -114,6 +115,33 @@
   "footer": {
     "disclaimer": "本サービスは法律相談ではありません。具体的な法的判断は弁護士にご相談ください",
     "privacy": "プライバシーポリシー",
-    "terms": "利用規約"
+    "terms": "利用規約",
+    "copyright": "© 2026 ContractGuard"
+  },
+  "privacy": {
+    "page_title": "プライバシーポリシー",
+    "summary": "ContractGuardはお客様のプライバシーを最優先にしています。契約書テキストは分析完了後にサーバーから即時削除され、保存されません。収集するのはメールアドレスのみで、レポートリンクの送信にのみ使用します。",
+    "last_updated": "最終更新：{{date}}"
+  },
+  "terms": {
+    "page_title": "利用規約",
+    "summary": "ContractGuardはAI技術を使用した契約書リスク分析サービスです。法律相談ではなく、具体的な法的判断は弁護士にご相談ください。分析開始後の返金はできません。レポートは24時間後に自動削除されます。",
+    "last_updated": "最終更新：{{date}}"
+  },
+  "examples": {
+    "section_kicker": "分析サンプル",
+    "section_title": "分析レポートのサンプル",
+    "section_desc": "実際の契約シーンに基づくAI分析の例をご覧ください",
+    "tab_rental": "賃貸契約",
+    "tab_employment": "雇用契約",
+    "tab_parttime": "アルバイト契約",
+    "badge": "サンプル",
+    "cta": "あなたの契約を分析する",
+    "rental_title": "賃貸借契約の分析例",
+    "rental_desc": "東京都内1LDKの標準的な賃貸契約",
+    "employment_title": "雇用契約の分析例",
+    "employment_desc": "IT企業の正社員雇用契約",
+    "parttime_title": "アルバイト契約の分析例",
+    "parttime_desc": "飲食店のパートタイム雇用契約"
   }
 }

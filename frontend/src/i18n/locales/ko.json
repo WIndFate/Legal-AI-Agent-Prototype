@@ -1,6 +1,6 @@
 {
   "app": {
-    "title": "계약 체커",
+    "title": "ContractGuard",
     "subtitle": "AI 계약서 리스크 분석 서비스"
   },
   "disclaimer": {
@@ -8,7 +8,8 @@
   },
   "nav": {
     "home": "홈",
-    "language": "언어"
+    "language": "언어",
+    "examples": "사례 소개"
   },
   "upload": {
     "title": "계약서 업로드",
@@ -91,7 +92,7 @@
     "referenced_law": "참조 법령",
     "expires_in": "이 보고서는 {{hours}}시간 후 자동 삭제됩니다",
     "share": "공유",
-    "share_text": "계약 체커로 계약서 리스크를 분석했습니다",
+    "share_text": "ContractGuard로 계약서 리스크를 분석했습니다",
     "language_locked_note": "이 보고서 본문은 생성 시 {{language}}로 고정되었습니다. 사이트 언어를 바꿔도 인터페이스만 바뀌고, 보고서 본문은 다시 번역되지 않습니다.",
     "share_note": "공유 시에는 보고서 링크만 전달되며 원본 계약서 본문은 포함되지 않습니다. 링크도 24시간 내 만료됩니다.",
     "show_original_clause": "원문 조항 보기",
@@ -114,6 +115,33 @@
   "footer": {
     "disclaimer": "本サービスは法律相談ではありません。具体的な法的判断は弁護士にご相談ください (본 서비스는 법률 상담이 아닙니다. 구체적인 법적 판단은 변호사에게 상담해 주세요.)",
     "privacy": "개인정보 처리방침",
-    "terms": "이용약관"
+    "terms": "이용약관",
+    "copyright": "© 2026 ContractGuard"
+  },
+  "privacy": {
+    "page_title": "개인정보 처리방침",
+    "summary": "ContractGuard는 고객의 개인정보를 최우선으로 보호합니다. 계약서 텍스트는 분석 완료 후 서버에서 즉시 삭제되며 저장하지 않습니다. 이메일 주소만 수집하며, 보고서 링크 전송 용도로만 사용합니다.",
+    "last_updated": "최종 업데이트: {{date}}"
+  },
+  "terms": {
+    "page_title": "이용약관",
+    "summary": "ContractGuard는 AI 기반 계약서 리스크 분석 서비스이며 법률 상담이 아닙니다. 구체적인 법적 판단은 변호사에게 상담해 주세요. 분석 시작 후 환불은 불가합니다. 보고서는 24시간 후 자동 삭제됩니다.",
+    "last_updated": "최종 업데이트: {{date}}"
+  },
+  "examples": {
+    "section_kicker": "분석 샘플",
+    "section_title": "분석 보고서 미리보기",
+    "section_desc": "실제 계약 시나리오 기반 AI 분석 사례를 확인하세요",
+    "tab_rental": "임대 계약",
+    "tab_employment": "고용 계약",
+    "tab_parttime": "아르바이트 계약",
+    "badge": "샘플",
+    "cta": "내 계약서 분석하기",
+    "rental_title": "임대차 계약 분석 사례",
+    "rental_desc": "도쿄 1LDK 표준 임대 계약",
+    "employment_title": "고용 계약 분석 사례",
+    "employment_desc": "IT 기업 정규직 고용 계약",
+    "parttime_title": "아르바이트 계약 분석 사례",
+    "parttime_desc": "음식점 아르바이트 고용 계약"
   }
 }

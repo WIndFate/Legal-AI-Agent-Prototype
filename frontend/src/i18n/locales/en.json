@@ -1,6 +1,6 @@
 {
   "app": {
-    "title": "Contract Checker",
+    "title": "ContractGuard",
     "subtitle": "AI-Powered Contract Risk Analysis"
   },
   "disclaimer": {
@@ -8,7 +8,8 @@
   },
   "nav": {
     "home": "Home",
-    "language": "Language"
+    "language": "Language",
+    "examples": "Examples"
   },
   "upload": {
     "title": "Upload Your Contract",
@@ -91,7 +92,7 @@
     "referenced_law": "Referenced Law",
     "expires_in": "This report will be automatically deleted in {{hours}} hours",
     "share": "Share",
-    "share_text": "I analyzed my contract with Contract Checker",
+    "share_text": "I analyzed my contract with ContractGuard",
     "language_locked_note": "This report was generated in {{language}}. Changing the site language only updates the interface, not the report content itself.",
     "share_note": "Sharing only sends the report link. The original contract text is never included, and the link expires within 24 hours.",
     "show_original_clause": "Show original clause",
@@ -114,6 +115,33 @@
   "footer": {
     "disclaimer": "本サービスは法律相談ではありません。具体的な法的判断は弁護士にご相談ください (This service is not legal advice. Please consult a licensed attorney for specific legal decisions.)",
     "privacy": "Privacy Policy",
-    "terms": "Terms of Service"
+    "terms": "Terms of Service",
+    "copyright": "© 2026 ContractGuard"
+  },
+  "privacy": {
+    "page_title": "Privacy Policy",
+    "summary": "ContractGuard puts your privacy first. Contract text is deleted from the server immediately after analysis — we never store it. We only collect your email address, used solely to send the report link.",
+    "last_updated": "Last updated: {{date}}"
+  },
+  "terms": {
+    "page_title": "Terms of Service",
+    "summary": "ContractGuard is an AI-powered contract risk analysis service. It is not legal advice — please consult a licensed attorney for binding legal decisions. No refunds after analysis begins. Reports are automatically deleted after 24 hours.",
+    "last_updated": "Last updated: {{date}}"
+  },
+  "examples": {
+    "section_kicker": "Sample Reports",
+    "section_title": "See What You Get",
+    "section_desc": "Explore AI analysis examples based on real contract scenarios",
+    "tab_rental": "Rental",
+    "tab_employment": "Employment",
+    "tab_parttime": "Part-time",
+    "badge": "EXAMPLE",
+    "cta": "Analyze Your Contract",
+    "rental_title": "Rental Contract Analysis",
+    "rental_desc": "Standard 1LDK lease in Tokyo",
+    "employment_title": "Employment Contract Analysis",
+    "employment_desc": "Full-time IT company employment contract",
+    "parttime_title": "Part-time Contract Analysis",
+    "parttime_desc": "Restaurant part-time employment contract"
   }
 }

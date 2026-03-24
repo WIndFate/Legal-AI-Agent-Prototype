@@ -1,6 +1,6 @@
 {
   "app": {
-    "title": "Pemeriksa Kontrak",
+    "title": "ContractGuard",
     "subtitle": "Layanan analisis risiko kontrak berbasis AI"
   },
   "disclaimer": {
@@ -8,7 +8,8 @@
   },
   "nav": {
     "home": "Beranda",
-    "language": "Bahasa"
+    "language": "Bahasa",
+    "examples": "Contoh"
   },
   "upload": {
     "title": "Unggah kontrak",
@@ -91,7 +92,7 @@
     "referenced_law": "Hukum yang dirujuk",
     "expires_in": "Laporan ini akan dihapus otomatis dalam {{hours}} jam",
     "share": "Bagikan",
-    "share_text": "Saya menganalisis kontrak saya dengan Pemeriksa Kontrak",
+    "share_text": "Saya menganalisis kontrak saya dengan ContractGuard",
     "language_locked_note": "Isi laporan ini telah dikunci dalam {{language}} saat dibuat. Mengganti bahasa situs hanya mengubah antarmuka, bukan menerjemahkan ulang isi laporan.",
     "share_note": "Saat dibagikan, hanya tautan laporan yang dikirim. Teks kontrak asli tidak pernah disertakan, dan tautan juga akan kedaluwarsa dalam 24 jam.",
     "show_original_clause": "Lihat klausul asli",
@@ -114,6 +115,33 @@
   "footer": {
     "disclaimer": "本サービスは法律相談ではありません。具体的な法的判断は弁護士にご相談ください (Layanan ini bukan konsultasi hukum. Silakan berkonsultasi dengan pengacara untuk keputusan hukum tertentu.)",
     "privacy": "Kebijakan Privasi",
-    "terms": "Ketentuan Layanan"
+    "terms": "Ketentuan Layanan",
+    "copyright": "© 2026 ContractGuard"
+  },
+  "privacy": {
+    "page_title": "Kebijakan Privasi",
+    "summary": "ContractGuard mengutamakan privasi Anda. Teks kontrak dihapus dari server segera setelah analisis — kami tidak pernah menyimpannya. Kami hanya mengumpulkan alamat email Anda, yang digunakan hanya untuk mengirim tautan laporan.",
+    "last_updated": "Terakhir diperbarui: {{date}}"
+  },
+  "terms": {
+    "page_title": "Ketentuan Layanan",
+    "summary": "ContractGuard adalah layanan analisis risiko kontrak berbasis AI. Ini bukan konsultasi hukum — silakan berkonsultasi dengan pengacara untuk keputusan hukum. Tidak ada pengembalian dana setelah analisis dimulai. Laporan dihapus otomatis setelah 24 jam.",
+    "last_updated": "Terakhir diperbarui: {{date}}"
+  },
+  "examples": {
+    "section_kicker": "Contoh Laporan",
+    "section_title": "Lihat Hasil Analisis",
+    "section_desc": "Jelajahi contoh analisis AI berdasarkan skenario kontrak nyata",
+    "tab_rental": "Sewa",
+    "tab_employment": "Kerja",
+    "tab_parttime": "Paruh waktu",
+    "badge": "CONTOH",
+    "cta": "Analisis Kontrak Anda",
+    "rental_title": "Analisis kontrak sewa",
+    "rental_desc": "Kontrak sewa standar 1LDK di Tokyo",
+    "employment_title": "Analisis kontrak kerja",
+    "employment_desc": "Kontrak kerja penuh waktu perusahaan IT",
+    "parttime_title": "Analisis kontrak paruh waktu",
+    "parttime_desc": "Kontrak kerja paruh waktu restoran"
   }
 }

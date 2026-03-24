@@ -1,6 +1,6 @@
 {
   "app": {
-    "title": "合同检查器",
+    "title": "ContractGuard",
     "subtitle": "AI合同风险分析服务"
   },
   "disclaimer": {
@@ -8,7 +8,8 @@
   },
   "nav": {
     "home": "首页",
-    "language": "语言"
+    "language": "语言",
+    "examples": "案例展示"
   },
   "upload": {
     "title": "上传合同",
@@ -91,7 +92,7 @@
     "referenced_law": "参考法条",
     "expires_in": "本报告将在{{hours}}小时后自动删除",
     "share": "分享",
-    "share_text": "我用合同检查器分析了合同风险",
+    "share_text": "我用ContractGuard分析了合同风险",
     "language_locked_note": "本报告正文生成时已固定为{{language}}。切换站点语言只会影响界面文案，不会重新翻译报告内容。",
     "share_note": "分享时只会带出报告链接，不会包含原合同文本；链接也会在 24 小时内失效。",
     "show_original_clause": "查看对应原条款",
@@ -114,6 +115,33 @@
   "footer": {
     "disclaimer": "本サービスは法律相談ではありません。具体的な法的判断は弁護士にご相談ください（本服务不构成法律咨询。具体法律判断请咨询专业律师。）",
     "privacy": "隐私政策",
-    "terms": "服务条款"
+    "terms": "服务条款",
+    "copyright": "© 2026 ContractGuard"
+  },
+  "privacy": {
+    "page_title": "隐私政策",
+    "summary": "ContractGuard 将您的隐私放在首位。合同文本在分析完成后立即从服务器删除，不做任何保存。我们仅收集邮箱地址，且仅用于发送报告链接。",
+    "last_updated": "最后更新：{{date}}"
+  },
+  "terms": {
+    "page_title": "服务条款",
+    "summary": "ContractGuard 是基于AI技术的合同风险分析服务，不构成法律咨询。具体法律判断请咨询专业律师。分析开始后不支持退款。报告在24小时后自动删除。",
+    "last_updated": "最后更新：{{date}}"
+  },
+  "examples": {
+    "section_kicker": "分析示例",
+    "section_title": "看看分析报告长什么样",
+    "section_desc": "以下是基于真实合同场景的AI分析示例",
+    "tab_rental": "租房合同",
+    "tab_employment": "劳动合同",
+    "tab_parttime": "兼职合同",
+    "badge": "示例",
+    "cta": "分析你的合同",
+    "rental_title": "租房合同分析示例",
+    "rental_desc": "东京都内1LDK标准租赁合同",
+    "employment_title": "劳动合同分析示例",
+    "employment_desc": "IT企业正式员工雇用合同",
+    "parttime_title": "兼职合同分析示例",
+    "parttime_desc": "餐饮店兼职雇用合同"
   }
 }

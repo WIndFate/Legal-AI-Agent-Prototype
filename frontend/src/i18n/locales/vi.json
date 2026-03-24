@@ -1,6 +1,6 @@
 {
   "app": {
-    "title": "Kiểm Tra Hợp Đồng",
+    "title": "ContractGuard",
     "subtitle": "Dịch vụ phân tích rủi ro hợp đồng bằng AI"
   },
   "disclaimer": {
@@ -8,7 +8,8 @@
   },
   "nav": {
     "home": "Trang chủ",
-    "language": "Ngôn ngữ"
+    "language": "Ngôn ngữ",
+    "examples": "Ví dụ"
   },
   "upload": {
     "title": "Tải lên hợp đồng",
@@ -91,7 +92,7 @@
     "referenced_law": "Luật tham chiếu",
     "expires_in": "Báo cáo này sẽ tự động xóa sau {{hours}} giờ",
     "share": "Chia sẻ",
-    "share_text": "Tôi đã phân tích rủi ro hợp đồng bằng Kiểm Tra Hợp Đồng",
+    "share_text": "Tôi đã phân tích rủi ro hợp đồng bằng ContractGuard",
     "language_locked_note": "Nội dung báo cáo này đã được cố định bằng {{language}} khi tạo. Việc đổi ngôn ngữ trang chỉ thay đổi giao diện, không dịch lại nội dung báo cáo.",
     "share_note": "Khi chia sẻ, chỉ có liên kết báo cáo được gửi đi. Văn bản hợp đồng gốc không bao giờ được kèm theo, và liên kết cũng hết hạn trong vòng 24 giờ.",
     "show_original_clause": "Xem điều khoản gốc",
@@ -114,6 +115,33 @@
   "footer": {
     "disclaimer": "本サービスは法律相談ではありません。具体的な法的判断は弁護士にご相談ください (Dịch vụ này không phải là tư vấn pháp lý. Vui lòng tham khảo ý kiến luật sư cho các quyết định pháp lý cụ thể.)",
     "privacy": "Chính sách bảo mật",
-    "terms": "Điều khoản dịch vụ"
+    "terms": "Điều khoản dịch vụ",
+    "copyright": "© 2026 ContractGuard"
+  },
+  "privacy": {
+    "page_title": "Chính sách bảo mật",
+    "summary": "ContractGuard đặt quyền riêng tư của bạn lên hàng đầu. Văn bản hợp đồng được xóa khỏi máy chủ ngay sau khi phân tích — chúng tôi không bao giờ lưu trữ. Chúng tôi chỉ thu thập địa chỉ email, dùng duy nhất để gửi liên kết báo cáo.",
+    "last_updated": "Cập nhật lần cuối: {{date}}"
+  },
+  "terms": {
+    "page_title": "Điều khoản dịch vụ",
+    "summary": "ContractGuard là dịch vụ phân tích rủi ro hợp đồng bằng AI. Đây không phải tư vấn pháp lý — vui lòng tham khảo luật sư cho các quyết định pháp lý. Không hoàn tiền sau khi phân tích bắt đầu. Báo cáo tự động xóa sau 24 giờ.",
+    "last_updated": "Cập nhật lần cuối: {{date}}"
+  },
+  "examples": {
+    "section_kicker": "Báo cáo mẫu",
+    "section_title": "Xem kết quả phân tích",
+    "section_desc": "Khám phá ví dụ phân tích AI dựa trên các tình huống hợp đồng thực tế",
+    "tab_rental": "Thuê nhà",
+    "tab_employment": "Lao động",
+    "tab_parttime": "Bán thời gian",
+    "badge": "VÍ DỤ",
+    "cta": "Phân tích hợp đồng của bạn",
+    "rental_title": "Phân tích hợp đồng thuê nhà",
+    "rental_desc": "Hợp đồng thuê 1LDK tiêu chuẩn tại Tokyo",
+    "employment_title": "Phân tích hợp đồng lao động",
+    "employment_desc": "Hợp đồng lao động chính thức công ty IT",
+    "parttime_title": "Phân tích hợp đồng bán thời gian",
+    "parttime_desc": "Hợp đồng làm thêm nhà hàng"
   }
 }
