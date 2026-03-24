@@ -2,7 +2,7 @@ from pydantic import BaseModel, EmailStr
 
 
 class PaymentCreateRequest(BaseModel):
-    email: str
+    email: EmailStr
     contract_text: str
     input_type: str
     estimated_tokens: int

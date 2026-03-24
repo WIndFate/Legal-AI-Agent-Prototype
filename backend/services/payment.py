@@ -10,12 +10,17 @@ from backend.config import get_settings
 logger = logging.getLogger(__name__)
 
 
+def is_dev_payment_mode() -> bool:
+    """Treat missing KOMOJU secret as local development mode."""
+    return not bool(get_settings().KOMOJU_SECRET_KEY)
+
+
 async def create_payment_session(order_id: str, amount_jpy: int, email: str) -> str:
     """Create a KOMOJU payment session and return the session URL."""
     settings = get_settings()
 
-    if not settings.KOMOJU_SECRET_KEY:
-        # Dev mode: return a placeholder URL
+    if is_dev_payment_mode():
+        # Local development skips the external checkout page.
         logger.warning("KOMOJU_SECRET_KEY not set, returning placeholder payment URL")
         return f"http://localhost:5173/review/{order_id}?dev_payment=true"
 
@@ -43,7 +48,7 @@ async def verify_webhook(payload: bytes, signature: str) -> dict | None:
     settings = get_settings()
 
     if not settings.KOMOJU_WEBHOOK_SECRET:
-        # Dev mode: accept any payload
+        # Local development accepts unsigned webhook payloads.
         return json.loads(payload)
 
     expected = hmac.HMAC(

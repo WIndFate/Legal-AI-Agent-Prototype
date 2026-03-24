@@ -40,27 +40,10 @@ export default function PaymentPage() {
           }
         }
 
-        // Try starting review (payment confirmed server-side via webhook)
-        const reviewRes = await fetch('/api/review/stream', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ order_id: orderId }),
-        });
-
-        if (reviewRes.ok || reviewRes.status === 409) {
-          // Payment confirmed or analysis already running
-          setStatus('success');
-          setTimeout(() => navigate(`/review/${orderId}`, { replace: true }), 1000);
-          return;
-        }
-
-        if (reviewRes.status === 402) {
-          // Still waiting for payment confirmation
-          setStatus('pending');
-          if (!cancelled) {
-            setTimeout(checkStatus, 3000);
-          }
-          return;
+        // Still waiting for payment confirmation.
+        setStatus('pending');
+        if (!cancelled) {
+          setTimeout(checkStatus, 3000);
         }
       } catch {
         // Retry on network error

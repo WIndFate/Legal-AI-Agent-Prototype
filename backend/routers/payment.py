@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy import select
@@ -8,7 +9,7 @@ from backend.db.session import get_db
 from backend.models.order import Order
 from backend.models.referral import Referral
 from backend.schemas.payment import PaymentCreateRequest, PaymentCreateResponse
-from backend.services.payment import create_payment_session, verify_webhook
+from backend.services.payment import create_payment_session, verify_webhook, is_dev_payment_mode
 from backend.services.analytics import capture as posthog_capture
 
 try:
@@ -39,7 +40,6 @@ async def create_payment(
         referral = ref_result.scalar_one_or_none()
         if referral and referral.uses_count < referral.max_uses:
             discount_jpy = referral.discount_jpy
-            referral.uses_count += 1
         else:
             logger.info("Invalid or exhausted referral code: %s", request.referral_code)
 
@@ -60,6 +60,12 @@ async def create_payment(
     db.add(order)
     await db.commit()
     await db.refresh(order)
+
+    if is_dev_payment_mode():
+        order.payment_status = "paid"
+        order.paid_at = datetime.now(timezone.utc)
+        order.komoju_session_id = "dev-payment"
+        await db.commit()
 
     # Create KOMOJU payment session
     session_url = await create_payment_session(
@@ -108,7 +114,6 @@ async def payment_webhook(
         payment_data = event.get("data", {})
         order_id = payment_data.get("metadata", {}).get("order_id")
         if order_id:
-            from datetime import datetime, timezone
             result = await db.execute(
                 select(Order).where(Order.id == order_id)
             )
@@ -117,6 +122,15 @@ async def payment_webhook(
                 order.payment_status = "paid"
                 order.paid_at = datetime.now(timezone.utc)
                 order.komoju_session_id = payment_data.get("id", "")
+
+                if order.referral_code_used:
+                    referral_result = await db.execute(
+                        select(Referral).where(Referral.referral_code == order.referral_code_used)
+                    )
+                    referral = referral_result.scalar_one_or_none()
+                    if referral and referral.uses_count < referral.max_uses:
+                        referral.uses_count += 1
+
                 await db.commit()
                 logger.info("Order %s marked as paid", order_id)
                 posthog_capture(
