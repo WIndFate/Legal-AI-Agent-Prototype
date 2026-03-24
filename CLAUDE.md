@@ -233,6 +233,7 @@ Embeddings are generated via OpenAI API (httpx direct call, not langchain).
 - `cleanup.py` runs every hour via APScheduler in lifespan
 - Deletes expired reports (past `expires_at`)
 - Nullifies `contract_text` for completed orders (defense in depth)
+- The frontend may keep a session-only copy of the uploaded contract text in `sessionStorage` for on-device comparison on review/report pages; this does not change the backend rule that contract text is deleted after analysis and is never included in shared links.
 
 ### Local startup bootstrap
 - `main.py` calls `init_db()` only when `APP_ENV=development`, so local Docker development can create `orders`, `reports`, and `referrals` automatically.
@@ -249,6 +250,12 @@ Embeddings are generated via OpenAI API (httpx direct call, not langchain).
 - The same critical paths also emit PostHog events when analytics is configured.
 - `main.py` initializes application logging at `INFO` level so these backend logs are visible in Docker and deployment logs.
 
+### Review/report UX behavior
+- The review page should show user-facing progress text during SSE streaming; do not expose raw internal tool names like `analyze_clause_risk` to end users.
+- `/api/report/{order_id}` must return the same payload shape whether data comes from Redis or PostgreSQL.
+- Report content is fixed in the language chosen at payment time; later UI language switches only affect surrounding page chrome unless an explicit re-translation feature is implemented.
+- Same-session original contract comparison on the frontend is acceptable only as a session-local convenience; keep it out of backend persistence, shared links, and email delivery.
+
 ### RAG evaluation
 `GET /api/eval/rag` runs Recall@K and MRR against `eval_dataset.json`.
 Eval only references JSON document IDs; TXT chunk auto-generated IDs do not affect eval.
@@ -257,6 +264,7 @@ Eval only references JSON document IDs; TXT chunk auto-generated IDs do not affe
 ### Regression checks
 - `scripts/check_locale_keys.sh` ensures all 9 locale files keep the same translation key set as `frontend/src/i18n/locales/ja.json`.
 - `scripts/run_backend_pytests.sh` installs backend dev dependencies in Docker and runs the backend regression tests.
+- `scripts/smoke_local_flow.sh` treats curl exit code `18` as acceptable for SSE shutdown and relies on the streamed `complete` / `error` events for pass-fail.
 
 ---
 

@@ -98,6 +98,9 @@ docker compose up -d backend postgres redis
 4. 本地开发时如果 `APP_ENV=development` 且 `KOMOJU_SECRET_KEY` 为空，订单会自动标记为已支付并跳到审查页。
 5. 在 `/review/:orderId` 观看 SSE 流式分析。
 6. 在 `/report/:orderId` 获取已保存报告。
+7. 流式审查阶段现在展示的是面向用户的进度文案，不再直接暴露内部工具/方法名。
+8. 报告正文会固定为支付时选择的语言；之后切换站点语言只影响页面壳层文案。
+9. 在上传合同的同一设备当前会话中，审查页和报告页会保留一份仅限本会话可见的原合同文本，便于对照阅读；分享链接和邮件链接不会带出原文。
 
 ## 关键实现说明
 
@@ -107,8 +110,10 @@ docker compose up -d backend postgres redis
 - 为了本地 Docker 开发可直接运行，后端启动时会自动补齐关系表。生产环境仍应显式执行 Alembic migration。
 - 生产环境如果缺少 KOMOJU / Resend 关键配置，或 `FRONTEND_URL` 仍指向 `localhost`，启动会直接失败。
 - 支付、审查、邮件、报告读取路径现在会输出结构化应用日志，并补充 PostHog 埋点，便于联调定位问题。
+- `/api/report/{order_id}` 在 Redis 命中和 PostgreSQL fallback 两种情况下，现在都会返回一致的 payload 结构。
 - `analyze_clause_risk` 工具内部直接做 RAG 检索，没有单独的 retrieval node。
 - `scripts/smoke_local_flow.sh` 是标准本地回归入口，会验证 `health -> upload -> payment -> review -> report -> contract deletion`。
+- `scripts/smoke_local_flow.sh` 已兼容 SSE 正常收流时可能出现的 `curl` 退出码 `18`，会以实际流事件内容判断成功与否。
 - `scripts/check_locale_keys.sh` 会检查 9 个语言文件是否与 `ja.json` 保持相同键集合。
 - `scripts/check_rag_eval.sh` 会检查 `/api/eval/rag` 是否满足当前本地基线阈值（`Recall@3 >= 0.5`、`MRR >= 0.6`）。
 - `scripts/run_backend_pytests.sh` 会在 Docker 内安装 backend dev 依赖并执行回归单测。

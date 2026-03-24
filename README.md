@@ -98,6 +98,9 @@ docker compose up -d backend postgres redis
 4. In local dev, if `APP_ENV=development` and `KOMOJU_SECRET_KEY` is empty, the order is auto-marked as paid and redirected to review.
 5. Watch SSE analysis on `/review/:orderId`.
 6. Retrieve the saved report on `/report/:orderId`.
+7. During the live review, the UI now shows user-facing progress text instead of raw internal tool names.
+8. The saved report keeps the language chosen at payment time; switching the site language later only changes the page chrome.
+9. On the same device session that uploaded the contract, the review/report pages keep a session-only copy of the original contract text for side-by-side reading. Shared links and emailed links do not include that original text.
 
 ## Important Implementation Notes
 
@@ -107,8 +110,10 @@ docker compose up -d backend postgres redis
 - The backend bootstraps relational tables on startup for local Docker development. Production should still run Alembic migrations explicitly.
 - Production startup now fails fast if KOMOJU/Resend credentials are missing or `FRONTEND_URL` still points to `localhost`.
 - Payment, review, email, and report retrieval paths now emit structured application logs and PostHog events for easier integration debugging.
+- `/api/report/{order_id}` now returns the same payload shape for both Redis cache hits and PostgreSQL fallback reads.
 - `analyze_clause_risk` performs RAG lookup internally; there is no separate retrieval node.
 - `scripts/smoke_local_flow.sh` is the repeatable local regression entrypoint for `health -> upload -> payment -> review -> report -> contract deletion`.
+- `scripts/smoke_local_flow.sh` tolerates curl exit code `18` on SSE shutdown and validates success from the actual streamed events instead.
 - `scripts/check_locale_keys.sh` verifies that all 9 locale files keep the same translation key set as `ja.json`.
 - `scripts/check_rag_eval.sh` checks `/api/eval/rag` against the current local baseline thresholds (`Recall@3 >= 0.5`, `MRR >= 0.6`).
 - `scripts/run_backend_pytests.sh` runs the backend regression tests inside Docker after installing dev dependencies in the running backend container.
