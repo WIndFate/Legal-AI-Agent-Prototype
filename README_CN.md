@@ -75,6 +75,13 @@ docker compose up --build
 - 后端：`http://localhost:8000`
 - 健康检查：`http://localhost:8000/api/health`
 
+本地回归脚本：
+
+```bash
+docker compose up -d backend postgres redis
+./scripts/smoke_local_flow.sh
+```
+
 ## 本地体验流程
 
 1. 打开前端并上传文本、图片或 PDF 合同。
@@ -92,12 +99,14 @@ docker compose up --build
 - 为了本地 Docker 开发可直接运行，后端启动时会自动补齐关系表。生产环境仍应显式执行 Alembic migration。
 - 生产环境如果缺少 KOMOJU / Resend 关键配置，或 `FRONTEND_URL` 仍指向 `localhost`，启动会直接失败。
 - `analyze_clause_risk` 工具内部直接做 RAG 检索，没有单独的 retrieval node。
+- `scripts/smoke_local_flow.sh` 是标准本地回归入口，会验证 `health -> upload -> payment -> review -> report -> contract deletion`。
 
 ## 仓库入口
 
 - [`backend/main.py`](./backend/main.py)：应用启动、路由注册、Sentry/PostHog、清理任务
 - [`backend/routers/review.py`](./backend/routers/review.py)：SSE 审查、报告落库、隐私清理
 - [`backend/rag/store.py`](./backend/rag/store.py)：pgvector 存储与检索
+- [`scripts/smoke_local_flow.sh`](./scripts/smoke_local_flow.sh)：端到端本地 smoke/regression 脚本
 - [`frontend/src/main.tsx`](./frontend/src/main.tsx)：前端路由、i18n、分析初始化
 - [`SPEC.md`](./SPEC.md)：详细进度、待办和风险
 - [`DESIGN.md`](./DESIGN.md)：产品设计和商业定位

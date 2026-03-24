@@ -75,6 +75,13 @@ docker compose up --build
 - Backend: `http://localhost:8000`
 - Health: `http://localhost:8000/api/health`
 
+ローカル回帰スクリプト:
+
+```bash
+docker compose up -d backend postgres redis
+./scripts/smoke_local_flow.sh
+```
+
 ## ローカル確認フロー
 
 1. フロントエンドでテキスト、画像、または PDF 契約書をアップロードします。
@@ -92,12 +99,14 @@ docker compose up --build
 - ローカル Docker 開発を即時実行できるよう、バックエンド起動時に関係テーブルを自動作成します。本番では Alembic migration を明示的に実行してください。
 - 本番環境で KOMOJU / Resend の必須設定が不足している場合、または `FRONTEND_URL` が `localhost` のままの場合は起動時に失敗します。
 - `analyze_clause_risk` ツールが内部で直接 RAG 検索を行うため、独立した retrieval node はありません。
+- `scripts/smoke_local_flow.sh` は `health -> upload -> payment -> review -> report -> contract deletion` を検証する標準ローカル回帰入口です。
 
 ## 主要ファイル
 
 - [`backend/main.py`](./backend/main.py): 起動処理、ルーター登録、Sentry/PostHog、クリーンアップ
 - [`backend/routers/review.py`](./backend/routers/review.py): SSE 審査、レポート保存、プライバシー削除
 - [`backend/rag/store.py`](./backend/rag/store.py): pgvector 保存と検索
+- [`scripts/smoke_local_flow.sh`](./scripts/smoke_local_flow.sh): ローカル end-to-end smoke/regression スクリプト
 - [`frontend/src/main.tsx`](./frontend/src/main.tsx): ルーター、i18n、分析初期化
 - [`SPEC.md`](./SPEC.md): 詳細な進捗、未完了項目、リスク
 - [`DESIGN.md`](./DESIGN.md): プロダクト設計とビジネス方針

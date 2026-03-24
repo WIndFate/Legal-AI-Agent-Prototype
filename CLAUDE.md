@@ -95,6 +95,10 @@ curl http://localhost:8000/api/health
 curl -X POST http://localhost:8000/api/upload \
   -F input_type=text \
   -F text='第1条（目的）本契約は業務委託について定める。'
+
+# Local smoke regression
+docker compose up -d backend postgres redis
+./scripts/smoke_local_flow.sh
 ```
 
 - Backend: `http://localhost:8000`
@@ -166,6 +170,8 @@ frontend/
       ReviewPage.tsx  # SSE review progress + live report
       ReportPage.tsx  # Saved report page
 docker-compose.yml  # backend + frontend + pgvector/pg16 + redis:7-alpine
+scripts/
+  smoke_local_flow.sh  # local end-to-end regression script
 pyproject.toml
 alembic.ini
 ```

@@ -75,6 +75,13 @@ Endpoints:
 - Backend: `http://localhost:8000`
 - Health: `http://localhost:8000/api/health`
 
+Smoke regression:
+
+```bash
+docker compose up -d backend postgres redis
+./scripts/smoke_local_flow.sh
+```
+
 ## Local Flow
 
 1. Open the frontend and upload contract text, image, or PDF.
@@ -92,12 +99,14 @@ Endpoints:
 - The backend bootstraps relational tables on startup for local Docker development. Production should still run Alembic migrations explicitly.
 - Production startup now fails fast if KOMOJU/Resend credentials are missing or `FRONTEND_URL` still points to `localhost`.
 - `analyze_clause_risk` performs RAG lookup internally; there is no separate retrieval node.
+- `scripts/smoke_local_flow.sh` is the repeatable local regression entrypoint for `health -> upload -> payment -> review -> report -> contract deletion`.
 
 ## Repo Pointers
 
 - [`backend/main.py`](./backend/main.py): app startup, routers, Sentry/PostHog, cleanup scheduler
 - [`backend/routers/review.py`](./backend/routers/review.py): SSE review, report persistence, privacy cleanup
 - [`backend/rag/store.py`](./backend/rag/store.py): pgvector storage and search
+- [`scripts/smoke_local_flow.sh`](./scripts/smoke_local_flow.sh): end-to-end local smoke/regression flow
 - [`frontend/src/main.tsx`](./frontend/src/main.tsx): router entry, i18n, analytics bootstrap
 - [`SPEC.md`](./SPEC.md): detailed implementation status, pending work, and risks
 - [`DESIGN.md`](./DESIGN.md): product rationale and go-to-market plan
