@@ -6,7 +6,7 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 from backend.rag.store import get_store
 
 
-def load_legal_knowledge() -> int:
+async def load_legal_knowledge() -> int:
     """Load legal knowledge from JSON file into the vector store.
 
     Returns the number of documents loaded.
@@ -16,11 +16,11 @@ def load_legal_knowledge() -> int:
         documents = json.load(f)
 
     store = get_store()
-    store.add_documents(documents)
+    await store._add_documents_async(documents)
     return len(documents)
 
 
-def load_text_documents() -> int:
+async def load_text_documents() -> int:
     """Load .txt files from data/ directory, chunk them, and store in vector store.
 
     chunk_size=200, chunk_overlap=40, separators prioritize paragraph/sentence boundaries.
@@ -41,6 +41,6 @@ def load_text_documents() -> int:
         text = txt_file.read_text(encoding="utf-8")
         chunks = splitter.split_text(text)
         source = txt_file.stem  # e.g. "civil_law"
-        store.add_chunks(chunks, source)
+        await store._add_chunks_async(chunks, source)
         total += len(chunks)
     return total

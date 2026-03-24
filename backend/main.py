@@ -19,9 +19,9 @@ async def lifespan(app: FastAPI):
     # Initialize RAG knowledge base
     logger.info("Loading legal knowledge into RAG store...")
     try:
-        count = load_legal_knowledge()
+        count = await load_legal_knowledge()
         logger.info(f"Loaded {count} JSON knowledge documents.")
-        chunk_count = load_text_documents()
+        chunk_count = await load_text_documents()
         logger.info(f"Loaded {chunk_count} text chunks from .txt files.")
     except Exception as e:
         logger.warning(f"Failed to load legal knowledge (will retry on first request): {e}")
