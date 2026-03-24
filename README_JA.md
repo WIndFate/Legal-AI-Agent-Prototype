@@ -1,175 +1,101 @@
-# 法律契約審査 AI エージェント
+# 契約チェッカー
 
-LangGraph、RAG、MCP、Tool Calling を活用した日本語法律契約書の AI 審査システム。
+在日外国人向けの日本語契約リスク分析サービスです。ユーザーはテキスト、画像、PDF の契約書をアップロードし、従量課金で SSE ストリーミング分析を見ながら、24 時間以内にレポートを取得できます。
 
 [English](./README.md) | [中文文档](./README_CN.md)
 
-## デモ
+## 現在の状況
 
-![デモスクリーンショット](./docs/demo-screenshot.png)
+2026-03-24 時点で、ローカル Docker 上の MVP フローは動作確認済みです。
+
+- `upload -> payment/create -> review/stream -> report -> 契約本文削除`
+- `pgvector` RAG は PostgreSQL 上で稼働
+- フロントエンドの 9 言語 UI は実装済み
+- `KOMOJU_SECRET_KEY` が未設定の場合、ローカル開発では自動的に支払い済み扱いになります
+
+リポジトリ外で未完了の項目:
+
+- Fly.io / Vercel / Supabase の本番デプロイ
+- KOMOJU、Resend、Sentry、PostHog の本番用認証情報
+- モバイル撮影と実機での手動テスト
 
 ## アーキテクチャ
 
-```
-┌─────────────┐    ┌──────────────────────────────────────────┐
-│  React UI   │───▶│  FastAPI バックエンド                      │
-└─────────────┘    │                                          │
-                   │  LangGraph Agent ワークフロー:              │
-┌─────────────┐    │  契約解析 → リスク分析 → レポート生成          │
-│ Claude       │    │                                          │
-│ Desktop     │───▶│  ツール: analyze_clause_risk（RAG内蔵）   │
-│ (MCPクライアント)│   │        generate_suggestion（LLM内蔵）   │
-└─────────────┘    │                                          │
-                   │                                          │
-                   │  RAG: ChromaDB + OpenAI Embeddings       │
-                   └──────────────────────────────────────────┘
+```text
+React/Vite フロントエンド
+  -> FastAPI バックエンド
+  -> LangGraph パイプライン:
+     parse_contract
+     -> analyze_risks
+     -> generate_report
+
+RAG:
+  PostgreSQL pgvector + OpenAI embeddings
+
+永続化:
+  PostgreSQL: orders / reports / referrals
+  Redis: 24時間レポートキャッシュ
+
+外部連携:
+  GPT-4o / GPT-4o-mini
+  KOMOJU
+  Resend
+  PostHog
+  Sentry
 ```
 
 ## 技術スタック
 
-- **LLM**: OpenAI GPT-4o
-- **エージェントフレームワーク**: LangGraph (StateGraph)
-- **RAG**: ChromaDB + text-embedding-3-small
-- **MCP**: FastMCP (Python)
-- **バックエンド**: FastAPI
-- **フロントエンド**: React + Vite + TypeScript
-- **デプロイ**: Docker Compose
-- **テキスト分割**: langchain-text-splitters for document chunking
+- バックエンド: FastAPI, SQLAlchemy async, Alembic, Redis, APScheduler
+- Agent: LangGraph, LangChain Tool Calling
+- RAG: PostgreSQL `pgvector`, `text-embedding-3-small`
+- フロントエンド: React, Vite, TypeScript, React Router, i18next
+- インフラ: Docker Compose, Fly.io 設定, Vercel 設定
 
 ## クイックスタート
 
-### 前提条件
+前提:
 
-- Docker & Docker Compose
+- Docker Desktop / Docker Engine
 - OpenAI API Key
 
-### 起動方法
+起動:
 
 ```bash
-cd legal-contract-agent
-
-# テンプレートから .env ファイルを作成し、OpenAI API Key を設定
 cp .env.example .env
-# .env を編集: OPENAI_API_KEY=sk-your-key-here
+# .env に OPENAI_API_KEY を設定
 
-# 全サービスをビルド・起動
 docker compose up --build
 ```
 
-http://localhost:5173 を開き、日本語の契約書を貼り付けて「契約書を審査する」をクリック。
+エンドポイント:
 
-停止方法：
+- Frontend: `http://localhost:5173`
+- Backend: `http://localhost:8000`
+- Health: `http://localhost:8000/api/health`
 
-```bash
-docker compose down        # コンテナを停止
-docker compose down -v     # コンテナ停止 + データボリューム削除
-```
+## ローカル確認フロー
 
-### Docker を使わない場合（代替方法）
+1. フロントエンドでテキスト、画像、または PDF 契約書をアップロードします。
+2. token 見積もり、価格、PII 警告を確認します。
+3. 支払い注文を作成します。
+4. ローカル開発では `KOMOJU_SECRET_KEY` が空なら自動的に支払い済みになります。
+5. `/review/:orderId` で SSE ストリーミング分析を確認します。
+6. `/report/:orderId` で保存済みレポートを取得します。
 
-```bash
-# Python 依存関係のインストール
-pip install .
+## 実装上の重要点
 
-# フロントエンド依存関係のインストール
-cd frontend && npm install && cd ..
+- ユーザー契約本文はベクトル DB に保存しません。
+- 分析完了後、`orders.contract_text` は `NULL` に更新されます。
+- レポートは Redis に 24 時間キャッシュされ、PostgreSQL に期限付きで保存されます。
+- ローカル Docker 開発を即時実行できるよう、バックエンド起動時に関係テーブルを自動作成します。本番では Alembic migration を明示的に実行してください。
+- `analyze_clause_risk` ツールが内部で直接 RAG 検索を行うため、独立した retrieval node はありません。
 
-# ターミナル 1：バックエンド起動
-uvicorn backend.main:app --reload
+## 主要ファイル
 
-# ターミナル 2：フロントエンド起動
-cd frontend && npm run dev
-```
-
-### MCP Server（Claude Desktop 連携）
-
-```bash
-python -m backend.mcp.server
-```
-
-Claude Desktop の設定に追加：
-
-```json
-{
-  "mcpServers": {
-    "legal-review": {
-      "command": "python",
-      "args": ["-m", "backend.mcp.server"],
-      "cwd": "/path/to/legal-contract-agent"
-    }
-  }
-}
-```
-
-## 設計上の主要判断
-
-- **シンプルな Chain ではなく LangGraph を採用した理由**：条件分岐、状態管理をサポートし、マルチエージェント協調への拡張が可能
-- **RAG の価値**：エージェントの回答を信頼できる法律知識に基づかせ、LLM の記憶のみに依存しない
-- **MCP の意義**：標準化された AI ツールプロトコルにより、任意のクライアント（Claude Desktop 等）から契約審査機能を呼び出し可能
-- **Tool Calling**：エージェントがどのツールをいつ呼び出すかを自律的に判断し、自律的意思決定能力を実現
-- **TXT チャンク分割**：長文 `.txt` は `RecursiveCharacterTextSplitter`（chunk_size=200, overlap=40）で分割し、JSON 知識と同一 ChromaDB に格納。`store.search()` で統合検索。
-- **契約書は保存しない**：ユーザーの契約テキストはクエリ専用。ベクトル DB には保存しない。
-
-## RAG 評価モジュール
-
-RAG 検索パイプラインの品質を定量化するための eval モジュールを内蔵しています。
-
-### 評価対象
-
-`analyze_clause_risk` ツールは ChromaDB 検索を通じて、各契約条項に関連する法律知識を取得します。eval モジュールはこの検索ステップの精度を計測します。
-
-### 評価指標
-
-| 指標 | 説明 |
-|------|------|
-| **Recall@K** | 上位 K 件の結果に関連文書が含まれる割合 |
-| **MRR** | 平均相互順位 —— 最初の関連結果の順位の逆数の平均 |
-
-### テストデータセット
-
-`backend/data/eval_dataset.json` に手動でラベル付けした 5 件のサンプルを用意。典型的な契約リスクシナリオを網羅：
-
-| ID | シナリオ |
-|----|----------|
-| eval_001 | 損害賠償上限なし条項 |
-| eval_002 | 競業避止期間過長（5年） |
-| eval_003 | 一方的解除権 |
-| eval_004 | 知的財産権・著作権帰属 |
-| eval_005 | 秘密保持期間の定めなし |
-
-各サンプルにはクエリテキストと、`legal_knowledge.json` から取得されるべき関連文書 ID が含まれます。
-
-### 評価の実行方法
-
-```bash
-# まずバックエンドを起動
-docker compose up --build backend
-
-# デフォルト k=3 で評価実行
-curl http://localhost:8000/api/eval/rag
-
-# k を指定して実行
-curl "http://localhost:8000/api/eval/rag?k=5"
-```
-
-### レスポンス例
-
-```json
-{
-  "k": 3,
-  "num_samples": 5,
-  "mean_recall_at_k": 0.72,
-  "mrr": 0.85,
-  "per_sample": [
-    {
-      "id": "eval_001",
-      "description": "損害賠償無制限条項",
-      "recall_at_k": 0.667,
-      "reciprocal_rank": 1.0,
-      "retrieved_ids": ["civil_code_415", "risk_liability_unlimited", "civil_code_416"],
-      "relevant_ids": ["civil_code_415", "civil_code_416", "risk_liability_unlimited"]
-    }
-  ]
-}
-```
-
+- [`backend/main.py`](./backend/main.py): 起動処理、ルーター登録、Sentry/PostHog、クリーンアップ
+- [`backend/routers/review.py`](./backend/routers/review.py): SSE 審査、レポート保存、プライバシー削除
+- [`backend/rag/store.py`](./backend/rag/store.py): pgvector 保存と検索
+- [`frontend/src/main.tsx`](./frontend/src/main.tsx): ルーター、i18n、分析初期化
+- [`SPEC.md`](./SPEC.md): 詳細な進捗、未完了項目、リスク
+- [`DESIGN.md`](./DESIGN.md): プロダクト設計とビジネス方針

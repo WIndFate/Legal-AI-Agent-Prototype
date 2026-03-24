@@ -46,23 +46,27 @@ All five docs must stay consistent with the actual codebase. Do not commit code-
 
 ## Project Overview
 
-**契約チェッカー** — An AI-powered contract risk analysis service for Chinese residents in Japan. Users upload Japanese contracts (photo/PDF/text), pay per use (¥299–¥1,299), and receive a Chinese-language risk analysis report via SSE streaming.
+**契約チェッカー** — An AI-powered contract risk analysis service for foreign residents in Japan. Users upload Japanese contracts (photo/PDF/text), pay per use (¥299–¥1,299), and receive a report in their selected language via SSE streaming.
 
 **Target Users:** Chinese people living in Japan (~800K) who need to understand Japanese legal contracts but face language barriers.
 
-**Core Value:** Affordable (price of a coffee), instant, Chinese-language risk analysis of Japanese contracts — filling the gap between "free but unreliable" (social media) and "professional but expensive" (lawyers at ¥30,000–50,000).
+**Core Value:** Affordable (price of a coffee), instant, understandable risk analysis of Japanese contracts — filling the gap between "free but unreliable" (social media) and "professional but expensive" (lawyers at ¥30,000–50,000).
 
-Built with LangGraph (agentic loop), ChromaDB (RAG), FastAPI (REST + SSE), React/Vite (frontend), and FastMCP (MCP server).
+Built with LangGraph (agentic loop), PostgreSQL pgvector (RAG), FastAPI (REST + SSE), React/Vite (frontend), Redis, and FastMCP (MCP server).
 
-**Current prototype pipeline:** `parse_contract → analyze_risks → generate_report`
+**Current implemented local MVP pipeline:** `upload_contract → recognize_text → parse_contract → analyze_risks → generate_report → persist_report`
 
-- `parse_contract`: LLM splits contract text into individual clauses (JSON)
-- `analyze_risks`: LLM agentic loop calls `analyze_clause_risk` (RAG inside) and `generate_suggestion` tools
-- `generate_report`: Aggregates results into final structured report
+- `upload_contract`: accepts text / image / PDF, estimates price, detects PII
+- `recognize_text`: image OCR with GPT-4o Vision, PDF extraction with OCR fallback
+- `analyze_risks`: LLM agentic loop calls `analyze_clause_risk` (RAG inside) and `generate_suggestion`
+- `generate_report`: aggregates results and translates to target language
+- `persist_report`: stores report, caches it, emails link, and deletes contract text
 
 **Target MVP pipeline (per DESIGN.md):** `upload_contract → recognize_text (OCR) → parse_contract → analyze_risks → generate_report → output_chinese_report`
 
-New capabilities needed for MVP: photo/PDF upload, GPT-4o Vision OCR, KOMOJU payment, Chinese report output, email delivery, 24h auto-deletion.
+Current status as of 2026-03-24:
+- Local Docker end-to-end flow is verified through upload, payment creation, SSE review, report retrieval, and contract deletion.
+- Production deployment and third-party production credentials are still pending.
 
 ---
 
@@ -80,10 +84,13 @@ docker compose up --build backend
 # View backend logs
 docker compose logs -f backend
 
-# Test the API
-curl -X POST http://localhost:8000/api/review/stream \
-  -H "Content-Type: application/json" \
-  -d '{"contract_text": "第1条（目的）..."}'
+# Health check
+curl http://localhost:8000/api/health
+
+# Example upload
+curl -X POST http://localhost:8000/api/upload \
+  -F input_type=text \
+  -F text='第1条（目的）本契約は業務委託について定める。'
 ```
 
 - Backend: `http://localhost:8000`
@@ -148,7 +155,12 @@ tests/
   test_pii_detector.py     # PII detection unit tests
 frontend/
   src/
-    App.tsx       # Single-page UI consuming SSE stream
+    main.tsx      # Router entry + i18n + analytics bootstrap
+    pages/
+      HomePage.tsx    # Upload + pricing + payment form
+      PaymentPage.tsx # Payment polling / redirect
+      ReviewPage.tsx  # SSE review progress + live report
+      ReportPage.tsx  # Saved report page
 docker-compose.yml  # backend + frontend + pgvector/pg16 + redis:7-alpine
 pyproject.toml
 alembic.ini
@@ -185,7 +197,7 @@ calls `store.add_chunks()`. Both live in the same pgvector table `legal_knowledg
 ### RAG vector store: pgvector (not ChromaDB)
 `store.py` uses PostgreSQL pgvector extension with `text-embedding-3-small` (1536 dims).
 Embeddings are generated via OpenAI API (httpx direct call, not langchain).
-`search()` is sync-compatible (uses thread pool when called from sync LangChain tools).
+`search()` is sync-compatible and uses direct `asyncpg` querying to avoid event-loop issues during tool calls.
 `loader.py` is async and called with `await` from lifespan startup.
 
 ### Payment + Report flow
@@ -199,6 +211,10 @@ Embeddings are generated via OpenAI API (httpx direct call, not langchain).
 - `cleanup.py` runs every hour via APScheduler in lifespan
 - Deletes expired reports (past `expires_at`)
 - Nullifies `contract_text` for completed orders (defense in depth)
+
+### Local startup bootstrap
+- `main.py` calls `init_db()` during startup so local Docker development can create `orders`, `reports`, and `referrals` automatically.
+- Production environments should still run Alembic migrations explicitly rather than relying on implicit table creation.
 
 ### RAG evaluation
 `GET /api/eval/rag` runs Recall@K and MRR against `eval_dataset.json`.

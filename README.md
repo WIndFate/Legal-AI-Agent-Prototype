@@ -1,175 +1,101 @@
-# Legal Contract Review Agent
+# Contract Checker
 
-AI-powered Japanese legal contract review agent system built with LangGraph, RAG, MCP, and Tool Calling.
+AI-powered Japanese contract risk analysis for foreign residents in Japan. Users can upload a contract as text, image, or PDF, pay per use, watch the analysis through SSE streaming, and retrieve a report for 24 hours.
 
 [中文文档](./README_CN.md) | [日本語ドキュメント](./README_JA.md)
 
-## Demo
+## Status
 
-![Demo Screenshot](./docs/demo-screenshot.png)
+As of 2026-03-24, the local MVP flow is working in Docker:
+
+- `upload -> payment/create -> review/stream -> report retrieval -> contract deletion`
+- `pgvector` RAG is running in PostgreSQL
+- 9-language frontend is implemented
+- Dev-mode payment works when `KOMOJU_SECRET_KEY` is absent
+
+Still pending outside the repo:
+
+- Fly.io / Vercel / Supabase production deployment
+- KOMOJU, Resend, Sentry, and PostHog production credentials
+- Mobile camera/manual cross-device testing
 
 ## Architecture
 
-```
-┌─────────────┐    ┌──────────────────────────────────────────┐
-│  React UI   │───▶│  FastAPI Backend                         │
-└─────────────┘    │                                          │
-                   │  LangGraph Agent Workflow:                │
-┌─────────────┐    │  parse_contract → analyze_risks          │
-│ Claude       │    │  → generate_report                       │
-│ Desktop     │───▶│                                          │
-│ (MCP Client)│    │  Tools: analyze_clause_risk (RAG inside) │
-└─────────────┘    │         generate_suggestion (LLM inside) │
-                   │                                          │
-                   │  RAG: ChromaDB + OpenAI Embeddings       │
-                   └──────────────────────────────────────────┘
+```text
+React/Vite frontend
+  -> FastAPI backend
+  -> LangGraph pipeline:
+     parse_contract
+     -> analyze_risks
+     -> generate_report
+
+RAG:
+  PostgreSQL pgvector + OpenAI embeddings
+
+Persistence:
+  PostgreSQL for orders/reports/referrals
+  Redis for 24h report cache
+
+Integrations:
+  GPT-4o / GPT-4o-mini
+  KOMOJU
+  Resend
+  PostHog
+  Sentry
 ```
 
 ## Tech Stack
 
-- **LLM**: OpenAI GPT-4o
-- **Agent Framework**: LangGraph (StateGraph)
-- **RAG**: ChromaDB + text-embedding-3-small
-- **MCP**: FastMCP (Python)
-- **Backend**: FastAPI
-- **Frontend**: React + Vite + TypeScript
-- **Deployment**: Docker Compose
-- **Text Splitting**: langchain-text-splitters for document chunking
+- Backend: FastAPI, SQLAlchemy async, Alembic, Redis, APScheduler
+- Agent: LangGraph, LangChain tool calling
+- RAG: PostgreSQL `pgvector`, `text-embedding-3-small`
+- Frontend: React, Vite, TypeScript, React Router, i18next
+- Infra: Docker Compose, Fly.io config, Vercel config
 
 ## Quick Start
 
-### Prerequisites
+Prerequisites:
 
-- Docker & Docker Compose
-- OpenAI API Key
+- Docker Desktop / Docker Engine
+- OpenAI API key
 
-### Setup & Run
+Setup:
 
 ```bash
-cd legal-contract-agent
-
-# Create .env from template and add your OpenAI API Key
 cp .env.example .env
-# Edit .env: OPENAI_API_KEY=sk-your-key-here
+# fill OPENAI_API_KEY in .env
 
-# Build and start all services
 docker compose up --build
 ```
 
-Open http://localhost:5173 — paste a Japanese contract and click "契約書を審査する".
+Endpoints:
 
-To stop:
+- Frontend: `http://localhost:5173`
+- Backend: `http://localhost:8000`
+- Health: `http://localhost:8000/api/health`
 
-```bash
-docker compose down        # Stop containers
-docker compose down -v     # Stop and remove data volumes
-```
+## Local Flow
 
-### Run Without Docker (Alternative)
+1. Open the frontend and upload contract text, image, or PDF.
+2. Review token estimate, pricing, and PII warnings.
+3. Create payment.
+4. In local dev, if `KOMOJU_SECRET_KEY` is empty, the order is auto-marked as paid and redirected to review.
+5. Watch SSE analysis on `/review/:orderId`.
+6. Retrieve the saved report on `/report/:orderId`.
 
-```bash
-# Install Python dependencies
-pip install .
+## Important Implementation Notes
 
-# Install frontend dependencies
-cd frontend && npm install && cd ..
+- User contract text is never stored in the vector database.
+- After analysis completes, `orders.contract_text` is set to `NULL`.
+- Reports are cached in Redis for 24 hours and stored in PostgreSQL with expiry metadata.
+- The backend bootstraps relational tables on startup for local Docker development. Production should still run Alembic migrations explicitly.
+- `analyze_clause_risk` performs RAG lookup internally; there is no separate retrieval node.
 
-# Terminal 1: Start backend
-uvicorn backend.main:app --reload
+## Repo Pointers
 
-# Terminal 2: Start frontend
-cd frontend && npm run dev
-```
-
-### MCP Server (for Claude Desktop)
-
-```bash
-python -m backend.mcp.server
-```
-
-Add to Claude Desktop config:
-
-```json
-{
-  "mcpServers": {
-    "legal-review": {
-      "command": "python",
-      "args": ["-m", "backend.mcp.server"],
-      "cwd": "/path/to/legal-contract-agent"
-    }
-  }
-}
-```
-
-## Key Design Decisions
-
-- **LangGraph over simple chain**: Supports conditional branching, state management, and is extensible for multi-agent collaboration
-- **RAG**: Grounds agent responses in reliable legal knowledge rather than relying solely on LLM memory
-- **MCP**: Standardized AI tool protocol enabling any client (Claude Desktop, etc.) to invoke contract review capabilities
-- **Tool Calling**: Agent autonomously decides when to invoke which tool, demonstrating autonomous decision-making
-- **TXT Chunking**: Long `.txt` documents are split by `RecursiveCharacterTextSplitter` (chunk_size=200, overlap=40) and stored alongside JSON knowledge. Both are retrieved uniformly by `store.search()`.
-- **Contracts are query-only**: User contract text is never stored in the vector database — only the curated knowledge base is indexed.
-
-## RAG Evaluation
-
-The project includes a built-in eval module to measure the retrieval quality of the RAG pipeline.
-
-### What it evaluates
-
-The `analyze_clause_risk` tool relies on `ChromaDB` search to retrieve relevant legal knowledge for each contract clause. The eval module measures how well this retrieval performs.
-
-### Metrics
-
-| Metric | Description |
-|--------|-------------|
-| **Recall@K** | Fraction of relevant documents found in the top-K results |
-| **MRR** | Mean Reciprocal Rank — average of 1/rank of the first relevant result |
-
-### Dataset
-
-5 hand-labeled evaluation samples in `backend/data/eval_dataset.json`, covering typical contract risk scenarios:
-
-| ID | Scenario |
-|----|----------|
-| eval_001 | Unlimited liability clause |
-| eval_002 | Excessive non-compete period (5 years) |
-| eval_003 | Unilateral termination right |
-| eval_004 | IP / copyright assignment |
-| eval_005 | NDA with no time limit |
-
-Each sample contains the query text and the expected relevant document IDs from `legal_knowledge.json`.
-
-### Run the eval
-
-```bash
-# Start backend first
-docker compose up --build backend
-
-# Run evaluation with default k=3
-curl http://localhost:8000/api/eval/rag
-
-# Run with custom k
-curl "http://localhost:8000/api/eval/rag?k=5"
-```
-
-### Example response
-
-```json
-{
-  "k": 3,
-  "num_samples": 5,
-  "mean_recall_at_k": 0.72,
-  "mrr": 0.85,
-  "per_sample": [
-    {
-      "id": "eval_001",
-      "description": "損害賠償無制限条項",
-      "recall_at_k": 0.667,
-      "reciprocal_rank": 1.0,
-      "retrieved_ids": ["civil_code_415", "risk_liability_unlimited", "civil_code_416"],
-      "relevant_ids": ["civil_code_415", "civil_code_416", "risk_liability_unlimited"]
-    }
-  ]
-}
-```
-
+- [`backend/main.py`](./backend/main.py): app startup, routers, Sentry/PostHog, cleanup scheduler
+- [`backend/routers/review.py`](./backend/routers/review.py): SSE review, report persistence, privacy cleanup
+- [`backend/rag/store.py`](./backend/rag/store.py): pgvector storage and search
+- [`frontend/src/main.tsx`](./frontend/src/main.tsx): router entry, i18n, analytics bootstrap
+- [`SPEC.md`](./SPEC.md): detailed implementation status, pending work, and risks
+- [`DESIGN.md`](./DESIGN.md): product rationale and go-to-market plan
