@@ -1,7 +1,9 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import * as Sentry from '@sentry/react';
 
+import './analytics'; // Initialize PostHog + Sentry early
 import './i18n';
 import './App.css';
 
@@ -11,8 +13,8 @@ import PaymentPage from './pages/PaymentPage';
 import ReviewPage from './pages/ReviewPage';
 import ReportPage from './pages/ReportPage';
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
+function AppRoutes() {
+  return (
     <BrowserRouter>
       <Layout>
         <Routes>
@@ -23,5 +25,13 @@ createRoot(document.getElementById('root')!).render(
         </Routes>
       </Layout>
     </BrowserRouter>
+  );
+}
+
+createRoot(document.getElementById('root')!).render(
+  <StrictMode>
+    <Sentry.ErrorBoundary fallback={<p>An error occurred. Please refresh the page.</p>}>
+      <AppRoutes />
+    </Sentry.ErrorBoundary>
   </StrictMode>,
 );
