@@ -8,6 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 load_dotenv()
 
 from backend.config import get_settings
+from backend.db.session import init_db
 from backend.rag.loader import load_legal_knowledge, load_text_documents
 from backend.routers import health, upload, payment, review, report, referral, eval
 
@@ -16,6 +17,9 @@ logger = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # Bootstrap relational tables for local/dev startup.
+    await init_db()
+
     # Initialize RAG knowledge base
     logger.info("Loading legal knowledge into RAG store...")
     try:

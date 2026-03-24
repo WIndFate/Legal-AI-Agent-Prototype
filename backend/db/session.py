@@ -1,6 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from backend.config import get_settings
+from backend.models.base import Base
 
 _engine = None
 _session_factory = None
@@ -26,3 +27,12 @@ async def get_db() -> AsyncSession:
     factory = get_session_factory()
     async with factory() as session:
         yield session
+
+
+async def init_db() -> None:
+    """Create relational tables for local/dev startup if they do not exist yet."""
+    import backend.models  # noqa: F401 - register SQLAlchemy models
+
+    engine = get_engine()
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
