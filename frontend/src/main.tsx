@@ -12,6 +12,8 @@ import HomePage from './pages/HomePage';
 import PaymentPage from './pages/PaymentPage';
 import ReviewPage from './pages/ReviewPage';
 import ReportPage from './pages/ReportPage';
+import PrivacyPage from './pages/PrivacyPage';
+import TermsPage from './pages/TermsPage';
 
 function AppRoutes() {
   return (
@@ -22,6 +24,8 @@ function AppRoutes() {
           <Route path="/payment/:orderId" element={<PaymentPage />} />
           <Route path="/review/:orderId" element={<ReviewPage />} />
           <Route path="/report/:orderId" element={<ReportPage />} />
+          <Route path="/privacy" element={<PrivacyPage />} />
+          <Route path="/terms" element={<TermsPage />} />
         </Routes>
       </Layout>
     </BrowserRouter>
