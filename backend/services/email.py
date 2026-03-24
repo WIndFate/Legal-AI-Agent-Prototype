@@ -3,6 +3,7 @@ import logging
 import httpx
 
 from backend.config import get_settings
+from backend.services.analytics import capture as posthog_capture
 
 logger = logging.getLogger(__name__)
 
@@ -12,7 +13,12 @@ async def send_report_email(email: str, order_id: str, language: str) -> bool:
     settings = get_settings()
 
     if not settings.RESEND_API_KEY:
-        logger.warning("RESEND_API_KEY not set, skipping email send")
+        logger.warning("Skipping report email: order_id=%s reason=resend_not_configured", order_id)
+        posthog_capture(
+            email or order_id,
+            "report_email_skipped",
+            {"order_id": order_id, "reason": "resend_not_configured", "language": language},
+        )
         return False
 
     report_url = f"{settings.FRONTEND_URL}/report/{order_id}"
@@ -33,6 +39,7 @@ async def send_report_email(email: str, order_id: str, language: str) -> bool:
     subject = subjects.get(language, subjects["ja"])
 
     try:
+        logger.info("Sending report email: order_id=%s email=%s language=%s", order_id, email, language)
         async with httpx.AsyncClient() as client:
             response = await client.post(
                 "https://api.resend.com/emails",
@@ -50,8 +57,18 @@ async def send_report_email(email: str, order_id: str, language: str) -> bool:
                 },
             )
             response.raise_for_status()
-            logger.info(f"Report email sent to {email} for order {order_id}")
+            logger.info("Report email sent: order_id=%s email=%s status_code=%s", order_id, email, response.status_code)
+            posthog_capture(
+                email or order_id,
+                "report_email_sent",
+                {"order_id": order_id, "language": language},
+            )
             return True
     except Exception as e:
-        logger.error(f"Failed to send email to {email}: {e}")
+        logger.error("Report email failed: order_id=%s email=%s error=%s", order_id, email, e)
+        posthog_capture(
+            email or order_id,
+            "report_email_failed",
+            {"order_id": order_id, "language": language, "error": str(e)},
+        )
         return False

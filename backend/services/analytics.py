@@ -12,8 +12,15 @@ def capture(distinct_id: str, event: str, properties: dict[str, Any] | None = No
         import posthog
 
         if not posthog.api_key:
+            logger.debug("PostHog not configured; skipping event %s", event)
             return
         posthog.capture(distinct_id, event, properties or {})
+        logger.debug(
+            "PostHog event captured: event=%s distinct_id=%s properties=%s",
+            event,
+            distinct_id,
+            properties or {},
+        )
     except Exception as e:
         # Never let analytics break the main flow
         logger.debug("PostHog capture failed: %s", e)

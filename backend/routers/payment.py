@@ -28,6 +28,15 @@ async def create_payment(
     db: AsyncSession = Depends(get_db),
 ):
     """Create an order and KOMOJU payment session. Apply referral discount if valid."""
+    logger.info(
+        "Creating payment order: email=%s input_type=%s price_tier=%s target_language=%s has_referral=%s",
+        request.email,
+        request.input_type,
+        request.price_tier,
+        request.target_language,
+        request.referral_code is not None,
+    )
+
     # Validate and apply referral discount
     discount_jpy = 0
     if request.referral_code:
@@ -42,6 +51,11 @@ async def create_payment(
             discount_jpy = referral.discount_jpy
         else:
             logger.info("Invalid or exhausted referral code: %s", request.referral_code)
+            posthog_capture(
+                request.email,
+                "referral_rejected",
+                {"referral_code": request.referral_code, "reason": "invalid_or_exhausted"},
+            )
 
     final_price = max(0, request.price_jpy - discount_jpy)
 
@@ -60,12 +74,24 @@ async def create_payment(
     db.add(order)
     await db.commit()
     await db.refresh(order)
+    logger.info(
+        "Payment order created: order_id=%s final_price=%s discount_jpy=%s",
+        order.id,
+        final_price,
+        discount_jpy,
+    )
 
     if is_dev_payment_mode():
         order.payment_status = "paid"
         order.paid_at = datetime.now(timezone.utc)
         order.komoju_session_id = "dev-payment"
         await db.commit()
+        logger.info("Dev payment bypass applied: order_id=%s", order.id)
+        posthog_capture(
+            request.email,
+            "payment_marked_paid_in_dev",
+            {"order_id": str(order.id), "price_jpy": final_price},
+        )
 
     # Create KOMOJU payment session
     session_url = await create_payment_session(
@@ -73,6 +99,7 @@ async def create_payment(
         amount_jpy=final_price,
         email=request.email,
     )
+    logger.info("Payment session prepared: order_id=%s session_url=%s", order.id, session_url)
 
     posthog_capture(
         request.email,
@@ -105,6 +132,8 @@ async def payment_webhook(
 
     event = await verify_webhook(body, signature)
     if event is None:
+        logger.warning("Payment webhook rejected: reason=invalid_signature")
+        posthog_capture("anonymous", "payment_webhook_rejected", {"reason": "invalid_signature"})
         raise HTTPException(status_code=401, detail="Invalid webhook signature")
 
     event_type = event.get("type", "")
@@ -118,6 +147,9 @@ async def payment_webhook(
                 select(Order).where(Order.id == order_id)
             )
             order = result.scalar_one_or_none()
+            if order is None:
+                logger.warning("Payment webhook order missing: order_id=%s", order_id)
+                posthog_capture("anonymous", "payment_webhook_order_missing", {"order_id": order_id})
             if order and order.payment_status != "paid":
                 order.payment_status = "paid"
                 order.paid_at = datetime.now(timezone.utc)
@@ -138,6 +170,16 @@ async def payment_webhook(
                     "payment_captured",
                     {"order_id": order_id, "price_jpy": order.price_jpy},
                 )
+            elif order and order.payment_status == "paid":
+                logger.info("Payment webhook ignored: order_id=%s reason=already_paid", order_id)
+                posthog_capture(
+                    order.email or order_id,
+                    "payment_webhook_ignored",
+                    {"order_id": order_id, "reason": "already_paid"},
+                )
+        else:
+            logger.warning("Payment webhook missing order_id in metadata")
+            posthog_capture("anonymous", "payment_webhook_missing_order_id", {"event_type": event_type})
 
     return {"ok": True}
 
@@ -151,5 +193,12 @@ async def payment_status(
     result = await db.execute(select(Order).where(Order.id == order_id))
     order = result.scalar_one_or_none()
     if order is None:
+        logger.warning("Payment status lookup failed: order_id=%s", order_id)
         raise HTTPException(status_code=404, detail="Order not found")
+    logger.info("Payment status lookup: order_id=%s status=%s", order_id, order.payment_status)
+    posthog_capture(
+        order.email or order_id,
+        "payment_status_checked",
+        {"order_id": order_id, "status": order.payment_status},
+    )
     return {"order_id": str(order.id), "status": order.payment_status}

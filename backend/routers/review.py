@@ -37,17 +37,37 @@ async def review_contract_stream(
     order = result.scalar_one_or_none()
 
     if order is None:
+        logger.warning("Review rejected: order_id=%s reason=order_not_found", request.order_id)
         raise HTTPException(status_code=404, detail="Order not found")
     if order.payment_status != "paid":
+        logger.warning("Review rejected: order_id=%s reason=payment_required status=%s", order.id, order.payment_status)
+        posthog_capture(
+            order.email or str(order.id),
+            "review_rejected",
+            {"order_id": str(order.id), "reason": "payment_required", "payment_status": order.payment_status},
+        )
         raise HTTPException(status_code=402, detail="Payment required")
     if order.analysis_status != "waiting":
+        logger.warning("Review rejected: order_id=%s reason=analysis_not_waiting status=%s", order.id, order.analysis_status)
+        posthog_capture(
+            order.email or str(order.id),
+            "review_rejected",
+            {"order_id": str(order.id), "reason": "analysis_not_waiting", "analysis_status": order.analysis_status},
+        )
         raise HTTPException(status_code=409, detail="Analysis already started or completed")
     if not order.contract_text:
+        logger.warning("Review rejected: order_id=%s reason=missing_contract_text", order.id)
+        posthog_capture(
+            order.email or str(order.id),
+            "review_rejected",
+            {"order_id": str(order.id), "reason": "missing_contract_text"},
+        )
         raise HTTPException(status_code=422, detail="No contract text associated with this order")
 
     # Mark as processing
     order.analysis_status = "processing"
     await db.commit()
+    logger.info("Review started: order_id=%s target_language=%s", order.id, order.target_language)
 
     posthog_capture(
         order.email or str(order.id),
@@ -82,7 +102,7 @@ async def review_contract_stream(
             try:
                 await _save_report(order_id, final_report, target_language, db)
                 await cache_report(order_id, final_report)
-                await send_report_email(email, order_id, target_language)
+                email_sent = await send_report_email(email, order_id, target_language)
                 await _finalize_order(order_id, db)
                 posthog_capture(
                     email or order_id,
@@ -91,10 +111,23 @@ async def review_contract_stream(
                         "order_id": order_id,
                         "overall_risk": final_report.get("overall_risk_level"),
                         "total_clauses": final_report.get("total_clauses", 0),
+                        "email_sent": email_sent,
                     },
+                )
+                logger.info(
+                    "Review completed: order_id=%s overall_risk=%s total_clauses=%s email_sent=%s",
+                    order_id,
+                    final_report.get("overall_risk_level"),
+                    final_report.get("total_clauses", 0),
+                    email_sent,
                 )
             except Exception as e:
                 logger.error("Post-analysis error for order %s: %s", order_id, e)
+                posthog_capture(
+                    email or order_id,
+                    "review_post_analysis_failed",
+                    {"order_id": order_id, "error": str(e)},
+                )
                 if sentry_sdk:
                     sentry_sdk.set_tag("order_id", order_id)
                     sentry_sdk.capture_exception(e)
@@ -126,7 +159,7 @@ async def _save_report(
     )
     db.add(report)
     await db.commit()
-    logger.info("Report saved to DB for order %s", order_id)
+    logger.info("Report saved: order_id=%s language=%s total_clauses=%s", order_id, language, report.total_clauses)
 
 
 async def _finalize_order(order_id: str, db: AsyncSession) -> None:
@@ -138,4 +171,4 @@ async def _finalize_order(order_id: str, db: AsyncSession) -> None:
         order.contract_text = None
         order.contract_deleted_at = datetime.now(timezone.utc)
         await db.commit()
-        logger.info("Order %s finalized: contract text deleted", order_id)
+        logger.info("Order finalized: order_id=%s contract_text_deleted=true", order_id)
