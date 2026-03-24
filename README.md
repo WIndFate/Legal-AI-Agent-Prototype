@@ -100,7 +100,7 @@ docker compose up -d backend postgres redis
 6. Retrieve the saved report on `/report/:orderId`.
 7. During the live review, the UI now shows user-facing progress text instead of raw internal tool names.
 8. The saved report keeps the language chosen at payment time; switching the site language later only changes the page chrome.
-9. On the same device session that uploaded the contract, the review/report pages keep a session-only copy of the original contract text for side-by-side reading. Shared links and emailed links do not include that original text.
+9. On the same device session that uploaded the contract, each clause analysis can expand its matching original clause inline for direct comparison. Shared links and emailed links do not include that original text.
 
 ## Important Implementation Notes
 
@@ -114,6 +114,7 @@ docker compose up -d backend postgres redis
 - `analyze_clause_risk` performs RAG lookup internally; there is no separate retrieval node.
 - `scripts/smoke_local_flow.sh` is the repeatable local regression entrypoint for `health -> upload -> payment -> review -> report -> contract deletion`.
 - `scripts/smoke_local_flow.sh` tolerates curl exit code `18` on SSE shutdown and validates success from the actual streamed events instead.
+- Original clause text is available only in the live review payload and same-device session storage; persisted reports, Redis cache, shared links, and emailed links do not store or expose it.
 - `scripts/check_locale_keys.sh` verifies that all 9 locale files keep the same translation key set as `ja.json`.
 - `scripts/check_rag_eval.sh` checks `/api/eval/rag` against the current local baseline thresholds (`Recall@3 >= 0.5`, `MRR >= 0.6`).
 - `scripts/run_backend_pytests.sh` runs the backend regression tests inside Docker after installing dev dependencies in the running backend container.

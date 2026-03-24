@@ -100,7 +100,7 @@ docker compose up -d backend postgres redis
 6. 在 `/report/:orderId` 获取已保存报告。
 7. 流式审查阶段现在展示的是面向用户的进度文案，不再直接暴露内部工具/方法名。
 8. 报告正文会固定为支付时选择的语言；之后切换站点语言只影响页面壳层文案。
-9. 在上传合同的同一设备当前会话中，审查页和报告页会保留一份仅限本会话可见的原合同文本，便于对照阅读；分享链接和邮件链接不会带出原文。
+9. 在上传合同的同一设备当前会话中，每条分析都可以就地展开对应原条款进行对照；分享链接和邮件链接不会带出原文。
 
 ## 关键实现说明
 
@@ -114,6 +114,7 @@ docker compose up -d backend postgres redis
 - `analyze_clause_risk` 工具内部直接做 RAG 检索，没有单独的 retrieval node。
 - `scripts/smoke_local_flow.sh` 是标准本地回归入口，会验证 `health -> upload -> payment -> review -> report -> contract deletion`。
 - `scripts/smoke_local_flow.sh` 已兼容 SSE 正常收流时可能出现的 `curl` 退出码 `18`，会以实际流事件内容判断成功与否。
+- 原条款文本只存在于流式完成结果和同设备会话缓存中；数据库报告、Redis 缓存、分享链接和邮件链接都不会保存或暴露原文。
 - `scripts/check_locale_keys.sh` 会检查 9 个语言文件是否与 `ja.json` 保持相同键集合。
 - `scripts/check_rag_eval.sh` 会检查 `/api/eval/rag` 是否满足当前本地基线阈值（`Recall@3 >= 0.5`、`MRR >= 0.6`）。
 - `scripts/run_backend_pytests.sh` 会在 Docker 内安装 backend dev 依赖并执行回归单测。

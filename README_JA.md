@@ -100,7 +100,7 @@ docker compose up -d backend postgres redis
 6. `/report/:orderId` で保存済みレポートを取得します。
 7. ストリーミング審査中は内部ツール名ではなく、ユーザー向けの進捗文言を表示します。
 8. レポート本文の言語は支払い時に選択した言語で固定され、後からサイト言語を切り替えても本文自体は再翻訳されません。
-9. 契約書をアップロードした同じ端末・同じセッションでは、レビュー画面とレポート画面に原文契約のセッション限定コピーを表示し、比較しやすくしています。共有リンクやメールリンクには原文は含まれません。
+9. 契約書をアップロードした同じ端末・同じセッションでは、各分析カード内で対応する元条項をその場で展開して比較できます。共有リンクやメールリンクには原文は含まれません。
 
 ## 実装上の重要点
 
@@ -114,6 +114,7 @@ docker compose up -d backend postgres redis
 - `analyze_clause_risk` ツールが内部で直接 RAG 検索を行うため、独立した retrieval node はありません。
 - `scripts/smoke_local_flow.sh` は `health -> upload -> payment -> review -> report -> contract deletion` を検証する標準ローカル回帰入口です。
 - `scripts/smoke_local_flow.sh` は SSE 終了時に発生しうる `curl` 終了コード `18` を許容し、実際のストリーム内容で成功可否を判定します。
+- 元条項テキストはストリーミング完了結果と同一端末セッション内にのみ保持されます。DB レポート、Redis キャッシュ、共有リンク、メールリンクには保存・露出しません。
 - `scripts/check_locale_keys.sh` は 9 言語の locale ファイルが `ja.json` と同じキー集合を保っているかを確認します。
 - `scripts/check_rag_eval.sh` は `/api/eval/rag` を現在のローカル基準値（`Recall@3 >= 0.5`、`MRR >= 0.6`）でチェックします。
 - `scripts/run_backend_pytests.sh` は Docker 内で backend の dev 依存を入れて回帰テストを実行します。

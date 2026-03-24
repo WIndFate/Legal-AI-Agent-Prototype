@@ -254,7 +254,8 @@ Embeddings are generated via OpenAI API (httpx direct call, not langchain).
 - The review page should show user-facing progress text during SSE streaming; do not expose raw internal tool names like `analyze_clause_risk` to end users.
 - `/api/report/{order_id}` must return the same payload shape whether data comes from Redis or PostgreSQL.
 - Report content is fixed in the language chosen at payment time; later UI language switches only affect surrounding page chrome unless an explicit re-translation feature is implemented.
-- Same-session original contract comparison on the frontend is acceptable only as a session-local convenience; keep it out of backend persistence, shared links, and email delivery.
+- Same-session original contract comparison should be clause-level and inline with each analysis card, not as a full-document dump at the bottom of the page.
+- Original clause text may be present in the SSE completion payload and same-session frontend storage, but must be stripped before database persistence, Redis caching, shared-link rendering, and email delivery.
 
 ### RAG evaluation
 `GET /api/eval/rag` runs Recall@K and MRR against `eval_dataset.json`.
