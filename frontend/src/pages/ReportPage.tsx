@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { SUPPORTED_LANGUAGES } from '../i18n';
 
 // Shared report types
 interface ClauseAnalysis {
@@ -43,6 +44,10 @@ function riskBg(level: string): string {
   return '#f9fafb';
 }
 
+function languageLabel(code: string): string {
+  return SUPPORTED_LANGUAGES.find((lang) => lang.code === code)?.name || code;
+}
+
 export default function ReportPage() {
   const { orderId } = useParams<{ orderId: string }>();
   const { t, i18n } = useTranslation();
@@ -57,7 +62,7 @@ export default function ReportPage() {
       try {
         const res = await fetch(`/api/report/${orderId}`);
         if (res.status === 404) {
-          setError(t('errors.report_expired'));
+          setError(i18n.t('errors.report_expired'));
           return;
         }
         if (!res.ok) throw new Error(`Failed: ${res.status}`);
@@ -71,22 +76,19 @@ export default function ReportPage() {
         };
         setData(json);
         setOriginalContractText(sessionStorage.getItem(`contract-text:${orderId}`) || '');
-        if (json.language) {
-          void i18n.changeLanguage(json.language);
-        }
 
         // Calculate initial hours remaining
         const expires = new Date(json.expires_at).getTime();
         const diffHours = Math.max(0, Math.ceil((expires - Date.now()) / (1000 * 60 * 60)));
         setHoursLeft(diffHours);
       } catch {
-        setError(t('errors.not_found'));
+        setError(i18n.t('errors.not_found'));
       } finally {
         setLoading(false);
       }
     };
     fetchReport();
-  }, [i18n, orderId, t]);
+  }, [i18n, orderId]);
 
   // Update expiry countdown every minute
   useEffect(() => {
@@ -98,13 +100,13 @@ export default function ReportPage() {
       setHoursLeft(diffHours);
 
       if (diffHours <= 0) {
-        setError(t('errors.report_expired'));
+        setError(i18n.t('errors.report_expired'));
         setData(null);
       }
     }, 60000);
 
     return () => clearInterval(interval);
-  }, [data, t]);
+  }, [data, i18n]);
 
   // Share handler with Web Share API fallback to clipboard
   const handleShare = async () => {
@@ -150,13 +152,14 @@ export default function ReportPage() {
   if (!data) return null;
 
   const report = data.report;
+  const reportLanguageLabel = languageLabel(data.language);
 
   return (
     <div className="page report-page">
       <div className="report-header-bar">
         <h2>{t('report.title')}</h2>
         <p className="report-language-note">
-          本报告内容已按生成时选择的语言固定为 {data.language}。切换页面语言只影响界面文案，不会重新翻译已生成报告。
+          {t('report.language_locked_note', { language: reportLanguageLabel })}
         </p>
         {hoursLeft > 0 && (
           <p className="expiry-notice">
@@ -232,9 +235,9 @@ export default function ReportPage() {
 
       {originalContractText && (
         <div className="original-contract-card">
-          <h3>原日文合同对照</h3>
+          <h3>{t('report.original_contract_title')}</h3>
           <p className="original-contract-note">
-            仅在上传合同的同一设备当前会话中可见。若通过分享链接或邮件打开，出于隐私保护不会再显示原合同全文。
+            {t('report.original_contract_shared_note')}
           </p>
           <pre className="original-contract-text">{originalContractText}</pre>
         </div>
@@ -244,6 +247,7 @@ export default function ReportPage() {
       <button className="btn-primary btn-share" onClick={handleShare}>
         {t('report.share')}
       </button>
+      <p className="share-note">{t('report.share_note')}</p>
     </div>
   );
 }

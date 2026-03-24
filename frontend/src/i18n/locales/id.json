@@ -49,7 +49,10 @@
     "analyzing": "Menganalisis kontrak Anda…",
     "step_parsing": "Mengurai pasal-pasal kontrak…",
     "step_analyzing": "Menganalisis risiko…",
-    "step_generating": "Membuat laporan…"
+    "step_generating": "Membuat laporan…",
+    "tool_analyze_clause_risk": "Memeriksa dasar hukum dan alasan risiko yang relevan…",
+    "tool_generate_suggestion": "Menyusun saran revisi yang lebih mudah dipahami…",
+    "tool_processing_clause": "Memproses klausul ini…"
   },
   "report": {
     "title": "Laporan Analisis",
@@ -61,7 +64,12 @@
     "referenced_law": "Hukum yang dirujuk",
     "expires_in": "Laporan ini akan dihapus otomatis dalam {{hours}} jam",
     "share": "Bagikan",
-    "share_text": "Saya menganalisis kontrak saya dengan Pemeriksa Kontrak"
+    "share_text": "Saya menganalisis kontrak saya dengan Pemeriksa Kontrak",
+    "language_locked_note": "Isi laporan ini telah dikunci dalam {{language}} saat dibuat. Mengganti bahasa situs hanya mengubah antarmuka, bukan menerjemahkan ulang isi laporan.",
+    "share_note": "Saat dibagikan, hanya tautan laporan yang dikirim. Teks kontrak asli tidak pernah disertakan, dan tautan juga akan kedaluwarsa dalam 24 jam.",
+    "original_contract_title": "Perbandingan kontrak asli",
+    "original_contract_session_note": "Hanya terlihat pada sesi saat ini di perangkat ini agar Anda bisa membandingkannya dengan hasil analisis. Server sudah menghapus teks kontrak asli.",
+    "original_contract_shared_note": "Hanya terlihat pada sesi saat ini di perangkat yang sama yang mengunggah kontrak. Demi privasi, tautan bagikan dan tautan email tidak pernah menyertakan teks kontrak asli."
   },
   "errors": {
     "upload_failed": "Gagal mengunggah. Silakan coba lagi.",

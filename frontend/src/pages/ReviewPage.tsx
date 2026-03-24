@@ -33,11 +33,6 @@ interface StreamEvent {
   message?: string;
 }
 
-const TOOL_LABELS: Record<string, string> = {
-  analyze_clause_risk: '正在检索相关法条与风险依据…',
-  generate_suggestion: '正在生成更易理解的修改建议…',
-};
-
 type AnalysisStep = 'parsing' | 'analyzing' | 'generating';
 
 // Risk level color helpers
@@ -65,7 +60,7 @@ const STEP_DEFS: { key: AnalysisStep; nodeMatch: string }[] = [
 export default function ReviewPage() {
   const { orderId } = useParams<{ orderId: string }>();
   const navigate = useNavigate();
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
 
   const [report, setReport] = useState<ReviewReport | null>(null);
   const [loading, setLoading] = useState(true);
@@ -74,6 +69,12 @@ export default function ReviewPage() {
   const [logLines, setLogLines] = useState<string[]>([]);
   const [originalContractText, setOriginalContractText] = useState('');
   const started = useRef(false);
+
+  const toolLabel = (toolName?: string) => {
+    if (toolName === 'analyze_clause_risk') return t('review.tool_analyze_clause_risk');
+    if (toolName === 'generate_suggestion') return t('review.tool_generate_suggestion');
+    return t('review.tool_processing_clause');
+  };
 
   const pushLog = (line: string) =>
     setLogLines((prev) => [...prev, line].slice(-5));
@@ -96,9 +97,6 @@ export default function ReviewPage() {
           const reportRes = await fetch(`/api/report/${orderId}`);
           if (reportRes.ok) {
             const data = await reportRes.json();
-            if (data.language) {
-              void i18n.changeLanguage(data.language);
-            }
             setReport(data.report || data);
           }
           setLoading(false);
@@ -137,7 +135,7 @@ export default function ReviewPage() {
                   break;
                 }
                 case 'tool_call':
-                  pushLog(TOOL_LABELS[evt.tool || ''] || '正在处理条款分析步骤…');
+                  pushLog(toolLabel(evt.tool));
                   break;
                 case 'tool_result':
                   if (evt.text) pushLog(evt.text);
@@ -168,7 +166,7 @@ export default function ReviewPage() {
     };
 
     startReview();
-  }, [i18n, orderId, t]);
+  }, [orderId, t]);
 
   // Determine step status for progress indicator
   const stepOrder: AnalysisStep[] = ['parsing', 'analyzing', 'generating'];
@@ -288,9 +286,9 @@ export default function ReviewPage() {
 
           {originalContractText && (
             <div className="original-contract-card">
-              <h3>原日文合同对照</h3>
+              <h3>{t('report.original_contract_title')}</h3>
               <p className="original-contract-note">
-                仅在本设备当前会话中保留，便于与分析结果对照阅读；服务端完成分析后已删除原合同文本。
+                {t('report.original_contract_session_note')}
               </p>
               <pre className="original-contract-text">{originalContractText}</pre>
             </div>
@@ -303,6 +301,7 @@ export default function ReviewPage() {
           >
             {t('report.share')}
           </button>
+          <p className="share-note">{t('report.share_note')}</p>
         </div>
       )}
     </div>

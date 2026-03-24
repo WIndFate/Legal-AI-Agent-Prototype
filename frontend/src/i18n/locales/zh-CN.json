@@ -49,7 +49,10 @@
     "analyzing": "正在分析您的合同…",
     "step_parsing": "正在解析合同条款…",
     "step_analyzing": "正在分析风险…",
-    "step_generating": "正在生成报告…"
+    "step_generating": "正在生成报告…",
+    "tool_analyze_clause_risk": "正在检索相关法条与风险依据…",
+    "tool_generate_suggestion": "正在生成更易理解的修改建议…",
+    "tool_processing_clause": "正在处理当前条款…"
   },
   "report": {
     "title": "分析报告",
@@ -61,7 +64,12 @@
     "referenced_law": "参考法条",
     "expires_in": "本报告将在{{hours}}小时后自动删除",
     "share": "分享",
-    "share_text": "我用合同检查器分析了合同风险"
+    "share_text": "我用合同检查器分析了合同风险",
+    "language_locked_note": "本报告正文生成时已固定为{{language}}。切换站点语言只会影响界面文案，不会重新翻译报告内容。",
+    "share_note": "分享时只会带出报告链接，不会包含原合同文本；链接也会在 24 小时内失效。",
+    "original_contract_title": "原合同对照",
+    "original_contract_session_note": "仅在本设备当前会话中可见，方便与分析结果对照阅读；服务端已删除原合同文本。",
+    "original_contract_shared_note": "仅在上传合同的同一设备当前会话中可见。出于隐私保护，分享链接和邮件链接都不会带出原合同全文。"
   },
   "errors": {
     "upload_failed": "上传失败，请重试。",

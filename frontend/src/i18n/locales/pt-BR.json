@@ -49,7 +49,10 @@
     "analyzing": "Analisando seu contrato…",
     "step_parsing": "Analisando cláusulas do contrato…",
     "step_analyzing": "Analisando riscos…",
-    "step_generating": "Gerando relatório…"
+    "step_generating": "Gerando relatório…",
+    "tool_analyze_clause_risk": "Verificando fundamentos legais e bases de risco relacionadas…",
+    "tool_generate_suggestion": "Criando sugestões de revisão mais fáceis de entender…",
+    "tool_processing_clause": "Processando esta cláusula…"
   },
   "report": {
     "title": "Relatório de Análise",
@@ -61,7 +64,12 @@
     "referenced_law": "Legislação referenciada",
     "expires_in": "Este relatório será excluído automaticamente em {{hours}} horas",
     "share": "Compartilhar",
-    "share_text": "Analisei meu contrato com o Verificador de Contrato"
+    "share_text": "Analisei meu contrato com o Verificador de Contrato",
+    "language_locked_note": "O conteúdo deste relatório foi fixado em {{language}} no momento da geração. Alterar o idioma do site muda apenas a interface, não retraduz o relatório.",
+    "share_note": "Ao compartilhar, apenas o link do relatório é enviado. O texto original do contrato nunca é incluído, e o link também expira em até 24 horas.",
+    "original_contract_title": "Referência do contrato original",
+    "original_contract_session_note": "Visível apenas na sessão atual deste dispositivo para comparação com a análise. O servidor já excluiu o texto original do contrato.",
+    "original_contract_shared_note": "Visível apenas na sessão atual do mesmo dispositivo que enviou o contrato. Por privacidade, links compartilhados e links por e-mail nunca incluem o texto original do contrato."
   },
   "errors": {
     "upload_failed": "Falha no envio. Tente novamente.",

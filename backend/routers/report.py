@@ -24,7 +24,7 @@ async def get_report(
     # Try Redis cache first
     cached = await get_cached_report(order_id)
     if cached and "report" in cached:
-        logger.info("Report cache hit: order_id=%s", order_id)
+        logger.debug("Report cache hit: order_id=%s", order_id)
         posthog_capture("anonymous", "report_viewed", {"order_id": order_id, "source": "redis"})
         return cached
     if cached:

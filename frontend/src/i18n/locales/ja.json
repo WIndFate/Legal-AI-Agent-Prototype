@@ -49,7 +49,10 @@
     "analyzing": "契約書を分析しています…",
     "step_parsing": "契約条項を解析中…",
     "step_analyzing": "リスクを分析中…",
-    "step_generating": "レポートを作成中…"
+    "step_generating": "レポートを作成中…",
+    "tool_analyze_clause_risk": "関連法令とリスク根拠を確認しています…",
+    "tool_generate_suggestion": "より分かりやすい修正文案を作成しています…",
+    "tool_processing_clause": "この条項を処理しています…"
   },
   "report": {
     "title": "分析レポート",
@@ -61,7 +64,12 @@
     "referenced_law": "参照法令",
     "expires_in": "このレポートは{{hours}}時間後に自動削除されます",
     "share": "共有",
-    "share_text": "契約チェッカーで契約書のリスク分析を行いました"
+    "share_text": "契約チェッカーで契約書のリスク分析を行いました",
+    "language_locked_note": "このレポート本文は生成時に{{language}}で確定しています。サイトの表示言語を切り替えても、レポート本文自体は再翻訳されません。",
+    "share_note": "共有されるのはレポートリンクのみです。元の契約本文は含まれず、リンクも 24 時間以内に失効します。",
+    "original_contract_title": "元契約の参照",
+    "original_contract_session_note": "この端末の現在セッションでのみ表示され、分析結果との見比べに使えます。サーバー側では元契約本文はすでに削除されています。",
+    "original_contract_shared_note": "契約書をアップロードした同じ端末の現在セッションでのみ表示されます。プライバシー保護のため、共有リンクやメールリンクには元契約本文は含まれません。"
   },
   "errors": {
     "upload_failed": "アップロードに失敗しました。もう一度お試しください。",

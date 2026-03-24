@@ -471,6 +471,13 @@ a {
   color: #1f2937;
 }
 
+.share-note {
+  margin-top: 10px;
+  font-size: 0.8125rem;
+  color: #6b7280;
+  line-height: 1.6;
+}
+
 /* === Analyzing === */
 .analyzing-section {
   text-align: center;
@@ -679,13 +686,5 @@ a {
   .disclaimer-banner {
     font-size: 0.8125rem;
     padding: 10px 24px;
-  }
-}
-
-@media (min-width: 1024px) {
-  .report-page .clause-list {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
   }
 }

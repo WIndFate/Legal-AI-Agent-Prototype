@@ -49,7 +49,10 @@
     "analyzing": "Đang phân tích hợp đồng của bạn…",
     "step_parsing": "Đang phân tách các điều khoản…",
     "step_analyzing": "Đang phân tích rủi ro…",
-    "step_generating": "Đang tạo báo cáo…"
+    "step_generating": "Đang tạo báo cáo…",
+    "tool_analyze_clause_risk": "Đang kiểm tra căn cứ pháp luật và cơ sở rủi ro liên quan…",
+    "tool_generate_suggestion": "Đang soạn đề xuất chỉnh sửa dễ hiểu hơn…",
+    "tool_processing_clause": "Đang xử lý điều khoản này…"
   },
   "report": {
     "title": "Báo cáo phân tích",
@@ -61,7 +64,12 @@
     "referenced_law": "Luật tham chiếu",
     "expires_in": "Báo cáo này sẽ tự động xóa sau {{hours}} giờ",
     "share": "Chia sẻ",
-    "share_text": "Tôi đã phân tích rủi ro hợp đồng bằng Kiểm Tra Hợp Đồng"
+    "share_text": "Tôi đã phân tích rủi ro hợp đồng bằng Kiểm Tra Hợp Đồng",
+    "language_locked_note": "Nội dung báo cáo này đã được cố định bằng {{language}} khi tạo. Việc đổi ngôn ngữ trang chỉ thay đổi giao diện, không dịch lại nội dung báo cáo.",
+    "share_note": "Khi chia sẻ, chỉ có liên kết báo cáo được gửi đi. Văn bản hợp đồng gốc không bao giờ được kèm theo, và liên kết cũng hết hạn trong vòng 24 giờ.",
+    "original_contract_title": "Đối chiếu hợp đồng gốc",
+    "original_contract_session_note": "Chỉ hiển thị trong phiên hiện tại trên thiết bị này để bạn đối chiếu với kết quả phân tích. Máy chủ đã xóa văn bản hợp đồng gốc.",
+    "original_contract_shared_note": "Chỉ hiển thị trong phiên hiện tại trên đúng thiết bị đã tải hợp đồng lên. Vì lý do riêng tư, liên kết chia sẻ và liên kết email không bao gồm toàn văn hợp đồng gốc."
   },
   "errors": {
     "upload_failed": "Tải lên thất bại. Vui lòng thử lại.",

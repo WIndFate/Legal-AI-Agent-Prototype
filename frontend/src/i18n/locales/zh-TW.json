@@ -49,7 +49,10 @@
     "analyzing": "正在分析您的合約…",
     "step_parsing": "正在解析合約條款…",
     "step_analyzing": "正在分析風險…",
-    "step_generating": "正在產生報告…"
+    "step_generating": "正在產生報告…",
+    "tool_analyze_clause_risk": "正在檢索相關法條與風險依據…",
+    "tool_generate_suggestion": "正在產生更容易理解的修改建議…",
+    "tool_processing_clause": "正在處理目前條款…"
   },
   "report": {
     "title": "分析報告",
@@ -61,7 +64,12 @@
     "referenced_law": "參考法條",
     "expires_in": "本報告將在{{hours}}小時後自動刪除",
     "share": "分享",
-    "share_text": "我用合約檢查器分析了合約風險"
+    "share_text": "我用合約檢查器分析了合約風險",
+    "language_locked_note": "本報告正文在生成時已固定為{{language}}。切換網站語言只會影響介面文案，不會重新翻譯報告內容。",
+    "share_note": "分享時只會帶出報告連結，不會包含原合約全文；連結也會在 24 小時內失效。",
+    "original_contract_title": "原合約對照",
+    "original_contract_session_note": "僅在本裝置目前工作階段中可見，方便與分析結果對照閱讀；伺服器端已刪除原合約文本。",
+    "original_contract_shared_note": "僅在上傳合約的同一裝置目前工作階段中可見。基於隱私保護，分享連結與郵件連結都不會帶出原合約全文。"
   },
   "errors": {
     "upload_failed": "上傳失敗，請重試。",
