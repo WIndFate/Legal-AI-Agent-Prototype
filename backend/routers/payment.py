@@ -105,3 +105,16 @@ async def payment_webhook(
                 )
 
     return {"ok": True}
+
+
+@router.get("/api/payment/status/{order_id}")
+async def payment_status(
+    order_id: str,
+    db: AsyncSession = Depends(get_db),
+):
+    """Check payment status for an order."""
+    result = await db.execute(select(Order).where(Order.id == order_id))
+    order = result.scalar_one_or_none()
+    if order is None:
+        raise HTTPException(status_code=404, detail="Order not found")
+    return {"order_id": str(order.id), "status": order.payment_status}
