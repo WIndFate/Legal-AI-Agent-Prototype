@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.db.session import get_db
 from backend.models.order import Order
+from backend.models.referral import Referral
 from backend.schemas.payment import PaymentCreateRequest, PaymentCreateResponse
 from backend.services.payment import create_payment_session, verify_webhook
 from backend.services.analytics import capture as posthog_capture
@@ -25,7 +26,25 @@ async def create_payment(
     request: PaymentCreateRequest,
     db: AsyncSession = Depends(get_db),
 ):
-    """Create an order and KOMOJU payment session."""
+    """Create an order and KOMOJU payment session. Apply referral discount if valid."""
+    # Validate and apply referral discount
+    discount_jpy = 0
+    if request.referral_code:
+        ref_result = await db.execute(
+            select(Referral).where(
+                Referral.referral_code == request.referral_code,
+                Referral.is_active == True,
+            )
+        )
+        referral = ref_result.scalar_one_or_none()
+        if referral and referral.uses_count < referral.max_uses:
+            discount_jpy = referral.discount_jpy
+            referral.uses_count += 1
+        else:
+            logger.info("Invalid or exhausted referral code: %s", request.referral_code)
+
+    final_price = max(0, request.price_jpy - discount_jpy)
+
     # Create order in database
     order = Order(
         email=request.email,
@@ -34,7 +53,7 @@ async def create_payment(
         estimated_tokens=request.estimated_tokens,
         page_estimate=request.estimated_tokens // 1500 or 1,
         price_tier=request.price_tier,
-        price_jpy=request.price_jpy,
+        price_jpy=final_price,
         target_language=request.target_language,
         referral_code_used=request.referral_code,
     )
@@ -45,7 +64,7 @@ async def create_payment(
     # Create KOMOJU payment session
     session_url = await create_payment_session(
         order_id=str(order.id),
-        amount_jpy=request.price_jpy,
+        amount_jpy=final_price,
         email=request.email,
     )
 
@@ -54,8 +73,9 @@ async def create_payment(
         "payment_created",
         {
             "order_id": str(order.id),
-            "price_jpy": request.price_jpy,
+            "price_jpy": final_price,
             "price_tier": request.price_tier,
+            "discount_jpy": discount_jpy,
             "has_referral": request.referral_code is not None,
         },
     )
@@ -63,7 +83,8 @@ async def create_payment(
     return PaymentCreateResponse(
         order_id=str(order.id),
         komoju_session_url=session_url,
-        price_jpy=request.price_jpy,
+        price_jpy=final_price,
+        discount_applied=discount_jpy,
     )
 
 
