@@ -6,6 +6,7 @@ WORKDIR /app
 
 COPY pyproject.toml .
 COPY backend/ backend/
+COPY tests/ tests/
 
 RUN pip install --no-cache-dir .
 

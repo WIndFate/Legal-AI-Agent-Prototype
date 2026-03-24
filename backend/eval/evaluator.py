@@ -22,16 +22,8 @@ def _reciprocal_rank(retrieved_ids: list[str], relevant_ids: list[str]) -> float
     return 0.0
 
 
-def run_rag_eval(k: int = 3) -> dict:
-    """Run RAG evaluation against the eval dataset.
-
-    Returns a report with Recall@K and MRR metrics.
-    """
-    data_path = Path(__file__).parent.parent / "data" / "eval_dataset.json"
-    with open(data_path, "r", encoding="utf-8") as f:
-        eval_dataset = json.load(f)
-
-    store = get_store()
+def _run_rag_eval_dataset(eval_dataset: list[dict], store, k: int = 3) -> dict:
+    """Run RAG evaluation against an explicit dataset and store."""
     results = []
 
     for sample in eval_dataset:
@@ -60,3 +52,16 @@ def run_rag_eval(k: int = 3) -> dict:
         "mrr": round(mrr, 3),
         "per_sample": results,
     }
+
+
+def run_rag_eval(k: int = 3) -> dict:
+    """Run RAG evaluation against the eval dataset.
+
+    Returns a report with Recall@K and MRR metrics.
+    """
+    data_path = Path(__file__).parent.parent / "data" / "eval_dataset.json"
+    with open(data_path, "r", encoding="utf-8") as f:
+        eval_dataset = json.load(f)
+
+    store = get_store()
+    return _run_rag_eval_dataset(eval_dataset, store, k=k)
