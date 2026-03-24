@@ -1,0 +1,78 @@
+{
+  "app": {
+    "title": "Pemeriksa Kontrak",
+    "subtitle": "Layanan analisis risiko kontrak berbasis AI"
+  },
+  "disclaimer": {
+    "banner": "Layanan ini bukan konsultasi hukum. Silakan berkonsultasi dengan pengacara untuk keputusan hukum tertentu."
+  },
+  "nav": {
+    "home": "Beranda",
+    "language": "Bahasa"
+  },
+  "upload": {
+    "title": "Unggah kontrak",
+    "camera": "Ambil foto",
+    "pdf": "Unggah PDF",
+    "paste": "Tempel teks",
+    "placeholder": "Tempel teks kontrak di sini…",
+    "submit": "Mulai analisis"
+  },
+  "pii": {
+    "warning": "Informasi pribadi terdeteksi. Harap periksa sebelum mengirim.",
+    "phone": "Nomor telepon",
+    "email": "Alamat email",
+    "mynumber": "My Number (個人番号)",
+    "address": "Alamat",
+    "postal_code": "Kode pos"
+  },
+  "pricing": {
+    "title": "Harga",
+    "estimated_pages": "Perkiraan halaman",
+    "price": "Harga",
+    "tier_basic": "Dasar (1–3 halaman)",
+    "tier_standard": "Standar (4–10 halaman)",
+    "tier_detailed": "Analisis detail (11–30 halaman)",
+    "tier_complex": "Kontrak kompleks (31+ halaman)"
+  },
+  "payment": {
+    "title": "Pembayaran",
+    "email_label": "Alamat email",
+    "email_placeholder": "report@example.com",
+    "referral_label": "Kode referral (opsional)",
+    "referral_placeholder": "Masukkan kode referral",
+    "pay_button": "Bayar ¥{{price}}",
+    "processing": "Memproses…"
+  },
+  "review": {
+    "title": "Menganalisis",
+    "analyzing": "Menganalisis kontrak Anda…",
+    "step_parsing": "Mengurai pasal-pasal kontrak…",
+    "step_analyzing": "Menganalisis risiko…",
+    "step_generating": "Membuat laporan…"
+  },
+  "report": {
+    "title": "Laporan Analisis",
+    "overall_risk": "Penilaian risiko keseluruhan",
+    "high_risk": "Risiko tinggi",
+    "medium_risk": "Risiko sedang",
+    "low_risk": "Risiko rendah",
+    "suggestion": "Saran",
+    "referenced_law": "Hukum yang dirujuk",
+    "expires_in": "Laporan ini akan dihapus otomatis dalam {{hours}} jam",
+    "share": "Bagikan",
+    "share_text": "Saya menganalisis kontrak saya dengan Pemeriksa Kontrak"
+  },
+  "errors": {
+    "upload_failed": "Gagal mengunggah. Silakan coba lagi.",
+    "payment_failed": "Pembayaran gagal. Silakan coba lagi.",
+    "review_failed": "Terjadi kesalahan saat analisis. Silakan coba lagi.",
+    "report_expired": "Laporan ini sudah kedaluwarsa.",
+    "not_found": "Halaman tidak ditemukan."
+  },
+  "footer": {
+    "disclaimer": "本サービスは法律相談ではありません。具体的な法的判断は弁護士にご相談ください (Layanan ini bukan konsultasi hukum. Silakan berkonsultasi dengan pengacara untuk keputusan hukum tertentu.)",
+    "privacy": "Kebijakan Privasi",
+    "terms": "Ketentuan Layanan"
+  }
+}

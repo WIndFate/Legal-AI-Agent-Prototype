@@ -1,0 +1,78 @@
+{
+  "app": {
+    "title": "Verificador de Contrato",
+    "subtitle": "Serviço de análise de riscos contratuais com IA"
+  },
+  "disclaimer": {
+    "banner": "Este serviço não constitui assessoria jurídica. Consulte um advogado para decisões legais específicas."
+  },
+  "nav": {
+    "home": "Início",
+    "language": "Idioma"
+  },
+  "upload": {
+    "title": "Enviar contrato",
+    "camera": "Tirar foto",
+    "pdf": "Enviar PDF",
+    "paste": "Colar texto",
+    "placeholder": "Cole o texto do contrato aqui…",
+    "submit": "Iniciar análise"
+  },
+  "pii": {
+    "warning": "Informações pessoais detectadas. Verifique antes de enviar.",
+    "phone": "Número de telefone",
+    "email": "Endereço de e-mail",
+    "mynumber": "My Number (個人番号)",
+    "address": "Endereço",
+    "postal_code": "CEP"
+  },
+  "pricing": {
+    "title": "Preços",
+    "estimated_pages": "Páginas estimadas",
+    "price": "Preço",
+    "tier_basic": "Básico (1–3 páginas)",
+    "tier_standard": "Padrão (4–10 páginas)",
+    "tier_detailed": "Análise detalhada (11–30 páginas)",
+    "tier_complex": "Contrato complexo (31+ páginas)"
+  },
+  "payment": {
+    "title": "Pagamento",
+    "email_label": "Endereço de e-mail",
+    "email_placeholder": "report@example.com",
+    "referral_label": "Código de indicação (opcional)",
+    "referral_placeholder": "Digite o código de indicação",
+    "pay_button": "Pagar ¥{{price}}",
+    "processing": "Processando…"
+  },
+  "review": {
+    "title": "Analisando",
+    "analyzing": "Analisando seu contrato…",
+    "step_parsing": "Analisando cláusulas do contrato…",
+    "step_analyzing": "Analisando riscos…",
+    "step_generating": "Gerando relatório…"
+  },
+  "report": {
+    "title": "Relatório de Análise",
+    "overall_risk": "Avaliação geral de risco",
+    "high_risk": "Alto risco",
+    "medium_risk": "Risco médio",
+    "low_risk": "Baixo risco",
+    "suggestion": "Sugestão",
+    "referenced_law": "Legislação referenciada",
+    "expires_in": "Este relatório será excluído automaticamente em {{hours}} horas",
+    "share": "Compartilhar",
+    "share_text": "Analisei meu contrato com o Verificador de Contrato"
+  },
+  "errors": {
+    "upload_failed": "Falha no envio. Tente novamente.",
+    "payment_failed": "Falha no pagamento. Tente novamente.",
+    "review_failed": "Ocorreu um erro durante a análise. Tente novamente.",
+    "report_expired": "Este relatório expirou.",
+    "not_found": "Página não encontrada."
+  },
+  "footer": {
+    "disclaimer": "本サービスは法律相談ではありません。具体的な法的判断は弁護士にご相談ください (Este serviço não constitui assessoria jurídica. Consulte um advogado para decisões legais específicas.)",
+    "privacy": "Política de Privacidade",
+    "terms": "Termos de Serviço"
+  }
+}

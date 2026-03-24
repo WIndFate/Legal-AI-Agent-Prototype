@@ -1,0 +1,78 @@
+{
+  "app": {
+    "title": "Contract Checker",
+    "subtitle": "AI-Powered Contract Risk Analysis"
+  },
+  "disclaimer": {
+    "banner": "This service is not legal advice. Please consult a licensed attorney for specific legal decisions."
+  },
+  "nav": {
+    "home": "Home",
+    "language": "Language"
+  },
+  "upload": {
+    "title": "Upload Your Contract",
+    "camera": "Take a Photo",
+    "pdf": "Upload PDF",
+    "paste": "Paste Text",
+    "placeholder": "Paste your contract text here...",
+    "submit": "Start Analysis"
+  },
+  "pii": {
+    "warning": "Personal information detected. Please review before submitting.",
+    "phone": "Phone number",
+    "email": "Email address",
+    "mynumber": "My Number (個人番号)",
+    "address": "Address",
+    "postal_code": "Postal code"
+  },
+  "pricing": {
+    "title": "Pricing",
+    "estimated_pages": "Estimated pages",
+    "price": "Price",
+    "tier_basic": "Basic (1–3 pages)",
+    "tier_standard": "Standard (4–10 pages)",
+    "tier_detailed": "Detailed Analysis (11–30 pages)",
+    "tier_complex": "Complex Contract (31+ pages)"
+  },
+  "payment": {
+    "title": "Payment",
+    "email_label": "Email address",
+    "email_placeholder": "report@example.com",
+    "referral_label": "Referral code (optional)",
+    "referral_placeholder": "Enter referral code",
+    "pay_button": "Pay ¥{{price}}",
+    "processing": "Processing..."
+  },
+  "review": {
+    "title": "Analyzing",
+    "analyzing": "Analyzing your contract...",
+    "step_parsing": "Parsing contract clauses...",
+    "step_analyzing": "Analyzing risks...",
+    "step_generating": "Generating report..."
+  },
+  "report": {
+    "title": "Analysis Report",
+    "overall_risk": "Overall Risk Assessment",
+    "high_risk": "High Risk",
+    "medium_risk": "Medium Risk",
+    "low_risk": "Low Risk",
+    "suggestion": "Suggestion",
+    "referenced_law": "Referenced Law",
+    "expires_in": "This report will be automatically deleted in {{hours}} hours",
+    "share": "Share",
+    "share_text": "I analyzed my contract with Contract Checker"
+  },
+  "errors": {
+    "upload_failed": "Upload failed. Please try again.",
+    "payment_failed": "Payment failed. Please try again.",
+    "review_failed": "An error occurred during analysis. Please try again.",
+    "report_expired": "This report has expired.",
+    "not_found": "Page not found."
+  },
+  "footer": {
+    "disclaimer": "本サービスは法律相談ではありません。具体的な法的判断は弁護士にご相談ください (This service is not legal advice. Please consult a licensed attorney for specific legal decisions.)",
+    "privacy": "Privacy Policy",
+    "terms": "Terms of Service"
+  }
+}

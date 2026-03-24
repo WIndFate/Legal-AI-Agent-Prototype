@@ -1,0 +1,78 @@
+{
+  "app": {
+    "title": "合約檢查器",
+    "subtitle": "AI合約風險分析服務"
+  },
+  "disclaimer": {
+    "banner": "本服務不構成法律諮詢。具體法律判斷請諮詢專業律師。"
+  },
+  "nav": {
+    "home": "首頁",
+    "language": "語言"
+  },
+  "upload": {
+    "title": "上傳合約",
+    "camera": "拍照上傳",
+    "pdf": "上傳PDF",
+    "paste": "貼上文字",
+    "placeholder": "請將合約文字貼到此處…",
+    "submit": "開始分析"
+  },
+  "pii": {
+    "warning": "偵測到個人資料，請在提交前確認。",
+    "phone": "電話號碼",
+    "email": "電子信箱",
+    "mynumber": "個人編號（マイナンバー）",
+    "address": "地址",
+    "postal_code": "郵遞區號"
+  },
+  "pricing": {
+    "title": "價格方案",
+    "estimated_pages": "預估頁數",
+    "price": "價格",
+    "tier_basic": "基礎版（1~3頁）",
+    "tier_standard": "標準版（4~10頁）",
+    "tier_detailed": "詳細分析（11~30頁）",
+    "tier_complex": "複雜合約（31頁以上）"
+  },
+  "payment": {
+    "title": "付款",
+    "email_label": "電子信箱",
+    "email_placeholder": "report@example.com",
+    "referral_label": "推薦碼（選填）",
+    "referral_placeholder": "請輸入推薦碼",
+    "pay_button": "支付 ¥{{price}}",
+    "processing": "處理中…"
+  },
+  "review": {
+    "title": "正在分析",
+    "analyzing": "正在分析您的合約…",
+    "step_parsing": "正在解析合約條款…",
+    "step_analyzing": "正在分析風險…",
+    "step_generating": "正在產生報告…"
+  },
+  "report": {
+    "title": "分析報告",
+    "overall_risk": "綜合風險評估",
+    "high_risk": "高風險",
+    "medium_risk": "中風險",
+    "low_risk": "低風險",
+    "suggestion": "修改建議",
+    "referenced_law": "參考法條",
+    "expires_in": "本報告將在{{hours}}小時後自動刪除",
+    "share": "分享",
+    "share_text": "我用合約檢查器分析了合約風險"
+  },
+  "errors": {
+    "upload_failed": "上傳失敗，請重試。",
+    "payment_failed": "付款失敗，請重試。",
+    "review_failed": "分析過程中發生錯誤，請重試。",
+    "report_expired": "該報告已過期。",
+    "not_found": "找不到頁面。"
+  },
+  "footer": {
+    "disclaimer": "本サービスは法律相談ではありません。具体的な法的判断は弁護士にご相談ください（本服務不構成法律諮詢。具體法律判斷請諮詢專業律師。）",
+    "privacy": "隱私權政策",
+    "terms": "服務條款"
+  }
+}

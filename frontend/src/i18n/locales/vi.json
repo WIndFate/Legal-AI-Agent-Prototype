@@ -1,0 +1,78 @@
+{
+  "app": {
+    "title": "Kiểm Tra Hợp Đồng",
+    "subtitle": "Dịch vụ phân tích rủi ro hợp đồng bằng AI"
+  },
+  "disclaimer": {
+    "banner": "Dịch vụ này không phải là tư vấn pháp lý. Vui lòng tham khảo ý kiến luật sư cho các quyết định pháp lý cụ thể."
+  },
+  "nav": {
+    "home": "Trang chủ",
+    "language": "Ngôn ngữ"
+  },
+  "upload": {
+    "title": "Tải lên hợp đồng",
+    "camera": "Chụp ảnh",
+    "pdf": "Tải lên PDF",
+    "paste": "Dán văn bản",
+    "placeholder": "Dán nội dung hợp đồng vào đây…",
+    "submit": "Bắt đầu phân tích"
+  },
+  "pii": {
+    "warning": "Phát hiện thông tin cá nhân. Vui lòng kiểm tra trước khi gửi.",
+    "phone": "Số điện thoại",
+    "email": "Địa chỉ email",
+    "mynumber": "Mã số cá nhân (マイナンバー)",
+    "address": "Địa chỉ",
+    "postal_code": "Mã bưu điện"
+  },
+  "pricing": {
+    "title": "Bảng giá",
+    "estimated_pages": "Số trang ước tính",
+    "price": "Giá",
+    "tier_basic": "Cơ bản (1–3 trang)",
+    "tier_standard": "Tiêu chuẩn (4–10 trang)",
+    "tier_detailed": "Phân tích chi tiết (11–30 trang)",
+    "tier_complex": "Hợp đồng phức tạp (trên 31 trang)"
+  },
+  "payment": {
+    "title": "Thanh toán",
+    "email_label": "Địa chỉ email",
+    "email_placeholder": "report@example.com",
+    "referral_label": "Mã giới thiệu (tùy chọn)",
+    "referral_placeholder": "Nhập mã giới thiệu",
+    "pay_button": "Thanh toán ¥{{price}}",
+    "processing": "Đang xử lý…"
+  },
+  "review": {
+    "title": "Đang phân tích",
+    "analyzing": "Đang phân tích hợp đồng của bạn…",
+    "step_parsing": "Đang phân tách các điều khoản…",
+    "step_analyzing": "Đang phân tích rủi ro…",
+    "step_generating": "Đang tạo báo cáo…"
+  },
+  "report": {
+    "title": "Báo cáo phân tích",
+    "overall_risk": "Đánh giá rủi ro tổng thể",
+    "high_risk": "Rủi ro cao",
+    "medium_risk": "Rủi ro trung bình",
+    "low_risk": "Rủi ro thấp",
+    "suggestion": "Đề xuất",
+    "referenced_law": "Luật tham chiếu",
+    "expires_in": "Báo cáo này sẽ tự động xóa sau {{hours}} giờ",
+    "share": "Chia sẻ",
+    "share_text": "Tôi đã phân tích rủi ro hợp đồng bằng Kiểm Tra Hợp Đồng"
+  },
+  "errors": {
+    "upload_failed": "Tải lên thất bại. Vui lòng thử lại.",
+    "payment_failed": "Thanh toán thất bại. Vui lòng thử lại.",
+    "review_failed": "Đã xảy ra lỗi trong quá trình phân tích. Vui lòng thử lại.",
+    "report_expired": "Báo cáo này đã hết hạn.",
+    "not_found": "Không tìm thấy trang."
+  },
+  "footer": {
+    "disclaimer": "本サービスは法律相談ではありません。具体的な法的判断は弁護士にご相談ください (Dịch vụ này không phải là tư vấn pháp lý. Vui lòng tham khảo ý kiến luật sư cho các quyết định pháp lý cụ thể.)",
+    "privacy": "Chính sách bảo mật",
+    "terms": "Điều khoản dịch vụ"
+  }
+}

@@ -1,0 +1,78 @@
+{
+  "app": {
+    "title": "계약 체커",
+    "subtitle": "AI 계약서 리스크 분석 서비스"
+  },
+  "disclaimer": {
+    "banner": "본 서비스는 법률 상담이 아닙니다. 구체적인 법적 판단은 변호사에게 상담해 주세요."
+  },
+  "nav": {
+    "home": "홈",
+    "language": "언어"
+  },
+  "upload": {
+    "title": "계약서 업로드",
+    "camera": "사진 촬영",
+    "pdf": "PDF 업로드",
+    "paste": "텍스트 붙여넣기",
+    "placeholder": "계약서 텍스트를 여기에 붙여넣으세요…",
+    "submit": "분석 시작"
+  },
+  "pii": {
+    "warning": "개인정보가 감지되었습니다. 제출 전에 확인해 주세요.",
+    "phone": "전화번호",
+    "email": "이메일 주소",
+    "mynumber": "마이넘버(個人番号)",
+    "address": "주소",
+    "postal_code": "우편번호"
+  },
+  "pricing": {
+    "title": "요금 안내",
+    "estimated_pages": "예상 페이지 수",
+    "price": "요금",
+    "tier_basic": "베이직 (1~3페이지)",
+    "tier_standard": "스탠다드 (4~10페이지)",
+    "tier_detailed": "상세 분석 (11~30페이지)",
+    "tier_complex": "복잡한 계약 (31페이지 이상)"
+  },
+  "payment": {
+    "title": "결제",
+    "email_label": "이메일 주소",
+    "email_placeholder": "report@example.com",
+    "referral_label": "추천 코드 (선택)",
+    "referral_placeholder": "추천 코드 입력",
+    "pay_button": "¥{{price}} 결제",
+    "processing": "처리 중…"
+  },
+  "review": {
+    "title": "분석 중",
+    "analyzing": "계약서를 분석하고 있습니다…",
+    "step_parsing": "계약 조항 분석 중…",
+    "step_analyzing": "리스크 분석 중…",
+    "step_generating": "보고서 생성 중…"
+  },
+  "report": {
+    "title": "분석 보고서",
+    "overall_risk": "종합 리스크 평가",
+    "high_risk": "고위험",
+    "medium_risk": "중위험",
+    "low_risk": "저위험",
+    "suggestion": "개선 제안",
+    "referenced_law": "참조 법령",
+    "expires_in": "이 보고서는 {{hours}}시간 후 자동 삭제됩니다",
+    "share": "공유",
+    "share_text": "계약 체커로 계약서 리스크를 분석했습니다"
+  },
+  "errors": {
+    "upload_failed": "업로드에 실패했습니다. 다시 시도해 주세요.",
+    "payment_failed": "결제에 실패했습니다. 다시 시도해 주세요.",
+    "review_failed": "분석 중 오류가 발생했습니다. 다시 시도해 주세요.",
+    "report_expired": "이 보고서는 만료되었습니다.",
+    "not_found": "페이지를 찾을 수 없습니다."
+  },
+  "footer": {
+    "disclaimer": "本サービスは法律相談ではありません。具体的な法的判断は弁護士にご相談ください (본 서비스는 법률 상담이 아닙니다. 구체적인 법적 판단은 변호사에게 상담해 주세요.)",
+    "privacy": "개인정보 처리방침",
+    "terms": "이용약관"
+  }
+}

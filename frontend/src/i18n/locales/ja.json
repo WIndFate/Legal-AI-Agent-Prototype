@@ -1,0 +1,78 @@
+{
+  "app": {
+    "title": "契約チェッカー",
+    "subtitle": "AI契約書リスク分析サービス"
+  },
+  "disclaimer": {
+    "banner": "本サービスは法律相談ではありません。具体的な法的判断は弁護士にご相談ください"
+  },
+  "nav": {
+    "home": "ホーム",
+    "language": "言語"
+  },
+  "upload": {
+    "title": "契約書をアップロード",
+    "camera": "写真を撮る",
+    "pdf": "PDFをアップロード",
+    "paste": "テキストを貼り付け",
+    "placeholder": "契約書のテキストをここに貼り付けてください…",
+    "submit": "分析を開始"
+  },
+  "pii": {
+    "warning": "個人情報が検出されました。送信前にご確認ください。",
+    "phone": "電話番号",
+    "email": "メールアドレス",
+    "mynumber": "マイナンバー",
+    "address": "住所",
+    "postal_code": "郵便番号"
+  },
+  "pricing": {
+    "title": "料金プラン",
+    "estimated_pages": "推定ページ数",
+    "price": "料金",
+    "tier_basic": "ベーシック（1〜3ページ）",
+    "tier_standard": "スタンダード（4〜10ページ）",
+    "tier_detailed": "詳細分析（11〜30ページ）",
+    "tier_complex": "複雑な契約（31ページ以上）"
+  },
+  "payment": {
+    "title": "お支払い",
+    "email_label": "メールアドレス",
+    "email_placeholder": "report@example.com",
+    "referral_label": "紹介コード（任意）",
+    "referral_placeholder": "紹介コードを入力",
+    "pay_button": "¥{{price}} で支払う",
+    "processing": "処理中…"
+  },
+  "review": {
+    "title": "分析中",
+    "analyzing": "契約書を分析しています…",
+    "step_parsing": "契約条項を解析中…",
+    "step_analyzing": "リスクを分析中…",
+    "step_generating": "レポートを作成中…"
+  },
+  "report": {
+    "title": "分析レポート",
+    "overall_risk": "総合リスク評価",
+    "high_risk": "高リスク",
+    "medium_risk": "中リスク",
+    "low_risk": "低リスク",
+    "suggestion": "改善提案",
+    "referenced_law": "参照法令",
+    "expires_in": "このレポートは{{hours}}時間後に自動削除されます",
+    "share": "共有",
+    "share_text": "契約チェッカーで契約書のリスク分析を行いました"
+  },
+  "errors": {
+    "upload_failed": "アップロードに失敗しました。もう一度お試しください。",
+    "payment_failed": "お支払いに失敗しました。もう一度お試しください。",
+    "review_failed": "分析中にエラーが発生しました。もう一度お試しください。",
+    "report_expired": "このレポートは有効期限が切れています。",
+    "not_found": "ページが見つかりません。"
+  },
+  "footer": {
+    "disclaimer": "本サービスは法律相談ではありません。具体的な法的判断は弁護士にご相談ください",
+    "privacy": "プライバシーポリシー",
+    "terms": "利用規約"
+  }
+}

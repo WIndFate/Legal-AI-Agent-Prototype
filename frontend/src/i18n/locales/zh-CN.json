@@ -1,0 +1,78 @@
+{
+  "app": {
+    "title": "合同检查器",
+    "subtitle": "AI合同风险分析服务"
+  },
+  "disclaimer": {
+    "banner": "本服务不构成法律咨询。具体法律判断请咨询专业律师。"
+  },
+  "nav": {
+    "home": "首页",
+    "language": "语言"
+  },
+  "upload": {
+    "title": "上传合同",
+    "camera": "拍照上传",
+    "pdf": "上传PDF",
+    "paste": "粘贴文本",
+    "placeholder": "请将合同文本粘贴到此处…",
+    "submit": "开始分析"
+  },
+  "pii": {
+    "warning": "检测到个人信息，请在提交前确认。",
+    "phone": "电话号码",
+    "email": "电子邮箱",
+    "mynumber": "个人编号（マイナンバー）",
+    "address": "地址",
+    "postal_code": "邮编"
+  },
+  "pricing": {
+    "title": "价格方案",
+    "estimated_pages": "预估页数",
+    "price": "价格",
+    "tier_basic": "基础版（1~3页）",
+    "tier_standard": "标准版（4~10页）",
+    "tier_detailed": "详细分析（11~30页）",
+    "tier_complex": "复杂合同（31页以上）"
+  },
+  "payment": {
+    "title": "支付",
+    "email_label": "电子邮箱",
+    "email_placeholder": "report@example.com",
+    "referral_label": "推荐码（可选）",
+    "referral_placeholder": "请输入推荐码",
+    "pay_button": "支付 ¥{{price}}",
+    "processing": "处理中…"
+  },
+  "review": {
+    "title": "正在分析",
+    "analyzing": "正在分析您的合同…",
+    "step_parsing": "正在解析合同条款…",
+    "step_analyzing": "正在分析风险…",
+    "step_generating": "正在生成报告…"
+  },
+  "report": {
+    "title": "分析报告",
+    "overall_risk": "综合风险评估",
+    "high_risk": "高风险",
+    "medium_risk": "中风险",
+    "low_risk": "低风险",
+    "suggestion": "修改建议",
+    "referenced_law": "参考法条",
+    "expires_in": "本报告将在{{hours}}小时后自动删除",
+    "share": "分享",
+    "share_text": "我用合同检查器分析了合同风险"
+  },
+  "errors": {
+    "upload_failed": "上传失败，请重试。",
+    "payment_failed": "支付失败，请重试。",
+    "review_failed": "分析过程中出现错误，请重试。",
+    "report_expired": "该报告已过期。",
+    "not_found": "页面未找到。"
+  },
+  "footer": {
+    "disclaimer": "本サービスは法律相談ではありません。具体的な法的判断は弁護士にご相談ください（本服务不构成法律咨询。具体法律判断请咨询专业律师。）",
+    "privacy": "隐私政策",
+    "terms": "服务条款"
+  }
+}
