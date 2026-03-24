@@ -232,6 +232,11 @@ Embeddings are generated via OpenAI API (httpx direct call, not langchain).
 - In `production`, startup fails if KOMOJU or Resend credentials are missing, or if `FRONTEND_URL` points to `localhost`.
 - In `production`, CORS is restricted to `FRONTEND_URL` only.
 
+### Observability
+- Payment creation, webhook rejection/ignore, review rejection, report cache hit/miss, and email skip/failure paths emit structured application logs.
+- The same critical paths also emit PostHog events when analytics is configured.
+- `main.py` initializes application logging at `INFO` level so these backend logs are visible in Docker and deployment logs.
+
 ### RAG evaluation
 `GET /api/eval/rag` runs Recall@K and MRR against `eval_dataset.json`.
 Eval only references JSON document IDs; TXT chunk auto-generated IDs do not affect eval.

@@ -98,6 +98,7 @@ docker compose up -d backend postgres redis
 - 报告会缓存到 Redis 24 小时，并在 PostgreSQL 中保存带过期时间的记录。
 - 为了本地 Docker 开发可直接运行，后端启动时会自动补齐关系表。生产环境仍应显式执行 Alembic migration。
 - 生产环境如果缺少 KOMOJU / Resend 关键配置，或 `FRONTEND_URL` 仍指向 `localhost`，启动会直接失败。
+- 支付、审查、邮件、报告读取路径现在会输出结构化应用日志，并补充 PostHog 埋点，便于联调定位问题。
 - `analyze_clause_risk` 工具内部直接做 RAG 检索，没有单独的 retrieval node。
 - `scripts/smoke_local_flow.sh` 是标准本地回归入口，会验证 `health -> upload -> payment -> review -> report -> contract deletion`。
 

@@ -98,6 +98,7 @@ docker compose up -d backend postgres redis
 - Reports are cached in Redis for 24 hours and stored in PostgreSQL with expiry metadata.
 - The backend bootstraps relational tables on startup for local Docker development. Production should still run Alembic migrations explicitly.
 - Production startup now fails fast if KOMOJU/Resend credentials are missing or `FRONTEND_URL` still points to `localhost`.
+- Payment, review, email, and report retrieval paths now emit structured application logs and PostHog events for easier integration debugging.
 - `analyze_clause_risk` performs RAG lookup internally; there is no separate retrieval node.
 - `scripts/smoke_local_flow.sh` is the repeatable local regression entrypoint for `health -> upload -> payment -> review -> report -> contract deletion`.
 

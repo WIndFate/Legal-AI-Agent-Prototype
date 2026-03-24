@@ -98,6 +98,7 @@ docker compose up -d backend postgres redis
 - レポートは Redis に 24 時間キャッシュされ、PostgreSQL に期限付きで保存されます。
 - ローカル Docker 開発を即時実行できるよう、バックエンド起動時に関係テーブルを自動作成します。本番では Alembic migration を明示的に実行してください。
 - 本番環境で KOMOJU / Resend の必須設定が不足している場合、または `FRONTEND_URL` が `localhost` のままの場合は起動時に失敗します。
+- 支払い、審査、メール、レポート取得の主要経路では、構造化アプリケーションログと PostHog イベントを出力し、外部連携時の切り分けをしやすくしています。
 - `analyze_clause_risk` ツールが内部で直接 RAG 検索を行うため、独立した retrieval node はありません。
 - `scripts/smoke_local_flow.sh` は `health -> upload -> payment -> review -> report -> contract deletion` を検証する標準ローカル回帰入口です。
 
