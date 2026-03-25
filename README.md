@@ -120,6 +120,7 @@ docker compose up -d backend postgres redis
 - `backend/services/costing.py` now emits structured per-step cost logs for formal OCR, parse, analyze, suggestion, and translation calls.
 - Embedding requests now emit cost logs too, and review completion logs include an in-memory per-order cost summary with quote mode, input type, and clause counts.
 - That order-level cost summary is now also persisted to `reports.cost_summary` for later inspection without relying only on logs.
+- `GET /api/eval/costs` now aggregates persisted `reports.cost_summary` samples and returns cost distributions plus first-pass pricing recommendations by tier.
 - `PARSE_MODEL` and `SUGGESTION_MODEL` are now configurable and default to `gpt-4o-mini`, while formal OCR and per-clause risk classification remain on `gpt-4o` by default.
 - `analyze_risks` now runs clause by clause instead of maintaining one growing multi-round tool-calling conversation, which materially reduces prompt growth and per-order cost.
 - `analyze_clause_risk` now returns a compact RAG summary instead of replaying long source chunks back into the classifier prompt.
@@ -135,7 +136,7 @@ docker compose up -d backend postgres redis
 - Original clause text is available only in the live review payload and same-device session storage; persisted reports, Redis cache, shared links, and emailed links do not store or expose it.
 - `scripts/check_locale_keys.sh` verifies that all 9 locale files keep the same translation key set as `ja.json`.
 - `scripts/check_rag_eval.sh` checks `/api/eval/rag` against the current local baseline thresholds (`Recall@3 >= 0.5`, `MRR >= 0.6`).
-- `scripts/run_backend_pytests.sh` runs the backend regression tests inside Docker after installing dev dependencies in the running backend container.
+- `scripts/run_backend_pytests.sh` runs the backend regression tests inside Docker after installing dev dependencies in the running backend container, and now executes the full `tests/` suite.
 
 ## Repo Pointers
 

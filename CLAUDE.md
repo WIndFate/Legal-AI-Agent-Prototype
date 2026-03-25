@@ -155,9 +155,10 @@ backend/
     review.py     # POST /api/review/stream (SSE, saves report + cache + email + cleanup)
     report.py     # GET /api/report/{order_id} (Redis cache → DB fallback)
     referral.py   # POST /api/referral/generate + GET /api/referral/{code}
-    eval.py       # GET /api/eval/rag
+    eval.py       # GET /api/eval/rag + /api/eval/costs
   services/
     costing.py        # Model pricing table + usage extraction + structured cost logging
+    cost_analysis.py  # Persisted cost-summary aggregation + pricing recommendation logic
     local_ocr.py      # Optional PaddleOCR-based pre-payment quote estimation
     ocr.py            # GPT-4o Vision OCR
     pdf_extractor.py  # pypdf + OCR fallback
@@ -172,6 +173,7 @@ backend/
     eval_dataset.json  # Hand-labeled eval test set (5 samples)
     civil_law.txt      # Civil law TXT source for chunk ingestion
 tests/
+  test_cost_analysis.py    # Cost aggregation + pricing recommendation unit tests
   test_token_estimator.py  # Token estimation + pricing unit tests
   test_pii_detector.py     # PII detection unit tests
 frontend/
@@ -295,12 +297,13 @@ Embeddings are generated via OpenAI API (httpx direct call, not langchain).
 
 ### RAG evaluation
 `GET /api/eval/rag` runs Recall@K and MRR against `eval_dataset.json`.
+`GET /api/eval/costs` aggregates persisted `reports.cost_summary` samples and returns pricing-oriented cost summaries.
 Eval only references JSON document IDs; TXT chunk auto-generated IDs do not affect eval.
 - `scripts/check_rag_eval.sh` wraps the endpoint with the current local baseline thresholds (`Recall@3 >= 0.5`, `MRR >= 0.6`).
 
 ### Regression checks
 - `scripts/check_locale_keys.sh` ensures all 9 locale files keep the same translation key set as `frontend/src/i18n/locales/ja.json`.
-- `scripts/run_backend_pytests.sh` installs backend dev dependencies in Docker and runs the backend regression tests.
+- `scripts/run_backend_pytests.sh` installs backend dev dependencies in Docker and runs the full backend regression test suite.
 - `scripts/smoke_local_flow.sh` treats curl exit code `18` as acceptable for SSE shutdown and relies on the streamed `complete` / `error` events for pass-fail.
 
 ---

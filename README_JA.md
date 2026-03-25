@@ -120,6 +120,7 @@ docker compose up -d backend postgres redis
 - `backend/services/costing.py` により、正式 OCR・parse・analyze・suggestion・translation の構造化コストログが出力されます。
 - embedding リクエストもコストログを出力し、review 完了時には見積もりモード・入力種別・条項数を含む注文単位のコスト要約ログも出力されます。
 - この注文単位のコスト要約は、ログだけでなく `reports.cost_summary` にも保存されるようになりました。
+- `GET /api/eval/costs` は `reports.cost_summary` を集計し、価格帯ごとの第一版の推奨価格を返せるようになりました。
 - `PARSE_MODEL` と `SUGGESTION_MODEL` は設定可能になり、デフォルトでは `gpt-4o-mini` を使います。正式 OCR と条項ごとのリスク判定は引き続きデフォルトで `gpt-4o` のままです。
 - `analyze_risks` は、膨張し続ける全契約の多段 tool-calling 会話ではなく、条項ごとの分析に変更されました。これによりコストとコンテキスト圧迫が大きく下がります。
 - `analyze_clause_risk` は、長い法令断片をそのまま返す代わりに、圧縮した RAG 要約を返します。
@@ -135,7 +136,7 @@ docker compose up -d backend postgres redis
 - 元条項テキストはストリーミング完了結果と同一端末セッション内にのみ保持されます。DB レポート、Redis キャッシュ、共有リンク、メールリンクには保存・露出しません。
 - `scripts/check_locale_keys.sh` は 9 言語の locale ファイルが `ja.json` と同じキー集合を保っているかを確認します。
 - `scripts/check_rag_eval.sh` は `/api/eval/rag` を現在のローカル基準値（`Recall@3 >= 0.5`、`MRR >= 0.6`）でチェックします。
-- `scripts/run_backend_pytests.sh` は Docker 内で backend の dev 依存を入れて回帰テストを実行します。
+- `scripts/run_backend_pytests.sh` は Docker 内で backend の dev 依存を入れた上で、完全な `tests/` 回帰テストを実行します。
 
 ## 主要ファイル
 

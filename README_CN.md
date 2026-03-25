@@ -120,6 +120,7 @@ docker compose up -d backend postgres redis
 - `backend/services/costing.py` 现在会为正式 OCR、parse、analyze、suggestion、translation 输出结构化成本日志。
 - embedding 请求现在也会输出成本日志，review 完成时还会记录一份包含报价模式、输入类型和条款统计的订单级成本摘要。
 - 这份订单级成本摘要现在也会持久化到 `reports.cost_summary`，后续排查成本时不再只依赖日志。
+- `GET /api/eval/costs` 现在会基于 `reports.cost_summary` 聚合真实样本成本，并按档位返回第一版建议售价。
 - `PARSE_MODEL` 和 `SUGGESTION_MODEL` 现在已经可配置，默认切到 `gpt-4o-mini`；正式 OCR 和逐条风险判断默认仍保持 `gpt-4o`。
 - `analyze_risks` 已改为按条款逐条分析，不再维护一段不断膨胀的整合同多轮 tool-calling 会话，因此单单成本和上下文压力都明显下降。
 - `analyze_clause_risk` 现在返回的是压缩后的 RAG 审查摘要，而不是把长篇知识片段原样塞回分类 prompt。
@@ -135,7 +136,7 @@ docker compose up -d backend postgres redis
 - 原条款文本只存在于流式完成结果和同设备会话缓存中；数据库报告、Redis 缓存、分享链接和邮件链接都不会保存或暴露原文。
 - `scripts/check_locale_keys.sh` 会检查 9 个语言文件是否与 `ja.json` 保持相同键集合。
 - `scripts/check_rag_eval.sh` 会检查 `/api/eval/rag` 是否满足当前本地基线阈值（`Recall@3 >= 0.5`、`MRR >= 0.6`）。
-- `scripts/run_backend_pytests.sh` 会在 Docker 内安装 backend dev 依赖并执行回归单测。
+- `scripts/run_backend_pytests.sh` 会在 Docker 内安装 backend dev 依赖并执行完整 `tests/` 回归单测。
 
 ## 仓库入口
 
