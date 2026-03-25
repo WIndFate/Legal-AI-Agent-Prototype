@@ -11,8 +11,4 @@ echo "[pytest] Installing backend dev dependencies in the running backend contai
 docker compose exec -T backend pip install --no-cache-dir '.[dev]'
 
 echo "[pytest] Running backend pytest suite"
-docker compose exec -T backend pytest \
-  tests/test_generate_report.py \
-  tests/test_rag_evaluator.py \
-  tests/test_token_estimator.py \
-  tests/test_pii_detector.py
+docker compose exec -T backend pytest tests/
