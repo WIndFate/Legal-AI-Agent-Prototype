@@ -66,7 +66,7 @@ def analyze_risks(state: AgentState) -> dict:
 generate_suggestion ツールが返したテキストをそのまま suggestion フィールドに使用してください。自分で修正案を考えないでください。
 
 最終的に、全条項のリスク評価を以下のJSON配列形式で出力してください:
-[{{"clause_number": "第X条", "risk_level": "高/中/低", "risk_reason": "理由", "suggestion": "generate_suggestionツールの返り値をそのまま使用、低リスクは空文字", "referenced_law": "参照法律"}}]
+[{{"clause_number": "第X条", "risk_level": "高/中/低", "risk_reason": "理由", "suggestion": "generate_suggestionツールの返り値をそのまま使用、低リスクは空文字", "referenced_law": "参照した日本の法律名・条文番号（日本語原文のまま記載）"}}]
 
 条項一覧:
 {chr(10).join(clauses_list)}"""
@@ -212,8 +212,10 @@ def _translate_report(
     response = llm_translator.invoke([
         SystemMessage(content=(
             f"Translate the following JSON content to {lang_name}. "
-            "Translate all text values (summary, risk_level, risk_reason, suggestion, referenced_law, overall_risk). "
-            "Keep clause_number as-is (e.g. 第1条). Keep JSON structure exactly the same. "
+            "Translate all text values (summary, risk_level, risk_reason, suggestion, overall_risk). "
+            "Keep clause_number as-is (e.g. 第1条). "
+            "Keep referenced_law in its original Japanese text — do NOT translate law names or article numbers. "
+            "Keep JSON structure exactly the same. "
             "Output only valid JSON, no markdown."
         )),
         HumanMessage(content=translate_payload),
@@ -258,7 +260,7 @@ def analyze_risks_streaming(state: AgentState, event_queue: _queue.Queue) -> dic
 generate_suggestion ツールが返したテキストをそのまま suggestion フィールドに使用してください。自分で修正案を考えないでください。
 
 最終的に、全条項のリスク評価を以下のJSON配列形式で出力してください:
-[{{"clause_number": "第X条", "risk_level": "高/中/低", "risk_reason": "理由", "suggestion": "generate_suggestionツールの返り値をそのまま使用、低リスクは空文字", "referenced_law": "参照法律"}}]
+[{{"clause_number": "第X条", "risk_level": "高/中/低", "risk_reason": "理由", "suggestion": "generate_suggestionツールの返り値をそのまま使用、低リスクは空文字", "referenced_law": "参照した日本の法律名・条文番号（日本語原文のまま記載）"}}]
 
 条項一覧:
 {chr(10).join(clauses_list)}"""
