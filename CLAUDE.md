@@ -215,6 +215,7 @@ Do NOT add a `retrieve_knowledge` node back. Do NOT pre-inject RAG results into 
   1. `analyze_clause_risk` returns compact RAG-backed legal context
   2. `gpt-4o` classifies that single clause into `高/中/低` with `risk_reason` and `referenced_law`
   3. `generate_suggestion` runs only for `高` / `中`
+- Medium-risk suggestions should stay concise; high-risk suggestions can be more detailed.
 - `generate_suggestion` internally invokes a dedicated configurable suggestion model (currently defaulting to `gpt-4o-mini`) and returns the concrete suggestion text.
 
 ### State fields

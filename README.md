@@ -119,9 +119,11 @@ docker compose up -d backend postgres redis
 - Reports are cached in Redis for 24 hours and stored in PostgreSQL with expiry metadata.
 - `backend/services/costing.py` now emits structured per-step cost logs for formal OCR, parse, analyze, suggestion, and translation calls.
 - Embedding requests now emit cost logs too, and review completion logs include an in-memory per-order cost summary with quote mode, input type, and clause counts.
+- That order-level cost summary is now also persisted to `reports.cost_summary` for later inspection without relying only on logs.
 - `PARSE_MODEL` and `SUGGESTION_MODEL` are now configurable and default to `gpt-4o-mini`, while formal OCR and per-clause risk classification remain on `gpt-4o` by default.
 - `analyze_risks` now runs clause by clause instead of maintaining one growing multi-round tool-calling conversation, which materially reduces prompt growth and per-order cost.
 - `analyze_clause_risk` now returns a compact RAG summary instead of replaying long source chunks back into the classifier prompt.
+- `generate_suggestion` now adjusts verbosity by risk level: medium-risk clauses get shorter suggestions, while high-risk clauses can return more detailed rewrite guidance.
 - The backend bootstraps relational tables on startup for local Docker development. Production should still run Alembic migrations explicitly.
 - Production startup now fails fast if KOMOJU/Resend credentials are missing or `FRONTEND_URL` still points to `localhost`.
 - Payment, review, email, and report retrieval paths now emit structured application logs and PostHog events for easier integration debugging.
