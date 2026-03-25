@@ -122,6 +122,7 @@ docker compose up -d backend postgres redis
 - この注文単位のコスト要約は、ログだけでなく `reports.cost_summary` にも保存されるようになりました。
 - `GET /api/eval/costs` は `reports.cost_summary` を集計し、実データが不足している間は `backend/data/cost_samples_seed.json` で 10 サンプル基準まで補完します。
 - 実行時の価格表は Python の固定値ではなく `backend/data/pricing_policy.json` から読み込むようになりました。現時点の暫定価格は `¥299 / ¥499 / ¥799 / ¥1599` です。
+- `/api/eval/costs` は「コスト下限の推奨価格」と「目標粗利込みの推奨価格」を両方返します。既定の `target_margin_rate` は `0.75` です。
 - `PARSE_MODEL` と `SUGGESTION_MODEL` は設定可能になり、デフォルトでは `gpt-4o-mini` を使います。正式 OCR と条項ごとのリスク判定は引き続きデフォルトで `gpt-4o` のままです。
 - `analyze_risks` は、膨張し続ける全契約の多段 tool-calling 会話ではなく、条項ごとの分析に変更されました。これによりコストとコンテキスト圧迫が大きく下がります。
 - `analyze_clause_risk` は、長い法令断片をそのまま返す代わりに、圧縮した RAG 要約を返します。

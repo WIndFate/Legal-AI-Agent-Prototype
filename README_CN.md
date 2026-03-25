@@ -122,6 +122,7 @@ docker compose up -d backend postgres redis
 - 这份订单级成本摘要现在也会持久化到 `reports.cost_summary`，后续排查成本时不再只依赖日志。
 - `GET /api/eval/costs` 现在会基于 `reports.cost_summary` 聚合真实样本成本；当真实样本还不够时，会自动从 `backend/data/cost_samples_seed.json` 补足到 10 条基线样本。
 - 运行时定价现在从 `backend/data/pricing_policy.json` 读取，不再把价格硬编码在 Python 里。当前试运行价表是 `¥299 / ¥499 / ¥799 / ¥1599`。
+- `/api/eval/costs` 现在会同时返回“成本底线建议价”和“目标毛利建议价”，默认目标毛利率 `target_margin_rate=0.75`，方便区分“不能低于多少”和“商业上该卖多少”。
 - `PARSE_MODEL` 和 `SUGGESTION_MODEL` 现在已经可配置，默认切到 `gpt-4o-mini`；正式 OCR 和逐条风险判断默认仍保持 `gpt-4o`。
 - `analyze_risks` 已改为按条款逐条分析，不再维护一段不断膨胀的整合同多轮 tool-calling 会话，因此单单成本和上下文压力都明显下降。
 - `analyze_clause_risk` 现在返回的是压缩后的 RAG 审查摘要，而不是把长篇知识片段原样塞回分类 prompt。

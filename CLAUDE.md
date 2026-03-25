@@ -254,6 +254,8 @@ Embeddings are generated via OpenAI API (httpx direct call, not langchain).
 - `token_estimator.py` loads the active tier table from `backend/data/pricing_policy.json`.
 - The current provisional table is `basic=299`, `standard=499`, `detailed=799`, `complex=1599`, with `complex` covering the supported upper bound (`MAX_UPLOAD_PAGES=30`) instead of a fake infinite ceiling.
 - `GET /api/eval/costs` mixes persisted `reports.cost_summary` with seeded baseline samples from `backend/data/cost_samples_seed.json` until at least 10 samples are available, so early pricing analysis is not based on a single order.
+- `GET /api/eval/costs` returns both `recommended_price_jpy_cost_floor` and `recommended_price_jpy_target_margin`; the latter folds in `target_margin_rate` (currently default `0.75`) so pricing reviews can reason about profit targets, not just raw API cost.
+- `GET /api/eval/costs` returns both `recommended_price_jpy_cost_floor` and `recommended_price_jpy_target_margin`; the latter folds in `target_margin_rate` (currently default `0.75`) so pricing reviews can reason about profit targets, not just raw API cost.
 
 ### Cleanup and privacy
 - `cleanup.py` runs every hour via APScheduler in lifespan
