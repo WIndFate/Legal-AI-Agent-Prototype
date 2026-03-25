@@ -170,8 +170,10 @@ backend/
     report_cache.py   # Redis report cache (24h TTL)
     cleanup.py        # APScheduler: expired reports + contract nullification
   data/
+    cost_samples_seed.json # Seeded cost baseline used until enough real cost samples exist
     eval_dataset.json  # Hand-labeled eval test set (5 samples)
     civil_law.txt      # Civil law TXT source for chunk ingestion
+    pricing_policy.json # Runtime pricing table loaded by token_estimator
 tests/
   test_cost_analysis.py    # Cost aggregation + pricing recommendation unit tests
   test_token_estimator.py  # Token estimation + pricing unit tests
@@ -246,6 +248,12 @@ Embeddings are generated via OpenAI API (httpx direct call, not langchain).
 4. User starts SSE review → report saved to DB + cached in Redis + emailed
 5. Contract text nullified immediately after analysis (privacy)
 6. Redis cache expires in 24h; APScheduler cleans DB hourly
+
+### Runtime pricing policy
+- Upload pricing is no longer hardcoded directly in Python constants.
+- `token_estimator.py` loads the active tier table from `backend/data/pricing_policy.json`.
+- The current provisional table is `basic=299`, `standard=499`, `detailed=799`, `complex=1599`, with `complex` covering the supported upper bound (`MAX_UPLOAD_PAGES=30`) instead of a fake infinite ceiling.
+- `GET /api/eval/costs` mixes persisted `reports.cost_summary` with seeded baseline samples from `backend/data/cost_samples_seed.json` until at least 10 samples are available, so early pricing analysis is not based on a single order.
 
 ### Cleanup and privacy
 - `cleanup.py` runs every hour via APScheduler in lifespan

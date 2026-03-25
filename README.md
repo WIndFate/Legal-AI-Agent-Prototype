@@ -120,7 +120,8 @@ docker compose up -d backend postgres redis
 - `backend/services/costing.py` now emits structured per-step cost logs for formal OCR, parse, analyze, suggestion, and translation calls.
 - Embedding requests now emit cost logs too, and review completion logs include an in-memory per-order cost summary with quote mode, input type, and clause counts.
 - That order-level cost summary is now also persisted to `reports.cost_summary` for later inspection without relying only on logs.
-- `GET /api/eval/costs` now aggregates persisted `reports.cost_summary` samples and returns cost distributions plus first-pass pricing recommendations by tier.
+- `GET /api/eval/costs` now aggregates persisted `reports.cost_summary` samples and, when live data is still sparse, backfills to a 10-sample baseline from `backend/data/cost_samples_seed.json`.
+- Runtime pricing is now loaded from `backend/data/pricing_policy.json` instead of being hardcoded in Python. The current provisional table remains `¥299 / ¥499 / ¥799 / ¥1599`.
 - `PARSE_MODEL` and `SUGGESTION_MODEL` are now configurable and default to `gpt-4o-mini`, while formal OCR and per-clause risk classification remain on `gpt-4o` by default.
 - `analyze_risks` now runs clause by clause instead of maintaining one growing multi-round tool-calling conversation, which materially reduces prompt growth and per-order cost.
 - `analyze_clause_risk` now returns a compact RAG summary instead of replaying long source chunks back into the classifier prompt.
