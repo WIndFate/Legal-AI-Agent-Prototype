@@ -11,8 +11,8 @@ logger = logging.getLogger(__name__)
 MIN_CHARS_PER_PAGE = 50
 
 
-async def extract_text_from_pdf(pdf_bytes: bytes) -> str:
-    """Extract text from PDF. Falls back to OCR for scanned PDFs."""
+def extract_text_from_pdf_text_layer(pdf_bytes: bytes) -> tuple[str, int]:
+    """Extract text from a PDF without OCR fallback."""
     reader = PdfReader(io.BytesIO(pdf_bytes))
     pages_text = []
 
@@ -20,11 +20,19 @@ async def extract_text_from_pdf(pdf_bytes: bytes) -> str:
         text = page.extract_text() or ""
         pages_text.append(text)
 
-    # Check if text extraction was successful
-    total_text = "\n".join(pages_text)
-    avg_chars = len(total_text) / max(len(reader.pages), 1)
+    return "\n".join(pages_text), len(reader.pages)
 
-    if avg_chars < MIN_CHARS_PER_PAGE:
+
+def pdf_text_layer_is_sufficient(text: str, page_count: int) -> bool:
+    """Return True when the embedded PDF text layer is likely usable."""
+    avg_chars = len(text) / max(page_count, 1)
+    return avg_chars >= MIN_CHARS_PER_PAGE
+
+
+async def extract_text_from_pdf(pdf_bytes: bytes) -> str:
+    """Extract text from PDF. Falls back to OCR for scanned PDFs."""
+    total_text, page_count = extract_text_from_pdf_text_layer(pdf_bytes)
+    if not pdf_text_layer_is_sufficient(total_text, page_count):
         # Scanned PDF - fall back to OCR (page by page would be ideal but costly)
         logger.info("PDF text extraction yielded too few characters, falling back to OCR")
         return await extract_text_from_image(pdf_bytes, "application/pdf")

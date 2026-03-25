@@ -12,9 +12,13 @@ from backend.models.order import Order
 from backend.models.report import Report
 from backend.schemas.order import ReviewStreamRequest
 from backend.agent.graph import run_review_stream
-from backend.services.report_cache import cache_report
-from backend.services.email import send_report_email
 from backend.services.analytics import capture as posthog_capture
+from backend.services.costing import clear_order_cost_summary, get_order_cost_summary, reset_cost_order_context, set_cost_order_context
+from backend.services.email import send_report_email
+from backend.services.ocr import extract_text_from_image
+from backend.services.pdf_extractor import extract_text_from_pdf
+from backend.services.report_cache import cache_report
+from backend.services.temp_uploads import delete_temp_upload, read_temp_upload
 
 try:
     import sentry_sdk
@@ -71,6 +75,11 @@ async def review_contract_stream(
             {"order_id": str(order.id), "reason": "analysis_not_waiting", "analysis_status": order.analysis_status},
         )
         raise HTTPException(status_code=409, detail="Analysis already started or completed")
+    preload_cost_context = set_cost_order_context(str(order.id))
+    try:
+        await _ensure_contract_text(order, db)
+    finally:
+        reset_cost_order_context(preload_cost_context)
     if not order.contract_text:
         logger.warning("Review rejected: order_id=%s reason=missing_contract_text", order.id)
         posthog_capture(
@@ -98,6 +107,7 @@ async def review_contract_stream(
 
     async def generate():
         final_report = None
+        cost_context = set_cost_order_context(order_id)
         try:
             async for evt in run_review_stream(
                 contract_text,
@@ -112,6 +122,8 @@ async def review_contract_stream(
                 sentry_sdk.set_tag("order_id", order_id)
                 sentry_sdk.capture_exception(e)
             yield f"data: {json.dumps({'type': 'error', 'message': str(e)})}\n\n"
+        finally:
+            reset_cost_order_context(cost_context)
 
         # Post-analysis: save report, cache, email, clean up contract
         if final_report:
@@ -121,6 +133,24 @@ async def review_contract_stream(
                 await cache_report(order_id, report_payload)
                 email_sent = await send_report_email(email, order_id, target_language)
                 await _finalize_order(order_id, db)
+                cost_summary = get_order_cost_summary(order_id)
+                if cost_summary:
+                    cost_summary.update(
+                        {
+                            "input_type": order.input_type,
+                            "quote_mode": order.quote_mode,
+                            "estimate_source": order.estimate_source,
+                            "page_estimate": order.page_estimate,
+                            "estimated_tokens": order.estimated_tokens,
+                            "target_language": target_language,
+                            "total_clauses": persisted_report.get("total_clauses", 0),
+                            "high_risk_count": persisted_report.get("high_risk_count", 0),
+                            "medium_risk_count": persisted_report.get("medium_risk_count", 0),
+                            "low_risk_count": persisted_report.get("low_risk_count", 0),
+                        }
+                    )
+                    logger.info("Order cost summary: %s", cost_summary)
+                    clear_order_cost_summary(order_id)
                 posthog_capture(
                     email or order_id,
                     "review_completed",
@@ -199,8 +229,42 @@ async def _finalize_order(order_id: str, db: AsyncSession) -> None:
     result = await db.execute(select(Order).where(Order.id == order_id))
     order = result.scalar_one_or_none()
     if order:
+        temp_upload_token = order.temp_upload_token
         order.analysis_status = "completed"
         order.contract_text = None
         order.contract_deleted_at = datetime.now(timezone.utc)
+        order.temp_upload_token = None
+        order.temp_upload_name = None
+        order.temp_upload_mime_type = None
+        delete_temp_upload(temp_upload_token)
         await db.commit()
         logger.info("Order finalized: order_id=%s contract_text_deleted=true", order_id)
+
+
+async def _ensure_contract_text(order: Order, db: AsyncSession) -> None:
+    """Materialize contract text from staged uploads after payment and before analysis."""
+    if order.contract_text or not order.temp_upload_token:
+        return
+
+    try:
+        file_bytes = read_temp_upload(order.temp_upload_token)
+    except FileNotFoundError:
+        logger.warning("Staged upload missing before review: order_id=%s token=%s", order.id, order.temp_upload_token)
+        return
+
+    if order.input_type == "image":
+        contract_text = await extract_text_from_image(file_bytes, order.temp_upload_mime_type or "image/jpeg")
+    elif order.input_type == "pdf":
+        contract_text = await extract_text_from_pdf(file_bytes)
+    else:
+        contract_text = ""
+
+    if contract_text.strip():
+        order.contract_text = contract_text
+        await db.commit()
+        logger.info(
+            "Contract text materialized before review: order_id=%s input_type=%s quote_mode=%s",
+            order.id,
+            order.input_type,
+            order.quote_mode,
+        )

@@ -10,6 +10,11 @@ class Settings(BaseSettings):
 
     # OpenAI
     OPENAI_API_KEY: str
+    OCR_MODEL: str = "gpt-4o"
+    ANALYSIS_MODEL: str = "gpt-4o"
+    PARSE_MODEL: str = "gpt-4o-mini"
+    SUGGESTION_MODEL: str = "gpt-4o-mini"
+    TRANSLATION_MODEL: str = "gpt-4o-mini"
 
     # Environment
     APP_ENV: Literal["development", "production"] = "development"
@@ -38,6 +43,10 @@ class Settings(BaseSettings):
     # App
     FRONTEND_URL: str = "http://localhost:5173"
     REPORT_TTL_HOURS: int = 24
+    UPLOAD_STAGING_DIR: str = "/tmp/contract_checker_uploads"
+    MAX_UPLOAD_PAGES: int = 30
+    MAX_CONTRACT_TOKENS: int = 60000
+    ENABLE_LOCAL_OCR_ESTIMATE: bool = True
 
     model_config = SettingsConfigDict(env_file=".env")
 

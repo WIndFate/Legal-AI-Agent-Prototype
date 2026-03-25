@@ -6,8 +6,14 @@ class PaymentCreateRequest(BaseModel):
     contract_text: str
     input_type: str
     estimated_tokens: int
+    page_estimate: int
     price_tier: str
     price_jpy: int
+    quote_mode: str = "exact"
+    estimate_source: str = "raw_text"
+    upload_token: str | None = None
+    upload_name: str | None = None
+    upload_mime_type: str | None = None
     target_language: str = "ja"
     referral_code: str | None = None
 

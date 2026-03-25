@@ -2,7 +2,12 @@ from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_core.tools import tool
 from langchain_openai import ChatOpenAI
 
+from backend.config import get_settings
 from backend.rag.store import get_store
+from backend.services.costing import log_model_usage
+
+settings = get_settings()
+suggestion_model = settings.SUGGESTION_MODEL
 
 
 @tool
@@ -42,7 +47,7 @@ def generate_suggestion(clause_text: str, risk_reason: str) -> str:
         clause_text: The original clause text that has identified risks.
         risk_reason: The reason why this clause is considered risky.
     """
-    llm = ChatOpenAI(model="gpt-4o", temperature=0)
+    llm = ChatOpenAI(model=suggestion_model, temperature=0)
     response = llm.invoke([
         SystemMessage(content="あなたは日本法に精通した法律専門家です。リスクのある契約条項に対して、具体的かつ実務的な修正案を提案してください。"),
         HumanMessage(content=f"""以下のリスクある契約条項に対して、具体的な修正案を生成してください。
@@ -55,6 +60,7 @@ def generate_suggestion(clause_text: str, risk_reason: str) -> str:
 
 修正案のみを出力してください。前置きや説明は不要です。"""),
     ])
+    log_model_usage("generate_suggestion", suggestion_model, response)
     return response.content
 
 

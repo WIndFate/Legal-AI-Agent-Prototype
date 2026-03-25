@@ -7,6 +7,7 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 
 from backend.config import get_settings
+from backend.services.costing import log_embedding_usage
 
 logger = logging.getLogger(__name__)
 
@@ -31,7 +32,14 @@ def _get_embedding_sync(text_input: str) -> list[float]:
         timeout=30,
     )
     response.raise_for_status()
-    return response.json()["data"][0]["embedding"]
+    payload = response.json()
+    log_embedding_usage(
+        "embedding_query",
+        EMBEDDING_MODEL,
+        input_tokens=int(payload.get("usage", {}).get("prompt_tokens", 0)),
+        item_count=1,
+    )
+    return payload["data"][0]["embedding"]
 
 
 def _get_embeddings_batch_sync(texts: list[str]) -> list[list[float]]:
@@ -44,7 +52,14 @@ def _get_embeddings_batch_sync(texts: list[str]) -> list[list[float]]:
         timeout=60,
     )
     response.raise_for_status()
-    data = response.json()["data"]
+    payload = response.json()
+    log_embedding_usage(
+        "embedding_batch",
+        EMBEDDING_MODEL,
+        input_tokens=int(payload.get("usage", {}).get("prompt_tokens", 0)),
+        item_count=len(texts),
+    )
+    data = payload["data"]
     # Sort by index to maintain order
     data.sort(key=lambda x: x["index"])
     return [d["embedding"] for d in data]

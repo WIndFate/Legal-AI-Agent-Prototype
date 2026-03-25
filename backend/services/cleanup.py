@@ -1,12 +1,13 @@
 import logging
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
-from sqlalchemy import delete, update, and_
+from sqlalchemy import delete, update, and_, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.db.session import get_session_factory
 from backend.models.order import Order
 from backend.models.report import Report
+from backend.services.temp_uploads import delete_temp_upload
 
 logger = logging.getLogger(__name__)
 
@@ -46,7 +47,37 @@ async def nullify_completed_contracts() -> int:
         return count
 
 
+async def cleanup_staged_uploads() -> int:
+    """Delete staged uploads once they are no longer needed."""
+    factory = get_session_factory()
+    cutoff = datetime.now(timezone.utc) - timedelta(hours=24)
+    async with factory() as session:
+        result = await session.execute(
+            select(Order).where(
+                Order.temp_upload_token.isnot(None),
+                or_(
+                    Order.analysis_status == "completed",
+                    and_(
+                        Order.payment_status != "paid",
+                        Order.created_at < cutoff,
+                    ),
+                ),
+            )
+        )
+        orders = list(result.scalars().all())
+        for order in orders:
+            delete_temp_upload(order.temp_upload_token)
+            order.temp_upload_token = None
+            order.temp_upload_name = None
+            order.temp_upload_mime_type = None
+        await session.commit()
+        if orders:
+            logger.info("Deleted %d staged upload files", len(orders))
+        return len(orders)
+
+
 async def run_cleanup() -> None:
     """Run all cleanup tasks. Called by APScheduler."""
     await cleanup_expired_reports()
     await nullify_completed_contracts()
+    await cleanup_staged_uploads()

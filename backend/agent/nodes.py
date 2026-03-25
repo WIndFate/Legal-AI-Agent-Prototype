@@ -9,9 +9,17 @@ logger = logging.getLogger(__name__)
 
 from backend.agent.state import AgentState
 from backend.agent.tools import analyze_clause_risk, generate_suggestion, ALL_TOOLS
+from backend.config import get_settings
+from backend.services.costing import log_model_usage
 
-llm = ChatOpenAI(model="gpt-4o", temperature=0, streaming=True)
-llm_with_tools = llm.bind_tools(ALL_TOOLS)
+settings = get_settings()
+analysis_model = settings.ANALYSIS_MODEL
+parse_model = settings.PARSE_MODEL
+translation_model = settings.TRANSLATION_MODEL
+
+analysis_llm = ChatOpenAI(model=analysis_model, temperature=0, streaming=True)
+analysis_llm_with_tools = analysis_llm.bind_tools(ALL_TOOLS)
+parse_llm = ChatOpenAI(model=parse_model, temperature=0)
 
 SYSTEM_PROMPT = """あなたは日本法に精通した法律AI契約審査アシスタントです。
 与えられた契約書を専門的に審査し、リスクのある条項を特定し、修正案を提案します。
@@ -31,7 +39,8 @@ JSON配列形式で出力してください:
 契約書:
 {state["contract_text"]}"""),
     ]
-    response = llm.invoke(messages)
+    response = parse_llm.invoke(messages)
+    log_model_usage("parse_contract", parse_model, response)
 
     try:
         content = response.content.strip()
@@ -84,7 +93,8 @@ generate_suggestion ツールが返したテキストをそのまま suggestion 
     # Agentic loop: keep calling tools until LLM returns a final text response
     final_content = ""
     for _ in range(5):  # max 5 rounds to avoid infinite loops
-        response = llm_with_tools.invoke(messages)
+        response = analysis_llm_with_tools.invoke(messages)
+        log_model_usage("analyze_risks_round", analysis_model, response, message_count=len(messages))
         messages.append(response)
 
         if not response.tool_calls:
@@ -122,7 +132,7 @@ generate_suggestion ツールが返したテキストをそのまま suggestion 
     return {"risk_analysis": risk_analysis, "messages": messages[2:]}
 
 
-llm_translator = ChatOpenAI(model="gpt-4o-mini", temperature=0)
+llm_translator = ChatOpenAI(model=translation_model, temperature=0)
 
 
 def generate_report(state: AgentState) -> dict:
@@ -220,6 +230,7 @@ def _translate_report(
         )),
         HumanMessage(content=translate_payload),
     ])
+    log_model_usage("translate_report", translation_model, response, target_language=target_lang)
 
     try:
         content = response.content.strip()
@@ -278,7 +289,8 @@ generate_suggestion ツールが返したテキストをそのまま suggestion 
     final_content = ""
     for _ in range(5):
         event_queue.put({"type": "thinking"})
-        response = llm_with_tools.invoke(messages)
+        response = analysis_llm_with_tools.invoke(messages)
+        log_model_usage("analyze_risks_stream_round", analysis_model, response, message_count=len(messages))
         messages.append(response)
 
         if not response.tool_calls:

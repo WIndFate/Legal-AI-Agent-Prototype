@@ -1,4 +1,4 @@
-from backend.services.token_estimator import estimate_tokens_and_price, TOKENS_PER_PAGE
+from backend.services.token_estimator import estimate_price_from_page_count, estimate_tokens_and_price, TOKENS_PER_PAGE
 
 
 def test_short_text_basic_tier():
@@ -48,3 +48,11 @@ def test_result_has_all_keys():
     """Result dict should contain all required keys."""
     result = estimate_tokens_and_price("テスト")
     assert set(result.keys()) == {"estimated_tokens", "page_estimate", "price_tier", "price_jpy"}
+
+
+def test_page_count_fallback_uses_same_pricing_grid():
+    result = estimate_price_from_page_count(4)
+    assert result["page_estimate"] == 4
+    assert result["estimated_tokens"] == 4 * TOKENS_PER_PAGE
+    assert result["price_tier"] == "standard"
+    assert result["price_jpy"] == 499
