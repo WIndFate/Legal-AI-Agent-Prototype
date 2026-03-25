@@ -64,8 +64,11 @@ jq -e '.contract_text | length > 0' "$UPLOAD_JSON" >/dev/null || fail "Upload re
 jq -e '.price_jpy > 0' "$UPLOAD_JSON" >/dev/null || fail "Upload returned invalid price"
 
 ESTIMATED_TOKENS="$(jq -r '.estimated_tokens' "$UPLOAD_JSON")"
+PAGE_ESTIMATE="$(jq -r '.page_estimate' "$UPLOAD_JSON")"
 PRICE_TIER="$(jq -r '.price_tier' "$UPLOAD_JSON")"
 PRICE_JPY="$(jq -r '.price_jpy' "$UPLOAD_JSON")"
+QUOTE_MODE="$(jq -r '.quote_mode' "$UPLOAD_JSON")"
+ESTIMATE_SOURCE="$(jq -r '.estimate_source' "$UPLOAD_JSON")"
 CONTRACT_TEXT_JSON="$(jq -r '.contract_text' "$UPLOAD_JSON")"
 
 log "Creating payment order"
@@ -74,16 +77,22 @@ jq -n \
   --arg contract_text "$CONTRACT_TEXT_JSON" \
   --arg input_type "text" \
   --arg price_tier "$PRICE_TIER" \
+  --arg quote_mode "$QUOTE_MODE" \
+  --arg estimate_source "$ESTIMATE_SOURCE" \
   --arg target_language "zh-CN" \
   --argjson estimated_tokens "$ESTIMATED_TOKENS" \
+  --argjson page_estimate "$PAGE_ESTIMATE" \
   --argjson price_jpy "$PRICE_JPY" \
   '{
     email: $email,
     contract_text: $contract_text,
     input_type: $input_type,
     estimated_tokens: $estimated_tokens,
+    page_estimate: $page_estimate,
     price_tier: $price_tier,
     price_jpy: $price_jpy,
+    quote_mode: $quote_mode,
+    estimate_source: $estimate_source,
     target_language: $target_language
   }' \
   | curl -sS -X POST "${API_BASE_URL}/api/payment/create" \
