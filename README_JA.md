@@ -49,7 +49,7 @@ RAG:
 ## 技術スタック
 
 - バックエンド: FastAPI, SQLAlchemy async, Alembic, Redis, APScheduler
-- Agent: LangGraph, LangChain Tool Calling
+- Agent: LangGraph, 条項単位の審査パイプライン
 - RAG: PostgreSQL `pgvector`, `text-embedding-3-small`
 - フロントエンド: React, Vite, TypeScript, React Router, i18next
 - インフラ: Docker Compose, Fly.io 設定, Vercel 設定
@@ -119,7 +119,9 @@ docker compose up -d backend postgres redis
 - レポートは Redis に 24 時間キャッシュされ、PostgreSQL に期限付きで保存されます。
 - `backend/services/costing.py` により、正式 OCR・parse・analyze・suggestion・translation の構造化コストログが出力されます。
 - embedding リクエストもコストログを出力し、review 完了時には見積もりモード・入力種別・条項数を含む注文単位のコスト要約ログも出力されます。
-- `PARSE_MODEL` と `SUGGESTION_MODEL` は設定可能になり、デフォルトでは `gpt-4o-mini` を使います。正式 OCR と外側の主分析ループは引き続きデフォルトで `gpt-4o` のままです。
+- `PARSE_MODEL` と `SUGGESTION_MODEL` は設定可能になり、デフォルトでは `gpt-4o-mini` を使います。正式 OCR と条項ごとのリスク判定は引き続きデフォルトで `gpt-4o` のままです。
+- `analyze_risks` は、膨張し続ける全契約の多段 tool-calling 会話ではなく、条項ごとの分析に変更されました。これによりコストとコンテキスト圧迫が大きく下がります。
+- `analyze_clause_risk` は、長い法令断片をそのまま返す代わりに、圧縮した RAG 要約を返します。
 - ローカル Docker 開発を即時実行できるよう、バックエンド起動時に関係テーブルを自動作成します。本番では Alembic migration を明示的に実行してください。
 - 本番環境で KOMOJU / Resend の必須設定が不足している場合、または `FRONTEND_URL` が `localhost` のままの場合は起動時に失敗します。
 - 支払い、審査、メール、レポート取得の主要経路では、構造化アプリケーションログと PostHog イベントを出力し、外部連携時の切り分けをしやすくしています。

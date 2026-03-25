@@ -61,7 +61,7 @@ Built with LangGraph (agentic loop), PostgreSQL pgvector (RAG), FastAPI (REST + 
 
 - `upload_contract`: accepts text / image / PDF, estimates price, detects PII, and stages image/scanned PDF uploads for dual-OCR flow
 - `recognize_text`: image OCR with GPT-4o Vision, PDF extraction with OCR fallback, but only after payment for staged OCR uploads
-- `analyze_risks`: LLM agentic loop calls `analyze_clause_risk` (RAG inside) and `generate_suggestion`
+- `analyze_risks`: clause-by-clause analysis; each clause runs internal RAG lookup first, then a compact LLM judgment, and only high/medium risks trigger `generate_suggestion`
 - `generate_report`: aggregates results and translates to target language
 - `persist_report`: stores report, caches it, emails link, and deletes contract text
 
@@ -207,11 +207,15 @@ alembic.ini
 The LLM calls the tool per clause → receives real legal knowledge → makes risk judgment.
 Do NOT add a `retrieve_knowledge` node back. Do NOT pre-inject RAG results into prompts.
 
-### Tool calling pattern
-- `ALL_TOOLS` contains exactly two tools: `analyze_clause_risk` and `generate_suggestion`.
-- Use `get_store().search()` directly in tools. Do NOT add a `search_legal_knowledge` tool back — its functionality is already covered by `analyze_clause_risk` internally.
-- `analyze_clause_risk` is responsible for risk judgment: queries RAG and returns relevant legal knowledge to the outer LLM.
-- `generate_suggestion` is responsible for producing modification text: internally invokes a dedicated configurable suggestion model (currently defaulting to `gpt-4o-mini`) and returns the concrete suggestion. The outer LLM must use the return value directly as the `suggestion` field — do NOT have the outer LLM write suggestions itself.
+### Clause-level analysis pattern
+- `analyze_clause_risk` and `generate_suggestion` remain the only two analysis helpers.
+- Use `get_store().search()` directly in `analyze_clause_risk`. Do NOT add a `search_legal_knowledge` tool back.
+- `analyze_risks` no longer keeps one growing whole-contract tool-calling conversation. It analyzes clauses one by one to cap prompt size and cost.
+- The per-clause flow is:
+  1. `analyze_clause_risk` returns compact RAG-backed legal context
+  2. `gpt-4o` classifies that single clause into `高/中/低` with `risk_reason` and `referenced_law`
+  3. `generate_suggestion` runs only for `高` / `中`
+- `generate_suggestion` internally invokes a dedicated configurable suggestion model (currently defaulting to `gpt-4o-mini`) and returns the concrete suggestion text.
 
 ### State fields
 `AgentState` has exactly: `contract_text`, `clauses`, `risk_analysis`, `review_report`, `messages`, `target_language`.

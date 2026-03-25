@@ -49,7 +49,7 @@ RAG：
 ## 技术栈
 
 - 后端：FastAPI、SQLAlchemy async、Alembic、Redis、APScheduler
-- Agent：LangGraph、LangChain Tool Calling
+- Agent：LangGraph、按条款逐条分析的审查流水线
 - RAG：PostgreSQL `pgvector`、`text-embedding-3-small`
 - 前端：React、Vite、TypeScript、React Router、i18next
 - 基础设施：Docker Compose、Fly.io 配置、Vercel 配置
@@ -119,7 +119,9 @@ docker compose up -d backend postgres redis
 - 报告会缓存到 Redis 24 小时，并在 PostgreSQL 中保存带过期时间的记录。
 - `backend/services/costing.py` 现在会为正式 OCR、parse、analyze、suggestion、translation 输出结构化成本日志。
 - embedding 请求现在也会输出成本日志，review 完成时还会记录一份包含报价模式、输入类型和条款统计的订单级成本摘要。
-- `PARSE_MODEL` 和 `SUGGESTION_MODEL` 现在已经可配置，默认切到 `gpt-4o-mini`；正式 OCR 和外层主分析默认仍保持 `gpt-4o`。
+- `PARSE_MODEL` 和 `SUGGESTION_MODEL` 现在已经可配置，默认切到 `gpt-4o-mini`；正式 OCR 和逐条风险判断默认仍保持 `gpt-4o`。
+- `analyze_risks` 已改为按条款逐条分析，不再维护一段不断膨胀的整合同多轮 tool-calling 会话，因此单单成本和上下文压力都明显下降。
+- `analyze_clause_risk` 现在返回的是压缩后的 RAG 审查摘要，而不是把长篇知识片段原样塞回分类 prompt。
 - 为了本地 Docker 开发可直接运行，后端启动时会自动补齐关系表。生产环境仍应显式执行 Alembic migration。
 - 生产环境如果缺少 KOMOJU / Resend 关键配置，或 `FRONTEND_URL` 仍指向 `localhost`，启动会直接失败。
 - 支付、审查、邮件、报告读取路径现在会输出结构化应用日志，并补充 PostHog 埋点，便于联调定位问题。
