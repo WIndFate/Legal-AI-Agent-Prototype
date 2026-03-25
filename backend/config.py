@@ -47,6 +47,9 @@ class Settings(BaseSettings):
     MAX_UPLOAD_PAGES: int = 30
     MAX_CONTRACT_TOKENS: int = 60000
     ENABLE_LOCAL_OCR_ESTIMATE: bool = True
+    PRICING_POLICY_FILE: str = "backend/data/pricing_policy.json"
+    COST_SAMPLE_SEED_FILE: str = "backend/data/cost_samples_seed.json"
+    COST_SAMPLE_MINIMUM: int = 10
 
     model_config = SettingsConfigDict(env_file=".env")
 

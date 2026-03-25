@@ -3,7 +3,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.db.session import get_db
 from backend.eval.evaluator import run_rag_eval
-from backend.services.cost_analysis import build_cost_pricing_report, load_cost_samples
+from backend.services.cost_analysis import (
+    build_cost_pricing_report,
+    load_cost_samples,
+    summarize_sample_sources,
+)
 
 router = APIRouter()
 
@@ -28,6 +32,7 @@ async def eval_costs(
     return {
         "sample_limit": limit,
         "samples": len(samples),
+        "sample_sources": summarize_sample_sources(samples),
         "report": build_cost_pricing_report(
             samples,
             payment_fee_rate=payment_fee_rate,

@@ -2,9 +2,12 @@ import pytest
 
 from backend.services.cost_analysis import (
     build_cost_pricing_report,
+    load_seed_cost_samples,
     percentile,
     recommend_price_jpy,
+    summarize_sample_sources,
 )
+from backend.services.token_estimator import get_price_tiers
 
 
 def test_percentile_interpolates_sorted_values():
@@ -58,3 +61,25 @@ def test_build_cost_pricing_report_groups_by_tier_and_input_type():
     assert len(report["by_price_tier"]) == 2
     assert report["by_price_tier"][0]["price_tier"] == "basic"
     assert report["by_price_tier"][1]["price_tier"] == "standard"
+
+
+def test_seed_cost_samples_cover_all_four_price_tiers():
+    samples = load_seed_cost_samples()
+    tiers = {sample["price_tier"] for sample in samples}
+    assert len(samples) >= 10
+    assert tiers == {"basic", "standard", "detailed", "complex"}
+
+
+def test_runtime_price_tiers_use_policy_file():
+    tiers = get_price_tiers()
+    assert tiers[-1]["name"] == "complex"
+    assert tiers[-1]["price_jpy"] == 1599
+    assert tiers[-1]["max_pages"] == 30
+
+
+def test_summarize_sample_sources_counts_seed_vs_database_rows():
+    result = summarize_sample_sources([
+        {"order_id": "seed-basic-text-001"},
+        {"order_id": "real-order-123"},
+    ])
+    assert result == {"database_samples": 1, "seed_samples": 1}

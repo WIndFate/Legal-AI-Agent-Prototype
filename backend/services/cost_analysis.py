@@ -1,12 +1,15 @@
+import json
 import math
+from pathlib import Path
 from typing import Any
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from backend.config import get_settings
 from backend.models.order import Order
 from backend.models.report import Report
-from backend.services.token_estimator import PRICE_TIERS
+from backend.services.token_estimator import get_price_tiers
 
 
 DEFAULT_PAYMENT_FEE_RATE = 0.0325
@@ -80,7 +83,7 @@ def build_cost_pricing_report(
         by_quote_mode.setdefault(sample["quote_mode"], []).append(float(sample["total_cost_jpy"]))
         by_price_tier.setdefault(sample["price_tier"], []).append(sample)
 
-    tier_price_lookup = {tier["name"]: tier["price_jpy"] for tier in PRICE_TIERS}
+    tier_price_lookup = {tier["name"]: tier["price_jpy"] for tier in get_price_tiers()}
     tier_rows = []
     for price_tier, tier_samples in by_price_tier.items():
         tier_costs = [float(sample["total_cost_jpy"]) for sample in tier_samples]
@@ -153,4 +156,53 @@ async def load_cost_samples(db: AsyncSession, limit: int = 200) -> list[dict[str
             "total_clauses": report.total_clauses,
             "created_at": report.created_at.isoformat(),
         })
-    return samples
+
+    return _append_seed_samples(samples, limit=limit)
+
+
+def load_seed_cost_samples() -> list[dict[str, Any]]:
+    settings = get_settings()
+    seed_path = Path(settings.COST_SAMPLE_SEED_FILE)
+    if not seed_path.is_absolute():
+        seed_path = Path.cwd() / seed_path
+
+    try:
+        payload = json.loads(seed_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return []
+
+    if not isinstance(payload, list):
+        return []
+    return [sample for sample in payload if isinstance(sample, dict)]
+
+
+def summarize_sample_sources(samples: list[dict[str, Any]]) -> dict[str, int]:
+    seeded = sum(
+        1 for sample in samples if str(sample.get("order_id", "")).startswith("seed-")
+    )
+    return {
+        "database_samples": len(samples) - seeded,
+        "seed_samples": seeded,
+    }
+
+
+def _append_seed_samples(
+    db_samples: list[dict[str, Any]],
+    *,
+    limit: int,
+) -> list[dict[str, Any]]:
+    settings = get_settings()
+    minimum_samples = min(max(settings.COST_SAMPLE_MINIMUM, 0), max(limit, 0))
+    if len(db_samples) >= minimum_samples:
+        return db_samples[:limit]
+
+    merged = list(db_samples)
+    existing_ids = {sample["order_id"] for sample in merged}
+    for seed_sample in load_seed_cost_samples():
+        if seed_sample.get("order_id") in existing_ids:
+            continue
+        merged.append(seed_sample)
+        existing_ids.add(seed_sample["order_id"])
+        if len(merged) >= minimum_samples or len(merged) >= limit:
+            break
+    return merged[:limit]

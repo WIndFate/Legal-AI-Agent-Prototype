@@ -41,7 +41,7 @@ def test_large_text_complex_tier():
     text = "甲は乙に対し、本契約に定める業務を委託し、乙はこれを受託する。" * 1000
     result = estimate_tokens_and_price(text)
     assert result["price_tier"] == "complex"
-    assert result["price_jpy"] == 1299
+    assert result["price_jpy"] == 1599
 
 
 def test_result_has_all_keys():

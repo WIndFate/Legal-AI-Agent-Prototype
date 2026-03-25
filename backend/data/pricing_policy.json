@@ -1,0 +1,10 @@
+{
+  "version": "2026-03-26",
+  "source": "seeded_cost_baseline",
+  "tiers": [
+    { "name": "basic", "max_pages": 2, "price_jpy": 299 },
+    { "name": "standard", "max_pages": 5, "price_jpy": 499 },
+    { "name": "detailed", "max_pages": 10, "price_jpy": 799 },
+    { "name": "complex", "max_pages": 30, "price_jpy": 1599 }
+  ]
+}
