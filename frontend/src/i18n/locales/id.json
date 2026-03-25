@@ -142,6 +142,20 @@
     "employment_title": "Analisis kontrak kerja",
     "employment_desc": "Kontrak kerja penuh waktu perusahaan IT",
     "parttime_title": "Analisis kontrak paruh waktu",
-    "parttime_desc": "Kontrak kerja paruh waktu restoran"
+    "parttime_desc": "Kontrak kerja paruh waktu restoran",
+    "rental_c1_reason": "Klausul ini mengharuskan penyewa menanggung semua biaya pemulihan termasuk keausan alami. Menurut Hukum Perdata dan pedoman MLIT, keausan normal seharusnya menjadi tanggung jawab pemilik — klausul ini mungkin tidak adil bagi penyewa.",
+    "rental_c1_suggestion": "Disarankan mengubah menjadi 'Penyewa hanya memulihkan kerusakan yang disebabkan oleh kesengajaan atau kelalaian', secara tegas mengecualikan keausan alami.",
+    "rental_c2_reason": "Pemberitahuan 6 bulan dan denda 3 bulan sewa, meskipun ada di pasar sewa Jepang, melebihi standar umum 1-2 bulan. Ketentuan ini ketat — pertimbangkan untuk bernegosiasi.",
+    "rental_c2_suggestion": "Disarankan bernegosiasi untuk mengurangi periode pemberitahuan menjadi 2 bulan dan denda menjadi 1 bulan sewa, yang lebih sesuai dengan norma pasar.",
+    "rental_c3_reason": "Biaya perpanjangan sebesar 1 bulan sewa umum di area Tokyo, dan Mahkamah Agung telah mengesahkan klausul biaya perpanjangan yang wajar. Klausul ini dalam rentang yang wajar.",
+    "rental_c3_suggestion": "Ini adalah praktik standar, tetapi konfirmasi sebelum menandatangani apakah biaya berlaku untuk setiap siklus perpanjangan.",
+    "employment_c1_reason": "Periode larangan persaingan 2 tahun terlalu lama, dan mencakup semua pesaing di seluruh Jepang terlalu luas. Pengadilan Jepang cenderung membatalkan klausul larangan persaingan lebih dari 1 tahun atau tanpa kompensasi.",
+    "employment_c1_suggestion": "Disarankan bernegosiasi menjadi 6 bulan hingga 1 tahun, membatasi ruang lingkup geografis dan bisnis, serta meminta kompensasi larangan persaingan dari pemberi kerja.",
+    "employment_c2_reason": "Masa percobaan 6 bulan berada dalam rentang hukum (biasanya 3-6 bulan), tetapi 'kurang memenuhi syarat' sebagai kriteria pemecatan tidak jelas, memberikan pemberi kerja kebebasan luas.",
+    "employment_c2_suggestion": "Disarankan meminta kriteria spesifik untuk 'kurang memenuhi syarat' dan mengonfirmasi apakah pemberitahuan 30 hari diperlukan untuk pemecatan selama masa percobaan.",
+    "parttime_c1_reason": "Membayar premi lembur hanya setelah 40 jam/bulan melanggar Undang-Undang Standar Ketenagakerjaan. Semua jam yang melebihi batas hukum (8 jam/hari, 40 jam/minggu) memerlukan premi minimal 25% — tidak ada pengecualian lembur gratis 40 jam.",
+    "parttime_c1_suggestion": "Klausul ini ilegal. Minta diubah menjadi: 'Premi lembur minimal 25% dibayarkan untuk semua jam yang melebihi jam kerja resmi.'",
+    "parttime_c2_reason": "Mengharuskan karyawan mengganti kerugian penuh biasanya dibatasi oleh pengadilan, yang umumnya hanya memberikan tanggung jawab sebagian. Selain itu, pemotongan dari gaji memerlukan persetujuan tertulis pekerja — jika tidak, melanggar prinsip pembayaran gaji penuh.",
+    "parttime_c2_suggestion": "Konfirmasi apakah perusahaan memiliki asuransi tanggung jawab bisnis, dan minta agar 'pemotongan gaji memerlukan persetujuan tertulis karyawan' dinyatakan secara eksplisit."
   }
 }

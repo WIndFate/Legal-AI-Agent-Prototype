@@ -142,6 +142,20 @@
     "employment_title": "Phân tích hợp đồng lao động",
     "employment_desc": "Hợp đồng lao động chính thức công ty IT",
     "parttime_title": "Phân tích hợp đồng bán thời gian",
-    "parttime_desc": "Hợp đồng làm thêm nhà hàng"
+    "parttime_desc": "Hợp đồng làm thêm nhà hàng",
+    "rental_c1_reason": "Điều khoản này yêu cầu người thuê chịu tất cả chi phí khôi phục bao gồm hao mòn tự nhiên. Theo Bộ luật Dân sự và hướng dẫn của MLIT, hao mòn thông thường phải do chủ nhà chịu — điều khoản này có thể không công bằng với người thuê.",
+    "rental_c1_suggestion": "Đề nghị sửa thành 'Người thuê chỉ khôi phục thiệt hại do cố ý hoặc sơ suất gây ra', loại trừ rõ ràng nghĩa vụ khôi phục hao mòn tự nhiên.",
+    "rental_c2_reason": "Thời hạn thông báo 6 tháng và tiền phạt 3 tháng tiền thuê, mặc dù tồn tại trên thị trường cho thuê Nhật Bản, vượt quá tiêu chuẩn thông thường 1-2 tháng. Điều kiện khá nghiêm ngặt — hãy xem xét đàm phán.",
+    "rental_c2_suggestion": "Đề nghị đàm phán giảm thời hạn thông báo xuống 2 tháng và tiền phạt xuống 1 tháng tiền thuê, gần hơn với thông lệ thị trường.",
+    "rental_c3_reason": "Phí gia hạn bằng 1 tháng tiền thuê là phổ biến ở khu vực Tokyo, và Tòa án Tối cao đã xác nhận hiệu lực của các điều khoản phí gia hạn hợp lý. Điều khoản này nằm trong phạm vi hợp lý.",
+    "rental_c3_suggestion": "Đây là thông lệ tiêu chuẩn, nhưng hãy xác nhận trước khi ký xem phí có áp dụng cho mỗi lần gia hạn không.",
+    "employment_c1_reason": "Thời hạn cấm cạnh tranh 2 năm là dài, và phạm vi bao gồm tất cả đối thủ trên toàn Nhật Bản là quá rộng. Tòa án Nhật Bản có xu hướng vô hiệu hóa các điều khoản cấm cạnh tranh trên 1 năm hoặc không có bồi thường.",
+    "employment_c1_suggestion": "Đề nghị đàm phán xuống 6 tháng đến 1 năm, giới hạn phạm vi địa lý và kinh doanh, và yêu cầu bồi thường cấm cạnh tranh từ nhà tuyển dụng.",
+    "employment_c2_reason": "Thời gian thử việc 6 tháng nằm trong phạm vi pháp luật (thường 3-6 tháng), nhưng 'thiếu năng lực' làm tiêu chí sa thải là mơ hồ, cho người sử dụng lao động quyền quyết định rộng.",
+    "employment_c2_suggestion": "Đề nghị yêu cầu tiêu chí cụ thể cho 'thiếu năng lực' và xác nhận liệu có cần thông báo trước 30 ngày cho sa thải trong thời gian thử việc không.",
+    "parttime_c1_reason": "Chỉ trả phụ cấp làm thêm sau 40 giờ/tháng vi phạm Luật Tiêu chuẩn Lao động. Tất cả giờ vượt quá giới hạn luật định (8 giờ/ngày, 40 giờ/tuần) đều phải được trả ít nhất 25% phụ cấp — không có ngoại lệ 40 giờ làm thêm miễn phí.",
+    "parttime_c1_suggestion": "Điều khoản này bất hợp pháp. Yêu cầu sửa thành: 'Phụ cấp làm thêm ít nhất 25% sẽ được trả cho tất cả giờ vượt quá giờ làm việc luật định.'",
+    "parttime_c2_reason": "Yêu cầu nhân viên bồi thường toàn bộ thiệt hại thường bị tòa án hạn chế, thường chỉ phán quyết trách nhiệm một phần. Ngoài ra, khấu trừ từ lương đòi hỏi sự đồng ý bằng văn bản của người lao động — nếu không sẽ vi phạm nguyên tắc thanh toán lương đầy đủ.",
+    "parttime_c2_suggestion": "Xác nhận xem công ty có bảo hiểm trách nhiệm kinh doanh không, và yêu cầu ghi rõ 'khấu trừ lương cần có sự đồng ý bằng văn bản của nhân viên'."
   }
 }

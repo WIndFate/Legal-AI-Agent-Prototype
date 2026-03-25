@@ -367,13 +367,11 @@ function ExamplesSection() {
                 </span>
               </div>
               <div className="example-original-text">{clause.original_text}</div>
-              <p className="risk-reason">{clause.risk_reason}</p>
-              {clause.suggestion && (
-                <div className="suggestion">
-                  <strong>{t('report.suggestion')}:</strong>
-                  <p>{clause.suggestion}</p>
-                </div>
-              )}
+              <p className="risk-reason">{t(`examples.${report.id}_c${idx + 1}_reason`)}</p>
+              <div className="suggestion">
+                <strong>{t('report.suggestion')}:</strong>
+                <p>{t(`examples.${report.id}_c${idx + 1}_suggestion`)}</p>
+              </div>
               {clause.referenced_law && (
                 <div className="reference">
                   <strong>{t('report.referenced_law')}:</strong>

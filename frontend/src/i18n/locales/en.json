@@ -142,6 +142,20 @@
     "employment_title": "Employment Contract Analysis",
     "employment_desc": "Full-time IT company employment contract",
     "parttime_title": "Part-time Contract Analysis",
-    "parttime_desc": "Restaurant part-time employment contract"
+    "parttime_desc": "Restaurant part-time employment contract",
+    "rental_c1_reason": "This clause requires the tenant to bear all restoration costs including natural wear and tear. Under the Civil Code and MLIT guidelines, normal wear and aging should be borne by the landlord — this clause may be unfair to the tenant.",
+    "rental_c1_suggestion": "Suggest amending to 'Tenant shall restore only damage caused by intent or negligence,' explicitly excluding natural wear and tear.",
+    "rental_c2_reason": "A 6-month notice period and 3 months' rent as penalty, while not unheard of in Japan's rental market, exceed the typical standard of 1–2 months. These terms are strict — consider negotiating.",
+    "rental_c2_suggestion": "Suggest negotiating the notice period down to 2 months and the penalty to 1 month's rent, which is closer to market norms.",
+    "rental_c3_reason": "A renewal fee of 1 month's rent is common in the Tokyo area, and the Supreme Court has upheld reasonable renewal fee clauses. This clause is within a reasonable range.",
+    "rental_c3_suggestion": "This is standard practice, but confirm before signing whether the fee applies to every renewal cycle.",
+    "employment_c1_reason": "A 2-year non-compete period is long, and covering all competitors nationwide is overly broad. Japanese courts tend to void non-compete clauses exceeding 1 year or lacking compensation.",
+    "employment_c1_suggestion": "Suggest negotiating to 6 months–1 year, limiting the geographic and business scope, and requesting non-compete compensation from the employer.",
+    "employment_c2_reason": "A 6-month probation is within the legal range (typically 3–6 months), but 'lacking aptitude' as a dismissal criterion is vague, giving the employer wide discretion.",
+    "employment_c2_suggestion": "Suggest requesting specific criteria for 'lacking aptitude' and confirming whether 30-day advance notice is required for dismissal during probation.",
+    "parttime_c1_reason": "Paying overtime premium only after 40 hours/month violates the Labor Standards Act. All hours exceeding statutory limits (8h/day, 40h/week) require at least 25% premium pay — there is no 40-hour free overtime exception.",
+    "parttime_c1_suggestion": "This clause is illegal. Demand it be amended to: 'Overtime premium of at least 25% shall be paid for all hours exceeding statutory working hours.'",
+    "parttime_c2_reason": "Requiring employees to compensate full damages is typically limited by courts, which usually award only partial liability. Also, deducting from wages requires the worker's written consent — otherwise it violates the full wage payment principle.",
+    "parttime_c2_suggestion": "Confirm whether the company has business liability insurance, and request that 'wage deductions require the employee's written consent' be explicitly stated."
   }
 }
