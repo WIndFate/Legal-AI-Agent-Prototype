@@ -20,6 +20,17 @@ def test_recommend_price_jpy_rounds_up_with_buffer_and_fee():
     assert recommended == 340
 
 
+def test_recommend_price_jpy_includes_target_margin_rate():
+    recommended = recommend_price_jpy(
+        100.0,
+        payment_fee_rate=0.0325,
+        fixed_buffer_jpy=30.0,
+        safety_multiplier=2.5,
+        target_margin_rate=0.75,
+    )
+    assert recommended == 1500
+
+
 def test_build_cost_pricing_report_groups_by_tier_and_input_type():
     samples = [
         {
@@ -52,15 +63,26 @@ def test_build_cost_pricing_report_groups_by_tier_and_input_type():
         },
     ]
 
-    report = build_cost_pricing_report(samples, fixed_buffer_jpy=30.0, safety_multiplier=2.5)
+    report = build_cost_pricing_report(
+        samples,
+        fixed_buffer_jpy=30.0,
+        safety_multiplier=2.5,
+        target_margin_rate=0.75,
+    )
 
     assert report["sample_count"] == 2
+    assert report["target_margin_rate"] == 0.75
     assert report["by_input_type"]["text"]["avg"] == 1.4
     assert report["by_input_type"]["pdf"]["avg"] == 12.0
     assert report["by_quote_mode"]["estimated_pre_ocr"]["avg"] == 12.0
     assert len(report["by_price_tier"]) == 2
     assert report["by_price_tier"][0]["price_tier"] == "basic"
     assert report["by_price_tier"][1]["price_tier"] == "standard"
+    assert report["by_price_tier"][0]["recommended_price_jpy_cost_floor"] > 0
+    assert (
+        report["by_price_tier"][0]["recommended_price_jpy_target_margin"]
+        > report["by_price_tier"][0]["recommended_price_jpy_cost_floor"]
+    )
 
 
 def test_seed_cost_samples_cover_all_four_price_tiers():

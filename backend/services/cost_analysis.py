@@ -15,6 +15,7 @@ from backend.services.token_estimator import get_price_tiers
 DEFAULT_PAYMENT_FEE_RATE = 0.0325
 DEFAULT_FIXED_BUFFER_JPY = 30.0
 DEFAULT_SAFETY_MULTIPLIER = 2.5
+DEFAULT_TARGET_MARGIN_RATE = 0.75
 
 
 def percentile(values: list[float], p: float) -> float:
@@ -60,8 +61,12 @@ def recommend_price_jpy(
     payment_fee_rate: float = DEFAULT_PAYMENT_FEE_RATE,
     fixed_buffer_jpy: float = DEFAULT_FIXED_BUFFER_JPY,
     safety_multiplier: float = DEFAULT_SAFETY_MULTIPLIER,
+    target_margin_rate: float = 0.0,
 ) -> int:
-    grossed_up = ((cost_jpy + fixed_buffer_jpy) * safety_multiplier) / (1 - payment_fee_rate)
+    denominator = 1 - payment_fee_rate - target_margin_rate
+    if denominator <= 0:
+        raise ValueError("payment_fee_rate + target_margin_rate must be < 1.0")
+    grossed_up = ((cost_jpy + fixed_buffer_jpy) * safety_multiplier) / denominator
     return int(math.ceil(grossed_up / 10.0) * 10)
 
 
@@ -70,6 +75,7 @@ def build_cost_pricing_report(
     payment_fee_rate: float = DEFAULT_PAYMENT_FEE_RATE,
     fixed_buffer_jpy: float = DEFAULT_FIXED_BUFFER_JPY,
     safety_multiplier: float = DEFAULT_SAFETY_MULTIPLIER,
+    target_margin_rate: float = DEFAULT_TARGET_MARGIN_RATE,
 ) -> dict[str, Any]:
     costs = [float(sample["total_cost_jpy"]) for sample in samples]
     summary = summarize_numeric(costs)
@@ -89,12 +95,31 @@ def build_cost_pricing_report(
         tier_costs = [float(sample["total_cost_jpy"]) for sample in tier_samples]
         tier_summary = summarize_numeric(tier_costs)
         current_list_price = tier_price_lookup.get(price_tier, 0)
-        recommended_price = recommend_price_jpy(
+        cost_floor_price = recommend_price_jpy(
             tier_summary["p95"],
             payment_fee_rate=payment_fee_rate,
             fixed_buffer_jpy=fixed_buffer_jpy,
             safety_multiplier=safety_multiplier,
         )
+        target_margin_price = recommend_price_jpy(
+            tier_summary["p95"],
+            payment_fee_rate=payment_fee_rate,
+            fixed_buffer_jpy=fixed_buffer_jpy,
+            safety_multiplier=safety_multiplier,
+            target_margin_rate=target_margin_rate,
+        )
+        adjusted_p95_cost = round(
+            (tier_summary["p95"] + fixed_buffer_jpy) * safety_multiplier,
+            3,
+        )
+        effective_margin_rate = 0.0
+        if current_list_price:
+            effective_margin_rate = round(
+                (
+                    current_list_price * (1 - payment_fee_rate) - adjusted_p95_cost
+                ) / current_list_price,
+                4,
+            )
         tier_rows.append({
             "price_tier": price_tier,
             "sample_count": len(tier_samples),
@@ -103,12 +128,15 @@ def build_cost_pricing_report(
                 sum(float(sample["paid_price_jpy"]) for sample in tier_samples) / len(tier_samples), 3
             ),
             "cost_jpy": tier_summary,
-            "recommended_price_jpy": recommended_price,
+            "adjusted_p95_cost_jpy": adjusted_p95_cost,
+            "recommended_price_jpy_cost_floor": cost_floor_price,
+            "recommended_price_jpy_target_margin": target_margin_price,
             "p95_margin_jpy_at_current_price": round(current_list_price - tier_summary["p95"], 3),
             "p95_margin_rate_at_current_price": round(
                 ((current_list_price - tier_summary["p95"]) / current_list_price) if current_list_price else 0.0,
                 4,
             ),
+            "effective_margin_rate_after_fee_and_buffers": effective_margin_rate,
         })
 
     return {
@@ -116,6 +144,7 @@ def build_cost_pricing_report(
         "payment_fee_rate": payment_fee_rate,
         "fixed_buffer_jpy": fixed_buffer_jpy,
         "safety_multiplier": safety_multiplier,
+        "target_margin_rate": target_margin_rate,
         "overall_cost_jpy": summary,
         "by_input_type": {
             key: summarize_numeric(values)

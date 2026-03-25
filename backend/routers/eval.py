@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.db.session import get_db
@@ -25,9 +25,15 @@ async def eval_costs(
     payment_fee_rate: float = 0.0325,
     fixed_buffer_jpy: float = 30.0,
     safety_multiplier: float = 2.5,
+    target_margin_rate: float = 0.75,
     db: AsyncSession = Depends(get_db),
 ):
     """Summarize persisted order costs and return pricing recommendations."""
+    if payment_fee_rate + target_margin_rate >= 1.0:
+        raise HTTPException(
+            status_code=422,
+            detail="payment_fee_rate + target_margin_rate must be < 1.0",
+        )
     samples = await load_cost_samples(db, limit=limit)
     return {
         "sample_limit": limit,
@@ -38,5 +44,6 @@ async def eval_costs(
             payment_fee_rate=payment_fee_rate,
             fixed_buffer_jpy=fixed_buffer_jpy,
             safety_multiplier=safety_multiplier,
+            target_margin_rate=target_margin_rate,
         ),
     }
