@@ -6,11 +6,13 @@ AI-powered Japanese contract risk analysis for foreign residents in Japan. Users
 
 ## Status
 
-As of 2026-03-25, the local MVP flow is working in Docker:
+As of 2026-03-26, the local MVP flow is working in Docker:
 
 - `upload -> payment/create -> review/stream -> report retrieval -> contract deletion`
+- Text and text-layer PDFs are quoted before payment from extracted text; image/scanned PDF uploads now use a dual-OCR path with temporary staging plus post-payment formal OCR
 - `pgvector` RAG is running in PostgreSQL
 - 9-language frontend with professional branding (ContractGuard), privacy/terms pages, and interactive example showcase
+- Route-level lazy loading and deferred analytics bootstrap now reduce the initial frontend bundle
 - Dev-mode payment works only when `APP_ENV=development` and `KOMOJU_SECRET_KEY` is absent
 
 Still pending outside the repo:
@@ -73,6 +75,7 @@ Docker note:
 
 - Prefer `docker compose exec` over `docker compose run` for local commands inside running services.
 - `docker compose run` can leave temporary `*-run-*` containers behind and block `docker compose down`.
+- Local OCR dependencies are gated behind `INSTALL_LOCAL_OCR=true` at Docker build time; the default backend image keeps them off for a lighter, safer baseline build.
 
 Endpoints:
 
@@ -93,7 +96,7 @@ docker compose up -d backend postgres redis
 ## Local Flow
 
 1. Open the frontend and upload contract text, image, or PDF.
-2. Review token estimate, pricing, and PII warnings.
+2. Review token estimate, pricing, and PII warnings. Image and scanned PDF uploads now explicitly show that the price is an estimate before payment.
 3. Create payment.
 4. In local dev, if `APP_ENV=development` and `KOMOJU_SECRET_KEY` is empty, the order is auto-marked as paid and redirected to review.
 5. Watch SSE analysis on `/review/:orderId`.
@@ -105,15 +108,22 @@ docker compose up -d backend postgres redis
 11. The homepage includes an interactive example showcase with three contract scenarios (rental, employment, part-time), each with localized clause analysis in all 9 languages.
 12. Privacy policy (`/privacy`) and Terms of service (`/terms`) pages combine localized summaries with hardcoded Japanese legal text.
 13. Referenced law citations (`referenced_law`) in reports are always kept in Japanese original text, regardless of the user's selected language.
+14. The saved report page is now styled as a more document-like review report and also has print-friendly layout rules for browser print / save-as-PDF flows.
+15. Homepage anchor navigation (`Home` / `Examples`) now scrolls to explicit page sections, and the hero pricing copy no longer hardcodes a visible maximum price.
 
 ## Important Implementation Notes
 
 - User contract text is never stored in the vector database.
 - After analysis completes, `orders.contract_text` is set to `NULL`.
+- Image and scanned-PDF uploads can now be staged temporarily before payment; the staged file is deleted after analysis or by scheduled cleanup for stale unpaid orders.
 - Reports are cached in Redis for 24 hours and stored in PostgreSQL with expiry metadata.
+- `backend/services/costing.py` now emits structured per-step cost logs for formal OCR, parse, analyze, suggestion, and translation calls.
+- Embedding requests now emit cost logs too, and review completion logs include an in-memory per-order cost summary with quote mode, input type, and clause counts.
+- `PARSE_MODEL` and `SUGGESTION_MODEL` are now configurable and default to `gpt-4o-mini`, while formal OCR and the main outer analysis loop remain on `gpt-4o` by default.
 - The backend bootstraps relational tables on startup for local Docker development. Production should still run Alembic migrations explicitly.
 - Production startup now fails fast if KOMOJU/Resend credentials are missing or `FRONTEND_URL` still points to `localhost`.
 - Payment, review, email, and report retrieval paths now emit structured application logs and PostHog events for easier integration debugging.
+- Frontend route pages are lazy-loaded, and analytics libraries are bootstrapped asynchronously so they do not bloat the initial application chunk.
 - `/api/report/{order_id}` now returns the same payload shape for both Redis cache hits and PostgreSQL fallback reads.
 - `analyze_clause_risk` performs RAG lookup internally; there is no separate retrieval node.
 - `scripts/smoke_local_flow.sh` is the repeatable local regression entrypoint for `health -> upload -> payment -> review -> report -> contract deletion`.
@@ -133,6 +143,6 @@ docker compose up -d backend postgres redis
 - [`scripts/check_locale_keys.sh`](./scripts/check_locale_keys.sh): locale key consistency check
 - [`scripts/check_rag_eval.sh`](./scripts/check_rag_eval.sh): local RAG metric regression check
 - [`scripts/run_backend_pytests.sh`](./scripts/run_backend_pytests.sh): Docker-based backend pytest runner
-- [`frontend/src/main.tsx`](./frontend/src/main.tsx): router entry, i18n, analytics bootstrap
+- [`frontend/src/main.tsx`](./frontend/src/main.tsx): router entry, i18n, lazy route loading, deferred analytics bootstrap
 - [`SPEC.md`](./SPEC.md): detailed implementation status, pending work, and risks
 - [`DESIGN.md`](./DESIGN.md): product rationale and go-to-market plan

@@ -6,11 +6,13 @@
 
 ## 現在の状況
 
-2026-03-25 時点で、ローカル Docker 上の MVP フローは動作確認済みです。
+2026-03-26 時点で、ローカル Docker 上の MVP フローは動作確認済みです。
 
 - `upload -> payment/create -> review/stream -> report -> 契約本文削除`
+- テキスト入力とテキスト抽出可能な PDF は支払い前にそのまま見積もりし、画像 / スキャン PDF は一時保存 + 支払い後の正式 OCR を使う二段階 OCR フローになりました
 - `pgvector` RAG は PostgreSQL 上で稼働
 - フロントエンドの 9 言語 UI は実装済み。ブランド（ContractGuard）、プライバシーポリシー/利用規約ページ、インタラクティブなサンプルレポート展示を含む
+- ルート単位の遅延読み込みと分析 SDK の遅延初期化により、初期フロントエンド bundle を軽量化
 - `APP_ENV=development` かつ `KOMOJU_SECRET_KEY` 未設定の場合のみ、ローカル開発では自動的に支払い済み扱いになります
 
 リポジトリ外で未完了の項目:
@@ -73,6 +75,7 @@ Docker メモ:
 
 - 起動中サービスの中でコマンドを実行する場合は、`docker compose run` ではなく `docker compose exec` を優先してください。
 - `docker compose run` は一時的な `*-run-*` コンテナを残し、`docker compose down` 時に network 解放を妨げることがあります。
+- ローカル OCR 依存は Docker build 時に `INSTALL_LOCAL_OCR=true` を明示した場合のみ入ります。デフォルトの backend イメージでは重い依存を自動では入れません。
 
 エンドポイント:
 
@@ -93,7 +96,7 @@ docker compose up -d backend postgres redis
 ## ローカル確認フロー
 
 1. フロントエンドでテキスト、画像、または PDF 契約書をアップロードします。
-2. token 見積もり、価格、PII 警告を確認します。
+2. token 見積もり、価格、PII 警告を確認します。画像 / スキャン PDF では、この価格が支払い前の「仮見積もり」であることも明示されます。
 3. 支払い注文を作成します。
 4. ローカル開発では `APP_ENV=development` かつ `KOMOJU_SECRET_KEY` が空なら自動的に支払い済みになります。
 5. `/review/:orderId` で SSE ストリーミング分析を確認します。
@@ -105,15 +108,22 @@ docker compose up -d backend postgres redis
 11. ホームページには3つの契約シナリオ（賃貸・雇用・アルバイト）のインタラクティブなサンプルレポート展示があり、各条項分析は9言語すべてで表示されます。
 12. プライバシーポリシー (`/privacy`) と利用規約 (`/terms`) ページはローカライズされた要約と日本語法律全文を組み合わせています。
 13. レポート内の参照法令 (`referenced_law`) はユーザーの選択言語にかかわらず、常に日本語原文のまま表示されます。
+14. 保存済みレポートページは、より正式な審査レポートらしい版面に寄せており、ブラウザ印刷 / PDF 保存を考慮したスタイルも入っています。
+15. ホームページの「ホーム / サンプル」導線は明示的なアンカー位置へスクロールするようになり、hero の価格文言も固定の見かけ上限を表示しない形に調整されています。
 
 ## 実装上の重要点
 
 - ユーザー契約本文はベクトル DB に保存しません。
 - 分析完了後、`orders.contract_text` は `NULL` に更新されます。
+- 画像 / スキャン PDF は支払い前に短期間だけ元ファイルを保持し、解析完了後または未払い期限切れ後のクリーンアップで削除されます。
 - レポートは Redis に 24 時間キャッシュされ、PostgreSQL に期限付きで保存されます。
+- `backend/services/costing.py` により、正式 OCR・parse・analyze・suggestion・translation の構造化コストログが出力されます。
+- embedding リクエストもコストログを出力し、review 完了時には見積もりモード・入力種別・条項数を含む注文単位のコスト要約ログも出力されます。
+- `PARSE_MODEL` と `SUGGESTION_MODEL` は設定可能になり、デフォルトでは `gpt-4o-mini` を使います。正式 OCR と外側の主分析ループは引き続きデフォルトで `gpt-4o` のままです。
 - ローカル Docker 開発を即時実行できるよう、バックエンド起動時に関係テーブルを自動作成します。本番では Alembic migration を明示的に実行してください。
 - 本番環境で KOMOJU / Resend の必須設定が不足している場合、または `FRONTEND_URL` が `localhost` のままの場合は起動時に失敗します。
 - 支払い、審査、メール、レポート取得の主要経路では、構造化アプリケーションログと PostHog イベントを出力し、外部連携時の切り分けをしやすくしています。
+- フロントエンドはルート単位で lazy load され、分析系 SDK も非同期初期化されるため、observability 依存が初期 main chunk を膨らませません。
 - `/api/report/{order_id}` は Redis キャッシュ命中時と PostgreSQL fallback 時で同じ payload 形を返すように統一されています。
 - `analyze_clause_risk` ツールが内部で直接 RAG 検索を行うため、独立した retrieval node はありません。
 - `scripts/smoke_local_flow.sh` は `health -> upload -> payment -> review -> report -> contract deletion` を検証する標準ローカル回帰入口です。
@@ -133,6 +143,6 @@ docker compose up -d backend postgres redis
 - [`scripts/check_locale_keys.sh`](./scripts/check_locale_keys.sh): locale キー整合性チェック
 - [`scripts/check_rag_eval.sh`](./scripts/check_rag_eval.sh): ローカル RAG 回帰チェック
 - [`scripts/run_backend_pytests.sh`](./scripts/run_backend_pytests.sh): Docker ベースの backend pytest 実行スクリプト
-- [`frontend/src/main.tsx`](./frontend/src/main.tsx): ルーター、i18n、分析初期化
+- [`frontend/src/main.tsx`](./frontend/src/main.tsx): ルーター、i18n、遅延読み込み、分析初期化
 - [`SPEC.md`](./SPEC.md): 詳細な進捗、未完了項目、リスク
 - [`DESIGN.md`](./DESIGN.md): プロダクト設計とビジネス方針

@@ -57,19 +57,20 @@ All five docs must stay consistent with the actual codebase. Do not commit code-
 
 Built with LangGraph (agentic loop), PostgreSQL pgvector (RAG), FastAPI (REST + SSE), React/Vite (frontend), Redis, and FastMCP (MCP server).
 
-**Current implemented local MVP pipeline:** `upload_contract → recognize_text → parse_contract → analyze_risks → generate_report → persist_report`
+**Current implemented local MVP pipeline:** `upload_contract → (exact text quote | staged pre-OCR quote) → payment → recognize_text → parse_contract → analyze_risks → generate_report → persist_report`
 
-- `upload_contract`: accepts text / image / PDF, estimates price, detects PII
-- `recognize_text`: image OCR with GPT-4o Vision, PDF extraction with OCR fallback
+- `upload_contract`: accepts text / image / PDF, estimates price, detects PII, and stages image/scanned PDF uploads for dual-OCR flow
+- `recognize_text`: image OCR with GPT-4o Vision, PDF extraction with OCR fallback, but only after payment for staged OCR uploads
 - `analyze_risks`: LLM agentic loop calls `analyze_clause_risk` (RAG inside) and `generate_suggestion`
 - `generate_report`: aggregates results and translates to target language
 - `persist_report`: stores report, caches it, emails link, and deletes contract text
 
 **Target MVP pipeline (per DESIGN.md):** `upload_contract → recognize_text (OCR) → parse_contract → analyze_risks → generate_report → output_chinese_report`
 
-Current status as of 2026-03-24:
+Current status as of 2026-03-26:
 - Local Docker end-to-end flow is verified through upload, payment creation, SSE review, report retrieval, and contract deletion.
 - `APP_ENV=development` enables local-only conveniences such as auto table bootstrap and dev payment bypass.
+- Dual-OCR groundwork is now in code: text/text-layer PDFs are quoted before payment, while image/scanned PDFs can be staged for local pre-estimation and formal OCR after payment.
 - Production deployment and third-party production credentials are still pending.
 
 ---
@@ -156,9 +157,12 @@ backend/
     referral.py   # POST /api/referral/generate + GET /api/referral/{code}
     eval.py       # GET /api/eval/rag
   services/
+    costing.py        # Model pricing table + usage extraction + structured cost logging
+    local_ocr.py      # Optional PaddleOCR-based pre-payment quote estimation
     ocr.py            # GPT-4o Vision OCR
     pdf_extractor.py  # pypdf + OCR fallback
-    token_estimator.py # tiktoken + 4 price tiers
+    temp_uploads.py   # Temporary upload staging for pre-payment OCR flows
+    token_estimator.py # tiktoken + 4 price tiers + page-count fallback
     pii_detector.py   # Regex PII detection (phone, email, mynumber, address, postal)
     payment.py        # KOMOJU API client + HMAC webhook verification
     email.py          # Resend API client (9-language subjects)
@@ -172,7 +176,7 @@ tests/
   test_pii_detector.py     # PII detection unit tests
 frontend/
   src/
-    main.tsx      # Router entry + i18n + analytics bootstrap
+    main.tsx      # Router entry + i18n + lazy route loading + deferred analytics bootstrap
     data/
       exampleReports.ts  # Example report data (JP clause text + i18n key refs)
     components/
@@ -207,7 +211,7 @@ Do NOT add a `retrieve_knowledge` node back. Do NOT pre-inject RAG results into 
 - `ALL_TOOLS` contains exactly two tools: `analyze_clause_risk` and `generate_suggestion`.
 - Use `get_store().search()` directly in tools. Do NOT add a `search_legal_knowledge` tool back — its functionality is already covered by `analyze_clause_risk` internally.
 - `analyze_clause_risk` is responsible for risk judgment: queries RAG and returns relevant legal knowledge to the outer LLM.
-- `generate_suggestion` is responsible for producing modification text: internally invokes a dedicated `gpt-4o` LLM and returns the concrete suggestion. The outer LLM must use the return value directly as the `suggestion` field — do NOT have the outer LLM write suggestions itself.
+- `generate_suggestion` is responsible for producing modification text: internally invokes a dedicated configurable suggestion model (currently defaulting to `gpt-4o-mini`) and returns the concrete suggestion. The outer LLM must use the return value directly as the `suggestion` field — do NOT have the outer LLM write suggestions itself.
 
 ### State fields
 `AgentState` has exactly: `contract_text`, `clauses`, `risk_analysis`, `review_report`, `messages`, `target_language`.
@@ -231,9 +235,10 @@ Embeddings are generated via OpenAI API (httpx direct call, not langchain).
 ### Payment + Report flow
 1. User uploads contract → gets pricing → creates order + KOMOJU session
 2. KOMOJU webhook marks order as `paid`
-3. User starts SSE review → report saved to DB + cached in Redis + emailed
-4. Contract text nullified immediately after analysis (privacy)
-5. Redis cache expires in 24h; APScheduler cleans DB hourly
+3. If the order came from staged image/scanned PDF upload, formal OCR runs only after payment and before SSE review starts
+4. User starts SSE review → report saved to DB + cached in Redis + emailed
+5. Contract text nullified immediately after analysis (privacy)
+6. Redis cache expires in 24h; APScheduler cleans DB hourly
 
 ### Cleanup and privacy
 - `cleanup.py` runs every hour via APScheduler in lifespan
@@ -272,6 +277,7 @@ Embeddings are generated via OpenAI API (httpx direct call, not langchain).
 - Example reports use i18n keys for `risk_reason`/`suggestion` (key pattern: `examples.{scenario}_c{n}_reason/suggestion`), while `original_text`, `referenced_law`, `clause_number` stay in Japanese in `exampleReports.ts`
 - Legal pages (`/privacy`, `/terms`): localized summary at top + hardcoded Japanese legal full text (required by law)
 - Layout: sticky header with brand mark + nav links + language selector; footer with nav links to all pages + legal disclaimer + copyright
+- Frontend routes should stay lazy-loaded where practical, and analytics/observability SDKs should bootstrap asynchronously so they do not bloat the initial application chunk
 
 ### Review/report UX behavior
 - The review page should show user-facing progress text during SSE streaming; do not expose raw internal tool names like `analyze_clause_risk` to end users.
@@ -280,6 +286,7 @@ Embeddings are generated via OpenAI API (httpx direct call, not langchain).
 - Same-session original contract comparison should be clause-level and inline with each analysis card, not as a full-document dump at the bottom of the page.
 - On larger screens, inline clause comparison can use a split layout, but mobile should preserve a single-column reading flow.
 - Original clause text may be present in the SSE completion payload and same-session frontend storage, but must be stripped before database persistence, Redis caching, shared-link rendering, and email delivery.
+- The saved report page should read like a concise professional review memo, and print / save-as-PDF from the browser should hide site chrome and preserve the report body cleanly.
 
 ### RAG evaluation
 `GET /api/eval/rag` runs Recall@K and MRR against `eval_dataset.json`.
