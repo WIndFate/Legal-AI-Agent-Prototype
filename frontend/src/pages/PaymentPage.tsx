@@ -67,6 +67,27 @@ export default function PaymentPage() {
   return (
     <div className="page payment-page">
       <div className="payment-status-card">
+        <div className="payment-status-header">
+          <p className="section-kicker">{t('payment.title')}</p>
+          <h2>{t('app.title')}</h2>
+          <p className="status-subtext">{t('payment.waiting_note')}</p>
+        </div>
+
+        <div className="payment-summary-grid">
+          <div className="payment-summary-item">
+            <span>ID</span>
+            <strong>{orderId?.slice(0, 8)}</strong>
+          </div>
+          <div className="payment-summary-item">
+            <span>{t('report.title')}</span>
+            <strong>24h</strong>
+          </div>
+          <div className="payment-summary-item payment-summary-item-wide">
+            <span>{t('upload.trust_privacy')}</span>
+            <strong>{t('payment.secure_note')}</strong>
+          </div>
+        </div>
+
         {(status === 'checking' || status === 'pending') && (
           <div className="loading-state">
             <div className="spinner" />

@@ -12,12 +12,19 @@ interface UploadResult {
   page_estimate: number;
   price_tier: string;
   price_jpy: number;
+  quote_mode: string;
+  estimate_source: string;
+  ocr_required: boolean;
+  upload_token?: string | null;
+  upload_name?: string | null;
+  upload_mime_type?: string | null;
   pii_warnings: Array<{ type: string; text: string; start: number; end: number }>;
 }
 
 export default function HomePage() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
+  const heroPreview = exampleReports.rental;
 
   const [inputMode, setInputMode] = useState<InputMode>('text');
   const [textInput, setTextInput] = useState('');
@@ -72,8 +79,14 @@ export default function HomePage() {
           contract_text: uploadResult.contract_text,
           input_type: inputMode,
           estimated_tokens: uploadResult.estimated_tokens,
+          page_estimate: uploadResult.page_estimate,
           price_tier: uploadResult.price_tier,
           price_jpy: uploadResult.price_jpy,
+          quote_mode: uploadResult.quote_mode,
+          estimate_source: uploadResult.estimate_source,
+          upload_token: uploadResult.upload_token,
+          upload_name: uploadResult.upload_name,
+          upload_mime_type: uploadResult.upload_mime_type,
           target_language: i18n.language,
           referral_code: referralCode || undefined,
         }),
@@ -102,21 +115,76 @@ export default function HomePage() {
     return t(key);
   };
 
+  const quoteLabel =
+    uploadResult?.quote_mode === 'estimated_pre_ocr'
+      ? t('pricing.quote_estimated_label')
+      : t('pricing.quote_exact_label');
+
+  const quoteDescription =
+    uploadResult?.quote_mode === 'estimated_pre_ocr'
+      ? t('pricing.quote_estimated_desc')
+      : t('pricing.quote_exact_desc');
+
   return (
-    <div className="page home-page">
-      <section className="hero-card">
-        <p className="section-kicker">{t('upload.hero_kicker')}</p>
-        <h2 className="hero-title">{t('app.title')}</h2>
-        <p className="hero-subtitle">{t('upload.hero_body')}</p>
-        <div className="trust-strip">
-          <span className="trust-pill">{t('upload.trust_privacy')}</span>
-          <span className="trust-pill">{t('upload.trust_no_account')}</span>
-          <span className="trust-pill">{t('upload.trust_payg')}</span>
+    <div className="page home-page" id="top">
+      <section className="hero-card hero-grid">
+        <div className="hero-copy">
+          <p className="section-kicker">{t('upload.hero_kicker')}</p>
+          <h2 className="hero-title">{t('app.title')}</h2>
+          <p className="hero-subtitle">{t('upload.hero_body')}</p>
+          <div className="trust-strip">
+            <span className="trust-pill">{t('upload.trust_privacy')}</span>
+            <span className="trust-pill">{t('upload.trust_no_account')}</span>
+            <span className="trust-pill">{t('upload.trust_payg')}</span>
+          </div>
+          <div className="hero-metrics">
+            <div className="hero-metric">
+              <span>{t('pricing.title')}</span>
+              <strong>{t('pricing.dynamic_quote')}</strong>
+            </div>
+            <div className="hero-metric">
+              <span>{t('report.title')}</span>
+              <strong>24h</strong>
+            </div>
+            <div className="hero-metric">
+              <span>{t('report.referenced_law')}</span>
+              <strong>JP</strong>
+            </div>
+          </div>
+        </div>
+
+        <div className="hero-preview-card">
+          <div className="hero-preview-head">
+            <span className="hero-preview-label">{t('report.title')}</span>
+            <span
+              className="risk-badge hero-preview-badge"
+              style={{ background: exampleRiskColor(heroPreview.overall_risk) }}
+            >
+              {heroPreview.overall_risk}
+            </span>
+          </div>
+          <div className="hero-preview-body">
+            {heroPreview.clauses.slice(0, 2).map((clause, idx) => (
+              <div key={clause.clause_number} className="hero-preview-item">
+                <div className="hero-preview-row">
+                  <strong>{clause.clause_number}</strong>
+                  <span
+                    className="risk-tag"
+                    style={{ background: exampleRiskColor(clause.risk_level) }}
+                  >
+                    {clause.risk_level}
+                  </span>
+                </div>
+                <p className="hero-preview-text">{t(`examples.${heroPreview.id}_c${idx + 1}_reason`)}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
       <section className="flow-card">
         <p className="section-kicker">{t('upload.how_it_works')}</p>
+        <h2>{t('upload.how_it_works')}</h2>
         <div className="flow-steps">
           <div className="flow-step">
             <span className="flow-index">1</span>
@@ -145,7 +213,29 @@ export default function HomePage() {
       <ExamplesSection />
 
       <section className="upload-shell" id="upload-section">
-      <h2>{t('upload.title')}</h2>
+      <div className="section-heading">
+        <p className="section-kicker">{t('payment.title')}</p>
+        <h2>{t('upload.title')}</h2>
+        <p className="section-intro">{t('upload.hero_body')}</p>
+      </div>
+
+        <div className="intake-trust-grid">
+          <div className="intake-trust-card">
+            <span>{t('upload.trust_privacy')}</span>
+            <strong>24h</strong>
+            <p>{t('pricing.assurance_privacy_desc')}</p>
+          </div>
+          <div className="intake-trust-card">
+            <span>{t('upload.trust_payg')}</span>
+            <strong>{t('review.live_label')}</strong>
+            <p>{t('pricing.assurance_delivery_desc')}</p>
+          </div>
+          <div className="intake-trust-card">
+            <span>{t('report.referenced_law')}</span>
+            <strong>JP</strong>
+            <p>{t('report.comparison_hint')}</p>
+          </div>
+        </div>
 
       {/* Input mode tabs */}
       <div className="input-tabs">
@@ -153,19 +243,19 @@ export default function HomePage() {
           className={`tab ${inputMode === 'image' ? 'active' : ''}`}
           onClick={() => setInputMode('image')}
         >
-          📷 {t('upload.camera')}
+          {t('upload.camera')}
         </button>
         <button
           className={`tab ${inputMode === 'pdf' ? 'active' : ''}`}
           onClick={() => setInputMode('pdf')}
         >
-          📄 {t('upload.pdf')}
+          {t('upload.pdf')}
         </button>
         <button
           className={`tab ${inputMode === 'text' ? 'active' : ''}`}
           onClick={() => setInputMode('text')}
         >
-          ✏️ {t('upload.paste')}
+          {t('upload.paste')}
         </button>
       </div>
 
@@ -218,7 +308,20 @@ export default function HomePage() {
       {/* Pricing estimate */}
       {uploadResult && uploadResult.price_jpy > 0 && (
         <div className="pricing-card polished-card">
-          <h3>{t('pricing.title')}</h3>
+          <div className="pricing-card-header">
+            <div>
+              <p className="section-kicker">{t('pricing.title')}</p>
+              <h3>{tierLabel(uploadResult.price_tier)}</h3>
+            </div>
+            <div className="pricing-price-lockup">
+              <span>{t('pricing.price')}</span>
+              <p className="price-amount">¥{uploadResult.price_jpy.toLocaleString()}</p>
+            </div>
+          </div>
+          <div className="pricing-quote-meta">
+            <strong>{quoteLabel}</strong>
+            <p>{quoteDescription}</p>
+          </div>
           <div className="pricing-details pricing-summary-grid">
             <div className="pricing-summary-item">
               <span>{t('pricing.estimated_pages')}</span>
@@ -229,8 +332,8 @@ export default function HomePage() {
               <strong>{uploadResult.estimated_tokens.toLocaleString()}</strong>
             </div>
             <div className="pricing-summary-item pricing-summary-item-wide">
-              <span>{tierLabel(uploadResult.price_tier)}</span>
-              <p className="price-amount">¥{uploadResult.price_jpy.toLocaleString()}</p>
+              <span>{t('payment.title')}</span>
+              <strong>{t('payment.secure_note')}</strong>
             </div>
           </div>
 
@@ -343,6 +446,16 @@ function ExamplesSection() {
           >
             {t('report.overall_risk')}: {report.overall_risk}
           </span>
+          <div className="example-meta-grid">
+            <div className="example-meta-item">
+              <span>{t('report.clause_count')}</span>
+              <strong>{report.clauses.length}</strong>
+            </div>
+            <div className="example-meta-item">
+              <span>{t('report.referenced_law')}</span>
+              <strong>JP</strong>
+            </div>
+          </div>
         </div>
 
         <div className="example-clause-list">

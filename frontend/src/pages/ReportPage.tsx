@@ -174,17 +174,44 @@ export default function ReportPage() {
   return (
     <div className="page report-page">
       <div className="report-summary-shell report-header-bar">
-        <p className="section-kicker">{t('report.executive_kicker')}</p>
-        <h2>{t('report.title')}</h2>
-        <p className="report-comparison-hint">{t('report.comparison_hint')}</p>
-        <p className="report-language-note">
-          {t('report.language_locked_note', { language: reportLanguageLabel })}
-        </p>
-        {hoursLeft > 0 && (
-          <p className="expiry-notice">
-            {t('report.expires_in', { hours: hoursLeft })}
-          </p>
-        )}
+        <div className="report-hero-grid">
+          <div className="report-hero-copy">
+            <p className="section-kicker">{t('report.executive_kicker')}</p>
+            <h2>{t('report.title')}</h2>
+            <p className="report-comparison-hint">{t('report.comparison_hint')}</p>
+            <p className="report-language-note">
+              {t('report.language_locked_note', { language: reportLanguageLabel })}
+            </p>
+            {hoursLeft > 0 && (
+              <p className="expiry-notice">
+                {t('report.expires_in', { hours: hoursLeft })}
+              </p>
+            )}
+          </div>
+
+          <div className="report-hero-panel">
+            <span
+              className="risk-badge report-hero-badge"
+              style={{ background: riskColor(report.overall_risk_level) }}
+            >
+              {t('report.overall_risk')}: {report.overall_risk_level}
+            </span>
+            <div className="report-hero-stats">
+              <div className="report-hero-stat">
+                <span>{t('report.clause_count')}</span>
+                <strong>{report.total_clauses}</strong>
+              </div>
+              <div className="report-hero-stat">
+                <span>{t('report.high_risk')}</span>
+                <strong className="stat high">{report.high_risk_count}</strong>
+              </div>
+              <div className="report-hero-stat">
+                <span>{t('report.medium_risk')}</span>
+                <strong className="stat medium">{report.medium_risk_count}</strong>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Overall risk card */}
@@ -235,6 +262,7 @@ export default function ReportPage() {
           >
             <div className="clause-header">
               <div className="clause-heading">
+                <span className="clause-eyebrow">#{String(idx + 1).padStart(2, '0')}</span>
                 <strong>{clause.clause_number}</strong>
               </div>
               <span
@@ -243,6 +271,16 @@ export default function ReportPage() {
               >
                 {clause.risk_level}
               </span>
+            </div>
+            <div className="clause-meta-row">
+              <div className="clause-meta-item">
+                <span>{t('report.overall_risk')}</span>
+                <strong>{clause.risk_level}</strong>
+              </div>
+              <div className="clause-meta-item">
+                <span>{t('report.referenced_law')}</span>
+                <strong>JP</strong>
+              </div>
             </div>
             <div className="clause-toolbar">
               {clause.original_text ? (
@@ -268,16 +306,18 @@ export default function ReportPage() {
                 </div>
               )}
               <div className="clause-analysis-panel">
-                <p className="risk-reason">{clause.risk_reason}</p>
+                <div className="analysis-block">
+                  <p className="risk-reason">{clause.risk_reason}</p>
+                </div>
                 {clause.suggestion && (
-                  <div className="suggestion">
-                    <strong>{t('report.suggestion')}:</strong>
+                  <div className="suggestion analysis-block">
+                    <p className="analysis-label">{t('report.suggestion')}</p>
                     <p>{clause.suggestion}</p>
                   </div>
                 )}
                 {clause.referenced_law && (
-                  <div className="reference">
-                    <strong>{t('report.referenced_law')}:</strong>
+                  <div className="reference analysis-block">
+                    <p className="analysis-label">{t('report.referenced_law')}</p>
                     <p>{clause.referenced_law}</p>
                   </div>
                 )}

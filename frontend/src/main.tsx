@@ -1,32 +1,71 @@
-import { StrictMode } from 'react';
+import { Component, StrictMode, Suspense, lazy, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import * as Sentry from '@sentry/react';
 
-import './analytics'; // Initialize PostHog + Sentry early
 import './i18n';
 import './App.css';
 
 import Layout from './components/Layout';
-import HomePage from './pages/HomePage';
-import PaymentPage from './pages/PaymentPage';
-import ReviewPage from './pages/ReviewPage';
-import ReportPage from './pages/ReportPage';
-import PrivacyPage from './pages/PrivacyPage';
-import TermsPage from './pages/TermsPage';
+
+const HomePage = lazy(() => import('./pages/HomePage'));
+const PaymentPage = lazy(() => import('./pages/PaymentPage'));
+const ReviewPage = lazy(() => import('./pages/ReviewPage'));
+const ReportPage = lazy(() => import('./pages/ReportPage'));
+const PrivacyPage = lazy(() => import('./pages/PrivacyPage'));
+const TermsPage = lazy(() => import('./pages/TermsPage'));
+
+function RouteFallback() {
+  return (
+    <div className="route-fallback">
+      <div className="spinner" />
+    </div>
+  );
+}
+
+function AnalyticsBootstrap() {
+  useEffect(() => {
+    import('./analytics').then(({ bootstrapAnalytics }) => {
+      void bootstrapAnalytics();
+    });
+  }, []);
+
+  return null;
+}
+
+class AppErrorBoundary extends Component<{ children: React.ReactNode }, { hasError: boolean }> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  override render() {
+    if (this.state.hasError) {
+      return <p>An error occurred. Please refresh the page.</p>;
+    }
+
+    return this.props.children;
+  }
+}
 
 function AppRoutes() {
   return (
     <BrowserRouter>
+      <AnalyticsBootstrap />
       <Layout>
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/payment/:orderId" element={<PaymentPage />} />
-          <Route path="/review/:orderId" element={<ReviewPage />} />
-          <Route path="/report/:orderId" element={<ReportPage />} />
-          <Route path="/privacy" element={<PrivacyPage />} />
-          <Route path="/terms" element={<TermsPage />} />
-        </Routes>
+        <Suspense fallback={<RouteFallback />}>
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/payment/:orderId" element={<PaymentPage />} />
+            <Route path="/review/:orderId" element={<ReviewPage />} />
+            <Route path="/report/:orderId" element={<ReportPage />} />
+            <Route path="/privacy" element={<PrivacyPage />} />
+            <Route path="/terms" element={<TermsPage />} />
+          </Routes>
+        </Suspense>
       </Layout>
     </BrowserRouter>
   );
@@ -34,8 +73,8 @@ function AppRoutes() {
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <Sentry.ErrorBoundary fallback={<p>An error occurred. Please refresh the page.</p>}>
+    <AppErrorBoundary>
       <AppRoutes />
-    </Sentry.ErrorBoundary>
+    </AppErrorBoundary>
   </StrictMode>,
 );

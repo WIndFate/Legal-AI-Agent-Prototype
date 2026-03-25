@@ -213,6 +213,7 @@ export default function ReviewPage() {
   // Determine step status for progress indicator
   const stepOrder: AnalysisStep[] = ['parsing', 'analyzing', 'generating'];
   const currentStepIdx = stepOrder.indexOf(currentStep);
+  const currentPhase = phaseMeta(currentStep);
 
   return (
     <div className="page review-page">
@@ -220,9 +221,26 @@ export default function ReviewPage() {
       {loading && (
         <div className="analyzing-section">
           <div className="review-live-card">
-            <p className="section-kicker">{t('review.live_label')}</p>
-            <h2>{phaseMeta(currentStep).title}</h2>
-            <p className="review-phase-text">{phaseText || phaseMeta(currentStep).desc}</p>
+            <div className="review-live-header">
+              <div>
+                <p className="section-kicker">{t('review.live_label')}</p>
+                <h2>{currentPhase.title}</h2>
+                <p className="review-phase-text">{phaseText || currentPhase.desc}</p>
+              </div>
+              <div className="review-phase-panel">
+                <span className="review-phase-chip">{t('review.analyzing')}</span>
+                <div className="review-phase-stats">
+                  <div className="review-phase-stat">
+                    <span>{t('review.live_label')}</span>
+                    <strong>{currentStepIdx + 1}/3</strong>
+                  </div>
+                  <div className="review-phase-stat">
+                    <span>{t('report.title')}</span>
+                    <strong>{currentPhase.title}</strong>
+                  </div>
+                </div>
+              </div>
+            </div>
 
             {/* Step progress indicator */}
             <div className="step-progress">
@@ -251,6 +269,21 @@ export default function ReviewPage() {
                 {logLines.map((line, i) => (
                   <p key={i} className="recent-log-line">{line}</p>
                 ))}
+              </div>
+            </div>
+
+            <div className="review-assurance-grid">
+              <div className="review-assurance-card">
+                <span>{t('upload.trust_privacy')}</span>
+                <strong>24h</strong>
+              </div>
+              <div className="review-assurance-card">
+                <span>{t('report.referenced_law')}</span>
+                <strong>JP</strong>
+              </div>
+              <div className="review-assurance-card">
+                <span>{t('payment.title')}</span>
+                <strong>SSE</strong>
               </div>
             </div>
           </div>
