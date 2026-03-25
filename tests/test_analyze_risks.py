@@ -60,6 +60,7 @@ def test_analyze_risks_only_generates_suggestions_for_medium_or_high(monkeypatch
     assert result["risk_analysis"][1]["suggestion"] == "修正案テキスト"
     assert len(suggestion_calls) == 1
     assert suggestion_calls[0]["clause_text"] == "甲はいつでも解除できる。"
+    assert suggestion_calls[0]["risk_level"] == "中"
 
 
 def test_analyze_risks_falls_back_when_clause_json_is_invalid(monkeypatch):

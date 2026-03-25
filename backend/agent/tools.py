@@ -50,14 +50,20 @@ def analyze_clause_risk(clause_text: str) -> str:
 
 
 @tool
-def generate_suggestion(clause_text: str, risk_reason: str) -> str:
+def generate_suggestion(clause_text: str, risk_reason: str, risk_level: str = "中") -> str:
     """Generate a concrete modification suggestion for a risky contract clause
     by calling a dedicated LLM internally.
 
     Args:
         clause_text: The original clause text that has identified risks.
         risk_reason: The reason why this clause is considered risky.
+        risk_level: Risk level ("高" or "中") used to control suggestion detail.
     """
+    suggestion_style = (
+        "修正案は2〜3文で、交渉や修正文案としてそのまま使える具体的な提案にしてください。"
+        if risk_level == "高"
+        else "修正案は1文または短い2文までに抑え、最低限の是正ポイントだけを簡潔に示してください。"
+    )
     llm = ChatOpenAI(model=suggestion_model, temperature=0)
     response = llm.invoke([
         SystemMessage(content="あなたは日本法に精通した法律専門家です。リスクのある契約条項に対して、具体的かつ実務的な修正案を提案してください。"),
@@ -69,9 +75,15 @@ def generate_suggestion(clause_text: str, risk_reason: str) -> str:
 リスクの理由:
 {risk_reason}
 
+リスクレベル:
+{risk_level}
+
+出力スタイル:
+{suggestion_style}
+
 修正案のみを出力してください。前置きや説明は不要です。"""),
     ])
-    log_model_usage("generate_suggestion", suggestion_model, response)
+    log_model_usage("generate_suggestion", suggestion_model, response, risk_level=risk_level)
     return response.content
 
 

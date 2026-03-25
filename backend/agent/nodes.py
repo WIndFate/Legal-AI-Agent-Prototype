@@ -130,6 +130,7 @@ def _analyze_single_clause(clause: dict, event_queue: _queue.Queue | None = None
         suggestion = generate_suggestion.invoke({
             "clause_text": clause_text,
             "risk_reason": risk_reason,
+            "risk_level": risk_level,
         })
         if event_queue:
             event_queue.put({"type": "tool_result", "tool": "generate_suggestion", "clause": clause_text[:40]})

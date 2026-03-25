@@ -129,10 +129,6 @@ async def review_contract_stream(
         if final_report:
             try:
                 persisted_report = _strip_clause_originals(final_report)
-                report_payload = await _save_report(order_id, persisted_report, target_language, db)
-                await cache_report(order_id, report_payload)
-                email_sent = await send_report_email(email, order_id, target_language)
-                await _finalize_order(order_id, db)
                 cost_summary = get_order_cost_summary(order_id)
                 if cost_summary:
                     cost_summary.update(
@@ -149,6 +145,17 @@ async def review_contract_stream(
                             "low_risk_count": persisted_report.get("low_risk_count", 0),
                         }
                     )
+                report_payload = await _save_report(
+                    order_id,
+                    persisted_report,
+                    target_language,
+                    db,
+                    cost_summary=cost_summary,
+                )
+                await cache_report(order_id, report_payload)
+                email_sent = await send_report_email(email, order_id, target_language)
+                await _finalize_order(order_id, db)
+                if cost_summary:
                     logger.info("Order cost summary: %s", cost_summary)
                     clear_order_cost_summary(order_id)
                 posthog_capture(
@@ -187,7 +194,11 @@ async def review_contract_stream(
 
 
 async def _save_report(
-    order_id: str, report_data: dict, language: str, db: AsyncSession
+    order_id: str,
+    report_data: dict,
+    language: str,
+    db: AsyncSession,
+    cost_summary: dict | None = None,
 ) -> dict:
     """Persist the analysis report to the database."""
     now = datetime.now(timezone.utc)
@@ -196,6 +207,7 @@ async def _save_report(
         overall_risk_level=report_data.get("overall_risk_level", ""),
         summary=report_data.get("summary", ""),
         clause_analyses=report_data.get("clause_analyses", []),
+        cost_summary=cost_summary,
         high_risk_count=report_data.get("high_risk_count", 0),
         medium_risk_count=report_data.get("medium_risk_count", 0),
         low_risk_count=report_data.get("low_risk_count", 0),

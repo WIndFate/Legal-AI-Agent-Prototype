@@ -16,6 +16,7 @@ class Report(Base):
     overall_risk_level: Mapped[str] = mapped_column(String(10), nullable=False)
     summary: Mapped[str] = mapped_column(Text, nullable=False)
     clause_analyses: Mapped[dict] = mapped_column(JSONB, nullable=False)
+    cost_summary: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
     high_risk_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     medium_risk_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     low_risk_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
