@@ -173,11 +173,17 @@ tests/
 frontend/
   src/
     main.tsx      # Router entry + i18n + analytics bootstrap
+    data/
+      exampleReports.ts  # Example report data (JP clause text + i18n key refs)
+    components/
+      Layout.tsx    # Header (brand + nav + lang) + footer (links + disclaimer)
     pages/
-      HomePage.tsx    # Upload + pricing + payment form
+      HomePage.tsx    # Upload + pricing + payment form + example showcase
       PaymentPage.tsx # Payment polling / redirect
       ReviewPage.tsx  # SSE review progress + live report
       ReportPage.tsx  # Saved report page
+      PrivacyPage.tsx # Privacy policy (i18n summary + JP legal text)
+      TermsPage.tsx   # Terms of service (i18n summary + JP legal text)
 docker-compose.yml  # backend + frontend + pgvector/pg16 + redis:7-alpine
 scripts/
   smoke_local_flow.sh  # local end-to-end regression script
@@ -249,6 +255,23 @@ Embeddings are generated via OpenAI API (httpx direct call, not langchain).
 - Payment creation, webhook rejection/ignore, review rejection, report cache hit/miss, and email skip/failure paths emit structured application logs.
 - The same critical paths also emit PostHog events when analytics is configured.
 - `main.py` initializes application logging at `INFO` level so these backend logs are visible in Docker and deployment logs.
+
+### Report translation language rules
+- `referenced_law` (参考法条) is always kept in Japanese original text, regardless of target language.
+- `clause_number` is always kept as-is (e.g. 第1条).
+- `risk_reason`, `suggestion`, `summary`, `risk_level`, `overall_risk` are translated to the target language.
+- The `_translate_report()` function in `nodes.py` explicitly instructs the translator to preserve `referenced_law` and `clause_number` in Japanese.
+
+### Brand identity
+- Brand name: **ContractGuard** (unified across all 9 languages, never translated)
+- `app.subtitle` is localized per language
+- CSS-only brand mark (blue gradient shield via `clip-path: polygon()`)
+
+### Frontend professional structure
+- Homepage: hero card + flow steps + example showcase (3 contract scenarios with tab switching) + upload section
+- Example reports use i18n keys for `risk_reason`/`suggestion` (key pattern: `examples.{scenario}_c{n}_reason/suggestion`), while `original_text`, `referenced_law`, `clause_number` stay in Japanese in `exampleReports.ts`
+- Legal pages (`/privacy`, `/terms`): localized summary at top + hardcoded Japanese legal full text (required by law)
+- Layout: sticky header with brand mark + nav links + language selector; footer with nav links to all pages + legal disclaimer + copyright
 
 ### Review/report UX behavior
 - The review page should show user-facing progress text during SSE streaming; do not expose raw internal tool names like `analyze_clause_risk` to end users.

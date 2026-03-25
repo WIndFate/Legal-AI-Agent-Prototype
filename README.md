@@ -1,4 +1,4 @@
-# Contract Checker
+# ContractGuard
 
 AI-powered Japanese contract risk analysis for foreign residents in Japan. Users can upload a contract as text, image, or PDF, pay per use, watch the analysis through SSE streaming, and retrieve a report for 24 hours.
 
@@ -6,11 +6,11 @@ AI-powered Japanese contract risk analysis for foreign residents in Japan. Users
 
 ## Status
 
-As of 2026-03-24, the local MVP flow is working in Docker:
+As of 2026-03-25, the local MVP flow is working in Docker:
 
 - `upload -> payment/create -> review/stream -> report retrieval -> contract deletion`
 - `pgvector` RAG is running in PostgreSQL
-- 9-language frontend is implemented
+- 9-language frontend with professional branding (ContractGuard), privacy/terms pages, and interactive example showcase
 - Dev-mode payment works only when `APP_ENV=development` and `KOMOJU_SECRET_KEY` is absent
 
 Still pending outside the repo:
@@ -102,6 +102,9 @@ docker compose up -d backend postgres redis
 8. The saved report keeps the language chosen at payment time; switching the site language later only changes the page chrome.
 9. On the same device session that uploaded the contract, each clause analysis can expand its matching original clause inline for direct comparison. Shared links and emailed links do not include that original text.
 10. Expanded clause comparison is optimized for readability: mobile keeps a stacked reading flow, while larger screens place the original clause beside the analysis content.
+11. The homepage includes an interactive example showcase with three contract scenarios (rental, employment, part-time), each with localized clause analysis in all 9 languages.
+12. Privacy policy (`/privacy`) and Terms of service (`/terms`) pages combine localized summaries with hardcoded Japanese legal text.
+13. Referenced law citations (`referenced_law`) in reports are always kept in Japanese original text, regardless of the user's selected language.
 
 ## Important Implementation Notes
 
