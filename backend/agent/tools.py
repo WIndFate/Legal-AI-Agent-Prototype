@@ -8,6 +8,8 @@ from backend.services.costing import log_model_usage
 
 settings = get_settings()
 suggestion_model = settings.SUGGESTION_MODEL
+RAG_RESULTS_PER_CLAUSE = 2
+MAX_KNOWLEDGE_CHARS = 220
 
 
 @tool
@@ -19,7 +21,7 @@ def analyze_clause_risk(clause_text: str) -> str:
         clause_text: The text of the contract clause to analyze.
     """
     store = get_store()
-    results = store.search(clause_text[:300], n_results=3)
+    results = store.search(clause_text[:300], n_results=RAG_RESULTS_PER_CLAUSE)
 
     if not results:
         return (
@@ -29,7 +31,16 @@ def analyze_clause_risk(clause_text: str) -> str:
 
     knowledge_parts = []
     for r in results:
-        knowledge_parts.append(f"【{r['metadata']['title']}】\n{r['content']}")
+        title = r["metadata"].get("title", "参考資料")
+        content = r["content"].replace("\n", " ").strip()
+        compact_content = content[:MAX_KNOWLEDGE_CHARS]
+        if len(content) > MAX_KNOWLEDGE_CHARS:
+            compact_content += "..."
+        knowledge_parts.append(
+            f"【{title}】\n"
+            f"要点: {compact_content}\n"
+            "審査メモ: この根拠が条項の不利益性、一方的不均衡、説明不足の有無にどう関係するかを判定してください。"
+        )
 
     return (
         f"条項「{clause_text[:30]}...」に関連する法律知識:\n\n"

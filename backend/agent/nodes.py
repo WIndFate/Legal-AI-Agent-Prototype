@@ -2,13 +2,13 @@ import json
 import logging
 import queue as _queue
 
-from langchain_core.messages import HumanMessage, SystemMessage, ToolMessage
+from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_openai import ChatOpenAI
 
 logger = logging.getLogger(__name__)
 
 from backend.agent.state import AgentState
-from backend.agent.tools import analyze_clause_risk, generate_suggestion, ALL_TOOLS
+from backend.agent.tools import analyze_clause_risk, generate_suggestion
 from backend.config import get_settings
 from backend.services.costing import log_model_usage
 
@@ -18,12 +18,24 @@ parse_model = settings.PARSE_MODEL
 translation_model = settings.TRANSLATION_MODEL
 
 analysis_llm = ChatOpenAI(model=analysis_model, temperature=0, streaming=True)
-analysis_llm_with_tools = analysis_llm.bind_tools(ALL_TOOLS)
 parse_llm = ChatOpenAI(model=parse_model, temperature=0)
 
 SYSTEM_PROMPT = """あなたは日本法に精通した法律AI契約審査アシスタントです。
 与えられた契約書を専門的に審査し、リスクのある条項を特定し、修正案を提案します。
 必ず日本語で回答してください。分析は具体的かつ実務的な観点で行ってください。"""
+
+CLAUSE_ANALYSIS_PROMPT = """あなたは日本法に精通した契約審査AIです。
+与えられた1つの契約条項だけを分析してください。
+
+必ず以下を守ってください:
+- 出力はJSONオブジェクトのみ
+- risk_level は「高」「中」「低」のいずれか
+- risk_reason は簡潔だが具体的に書く
+- referenced_law には根拠として参照した日本の法律名・条文番号を日本語原文のまま書く
+- suggestion はまだ生成しない
+
+出力形式:
+{"clause_number":"第X条","risk_level":"高/中/低","risk_reason":"理由","referenced_law":"参照法令"}"""
 
 
 def parse_contract(state: AgentState) -> dict:
@@ -56,80 +68,86 @@ JSON配列形式で出力してください:
     return {"clauses": clauses, "messages": [response]}
 
 
-def analyze_risks(state: AgentState) -> dict:
-    """Analyze risks for each clause using real LLM tool calling (2-3 rounds)."""
-    clauses = state["clauses"]
+def _extract_json_payload(content: str) -> dict:
+    stripped = content.strip()
+    if "```json" in stripped:
+        stripped = stripped.split("```json")[1].split("```")[0].strip()
+    elif "```" in stripped:
+        stripped = stripped.split("```")[1].split("```")[0].strip()
+    return json.loads(stripped)
 
-    clauses_list = []
-    for clause in clauses:
-        clauses_list.append(
-            f"【{clause['number']} {clause['title']}】\n"
-            f"条項本文: {clause['text']}"
-        )
 
-    analysis_prompt = f"""以下の各契約条項を分析してください。
-
-まず、各条項について analyze_clause_risk ツールを呼び出してください。
-ツールが返す法律知識に基づいてリスクレベルを判定してください。
-その後、リスクが高または中の条項については generate_suggestion ツールで修正案を生成してください。
-generate_suggestion ツールが返したテキストをそのまま suggestion フィールドに使用してください。自分で修正案を考えないでください。
-
-最終的に、全条項のリスク評価を以下のJSON配列形式で出力してください:
-[{{"clause_number": "第X条", "risk_level": "高/中/低", "risk_reason": "理由", "suggestion": "generate_suggestionツールの返り値をそのまま使用、低リスクは空文字", "referenced_law": "参照した日本の法律名・条文番号（日本語原文のまま記載）"}}]
-
-条項一覧:
-{chr(10).join(clauses_list)}"""
-
-    messages = [
-        SystemMessage(content=SYSTEM_PROMPT),
-        HumanMessage(content=analysis_prompt),
-    ]
-
-    tool_map = {
-        "analyze_clause_risk": analyze_clause_risk,
-        "generate_suggestion": generate_suggestion,
+def _fallback_clause_analysis(clause: dict) -> dict:
+    return {
+        "clause_number": clause.get("number", "全文"),
+        "risk_level": "不明",
+        "risk_reason": "分析に失敗しました",
+        "suggestion": "",
+        "referenced_law": "",
     }
 
-    # Agentic loop: keep calling tools until LLM returns a final text response
-    final_content = ""
-    for _ in range(5):  # max 5 rounds to avoid infinite loops
-        response = analysis_llm_with_tools.invoke(messages)
-        log_model_usage("analyze_risks_round", analysis_model, response, message_count=len(messages))
-        messages.append(response)
 
-        if not response.tool_calls:
-            final_content = response.content
-            break
+def _analyze_single_clause(clause: dict, event_queue: _queue.Queue | None = None) -> dict:
+    clause_text = clause.get("text", "")
+    clause_number = clause.get("number", "全文")
+    clause_title = clause.get("title", "")
 
-        # Execute all tool calls returned in this round
-        for tool_call in response.tool_calls:
-            tool_fn = tool_map.get(tool_call["name"])
-            if tool_fn:
-                result = tool_fn.invoke(tool_call["args"])
-            else:
-                result = f"Unknown tool: {tool_call['name']}"
-            messages.append(ToolMessage(content=str(result), tool_call_id=tool_call["id"]))
+    if event_queue:
+        event_queue.put({"type": "tool_call", "tool": "analyze_clause_risk", "clause": clause_text[:40]})
+    legal_knowledge = analyze_clause_risk.invoke({"clause_text": clause_text})
+    if event_queue:
+        event_queue.put({"type": "tool_result", "tool": "analyze_clause_risk", "clause": clause_text[:40]})
+
+    response = analysis_llm.invoke([
+        SystemMessage(content=SYSTEM_PROMPT),
+        SystemMessage(content=CLAUSE_ANALYSIS_PROMPT),
+        HumanMessage(content=(
+            f"条項番号: {clause_number}\n"
+            f"条項タイトル: {clause_title}\n"
+            f"条項本文:\n{clause_text}\n\n"
+            f"関連法律知識:\n{legal_knowledge}"
+        )),
+    ])
+    log_model_usage(
+        "analyze_clause",
+        analysis_model,
+        response,
+        clause_number=clause_number,
+    )
 
     try:
-        content = final_content.strip()
-        if "```json" in content:
-            content = content.split("```json")[1].split("```")[0].strip()
-        elif "```" in content:
-            content = content.split("```")[1].split("```")[0].strip()
-        risk_analysis = json.loads(content)
-    except (json.JSONDecodeError, IndexError):
-        risk_analysis = [
-            {
-                "clause_number": c["number"],
-                "risk_level": "不明",
-                "risk_reason": "分析に失敗しました",
-                "suggestion": "",
-                "referenced_law": "",
-            }
-            for c in clauses
-        ]
+        analysis = _extract_json_payload(str(response.content))
+    except (json.JSONDecodeError, IndexError, TypeError):
+        return _fallback_clause_analysis(clause)
 
-    return {"risk_analysis": risk_analysis, "messages": messages[2:]}
+    risk_level = analysis.get("risk_level", "不明")
+    risk_reason = analysis.get("risk_reason", "")
+    suggestion = ""
+
+    if risk_level in {"高", "中"} and risk_reason:
+        if event_queue:
+            event_queue.put({"type": "tool_call", "tool": "generate_suggestion", "clause": clause_text[:40]})
+        suggestion = generate_suggestion.invoke({
+            "clause_text": clause_text,
+            "risk_reason": risk_reason,
+        })
+        if event_queue:
+            event_queue.put({"type": "tool_result", "tool": "generate_suggestion", "clause": clause_text[:40]})
+
+    return {
+        "clause_number": analysis.get("clause_number") or clause_number,
+        "risk_level": risk_level,
+        "risk_reason": risk_reason or "分析結果が不十分でした",
+        "suggestion": suggestion,
+        "referenced_law": analysis.get("referenced_law", ""),
+    }
+
+
+def analyze_risks(state: AgentState) -> dict:
+    """Analyze clauses one by one to avoid multi-round prompt growth."""
+    clauses = state["clauses"]
+    risk_analysis = [_analyze_single_clause(clause) for clause in clauses]
+    return {"risk_analysis": risk_analysis, "messages": []}
 
 
 llm_translator = ChatOpenAI(model=translation_model, temperature=0)
@@ -253,88 +271,10 @@ def _translate_report(
 
 
 def analyze_risks_streaming(state: AgentState, event_queue: _queue.Queue) -> dict:
-    """Same as analyze_risks but emits tool_call/tool_result events to event_queue."""
+    """Same as analyze_risks but emits per-clause progress events."""
     clauses = state["clauses"]
-
-    clauses_list = []
+    risk_analysis = []
     for clause in clauses:
-        clauses_list.append(
-            f"【{clause['number']} {clause['title']}】\n"
-            f"条項本文: {clause['text']}"
-        )
-
-    analysis_prompt = f"""以下の各契約条項を分析してください。
-
-まず、各条項について analyze_clause_risk ツールを呼び出してください。
-ツールが返す法律知識に基づいてリスクレベルを判定してください。
-その後、リスクが高または中の条項については generate_suggestion ツールで修正案を生成してください。
-generate_suggestion ツールが返したテキストをそのまま suggestion フィールドに使用してください。自分で修正案を考えないでください。
-
-最終的に、全条項のリスク評価を以下のJSON配列形式で出力してください:
-[{{"clause_number": "第X条", "risk_level": "高/中/低", "risk_reason": "理由", "suggestion": "generate_suggestionツールの返り値をそのまま使用、低リスクは空文字", "referenced_law": "参照した日本の法律名・条文番号（日本語原文のまま記載）"}}]
-
-条項一覧:
-{chr(10).join(clauses_list)}"""
-
-    messages = [
-        SystemMessage(content=SYSTEM_PROMPT),
-        HumanMessage(content=analysis_prompt),
-    ]
-
-    tool_map = {
-        "analyze_clause_risk": analyze_clause_risk,
-        "generate_suggestion": generate_suggestion,
-    }
-
-    final_content = ""
-    for _ in range(5):
         event_queue.put({"type": "thinking"})
-        response = analysis_llm_with_tools.invoke(messages)
-        log_model_usage("analyze_risks_stream_round", analysis_model, response, message_count=len(messages))
-        messages.append(response)
-
-        if not response.tool_calls:
-            final_content = response.content
-            break
-
-        for tool_call in response.tool_calls:
-            clause_hint = ""
-            if "clause_text" in tool_call["args"]:
-                clause_hint = tool_call["args"]["clause_text"][:40]
-
-            event_queue.put({
-                "type": "tool_call",
-                "tool": tool_call["name"],
-                "clause": clause_hint,
-            })
-
-            tool_fn = tool_map.get(tool_call["name"])
-            result = tool_fn.invoke(tool_call["args"]) if tool_fn else f"Unknown tool: {tool_call['name']}"
-
-            event_queue.put({
-                "type": "tool_result",
-                "tool": tool_call["name"],
-                "clause": clause_hint,
-            })
-            messages.append(ToolMessage(content=str(result), tool_call_id=tool_call["id"]))
-
-    try:
-        content = final_content.strip()
-        if "```json" in content:
-            content = content.split("```json")[1].split("```")[0].strip()
-        elif "```" in content:
-            content = content.split("```")[1].split("```")[0].strip()
-        risk_analysis = json.loads(content)
-    except (json.JSONDecodeError, IndexError):
-        risk_analysis = [
-            {
-                "clause_number": c["number"],
-                "risk_level": "不明",
-                "risk_reason": "分析に失敗しました",
-                "suggestion": "",
-                "referenced_law": "",
-            }
-            for c in clauses
-        ]
-
-    return {"risk_analysis": risk_analysis, "messages": messages[2:]}
+        risk_analysis.append(_analyze_single_clause(clause, event_queue=event_queue))
+    return {"risk_analysis": risk_analysis, "messages": []}
