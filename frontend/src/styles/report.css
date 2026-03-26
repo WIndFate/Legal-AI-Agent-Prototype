@@ -54,6 +54,7 @@
 .clause-card {
   background: rgba(255, 255, 255, 0.82);
   transition: box-shadow 0.18s ease, transform 0.18s ease;
+  overflow: hidden;
 }
 
 .clause-card:hover {
@@ -161,6 +162,13 @@
 
 .analysis-block + .analysis-block {
   border-top: 1px solid rgba(31, 58, 95, 0.08);
+}
+
+.risk-reason,
+.suggestion p,
+.reference p {
+  margin: 0;
+  line-height: 1.82;
 }
 
 .suggestion strong,

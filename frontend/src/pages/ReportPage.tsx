@@ -305,7 +305,9 @@ export default function ReportPage() {
           >
             <div className="clause-header">
               <div className="clause-heading">
-                <span className="clause-eyebrow">#{String(idx + 1).padStart(2, '0')}</span>
+                <span className="clause-eyebrow">
+                  {t('report.finding_label')} #{String(idx + 1).padStart(2, '0')}
+                </span>
                 <strong>{clause.clause_number}</strong>
               </div>
               <span
@@ -350,17 +352,18 @@ export default function ReportPage() {
               )}
               <div className="clause-analysis-panel">
                 <div className="analysis-block">
+                  <p className="analysis-label">{t('report.assessment_label')}</p>
                   <p className="risk-reason">{clause.risk_reason}</p>
                 </div>
                 {clause.suggestion && (
                   <div className="suggestion analysis-block">
-                    <p className="analysis-label">{t('report.suggestion')}</p>
+                    <p className="analysis-label">{t('report.suggestion_label')}</p>
                     <p>{clause.suggestion}</p>
                   </div>
                 )}
                 {clause.referenced_law && (
                   <div className="reference analysis-block">
-                    <p className="analysis-label">{t('report.referenced_law')}</p>
+                    <p className="analysis-label">{t('report.reference_label')}</p>
                     <p>{clause.referenced_law}</p>
                   </div>
                 )}
