@@ -100,6 +100,23 @@ class LegalKnowledgeStore:
 
     async def _add_documents_async(self, documents: list[dict]) -> None:
         await self._ensure_table()
+
+        # Remove stale documents not in the incoming set
+        incoming_ids = {doc["id"] for doc in documents}
+        async with self._session_factory() as session:
+            result = await session.execute(
+                text("SELECT id FROM legal_knowledge_embeddings")
+            )
+            existing_ids = {row[0] for row in result}
+            stale_ids = existing_ids - incoming_ids
+            if stale_ids:
+                await session.execute(
+                    text("DELETE FROM legal_knowledge_embeddings WHERE id = ANY(:ids)"),
+                    {"ids": list(stale_ids)},
+                )
+                await session.commit()
+                logger.info("Removed %d stale documents from pgvector", len(stale_ids))
+
         texts = [
             f"{doc['title']}\n{doc['content']}\n審査ポイント: {doc['review_point']}"
             for doc in documents
