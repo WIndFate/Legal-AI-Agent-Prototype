@@ -1,18 +1,19 @@
 import { useTranslation } from 'react-i18next';
+import styles from '../styles/legal.module.css';
 
 export default function TermsPage() {
   const { t } = useTranslation();
 
   return (
-    <div className="page legal-page">
+    <div className={`page ${styles.legalPage}`}>
       <h2>{t('terms.page_title')}</h2>
 
-      <div className="legal-summary">
+      <div className={styles.summary}>
         <p>{t('terms.summary')}</p>
       </div>
 
-      <div className="legal-content">
-        <p className="legal-last-updated">{t('terms.last_updated', { date: '2026-03-25' })}</p>
+      <div className={styles.content}>
+        <p className={styles.lastUpdated}>{t('terms.last_updated', { date: '2026-03-25' })}</p>
 
         <h3>第1条（サービスの内容）</h3>
         <p>

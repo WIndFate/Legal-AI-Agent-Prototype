@@ -1,18 +1,19 @@
 import { useTranslation } from 'react-i18next';
+import styles from '../styles/legal.module.css';
 
 export default function PrivacyPage() {
   const { t } = useTranslation();
 
   return (
-    <div className="page legal-page">
+    <div className={`page ${styles.legalPage}`}>
       <h2>{t('privacy.page_title')}</h2>
 
-      <div className="legal-summary">
+      <div className={styles.summary}>
         <p>{t('privacy.summary')}</p>
       </div>
 
-      <div className="legal-content">
-        <p className="legal-last-updated">{t('privacy.last_updated', { date: '2026-03-25' })}</p>
+      <div className={styles.content}>
+        <p className={styles.lastUpdated}>{t('privacy.last_updated', { date: '2026-03-25' })}</p>
 
         <h3>第1条（個人情報の定義）</h3>
         <p>
