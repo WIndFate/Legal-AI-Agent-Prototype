@@ -141,6 +141,7 @@ docker compose up -d backend postgres redis
 - 生产环境如果缺少 KOMOJU / Resend 关键配置，或 `FRONTEND_URL` 仍指向 `localhost`，启动会直接失败。
 - 支付、审查、邮件、报告读取路径现在会输出结构化应用日志，并补充 PostHog 埋点，便于联调定位问题。
 - 前端页面采用路由懒加载，分析相关 SDK 改为异步初始化，避免把 observability 依赖塞进首屏主 chunk。
+- 前端现在新增了 `RevealSection`、`OrderReminderDialog`、`ShareSheet` 三类通用 UX 组件，分别用于滚动显现、订单号提醒弹层和自定义分享面板。
 - `/api/report/{order_id}` 在 Redis 命中和 PostgreSQL fallback 两种情况下，现在都会返回一致的 payload 结构。
 - `analyze_clause_risk` 工具内部直接做 RAG 检索，没有单独的 retrieval node。
 - `scripts/smoke_local_flow.sh` 是标准本地回归入口，会验证 `health -> upload -> payment -> review -> report -> contract deletion`。
@@ -152,6 +153,10 @@ docker compose up -d backend postgres redis
 - `scripts/run_backend_pytests.sh` 会在 Docker 内安装 backend dev 依赖并执行完整 `tests/` 回归单测。
 - 集成测试覆盖全部 7 个 API 路由（health、upload、payment、review、report、referral、eval），共 39+ 测试函数。
 - `frontend/src/pages/HomePage.tsx` 现在只作为容器页，首屏、流程、案例、上传/支付区域已拆到独立的首页组件中（`HomeHeroSection`、`HomeFlowSection`、`HomeExamplesSection`、`HomeUploadSection`）。
+- 首页在生成报价后会自动滚动到支付区域，并对支付卡片做短暂高亮，避免用户点击“开始分析”后误以为页面没有反应。
+- 现在新增 `/lookup` 结果查询页，用户输入订单号即可重新进入付款状态页、分析页或最终报告页。
+- 支付成功和分析完成后，前端会弹出订单提醒框，引导用户截图或复制订单号。
+- 报告页分享按钮现在先打开自定义分享面板，支持宣传型预览、复制链接、复制订单号，以及设备支持时的原生分享入口。
 - SSE 断线重连采用指数退避（基础延迟 1 秒，最多 3 次）+ 事件去重 + 60 秒无活动超时机制。
 - RAG embedding 请求已批量化，通过 `_get_embeddings_batch_sync()` 和 `search_batch()` 减少 API 调用。
 
@@ -166,10 +171,13 @@ docker compose up -d backend postgres redis
 - [`scripts/check_rag_eval.sh`](./scripts/check_rag_eval.sh)：本地 RAG 指标回归检查
 - [`scripts/run_backend_pytests.sh`](./scripts/run_backend_pytests.sh)：Docker 内 backend pytest 运行脚本
 - [`frontend/src/main.tsx`](./frontend/src/main.tsx)：前端路由、i18n、懒加载与延迟分析初始化
-- [`frontend/src/pages/HomeHeroSection.tsx`](./frontend/src/pages/HomeHeroSection.tsx)：首页 hero 区域组件
-- [`frontend/src/pages/HomeFlowSection.tsx`](./frontend/src/pages/HomeFlowSection.tsx)：首页流程步骤组件
-- [`frontend/src/pages/HomeExamplesSection.tsx`](./frontend/src/pages/HomeExamplesSection.tsx)：首页案例展示组件
-- [`frontend/src/pages/HomeUploadSection.tsx`](./frontend/src/pages/HomeUploadSection.tsx)：首页上传界面组件
+- [`frontend/src/components/home/HomeHeroSection.tsx`](./frontend/src/components/home/HomeHeroSection.tsx)：首页 hero 区域组件
+- [`frontend/src/components/home/HomeFlowSection.tsx`](./frontend/src/components/home/HomeFlowSection.tsx)：首页流程步骤组件
+- [`frontend/src/components/home/HomeExamplesSection.tsx`](./frontend/src/components/home/HomeExamplesSection.tsx)：首页案例展示组件
+- [`frontend/src/components/home/HomeUploadSection.tsx`](./frontend/src/components/home/HomeUploadSection.tsx)：首页上传界面组件
+- [`frontend/src/pages/LookupPage.tsx`](./frontend/src/pages/LookupPage.tsx)：订单号结果查询页
+- [`frontend/src/components/common/OrderReminderDialog.tsx`](./frontend/src/components/common/OrderReminderDialog.tsx)：订单号保存提醒弹层
+- [`frontend/src/components/common/ShareSheet.tsx`](./frontend/src/components/common/ShareSheet.tsx)：自定义分享面板
 - [`tests/`](./tests/)：全部 7 个 API 路由的集成测试 + 单元测试
 - [`SPEC.md`](./SPEC.md)：详细进度、待办和风险
 - [`DESIGN.md`](./DESIGN.md)：产品设计和商业定位

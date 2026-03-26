@@ -12,6 +12,10 @@ As of 2026-03-27, the local MVP flow is working in Docker:
 - Text and text-layer PDFs are quoted before payment from extracted text; image/scanned PDF uploads now use a dual-OCR path with temporary staging plus post-payment formal OCR
 - `pgvector` RAG is running in PostgreSQL with 331+ law articles across 10 legal categories (rental, labor, part-time, business outsourcing, sales, etc.)
 - 9-language frontend with professional branding (ContractGuard), privacy/terms pages, and interactive example showcase
+- Homepage UX now includes reveal-on-scroll sections, auto-scroll into the payment panel after quote generation, and broader spacing/padding cleanup across upload, payment, review, and report surfaces
+- A new `/lookup` page lets users reopen payment, analysis, or finished reports by order ID
+- Payment success and analysis completion now show an order reminder dialog so users can screenshot or copy their order ID before moving on
+- Report sharing now uses a custom share sheet with a promotional preview, copy-link, copy-order-ID, and native share fallback instead of relying only on direct Web Share calls
 - Route-level lazy loading and deferred analytics bootstrap now reduce the initial frontend bundle
 - Dev-mode payment works only when `APP_ENV=development` and `KOMOJU_SECRET_KEY` is absent
 - Deployment configs ready: `fly.toml` (NRT region, force HTTPS) and `vercel.json` (API proxy, security headers)
@@ -120,6 +124,10 @@ docker compose up -d backend postgres redis
 13. Referenced law citations (`referenced_law`) in reports are always kept in Japanese original text, regardless of the user's selected language.
 14. The saved report page is now styled as a more document-like review report and also has print-friendly layout rules for browser print / save-as-PDF flows.
 15. Homepage anchor navigation (`Home` / `Examples`) now scrolls to explicit page sections, and the hero pricing copy no longer hardcodes a visible maximum price.
+16. After a quote is generated, the homepage automatically scrolls to the payment panel and highlights the next-step area so users do not miss that the flow has advanced.
+17. Payment success and review completion now open a reminder dialog that emphasizes saving the order ID for later lookup.
+18. A dedicated `/lookup` page can reopen pending-payment, in-progress review, or finished report states from the same order ID.
+19. The report page now opens a custom share sheet first, with promotional preview content, copy-link / copy-order-ID actions, and native device share as an optional second step.
 
 ## Important Implementation Notes
 
@@ -141,6 +149,7 @@ docker compose up -d backend postgres redis
 - Production startup now fails fast if KOMOJU/Resend credentials are missing or `FRONTEND_URL` still points to `localhost`.
 - Payment, review, email, and report retrieval paths now emit structured application logs and PostHog events for easier integration debugging.
 - Frontend route pages are lazy-loaded, and analytics libraries are bootstrapped asynchronously so they do not bloat the initial application chunk.
+- Frontend UX now includes reusable `RevealSection`, `OrderReminderDialog`, and `ShareSheet` components for scroll reveal, order-saving prompts, and custom sharing.
 - `/api/report/{order_id}` now returns the same payload shape for both Redis cache hits and PostgreSQL fallback reads.
 - `analyze_clause_risk` performs RAG lookup internally; there is no separate retrieval node.
 - `scripts/smoke_local_flow.sh` is the repeatable local regression entrypoint for `health -> upload -> payment -> review -> report -> contract deletion`.
@@ -166,10 +175,13 @@ docker compose up -d backend postgres redis
 - [`scripts/check_rag_eval.sh`](./scripts/check_rag_eval.sh): local RAG metric regression check
 - [`scripts/run_backend_pytests.sh`](./scripts/run_backend_pytests.sh): Docker-based backend pytest runner
 - [`frontend/src/main.tsx`](./frontend/src/main.tsx): router entry, i18n, lazy route loading, deferred analytics bootstrap
-- [`frontend/src/pages/HomeHeroSection.tsx`](./frontend/src/pages/HomeHeroSection.tsx): homepage hero section component
-- [`frontend/src/pages/HomeFlowSection.tsx`](./frontend/src/pages/HomeFlowSection.tsx): homepage flow steps component
-- [`frontend/src/pages/HomeExamplesSection.tsx`](./frontend/src/pages/HomeExamplesSection.tsx): homepage example showcase component
-- [`frontend/src/pages/HomeUploadSection.tsx`](./frontend/src/pages/HomeUploadSection.tsx): homepage upload interface component
+- [`frontend/src/components/home/HomeHeroSection.tsx`](./frontend/src/components/home/HomeHeroSection.tsx): homepage hero section component
+- [`frontend/src/components/home/HomeFlowSection.tsx`](./frontend/src/components/home/HomeFlowSection.tsx): homepage flow steps component
+- [`frontend/src/components/home/HomeExamplesSection.tsx`](./frontend/src/components/home/HomeExamplesSection.tsx): homepage example showcase component
+- [`frontend/src/components/home/HomeUploadSection.tsx`](./frontend/src/components/home/HomeUploadSection.tsx): homepage upload interface component
+- [`frontend/src/pages/LookupPage.tsx`](./frontend/src/pages/LookupPage.tsx): order-ID based result lookup page
+- [`frontend/src/components/common/OrderReminderDialog.tsx`](./frontend/src/components/common/OrderReminderDialog.tsx): modal prompting users to save order details
+- [`frontend/src/components/common/ShareSheet.tsx`](./frontend/src/components/common/ShareSheet.tsx): custom share panel with copy/native-share actions
 - [`tests/`](./tests/): integration tests for all 7 API routers + unit tests
 - [`SPEC.md`](./SPEC.md): detailed implementation status, pending work, and risks
 - [`DESIGN.md`](./DESIGN.md): product rationale and go-to-market plan

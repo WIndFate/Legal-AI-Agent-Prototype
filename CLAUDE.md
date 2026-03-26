@@ -79,6 +79,7 @@ Current status as of 2026-03-27:
 - HomePage split into focused section components (Hero, Flow, Examples, Upload).
 - RAG embedding batching, database query indexes, and dead code cleanup completed.
 - CSS partially migrated to CSS Modules: layout, home, examples, legal use scoped modules; report/review remain global due to cross-page sharing and responsive dependencies.
+- Frontend UX polish now includes result lookup, order reminder dialogs, custom share sheet, and reveal-on-scroll homepage sections.
 - Production credentials and live third-party testing still pending.
 
 ---
@@ -200,15 +201,14 @@ frontend/
       exampleReports.ts  # Example report data (JP clause text + i18n key refs)
     components/
       Layout.tsx    # Header (brand + nav + lang) + footer (links + disclaimer)
+      common/       # RevealSection + OrderReminderDialog + ShareSheet
+      home/         # HomeHeroSection + HomeFlowSection + HomeExamplesSection + HomeUploadSection
     pages/
       HomePage.tsx          # Homepage container composing hero/flow/examples/upload sections
-      HomeHeroSection.tsx   # Homepage hero section component
-      HomeFlowSection.tsx   # Homepage flow steps component
-      HomeExamplesSection.tsx # Homepage example showcase component
-      HomeUploadSection.tsx # Homepage upload interface component
-      PaymentPage.tsx       # Payment polling / redirect
-      ReviewPage.tsx        # SSE review progress + live report + exponential backoff reconnection
-      ReportPage.tsx        # Saved report page
+      LookupPage.tsx        # Order-ID based result lookup page
+      PaymentPage.tsx       # Payment polling + order reminder prompt
+      ReviewPage.tsx        # SSE review progress + live report + completion prompt
+      ReportPage.tsx        # Saved report page + custom share sheet
       PrivacyPage.tsx       # Privacy policy (i18n summary + JP legal text)
       TermsPage.tsx         # Terms of service (i18n summary + JP legal text)
 docker-compose.yml  # backend + frontend + pgvector/pg16 + redis:7-alpine
@@ -312,6 +312,7 @@ Embeddings are generated via OpenAI API (httpx direct call, not langchain).
 - Example reports use i18n keys for `risk_reason`/`suggestion` (key pattern: `examples.{scenario}_c{n}_reason/suggestion`), while `original_text`, `referenced_law`, `clause_number` stay in Japanese in `exampleReports.ts`
 - Legal pages (`/privacy`, `/terms`): localized summary at top + hardcoded Japanese legal full text (required by law)
 - Layout: sticky header with brand mark + nav links + language selector; footer with nav links to all pages + legal disclaimer + copyright
+- Homepage reveal motion should stay restrained: fade/up reveal plus payment-panel spotlight is acceptable; avoid heavy parallax or novelty animations.
 - Frontend routes should stay lazy-loaded where practical, and analytics/observability SDKs should bootstrap asynchronously so they do not bloat the initial application chunk
 
 ### Review/report UX behavior
@@ -322,6 +323,10 @@ Embeddings are generated via OpenAI API (httpx direct call, not langchain).
 - On larger screens, inline clause comparison can use a split layout, but mobile should preserve a single-column reading flow.
 - Original clause text may be present in the SSE completion payload and same-session frontend storage, but must be stripped before database persistence, Redis caching, shared-link rendering, and email delivery.
 - The saved report page should read like a concise professional review memo, and print / save-as-PDF from the browser should hide site chrome and preserve the report body cleanly.
+- After quote generation, the homepage should visibly advance the user to the payment area instead of leaving the next step off-screen.
+- After payment success and after review completion, the UI should prompt the user to save the order ID for later lookup.
+- A dedicated lookup page should allow reopening payment, in-progress review, or the completed report from the order ID.
+- Sharing should open a first-party share sheet before optional native share, and should always offer copy-link plus copy-order-ID actions.
 
 ### RAG evaluation
 `GET /api/eval/rag` runs Recall@K and MRR against `eval_dataset.json`.
