@@ -11,7 +11,7 @@ As of 2026-03-27, the local MVP flow is working in Docker:
 - `upload -> payment/create -> review/stream -> report retrieval -> contract deletion`
 - Text and text-layer PDFs are quoted before payment from extracted text; image/scanned PDF uploads now use a dual-OCR path with temporary staging plus post-payment formal OCR
 - `pgvector` RAG is running in PostgreSQL with 331+ law articles across 10 legal categories (rental, labor, part-time, business outsourcing, sales, etc.)
-- 9-language frontend with professional branding (ContractGuard), privacy/terms pages, and interactive example showcase
+- 9-language frontend with professional branding (ContractGuard), privacy/terms pages, and a dedicated examples gallery with report-style samples
 - Homepage UX now includes reveal-on-scroll sections, auto-scroll into the payment panel after quote generation, and broader spacing/padding cleanup across upload, payment, review, and report surfaces
 - A new `/lookup` page lets users reopen payment, analysis, or finished reports by order ID
 - Payment success and analysis completion now show an order reminder dialog so users can screenshot or copy their order ID before moving on
@@ -22,7 +22,7 @@ As of 2026-03-27, the local MVP flow is working in Docker:
 - Deployment configs ready: `fly.toml` (NRT region, force HTTPS) and `vercel.json` (API proxy, security headers)
 - Integration test suite: 7 router test files with 39+ test functions covering all API endpoints
 - SSE reconnection with exponential backoff (3 attempts), event deduplication, and 60s inactivity timeout
-- Homepage split into focused section components (Hero, Flow, Upload), and examples moved into a dedicated `/examples` page
+- Homepage split into focused section components (Hero, Flow, Upload), and examples moved into a dedicated `/examples` gallery page
 - RAG embedding batching for reduced API calls
 - Dead code cleanup completed (removed unused `analyze_risks_streaming`)
 - Database indexes on commonly queried columns (email, payment_status, expires_at, analysis_status)
@@ -120,7 +120,7 @@ docker compose up -d backend postgres redis
 8. The saved report keeps the language chosen at payment time; switching the site language later only changes the page chrome.
 9. On the same device session that uploaded the contract, each clause analysis can expand its matching original clause inline for direct comparison. Shared links and emailed links do not include that original text.
 10. Expanded clause comparison is optimized for readability: mobile keeps a stacked reading flow, while larger screens place the original clause beside the analysis content.
-11. The homepage includes an interactive example showcase with three contract scenarios (rental, employment, part-time), each with localized clause analysis in all 9 languages.
+11. The standalone `/examples` page presents three contract scenarios (rental, employment, part-time) as a gallery-style report showcase with localized clause analysis in all 9 languages.
 12. Privacy policy (`/privacy`) and Terms of service (`/terms`) pages combine localized summaries with hardcoded Japanese legal text.
 13. Referenced law citations (`referenced_law`) in reports are always kept in Japanese original text, regardless of the user's selected language.
 14. The saved report page is now styled as a more document-like review report and also has print-friendly layout rules for browser print / save-as-PDF flows.
@@ -181,7 +181,7 @@ docker compose up -d backend postgres redis
 - [`frontend/src/components/home/HomeFlowSection.tsx`](./frontend/src/components/home/HomeFlowSection.tsx): homepage flow steps component
 - [`frontend/src/components/home/HomeExamplesSection.tsx`](./frontend/src/components/home/HomeExamplesSection.tsx): homepage example showcase component
 - [`frontend/src/components/home/HomeUploadSection.tsx`](./frontend/src/components/home/HomeUploadSection.tsx): homepage upload interface component
-- [`frontend/src/pages/ExamplesPage.tsx`](./frontend/src/pages/ExamplesPage.tsx): dedicated examples page
+- [`frontend/src/pages/ExamplesPage.tsx`](./frontend/src/pages/ExamplesPage.tsx): dedicated examples gallery / report sample page
 - [`frontend/src/pages/LookupPage.tsx`](./frontend/src/pages/LookupPage.tsx): order-ID based result lookup page
 - [`frontend/src/components/common/OrderReminderDialog.tsx`](./frontend/src/components/common/OrderReminderDialog.tsx): modal prompting users to save order details
 - [`frontend/src/components/common/ShareSheet.tsx`](./frontend/src/components/common/ShareSheet.tsx): custom share panel with copy/native-share actions

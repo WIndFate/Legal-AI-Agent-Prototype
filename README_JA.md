@@ -11,13 +11,13 @@
 - `upload -> payment/create -> review/stream -> report -> 契約本文削除`
 - テキスト入力とテキスト抽出可能な PDF は支払い前にそのまま見積もりし、画像 / スキャン PDF は一時保存 + 支払い後の正式 OCR を使う二段階 OCR フローになりました
 - `pgvector` RAG は PostgreSQL 上で稼働し、10 法令カテゴリ・331 件超の法条（賃貸借・労働・パート・業務委託・売買等）を収録
-- フロントエンドの 9 言語 UI は実装済み。ブランド（ContractGuard）、プライバシーポリシー/利用規約ページ、インタラクティブなサンプルレポート展示を含む
+- フロントエンドの 9 言語 UI は実装済み。ブランド（ContractGuard）、プライバシーポリシー/利用規約ページ、独立した事例ギャラリーとレポート見本表示を含みます
 - ルート単位の遅延読み込みと分析 SDK の遅延初期化により、初期フロントエンド bundle を軽量化
 - `APP_ENV=development` かつ `KOMOJU_SECRET_KEY` 未設定の場合のみ、ローカル開発では自動的に支払い済み扱いになります
 - デプロイ設定済み: `fly.toml`（NRT リージョン、HTTPS 強制）+ `vercel.json`（API プロキシ + セキュリティヘッダー）
 - 統合テストスイート: 7 つのルーターテストファイル、39 件超のテスト関数で全 API エンドポイントをカバー
 - SSE 再接続: 指数バックオフ（最大 3 回）+ イベント重複排除 + 60 秒の無活動タイムアウト
-- ホームページを独立コンポーネントに分割（Hero / Flow / Examples / Upload）
+- ホームページを独立コンポーネントに分割（Hero / Flow / Upload）し、事例紹介は独立 `/examples` ギャラリーページへ移動
 - RAG embedding バッチ化により API 呼び出し回数を削減
 - 不要コードのクリーンアップ完了（未使用の `analyze_risks_streaming` を削除）
 - よく使うクエリパスにデータベースインデックスを追加（email, payment_status, expires_at, analysis_status）
@@ -176,7 +176,7 @@ docker compose up -d backend postgres redis
 - [`frontend/src/components/home/HomeFlowSection.tsx`](./frontend/src/components/home/HomeFlowSection.tsx): ホームページフローステップ
 - [`frontend/src/components/home/HomeExamplesSection.tsx`](./frontend/src/components/home/HomeExamplesSection.tsx): ホームページサンプル展示
 - [`frontend/src/components/home/HomeUploadSection.tsx`](./frontend/src/components/home/HomeUploadSection.tsx): ホームページアップロード
-- [`frontend/src/pages/ExamplesPage.tsx`](./frontend/src/pages/ExamplesPage.tsx): 独立した事例紹介ページ
+- [`frontend/src/pages/ExamplesPage.tsx`](./frontend/src/pages/ExamplesPage.tsx): 独立した事例ギャラリー / レポート見本ページ
 - [`frontend/src/pages/LookupPage.tsx`](./frontend/src/pages/LookupPage.tsx): 注文番号ベースの結果照会ページ
 - [`frontend/src/components/common/OrderReminderDialog.tsx`](./frontend/src/components/common/OrderReminderDialog.tsx): 注文番号保存を促すダイアログ
 - [`frontend/src/components/common/ShareSheet.tsx`](./frontend/src/components/common/ShareSheet.tsx): 専用共有パネル

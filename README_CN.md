@@ -11,13 +11,13 @@
 - `upload -> payment/create -> review/stream -> report -> 合同文本删除`
 - 文本和可提取文本 PDF 会在付款前直接按文本估价；图片 / 扫描 PDF 现在走”双层 OCR”路径：先临时暂存并预估，付款后再做正式 OCR
 - `pgvector` RAG 已运行在 PostgreSQL 中，覆盖 10 个法律类别共 331+ 条法律条文（租赁、劳动、兼职、业务委托、买卖等）
-- 前端 9 语言界面已实现，包含品牌标识（ContractGuard）、隐私政策/服务条款页面、交互式示例展示
+- 前端 9 语言界面已实现，包含品牌标识（ContractGuard）、隐私政策/服务条款页面、独立案例画廊与报告样张展示
 - 前端已加入路由级懒加载和延迟分析初始化，降低首屏 bundle 压力
 - 仅当 `APP_ENV=development` 且 `KOMOJU_SECRET_KEY` 为空时，本地开发可走自动支付
 - 部署配置已就绪：`fly.toml`（NRT 东京区域，强制 HTTPS）+ `vercel.json`（API 代理 + 安全头）
 - 集成测试套件：7 个路由测试文件，39+ 测试函数，覆盖全部 API 端点
 - SSE 断线重连：指数退避（3 次上限）+ 事件去重 + 60 秒无活动超时
-- 首页已拆分为独立子组件（Hero、Flow、Examples、Upload）
+- 首页已拆分为独立子组件（Hero、Flow、Upload），案例展示已迁移到独立 `/examples` 画廊页
 - RAG embedding 批量化，减少 API 调用次数
 - 死代码已清理（移除未使用的 `analyze_risks_streaming`）
 - 数据库已为常用查询路径添加索引（email、payment_status、expires_at、analysis_status）
@@ -176,7 +176,7 @@ docker compose up -d backend postgres redis
 - [`frontend/src/components/home/HomeFlowSection.tsx`](./frontend/src/components/home/HomeFlowSection.tsx)：首页流程步骤组件
 - [`frontend/src/components/home/HomeExamplesSection.tsx`](./frontend/src/components/home/HomeExamplesSection.tsx)：首页案例展示组件
 - [`frontend/src/components/home/HomeUploadSection.tsx`](./frontend/src/components/home/HomeUploadSection.tsx)：首页上传界面组件
-- [`frontend/src/pages/ExamplesPage.tsx`](./frontend/src/pages/ExamplesPage.tsx)：独立案例展示页
+- [`frontend/src/pages/ExamplesPage.tsx`](./frontend/src/pages/ExamplesPage.tsx)：独立案例画廊 / 报告样张页
 - [`frontend/src/pages/LookupPage.tsx`](./frontend/src/pages/LookupPage.tsx)：订单号结果查询页
 - [`frontend/src/components/common/OrderReminderDialog.tsx`](./frontend/src/components/common/OrderReminderDialog.tsx)：订单号保存提醒弹层
 - [`frontend/src/components/common/ShareSheet.tsx`](./frontend/src/components/common/ShareSheet.tsx)：自定义分享面板
