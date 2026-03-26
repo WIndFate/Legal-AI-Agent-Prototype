@@ -16,15 +16,10 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    # orders: cleanup queries filter by payment_status and analysis_status
-    op.create_index("ix_orders_payment_status", "orders", ["payment_status"])
+    # payment_status and reports.expires_at already exist in revision 001.
+    # This revision only adds the missing analysis_status index.
     op.create_index("ix_orders_analysis_status", "orders", ["analysis_status"])
-
-    # reports: cleanup deletes rows past expires_at
-    op.create_index("ix_reports_expires_at", "reports", ["expires_at"])
 
 
 def downgrade() -> None:
-    op.drop_index("ix_reports_expires_at", table_name="reports")
     op.drop_index("ix_orders_analysis_status", table_name="orders")
-    op.drop_index("ix_orders_payment_status", table_name="orders")

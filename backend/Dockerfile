@@ -7,6 +7,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends gcc libpq-dev l
 WORKDIR /app
 
 COPY pyproject.toml .
+COPY alembic.ini .
 COPY backend/ backend/
 COPY tests/ tests/
 
