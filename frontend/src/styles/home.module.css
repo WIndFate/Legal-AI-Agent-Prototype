@@ -24,13 +24,24 @@
 }
 
 .trustPill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 14px;
+  border-radius: 999px;
   color: var(--brand);
   background: rgba(245, 249, 255, 0.92);
   border: 1px solid rgba(95, 127, 163, 0.22);
+  box-shadow: 0 10px 24px rgba(31, 58, 95, 0.06);
+  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
+  font-size: 0.9rem;
+  font-weight: 600;
+  line-height: 1.35;
 }
 
 .heroPreviewCard {
   position: relative;
+  align-self: start;
   z-index: 1;
   padding: 18px;
   border-radius: var(--radius-lg);
@@ -207,7 +218,7 @@
 
 @media (min-width: 1024px) {
   .heroPreviewCard {
-    position: sticky;
-    top: 132px;
+    position: relative;
+    top: auto;
   }
 }
