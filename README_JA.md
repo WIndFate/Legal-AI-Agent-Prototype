@@ -21,6 +21,7 @@
 - RAG embedding バッチ化により API 呼び出し回数を削減
 - 不要コードのクリーンアップ完了（未使用の `analyze_risks_streaming` を削除）
 - よく使うクエリパスにデータベースインデックスを追加（email, payment_status, expires_at, analysis_status）
+- CSS を部分的に CSS Modules へ移行: layout / home / examples / legal はスコープ付きモジュール + `clsx`、report / review はページ間共有のためグローバル維持
 
 リポジトリ外で未完了の項目:
 
@@ -28,7 +29,7 @@
 - モバイル撮影と実機での手動テスト
 - ユーザーフィードバック収集機能（P2）
 - OG タグとソーシャルメディア共有最適化（P2）
-- CSS モジュール化移行（P3）
+- report/review ページの CSS モジュール化（ページ間共有のためグローバル維持）
 
 ## アーキテクチャ
 

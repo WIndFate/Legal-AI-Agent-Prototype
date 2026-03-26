@@ -78,6 +78,7 @@ Current status as of 2026-03-27:
 - SSE reconnection with exponential backoff, event deduplication, and inactivity timeout.
 - HomePage split into focused section components (Hero, Flow, Examples, Upload).
 - RAG embedding batching, database query indexes, and dead code cleanup completed.
+- CSS partially migrated to CSS Modules: layout, home, examples, legal use scoped modules; report/review remain global due to cross-page sharing and responsive dependencies.
 - Production credentials and live third-party testing still pending.
 
 ---
@@ -344,6 +345,12 @@ Eval references the explicit document IDs in `egov_laws.json`.
 - 7 router test files covering all API endpoints: health, upload, payment, review, report, referral, eval.
 - 39+ test functions with 1877 lines of test code.
 - Tests use FastAPI `TestClient` with mocked dependencies (DB, Redis, external APIs).
+
+### CSS Modules strategy
+- Component-scoped styles use Vite CSS Modules (`*.module.css`) with `clsx` for dynamic class composition.
+- **Migrated to modules:** `layout.module.css` (Layout header/footer/nav), `home.module.css` (hero/flow/upload internals), `examples.module.css` (example showcase), `legal.module.css` (privacy/terms pages).
+- **Kept global:** `base.css` (variables, reset, keyframes), `home.css` (card shells, tabs referenced by responsive.css), `layout.css` (page, section-kicker used across all pages), `report.css` and `review.css` (shared between ReviewPage/ReportPage + responsive/print dependencies + dynamic `step-${status}` class patterns), `responsive.css` (media queries targeting global classes).
+- New frontend components should prefer CSS Modules for page-specific styling; shared cross-page patterns stay global.
 
 ### Regression checks
 - `scripts/check_locale_keys.sh` ensures all 9 locale files keep the same translation key set as `frontend/src/i18n/locales/ja.json`.

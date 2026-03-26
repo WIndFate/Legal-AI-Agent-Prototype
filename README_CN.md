@@ -21,6 +21,7 @@
 - RAG embedding 批量化，减少 API 调用次数
 - 死代码已清理（移除未使用的 `analyze_risks_streaming`）
 - 数据库已为常用查询路径添加索引（email、payment_status、expires_at、analysis_status）
+- CSS 部分迁移到 CSS Modules：layout、home、examples、legal 组件使用作用域模块 + `clsx`；report/review 因跨页面共享保持全局
 
 仓库外仍待完成：
 
@@ -28,7 +29,7 @@
 - 真机拍照和跨设备手动测试
 - 用户反馈收集机制（P2）
 - OG tags 与社交媒体分享优化（P2）
-- CSS 模块化迁移（P3）
+- report/review 页面 CSS 模块化（因跨页面共享保持全局）
 
 ## 架构
 

@@ -21,6 +21,7 @@ As of 2026-03-27, the local MVP flow is working in Docker:
 - RAG embedding batching for reduced API calls
 - Dead code cleanup completed (removed unused `analyze_risks_streaming`)
 - Database indexes on commonly queried columns (email, payment_status, expires_at, analysis_status)
+- CSS partially migrated to CSS Modules: layout, home, examples, legal components use scoped modules with `clsx`; report/review remain global due to cross-page sharing
 
 Still pending outside the repo:
 
@@ -28,7 +29,7 @@ Still pending outside the repo:
 - Mobile camera/manual cross-device testing
 - User feedback collection on report page (P2)
 - OG tags and social media sharing optimization (P2)
-- CSS modules migration (P3)
+- CSS Modules migration for report/review pages (kept global due to cross-page sharing)
 
 ## Architecture
 
