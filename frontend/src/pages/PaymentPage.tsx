@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 
+import OrderReminderDialog from '../components/common/OrderReminderDialog';
+
 type PaymentStatus = 'checking' | 'success' | 'failed' | 'pending';
 
 export default function PaymentPage() {
@@ -10,6 +12,8 @@ export default function PaymentPage() {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const [status, setStatus] = useState<PaymentStatus>('checking');
+  const [showOrderPrompt, setShowOrderPrompt] = useState(false);
+  const [nextRoute, setNextRoute] = useState<string | null>(null);
 
   useEffect(() => {
     if (!orderId) return;
@@ -21,7 +25,8 @@ export default function PaymentPage() {
         const reportRes = await fetch(`/api/report/${orderId}`);
         if (reportRes.ok) {
           setStatus('success');
-          setTimeout(() => navigate(`/report/${orderId}`, { replace: true }), 1000);
+          setNextRoute(`/report/${orderId}`);
+          setShowOrderPrompt(true);
           return;
         }
 
@@ -31,7 +36,8 @@ export default function PaymentPage() {
           const data = await payRes.json();
           if (data.status === 'paid' || data.status === 'captured') {
             setStatus('success');
-            setTimeout(() => navigate(`/review/${orderId}`, { replace: true }), 1500);
+            setNextRoute(`/review/${orderId}`);
+            setShowOrderPrompt(true);
             return;
           }
           if (data.status === 'failed' || data.status === 'cancelled') {
@@ -66,6 +72,18 @@ export default function PaymentPage() {
 
   return (
     <div className="page payment-page">
+      {orderId && nextRoute && (
+        <OrderReminderDialog
+          open={showOrderPrompt}
+          orderId={orderId}
+          title={t('order.save_after_payment_title')}
+          description={t('order.save_after_payment_desc')}
+          primaryLabel={nextRoute.includes('/report/') ? t('order.open_report') : t('order.continue_review')}
+          onPrimary={() => navigate(nextRoute, { replace: true })}
+          secondaryLabel={t('share.close')}
+          onSecondary={() => setShowOrderPrompt(false)}
+        />
+      )}
       <div className="payment-status-card">
         <div className="payment-status-header">
           <p className="section-kicker">{t('payment.title')}</p>
@@ -99,8 +117,17 @@ export default function PaymentPage() {
         {status === 'success' && (
           <div className="success-state">
             <div className="check-icon">&#10003;</div>
-            <p className="status-text">{t('review.analyzing')}</p>
-            <p className="status-subtext">{t('payment.success_note')}</p>
+            <p className="status-text">{t('payment.success_note')}</p>
+            <p className="status-subtext">{t('order.save_after_payment_desc')}</p>
+            <div className="order-inline-card">
+              <span>{t('order.order_id')}</span>
+              <strong>{orderId}</strong>
+            </div>
+            {nextRoute && (
+              <button className="btn-primary" onClick={() => navigate(nextRoute, { replace: true })}>
+                {nextRoute.includes('/report/') ? t('order.open_report') : t('order.continue_review')}
+              </button>
+            )}
           </div>
         )}
 

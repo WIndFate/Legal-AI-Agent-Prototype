@@ -9,7 +9,8 @@
   "nav": {
     "home": "Trang chủ",
     "language": "Ngôn ngữ",
-    "examples": "Ví dụ"
+    "examples": "Ví dụ",
+    "lookup": "Tra cứu"
   },
   "upload": {
     "title": "Tải lên hợp đồng",
@@ -70,6 +71,35 @@
     "waiting_note": "Đang xử lý thanh toán. Vui lòng không đóng trang này.",
     "success_note": "Thanh toán thành công. Phân tích sẽ bắt đầu ngay."
   },
+  "order": {
+    "order_id": "Mã đơn hàng",
+    "save_kicker": "Chi tiết đơn hàng",
+    "screenshot_hint": "Hãy chụp màn hình hoặc sao chép mã đơn hàng này để bạn có thể tra cứu lại kết quả sau này.",
+    "copy_id": "Sao chép mã đơn hàng",
+    "copied": "Đã sao chép mã đơn hàng",
+    "save_after_payment_title": "Lưu mã đơn hàng trước khi bắt đầu phân tích",
+    "save_after_payment_desc": "Thanh toán của bạn đã được xác nhận. Hãy lưu mã đơn hàng này ngay bây giờ để có thể mở lại kết quả nếu bạn đóng trang.",
+    "save_after_review_title": "Lưu mã đơn hàng cùng kết quả đã hoàn tất",
+    "save_after_review_desc": "Phân tích đã hoàn tất. Hãy giữ mã đơn hàng này để bạn có thể mở lại báo cáo từ trang tra cứu.",
+    "continue_review": "Tiếp tục tới phân tích",
+    "open_report": "Mở báo cáo",
+    "lookup_kicker": "Tra cứu kết quả",
+    "lookup_title": "Mở kết quả bằng mã đơn hàng",
+    "lookup_desc": "Nhập mã đơn hàng và chúng tôi sẽ đưa bạn tới đúng trang thanh toán, phân tích hoặc báo cáo hoàn thành.",
+    "lookup_placeholder": "Ví dụ: 2f8d6f9b-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+    "lookup_action": "Tìm kết quả của tôi",
+    "lookup_checking": "Đang kiểm tra…",
+    "lookup_not_found": "Không tìm thấy đơn hàng đó. Vui lòng kiểm tra lại mã đơn hàng và thử lại.",
+    "lookup_found_report": "Đã tìm thấy báo cáo. Đang mở trang kết quả…",
+    "lookup_found_processing": "Đã tìm thấy đơn hàng đã thanh toán. Đang mở trang phân tích…",
+    "lookup_found_payment": "Đã tìm thấy đơn hàng đang chờ thanh toán. Đang mở trang trạng thái thanh toán…",
+    "lookup_help_title": "Bạn có thể dùng mã đơn hàng bất cứ lúc nào",
+    "lookup_help_body": "Nếu giữ mã đơn hàng, bạn có thể mở lại trang thanh toán, phân tích hoặc báo cáo từ đây.",
+    "lookup_help_payment": "Đơn hàng đang chờ sẽ mở trang trạng thái thanh toán.",
+    "lookup_help_report": "Đơn hàng hoàn tất sẽ mở thẳng trang báo cáo.",
+    "next_step_title": "Báo giá của bạn đã sẵn sàng",
+    "next_step_body": "Biểu mẫu thanh toán đã hiện ở phía dưới. Tiếp tục tại đó để đi thẳng vào luồng phân tích."
+  },
   "review": {
     "title": "Đang phân tích",
     "analyzing": "Đang phân tích hợp đồng của bạn…",
@@ -125,6 +155,24 @@
     "privacy": "Chính sách bảo mật",
     "terms": "Điều khoản dịch vụ",
     "copyright": "© 2026 ContractGuard"
+  },
+  "share": {
+    "kicker": "Chia sẻ",
+    "title": "Chia sẻ từ bảng chia sẻ riêng",
+    "description": "Sử dụng bảng chia sẻ được thiết kế riêng với phần xem trước quảng bá, sao chép liên kết và chia sẻ gốc của thiết bị khi được hỗ trợ.",
+    "preview_badge": "Share Kit",
+    "preview_title": "Hiểu hợp đồng tiếng Nhật mà không phải đoán mò.",
+    "preview_desc": "ContractGuard rà soát hợp đồng tiếng Nhật và trả về báo cáo rủi ro rõ ràng bằng ngôn ngữ của bạn.",
+    "point_fast": "Phân tích nhanh từ ảnh, PDF hoặc văn bản dán vào",
+    "point_private": "Văn bản hợp đồng bị xóa ngay sau khi phân tích",
+    "point_multilingual": "Báo cáo được gửi bằng ngôn ngữ bạn đã chọn",
+    "link_label": "Liên kết chia sẻ",
+    "copy_link": "Sao chép liên kết",
+    "link_copied": "Đã sao chép liên kết",
+    "native_share": "Mở chia sẻ của thiết bị",
+    "copy_order": "Sao chép mã đơn hàng",
+    "order_copied": "Đã sao chép mã đơn hàng",
+    "close": "Đóng"
   },
   "privacy": {
     "page_title": "Chính sách bảo mật",

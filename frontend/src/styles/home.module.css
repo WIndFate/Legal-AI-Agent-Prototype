@@ -204,3 +204,10 @@
   font-size: 0.88rem;
   font-weight: 600;
 }
+
+@media (min-width: 1024px) {
+  .heroPreviewCard {
+    position: sticky;
+    top: 132px;
+  }
+}

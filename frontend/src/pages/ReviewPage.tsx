@@ -2,6 +2,8 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 
+import OrderReminderDialog from '../components/common/OrderReminderDialog';
+
 // Shared report types
 interface ClauseAnalysis {
   clause_number: string;
@@ -77,6 +79,7 @@ export default function ReviewPage() {
   const [expandedClauses, setExpandedClauses] = useState<Record<string, boolean>>({});
   const [phaseText, setPhaseText] = useState('');
   const [reconnecting, setReconnecting] = useState(false);
+  const [showCompletionPrompt, setShowCompletionPrompt] = useState(false);
 
   // Refs to track reconnection state without causing re-renders
   const started = useRef(false);
@@ -255,6 +258,7 @@ export default function ReviewPage() {
                   sessionStorage.setItem(`report-originals:${orderId}`, JSON.stringify(originalByClause));
                   setReport(evt.report);
                   setLoading(false);
+                  setShowCompletionPrompt(true);
                 }
                 terminalReached.current = true;
                 return 'terminal';
@@ -371,6 +375,18 @@ export default function ReviewPage() {
 
   return (
     <div className="page review-page">
+      {orderId && (
+        <OrderReminderDialog
+          open={showCompletionPrompt}
+          orderId={orderId}
+          title={t('order.save_after_review_title')}
+          description={t('order.save_after_review_desc')}
+          primaryLabel={t('order.open_report')}
+          onPrimary={() => navigate(`/report/${orderId}`)}
+          secondaryLabel={t('share.close')}
+          onSecondary={() => setShowCompletionPrompt(false)}
+        />
+      )}
       {/* Streaming progress section */}
       {loading && (
         <div className="analyzing-section">
@@ -445,7 +461,7 @@ export default function ReviewPage() {
               </div>
               <div className="review-assurance-card">
                 <span>{t('payment.title')}</span>
-                <strong>SSE</strong>
+                <strong>{t('review.live_label')}</strong>
               </div>
             </div>
           </div>
@@ -472,6 +488,13 @@ export default function ReviewPage() {
             <p className="section-kicker">{t('report.executive_kicker')}</p>
             <h2>{t('report.title')}</h2>
             <p className="report-comparison-hint">{t('report.comparison_hint')}</p>
+            {orderId && (
+              <div className="order-inline-card order-inline-card-report">
+                <span>{t('order.order_id')}</span>
+                <strong>{orderId}</strong>
+                <p>{t('order.lookup_help_body')}</p>
+              </div>
+            )}
           </div>
 
           {/* Overall risk card */}

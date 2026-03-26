@@ -1,0 +1,331 @@
+/* ── Shared interaction and high-touch UX patterns ── */
+
+.reveal-section {
+  opacity: 0;
+  transform: translateY(34px) scale(0.985);
+  transition:
+    opacity 0.7s ease,
+    transform 0.7s ease;
+}
+
+.reveal-section-visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.spotlight-card {
+  animation: spotlightPulse 1.4s ease;
+}
+
+@keyframes spotlightPulse {
+  0% {
+    box-shadow: 0 0 0 rgba(31, 58, 95, 0);
+    transform: translateY(0);
+  }
+  35% {
+    box-shadow: 0 0 0 10px rgba(31, 58, 95, 0.08), 0 24px 50px rgba(31, 58, 95, 0.18);
+    transform: translateY(-3px);
+  }
+  100% {
+    box-shadow: var(--shadow-md);
+    transform: translateY(0);
+  }
+}
+
+.next-step-banner,
+.order-inline-card,
+.lookup-status,
+.share-url-block {
+  padding: 16px 18px;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(31, 58, 95, 0.12);
+  background: rgba(255, 255, 255, 0.78);
+}
+
+.next-step-banner {
+  margin-bottom: 18px;
+  background: linear-gradient(135deg, rgba(31, 58, 95, 0.08), rgba(95, 127, 163, 0.05));
+}
+
+.next-step-banner strong,
+.order-inline-card strong,
+.lookup-help-card strong,
+.share-url-block strong {
+  display: block;
+  color: var(--brand-ink);
+  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
+}
+
+.next-step-banner strong {
+  margin-bottom: 6px;
+}
+
+.next-step-banner p,
+.order-inline-card p,
+.lookup-help-card span,
+.share-url-block span {
+  color: var(--text-soft);
+  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
+  font-size: 0.86rem;
+  line-height: 1.7;
+}
+
+.dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 140;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(20, 25, 34, 0.42);
+  backdrop-filter: blur(10px);
+}
+
+.dialog-shell {
+  position: relative;
+  width: min(100%, 560px);
+  max-height: min(88vh, 780px);
+  overflow-y: auto;
+  padding: 28px;
+  border-radius: 28px;
+  border: 1px solid rgba(255, 255, 255, 0.34);
+  background:
+    radial-gradient(circle at top right, rgba(95, 127, 163, 0.12), transparent 28%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 244, 238, 0.98) 100%);
+  box-shadow: 0 34px 80px rgba(21, 29, 41, 0.22);
+}
+
+.dialog-title {
+  font-size: clamp(1.7rem, 3vw, 2.4rem);
+  line-height: 1.08;
+}
+
+.dialog-body {
+  margin-top: 12px;
+  color: var(--text-soft);
+  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
+  font-size: 0.98rem;
+  line-height: 1.85;
+}
+
+.dialog-action-stack {
+  display: grid;
+  gap: 12px;
+  margin-top: 22px;
+}
+
+.dialog-secondary-btn {
+  width: 100%;
+  margin-top: 0;
+}
+
+.dialog-link-btn {
+  border: none;
+  background: transparent;
+  color: var(--brand);
+  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.dialog-close-btn {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 38px;
+  height: 38px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(31, 58, 95, 0.08);
+  color: var(--brand);
+  font-size: 1.4rem;
+  cursor: pointer;
+}
+
+.order-reference-card {
+  margin-top: 18px;
+  padding: 18px;
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(31, 58, 95, 0.12);
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.order-reference-card span,
+.order-inline-card span,
+.lookup-help-card span {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--text-faint);
+  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.order-reference-card strong,
+.order-inline-card strong {
+  font-size: 1rem;
+  word-break: break-word;
+}
+
+.order-reference-card p,
+.order-inline-card p {
+  margin-top: 8px;
+}
+
+.order-inline-card {
+  margin-top: 18px;
+}
+
+.order-inline-card-report {
+  margin-top: 18px;
+  max-width: 520px;
+}
+
+.share-dialog {
+  width: min(100%, 640px);
+}
+
+.share-preview-card {
+  margin-top: 18px;
+  padding: 22px;
+  border-radius: 26px;
+  background:
+    linear-gradient(160deg, rgba(20, 40, 63, 0.98) 0%, rgba(31, 58, 95, 0.98) 42%, rgba(95, 127, 163, 0.9) 100%);
+  color: #f3f7fb;
+  box-shadow: 0 24px 54px rgba(20, 40, 63, 0.22);
+}
+
+.share-preview-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  align-items: flex-start;
+}
+
+.share-preview-header strong {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: #fff;
+  font-size: 1.02rem;
+}
+
+.share-brand-mark {
+  display: inline-block;
+  width: 18px;
+  height: 20px;
+  border-radius: 6px;
+  background: linear-gradient(135deg, #b7cae1 0%, #eef4fb 100%);
+  clip-path: polygon(50% 0%, 96% 18%, 96% 72%, 50% 100%, 4% 72%, 4% 18%);
+}
+
+.share-preview-badge {
+  padding: 7px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.84);
+  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.share-preview-card h3 {
+  margin-top: 20px;
+  color: #fff;
+  font-size: 1.5rem;
+}
+
+.share-preview-card p {
+  margin-top: 10px;
+  color: rgba(243, 247, 251, 0.84);
+  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
+  line-height: 1.75;
+}
+
+.share-preview-points {
+  display: grid;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.share-preview-points div {
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.08);
+  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
+  font-size: 0.9rem;
+}
+
+.share-url-block {
+  margin-top: 18px;
+}
+
+.share-url-block strong {
+  font-size: 0.94rem;
+  line-height: 1.7;
+}
+
+.lookup-shell {
+  padding: 30px;
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--line);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 251, 246, 0.95) 100%);
+  box-shadow: var(--shadow-lg);
+}
+
+.lookup-form {
+  display: grid;
+  gap: 14px;
+  margin-top: 18px;
+}
+
+.lookup-label {
+  display: grid;
+  gap: 10px;
+  color: var(--brand-ink);
+  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.lookup-input {
+  width: 100%;
+  padding: 16px 18px;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(31, 58, 95, 0.14);
+  background: rgba(255, 255, 255, 0.78);
+}
+
+.lookup-help-grid {
+  display: grid;
+  gap: 12px;
+  margin-top: 22px;
+}
+
+.lookup-help-card {
+  padding: 16px 18px;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(31, 58, 95, 0.12);
+  background: rgba(255, 255, 255, 0.7);
+}
+
+@media (min-width: 768px) {
+  .lookup-help-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 767px) {
+  .dialog-shell,
+  .lookup-shell {
+    padding: 22px 18px;
+    border-radius: 22px;
+  }
+
+  .share-preview-header {
+    flex-direction: column;
+  }
+}

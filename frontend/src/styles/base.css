@@ -344,3 +344,7 @@ a {
   font-size: 0.84rem;
   line-height: 1.7;
 }
+
+.section-kicker + .dialog-title {
+  margin-top: 2px;
+}

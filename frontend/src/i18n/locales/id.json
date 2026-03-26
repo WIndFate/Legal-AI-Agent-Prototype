@@ -9,7 +9,8 @@
   "nav": {
     "home": "Beranda",
     "language": "Bahasa",
-    "examples": "Contoh"
+    "examples": "Contoh",
+    "lookup": "Cari hasil"
   },
   "upload": {
     "title": "Unggah kontrak",
@@ -70,6 +71,35 @@
     "waiting_note": "Memproses pembayaran. Jangan tutup halaman ini.",
     "success_note": "Pembayaran berhasil. Analisis akan segera dimulai."
   },
+  "order": {
+    "order_id": "ID pesanan",
+    "save_kicker": "Detail pesanan",
+    "screenshot_hint": "Ambil tangkapan layar atau salin ID ini agar Anda bisa membuka hasil lagi nanti.",
+    "copy_id": "Salin ID pesanan",
+    "copied": "ID pesanan disalin",
+    "save_after_payment_title": "Simpan ID pesanan sebelum analisis dimulai",
+    "save_after_payment_desc": "Pembayaran Anda sudah dikonfirmasi. Simpan ID ini sekarang agar Anda bisa membuka hasil lagi nanti.",
+    "save_after_review_title": "Simpan ID pesanan bersama hasil selesai",
+    "save_after_review_desc": "Analisis selesai. Simpan ID ini agar Anda bisa membuka laporan lagi dari halaman pencarian.",
+    "continue_review": "Lanjut ke analisis",
+    "open_report": "Buka laporan",
+    "lookup_kicker": "Pencarian hasil",
+    "lookup_title": "Buka hasil dengan ID pesanan",
+    "lookup_desc": "Masukkan ID pesanan dan kami akan mengarahkan Anda ke halaman pembayaran, analisis, atau laporan.",
+    "lookup_placeholder": "Contoh: 2f8d6f9b-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+    "lookup_action": "Cari hasil saya",
+    "lookup_checking": "Memeriksa…",
+    "lookup_not_found": "Pesanan tidak ditemukan. Periksa kembali ID pesanan Anda.",
+    "lookup_found_report": "Laporan ditemukan. Membuka halaman hasil…",
+    "lookup_found_processing": "Pesanan berbayar ditemukan. Membuka halaman analisis…",
+    "lookup_found_payment": "Pesanan menunggu pembayaran ditemukan. Membuka status pembayaran…",
+    "lookup_help_title": "Gunakan ID kapan saja",
+    "lookup_help_body": "Jika Anda menyimpan ID ini, Anda bisa membuka ulang halaman pembayaran, analisis, atau laporan dari sini.",
+    "lookup_help_payment": "Pesanan tertunda akan membuka halaman pembayaran.",
+    "lookup_help_report": "Pesanan selesai akan membuka laporan secara langsung.",
+    "next_step_title": "Penawaran Anda siap",
+    "next_step_body": "Formulir pembayaran sudah ditampilkan di bawah. Lanjutkan ke sana untuk masuk langsung ke alur analisis."
+  },
   "review": {
     "title": "Menganalisis",
     "analyzing": "Menganalisis kontrak Anda…",
@@ -125,6 +155,24 @@
     "privacy": "Kebijakan Privasi",
     "terms": "Ketentuan Layanan",
     "copyright": "© 2026 ContractGuard"
+  },
+  "share": {
+    "kicker": "Bagikan",
+    "title": "Bagikan lewat panel khusus",
+    "description": "Gunakan panel berbagi dengan pratinjau promosi, tautan yang bisa disalin, dan berbagi native bila perangkat mendukung.",
+    "preview_badge": "Share Kit",
+    "preview_title": "Pahami kontrak Jepang tanpa menebak.",
+    "preview_desc": "ContractGuard meninjau kontrak Jepang dan mengirim laporan risiko yang jelas dalam bahasa Anda.",
+    "point_fast": "Analisis cepat dari foto, PDF, atau teks",
+    "point_private": "Teks kontrak dihapus setelah analisis",
+    "point_multilingual": "Laporan dikirim dalam bahasa pilihan Anda",
+    "link_label": "Tautan berbagi",
+    "copy_link": "Salin tautan",
+    "link_copied": "Tautan disalin",
+    "native_share": "Buka berbagi perangkat",
+    "copy_order": "Salin ID pesanan",
+    "order_copied": "ID pesanan disalin",
+    "close": "Tutup"
   },
   "privacy": {
     "page_title": "Kebijakan Privasi",

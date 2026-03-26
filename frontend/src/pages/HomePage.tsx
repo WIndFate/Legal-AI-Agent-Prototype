@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 
+import RevealSection from '../components/common/RevealSection';
 import HomeExamplesSection from '../components/home/HomeExamplesSection';
 import HomeFlowSection from '../components/home/HomeFlowSection';
 import HomeHeroSection from '../components/home/HomeHeroSection';
@@ -20,6 +21,7 @@ export default function HomePage() {
   const [uploadResult, setUploadResult] = useState<UploadResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [resultReady, setResultReady] = useState(false);
 
   // Payment form
   const [email, setEmail] = useState('');
@@ -46,6 +48,7 @@ export default function HomePage() {
 
       const data: UploadResult = await res.json();
       setUploadResult(data);
+      setResultReady(true);
     } catch (e) {
       setError(t('errors.upload_failed'));
     } finally {
@@ -98,29 +101,53 @@ export default function HomePage() {
     }
   };
 
+  useEffect(() => {
+    if (!uploadResult) return;
+
+    const timer = window.setTimeout(() => {
+      const target = document.getElementById('payment-panel');
+      target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 80);
+
+    const clearCue = window.setTimeout(() => setResultReady(false), 2600);
+    return () => {
+      window.clearTimeout(timer);
+      window.clearTimeout(clearCue);
+    };
+  }, [uploadResult]);
+
   return (
     <div className="page home-page" id="top">
-      <HomeHeroSection preview={heroPreview} />
-      <HomeFlowSection />
-      <HomeExamplesSection />
-      <HomeUploadSection
-        inputMode={inputMode}
-        setInputMode={setInputMode}
-        textInput={textInput}
-        setTextInput={setTextInput}
-        file={file}
-        setFile={setFile}
-        uploadResult={uploadResult}
-        loading={loading}
-        error={error}
-        email={email}
-        setEmail={setEmail}
-        referralCode={referralCode}
-        setReferralCode={setReferralCode}
-        paying={paying}
-        onUpload={handleUpload}
-        onPayment={handlePayment}
-      />
+      <RevealSection delayMs={0}>
+        <HomeHeroSection preview={heroPreview} />
+      </RevealSection>
+      <RevealSection delayMs={80}>
+        <HomeFlowSection />
+      </RevealSection>
+      <RevealSection delayMs={120}>
+        <HomeExamplesSection />
+      </RevealSection>
+      <RevealSection delayMs={160}>
+        <HomeUploadSection
+          inputMode={inputMode}
+          setInputMode={setInputMode}
+          textInput={textInput}
+          setTextInput={setTextInput}
+          file={file}
+          setFile={setFile}
+          uploadResult={uploadResult}
+          loading={loading}
+          error={error}
+          email={email}
+          setEmail={setEmail}
+          referralCode={referralCode}
+          setReferralCode={setReferralCode}
+          paying={paying}
+          onUpload={handleUpload}
+          onPayment={handlePayment}
+          spotlightResult={resultReady}
+        />
+      </RevealSection>
     </div>
   );
 }

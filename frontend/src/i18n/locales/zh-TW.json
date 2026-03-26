@@ -9,7 +9,8 @@
   "nav": {
     "home": "首頁",
     "language": "語言",
-    "examples": "案例展示"
+    "examples": "案例展示",
+    "lookup": "結果查詢"
   },
   "upload": {
     "title": "上傳合約",
@@ -70,6 +71,35 @@
     "waiting_note": "正在處理付款，請勿關閉此頁面。",
     "success_note": "付款成功，即將開始分析。"
   },
+  "order": {
+    "order_id": "訂單號",
+    "save_kicker": "訂單資訊",
+    "screenshot_hint": "建議立即截圖或複製訂單號，之後關閉頁面也可以再次查詢結果。",
+    "copy_id": "複製訂單號",
+    "copied": "訂單號已複製",
+    "save_after_payment_title": "開始分析前，請先保存訂單號",
+    "save_after_payment_desc": "你的付款已確認。為了避免之後關閉頁面後找不到結果，建議先保存這個訂單號。",
+    "save_after_review_title": "分析完成，請保存訂單號",
+    "save_after_review_desc": "你的合約分析已完成。建議保存訂單號，之後可以透過「結果查詢」重新打開報告。",
+    "continue_review": "繼續進入分析",
+    "open_report": "打開報告",
+    "lookup_kicker": "結果查詢",
+    "lookup_title": "用訂單號找回結果",
+    "lookup_desc": "輸入訂單號後，系統會依目前狀態自動帶你進入付款頁、分析頁或最終報告頁。",
+    "lookup_placeholder": "例如：2f8d6f9b-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+    "lookup_action": "查詢結果",
+    "lookup_checking": "查詢中…",
+    "lookup_not_found": "找不到對應訂單，請確認訂單號是否正確。",
+    "lookup_found_report": "已找到報告，正在打開結果頁…",
+    "lookup_found_processing": "已找到已付款訂單，正在打開分析頁…",
+    "lookup_found_payment": "已找到待付款訂單，正在打開付款狀態頁…",
+    "lookup_help_title": "保存訂單號就能再次查看",
+    "lookup_help_body": "只要保留訂單號，就可以從這裡重新進入付款、分析或報告頁面。",
+    "lookup_help_payment": "未付款訂單會進入付款狀態頁。",
+    "lookup_help_report": "已完成訂單會直接進入報告頁。",
+    "next_step_title": "報價已經生成",
+    "next_step_body": "付款區域已在下方展開。繼續下滑並完成付款後，就會直接進入分析流程。"
+  },
   "review": {
     "title": "正在分析",
     "analyzing": "正在分析您的合約…",
@@ -125,6 +155,24 @@
     "privacy": "隱私權政策",
     "terms": "服務條款",
     "copyright": "© 2026 ContractGuard"
+  },
+  "share": {
+    "kicker": "分享",
+    "title": "使用我們自己的分享面板",
+    "description": "這裡會先提供一個更完整的分享介面，包含宣傳內容、可複製連結，以及裝置支援時的原生分享入口。",
+    "preview_badge": "Share Kit",
+    "preview_title": "看懂日文合約，不再靠猜。",
+    "preview_desc": "ContractGuard 可以分析日文合約風險，並用你的語言給出清晰報告。",
+    "point_fast": "拍照、PDF、貼上文字都能快速分析",
+    "point_private": "合約正文分析後立即刪除",
+    "point_multilingual": "報告按你選擇的語言輸出",
+    "link_label": "分享連結",
+    "copy_link": "複製連結",
+    "link_copied": "連結已複製",
+    "native_share": "打開系統分享",
+    "copy_order": "複製訂單號",
+    "order_copied": "訂單號已複製",
+    "close": "關閉"
   },
   "privacy": {
     "page_title": "隱私權政策",

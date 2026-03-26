@@ -2,7 +2,7 @@
 /* Component-internal styles are in home.module.css */
 
 .hero-card {
-  padding: 28px;
+  padding: 34px 32px;
   position: relative;
   overflow: hidden;
   animation: fadeUp 0.65s ease both;
@@ -33,7 +33,7 @@
 .payment-status-card,
 .report-summary-shell {
   margin-top: 20px;
-  padding: 26px 24px;
+  padding: 30px 28px;
 }
 
 .flow-card h2,
@@ -86,7 +86,7 @@
 
 .pricing-card {
   margin-top: 24px;
-  padding: 22px;
+  padding: 26px;
   border-radius: var(--radius-lg);
   border: 1px solid rgba(31, 58, 95, 0.14);
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.84) 0%, rgba(248, 244, 238, 0.96) 100%);
@@ -123,6 +123,11 @@
   margin-bottom: 20px;
 }
 
+.pricing-assurance {
+  display: grid;
+  gap: 12px;
+}
+
 .pricing-summary-item-wide,
 .payment-summary-item-wide {
   grid-column: 1 / -1;
@@ -139,4 +144,5 @@
   font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
   color: var(--text-soft);
   font-size: 0.84rem;
+  line-height: 1.7;
 }

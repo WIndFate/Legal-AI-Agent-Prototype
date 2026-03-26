@@ -22,6 +22,7 @@ interface HomeUploadSectionProps {
   paying: boolean;
   onUpload: () => Promise<void>;
   onPayment: () => Promise<void>;
+  spotlightResult: boolean;
 }
 
 export default function HomeUploadSection({
@@ -41,6 +42,7 @@ export default function HomeUploadSection({
   paying,
   onUpload,
   onPayment,
+  spotlightResult,
 }: HomeUploadSectionProps) {
   const { t } = useTranslation();
 
@@ -151,7 +153,14 @@ export default function HomeUploadSection({
       )}
 
       {uploadResult && uploadResult.price_jpy > 0 && (
-        <div className="pricing-card polished-card">
+        <div
+          id="payment-panel"
+          className={clsx('pricing-card', 'polished-card', spotlightResult && 'spotlight-card')}
+        >
+          <div className="next-step-banner">
+            <strong>{t('order.next_step_title')}</strong>
+            <p>{t('order.next_step_body')}</p>
+          </div>
           <div className="pricing-card-header">
             <div>
               <p className="section-kicker">{t('pricing.title')}</p>

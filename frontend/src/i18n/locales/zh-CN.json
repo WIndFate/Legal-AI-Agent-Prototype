@@ -9,7 +9,8 @@
   "nav": {
     "home": "首页",
     "language": "语言",
-    "examples": "案例展示"
+    "examples": "案例展示",
+    "lookup": "结果查询"
   },
   "upload": {
     "title": "上传合同",
@@ -70,6 +71,35 @@
     "waiting_note": "正在处理支付，请勿关闭此页面。",
     "success_note": "支付成功，即将开始分析。"
   },
+  "order": {
+    "order_id": "订单号",
+    "save_kicker": "订单信息",
+    "screenshot_hint": "建议立即截图或复制订单号，之后关闭页面也可以再次查询结果。",
+    "copy_id": "复制订单号",
+    "copied": "订单号已复制",
+    "save_after_payment_title": "开始分析前，请先保存订单号",
+    "save_after_payment_desc": "你的支付已经确认。为了防止稍后关闭页面后找不到结果，建议先保存这个订单号。",
+    "save_after_review_title": "分析完成，请保存订单号",
+    "save_after_review_desc": "你的合同分析已经完成。建议保存订单号，之后可以通过“结果查询”重新打开报告。",
+    "continue_review": "继续进入分析",
+    "open_report": "打开报告",
+    "lookup_kicker": "结果查询",
+    "lookup_title": "用订单号找回结果",
+    "lookup_desc": "输入订单号后，系统会根据当前状态自动带你进入支付页、分析页或最终报告页。",
+    "lookup_placeholder": "例如：2f8d6f9b-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+    "lookup_action": "查询结果",
+    "lookup_checking": "查询中…",
+    "lookup_not_found": "没有找到对应订单，请检查订单号是否正确。",
+    "lookup_found_report": "已找到报告，正在打开结果页…",
+    "lookup_found_processing": "已找到已支付订单，正在打开分析页…",
+    "lookup_found_payment": "已找到待支付订单，正在打开支付状态页…",
+    "lookup_help_title": "保存订单号就能再次查看",
+    "lookup_help_body": "只要保留订单号，就可以从这里重新进入支付、分析或报告页面。",
+    "lookup_help_payment": "未支付订单会进入支付状态页。",
+    "lookup_help_report": "已完成订单会直接进入报告页。",
+    "next_step_title": "报价已经生成",
+    "next_step_body": "支付区域已经在下方展开。继续下滑并完成支付后，就会直接进入分析流程。"
+  },
   "review": {
     "title": "正在分析",
     "analyzing": "正在分析您的合同…",
@@ -125,6 +155,24 @@
     "privacy": "隐私政策",
     "terms": "服务条款",
     "copyright": "© 2026 ContractGuard"
+  },
+  "share": {
+    "kicker": "分享",
+    "title": "使用我们自己的分享面板",
+    "description": "这里会先给你一个更完整的分享界面，包含宣传内容、可复制链接，以及设备支持时的原生分享入口。",
+    "preview_badge": "Share Kit",
+    "preview_title": "看懂日文合同，不再靠猜。",
+    "preview_desc": "ContractGuard 可以分析日文合同风险，并用你的语言给出清晰报告。",
+    "point_fast": "拍照、PDF、粘贴文本都能快速分析",
+    "point_private": "合同正文分析后立即删除",
+    "point_multilingual": "报告按你选择的语言输出",
+    "link_label": "分享链接",
+    "copy_link": "复制链接",
+    "link_copied": "链接已复制",
+    "native_share": "打开系统分享",
+    "copy_order": "复制订单号",
+    "order_copied": "订单号已复制",
+    "close": "关闭"
   },
   "privacy": {
     "page_title": "隐私政策",

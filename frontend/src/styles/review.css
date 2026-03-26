@@ -10,7 +10,7 @@
 }
 
 .report-hero-panel {
-  padding: 18px;
+  padding: 20px;
   border-radius: var(--radius-lg);
   border: 1px solid rgba(31, 58, 95, 0.14);
   background: rgba(255, 255, 255, 0.66);
@@ -23,7 +23,7 @@
 }
 
 .review-phase-panel {
-  padding: 16px;
+  padding: 18px;
   border-radius: var(--radius-lg);
   border: 1px solid rgba(31, 58, 95, 0.12);
   background: rgba(255, 255, 255, 0.68);
@@ -73,6 +73,10 @@
   color: var(--text-soft);
   background: rgba(255, 255, 255, 0.72);
   border: 1px solid rgba(31, 58, 95, 0.12);
+  display: block;
+  padding: 14px 16px;
+  border-radius: var(--radius-md);
+  line-height: 1.75;
 }
 
 .expiry-notice {
@@ -80,6 +84,10 @@
   color: #7d5d2d;
   background: rgba(250, 241, 222, 0.9);
   border: 1px solid rgba(176, 138, 74, 0.18);
+  display: block;
+  padding: 14px 16px;
+  border-radius: var(--radius-md);
+  line-height: 1.75;
 }
 
 .analyzing-section {
@@ -87,7 +95,7 @@
 }
 
 .review-live-card {
-  padding: 28px 24px;
+  padding: 32px 28px;
   border-radius: var(--radius-xl);
   border: 1px solid rgba(31, 58, 95, 0.12);
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.92) 0%, rgba(244, 248, 252, 0.94) 100%);
@@ -177,7 +185,7 @@
 .recent-log {
   max-width: 460px;
   margin: 12px auto 0;
-  padding: 14px 16px;
+  padding: 16px 18px;
   min-height: 76px;
   border-radius: var(--radius-md);
   border: 1px solid rgba(31, 58, 95, 0.12);
@@ -219,6 +227,26 @@
   border-radius: var(--radius-lg);
   border: 1px solid rgba(31, 58, 95, 0.1);
   background: rgba(255, 255, 255, 0.66);
+}
+
+.reconnecting-banner {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+  padding: 10px 14px;
+  border-radius: 999px;
+  background: rgba(31, 58, 95, 0.08);
+  color: var(--brand);
+  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.spinner-small {
+  width: 18px;
+  height: 18px;
+  border-width: 2px;
 }
 
 .status-text {

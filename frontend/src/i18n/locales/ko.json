@@ -9,7 +9,8 @@
   "nav": {
     "home": "홈",
     "language": "언어",
-    "examples": "사례 소개"
+    "examples": "사례 소개",
+    "lookup": "결과 조회"
   },
   "upload": {
     "title": "계약서 업로드",
@@ -70,6 +71,35 @@
     "waiting_note": "결제를 처리 중입니다. 이 페이지를 닫지 마세요.",
     "success_note": "결제 완료. 곧 분석이 시작됩니다."
   },
+  "order": {
+    "order_id": "주문 번호",
+    "save_kicker": "주문 정보",
+    "screenshot_hint": "나중에 결과를 다시 열 수 있도록 이 주문 번호를 캡처하거나 복사해 두세요.",
+    "copy_id": "주문 번호 복사",
+    "copied": "주문 번호가 복사되었습니다",
+    "save_after_payment_title": "분석 전에 주문 번호를 저장하세요",
+    "save_after_payment_desc": "결제가 확인되었습니다. 페이지를 닫아도 결과를 다시 열 수 있도록 지금 주문 번호를 저장해 두세요.",
+    "save_after_review_title": "완료된 결과와 함께 주문 번호를 저장하세요",
+    "save_after_review_desc": "분석이 완료되었습니다. 결과 조회 페이지에서 다시 열 수 있도록 이 주문 번호를 보관해 주세요.",
+    "continue_review": "분석 계속하기",
+    "open_report": "보고서 열기",
+    "lookup_kicker": "결과 조회",
+    "lookup_title": "주문 번호로 결과 열기",
+    "lookup_desc": "주문 번호를 입력하면 결제, 분석 진행 중, 완료된 보고서 중 알맞은 페이지로 안내합니다.",
+    "lookup_placeholder": "예: 2f8d6f9b-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+    "lookup_action": "결과 찾기",
+    "lookup_checking": "확인 중…",
+    "lookup_not_found": "해당 주문 번호를 찾을 수 없습니다. 다시 확인해 주세요.",
+    "lookup_found_report": "보고서를 찾았습니다. 결과 페이지를 여는 중…",
+    "lookup_found_processing": "결제된 주문을 찾았습니다. 분석 페이지를 여는 중…",
+    "lookup_found_payment": "미완료 결제를 찾았습니다. 결제 상태 페이지를 여는 중…",
+    "lookup_help_title": "주문 번호만 있으면 언제든 다시 열 수 있습니다",
+    "lookup_help_body": "주문 번호를 보관하면 여기서 결제, 분석, 보고서 페이지를 다시 열 수 있습니다.",
+    "lookup_help_payment": "미완료 주문은 결제 상태 페이지를 엽니다.",
+    "lookup_help_report": "완료된 주문은 보고서 페이지를 바로 엽니다.",
+    "next_step_title": "견적이 준비되었습니다",
+    "next_step_body": "아래에 결제 폼이 표시되었습니다. 그곳으로 내려가면 바로 분석 흐름으로 이어집니다."
+  },
   "review": {
     "title": "분석 중",
     "analyzing": "계약서를 분석하고 있습니다…",
@@ -125,6 +155,24 @@
     "privacy": "개인정보 처리방침",
     "terms": "이용약관",
     "copyright": "© 2026 ContractGuard"
+  },
+  "share": {
+    "kicker": "공유",
+    "title": "전용 공유 패널로 보내기",
+    "description": "홍보용 미리보기, 링크 복사, 기기 공유를 한곳에 모은 공유 패널을 사용할 수 있습니다.",
+    "preview_badge": "Share Kit",
+    "preview_title": "짐작하지 않고 일본어 계약을 이해하세요.",
+    "preview_desc": "ContractGuard는 일본어 계약서를 검토하고 선택한 언어로 명확한 리스크 보고서를 제공합니다.",
+    "point_fast": "사진, PDF, 텍스트에서 빠른 분석",
+    "point_private": "계약 본문은 분석 직후 삭제",
+    "point_multilingual": "선택한 언어로 보고서 제공",
+    "link_label": "공유 링크",
+    "copy_link": "링크 복사",
+    "link_copied": "링크가 복사되었습니다",
+    "native_share": "기기 공유 열기",
+    "copy_order": "주문 번호 복사",
+    "order_copied": "주문 번호가 복사되었습니다",
+    "close": "닫기"
   },
   "privacy": {
     "page_title": "개인정보 처리방침",

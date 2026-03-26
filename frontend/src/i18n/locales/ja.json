@@ -9,7 +9,8 @@
   "nav": {
     "home": "ホーム",
     "language": "言語",
-    "examples": "事例紹介"
+    "examples": "事例紹介",
+    "lookup": "結果照会"
   },
   "upload": {
     "title": "契約書をアップロード",
@@ -70,6 +71,35 @@
     "waiting_note": "決済処理中です。このページを閉じないでください。",
     "success_note": "お支払い完了。まもなく分析を開始します。"
   },
+  "order": {
+    "order_id": "注文番号",
+    "save_kicker": "注文情報",
+    "screenshot_hint": "あとで結果を開けるよう、この注文番号をスクリーンショット保存するかコピーしてください。",
+    "copy_id": "注文番号をコピー",
+    "copied": "注文番号をコピーしました",
+    "save_after_payment_title": "分析前に注文番号を保存してください",
+    "save_after_payment_desc": "決済は確認済みです。ページを閉じても結果を再表示できるよう、この注文番号を今のうちに保存してください。",
+    "save_after_review_title": "完了した結果と一緒に注文番号を保存してください",
+    "save_after_review_desc": "分析が完了しました。結果照会ページから再表示できるよう、この注文番号を保存してください。",
+    "continue_review": "分析画面へ進む",
+    "open_report": "レポートを開く",
+    "lookup_kicker": "結果照会",
+    "lookup_title": "注文番号で結果を開く",
+    "lookup_desc": "注文番号を入力すると、決済状況・分析中・完成レポートのいずれか適切なページへ案内します。",
+    "lookup_placeholder": "例: 2f8d6f9b-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+    "lookup_action": "結果を探す",
+    "lookup_checking": "確認中…",
+    "lookup_not_found": "その注文番号は見つかりませんでした。入力内容をご確認ください。",
+    "lookup_found_report": "レポートが見つかりました。結果ページを開いています…",
+    "lookup_found_processing": "支払い済みの注文が見つかりました。分析ページを開いています…",
+    "lookup_found_payment": "未完了の決済が見つかりました。決済状況ページを開いています…",
+    "lookup_help_title": "注文番号があればいつでも再表示できます",
+    "lookup_help_body": "注文番号を保存しておけば、決済・分析・レポートの各ページをここから再度開けます。",
+    "lookup_help_payment": "未完了の注文は決済状況ページを開きます。",
+    "lookup_help_report": "完了済みの注文はレポートページを直接開きます。",
+    "next_step_title": "お見積もりの準備ができました",
+    "next_step_body": "下に支払いフォームが表示されています。そこまで進むと、そのまま分析フローへ入れます。"
+  },
   "review": {
     "title": "分析中",
     "analyzing": "契約書を分析しています…",
@@ -125,6 +155,24 @@
     "privacy": "プライバシーポリシー",
     "terms": "利用規約",
     "copyright": "© 2026 ContractGuard"
+  },
+  "share": {
+    "kicker": "共有",
+    "title": "専用の共有パネルから送る",
+    "description": "宣伝用プレビュー、リンクコピー、端末共有を一つにまとめた共有パネルを使えます。",
+    "preview_badge": "Share Kit",
+    "preview_title": "日本語契約を、勘に頼らず理解する。",
+    "preview_desc": "ContractGuard は日本語契約書を分析し、あなたの言語で明確なリスクレポートを返します。",
+    "point_fast": "写真・PDF・テキストからすぐ分析",
+    "point_private": "契約本文は分析直後に削除",
+    "point_multilingual": "レポートは選択言語で受け取り",
+    "link_label": "共有リンク",
+    "copy_link": "リンクをコピー",
+    "link_copied": "リンクをコピーしました",
+    "native_share": "端末の共有を開く",
+    "copy_order": "注文番号をコピー",
+    "order_copied": "注文番号をコピーしました",
+    "close": "閉じる"
   },
   "privacy": {
     "page_title": "プライバシーポリシー",

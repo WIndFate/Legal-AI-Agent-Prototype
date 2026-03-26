@@ -9,7 +9,8 @@
   "nav": {
     "home": "Início",
     "language": "Idioma",
-    "examples": "Exemplos"
+    "examples": "Exemplos",
+    "lookup": "Consultar"
   },
   "upload": {
     "title": "Enviar contrato",
@@ -70,6 +71,35 @@
     "waiting_note": "Processando pagamento. Não feche esta página.",
     "success_note": "Pagamento realizado. A análise começará em breve."
   },
+  "order": {
+    "order_id": "ID do pedido",
+    "save_kicker": "Detalhes do pedido",
+    "screenshot_hint": "Tire uma captura de tela ou copie este ID para encontrar o resultado depois.",
+    "copy_id": "Copiar ID do pedido",
+    "copied": "ID copiado",
+    "save_after_payment_title": "Salve o ID do pedido antes da análise começar",
+    "save_after_payment_desc": "Seu pagamento foi confirmado. Salve este ID agora para reabrir o resultado depois.",
+    "save_after_review_title": "Salve o ID do pedido com o resultado concluído",
+    "save_after_review_desc": "A análise terminou. Guarde este ID para abrir o relatório novamente pela página de consulta.",
+    "continue_review": "Continuar para a análise",
+    "open_report": "Abrir relatório",
+    "lookup_kicker": "Consulta",
+    "lookup_title": "Abra seu resultado com o ID do pedido",
+    "lookup_desc": "Digite o ID do pedido e abriremos a página correta de pagamento, análise ou relatório.",
+    "lookup_placeholder": "Exemplo: 2f8d6f9b-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+    "lookup_action": "Encontrar meu resultado",
+    "lookup_checking": "Verificando…",
+    "lookup_not_found": "Não encontramos esse pedido. Verifique o ID e tente novamente.",
+    "lookup_found_report": "Relatório encontrado. Abrindo a página…",
+    "lookup_found_processing": "Pedido pago encontrado. Abrindo a análise…",
+    "lookup_found_payment": "Pedido pendente encontrado. Abrindo o status do pagamento…",
+    "lookup_help_title": "Use o ID a qualquer momento",
+    "lookup_help_body": "Se você guardar o ID, poderá reabrir o pagamento, a análise ou o relatório daqui.",
+    "lookup_help_payment": "Pedidos pendentes abrem a página de pagamento.",
+    "lookup_help_report": "Pedidos concluídos abrem o relatório diretamente.",
+    "next_step_title": "Seu orçamento está pronto",
+    "next_step_body": "Mostramos o formulário de pagamento logo abaixo. Continue por ali para seguir direto para a análise."
+  },
   "review": {
     "title": "Analisando",
     "analyzing": "Analisando seu contrato…",
@@ -125,6 +155,24 @@
     "privacy": "Política de Privacidade",
     "terms": "Termos de Serviço",
     "copyright": "© 2026 ContractGuard"
+  },
+  "share": {
+    "kicker": "Compartilhar",
+    "title": "Compartilhe por um painel dedicado",
+    "description": "Use um painel com prévia promocional, link copiável e compartilhamento nativo quando o dispositivo suportar.",
+    "preview_badge": "Share Kit",
+    "preview_title": "Entenda contratos japoneses sem adivinhar.",
+    "preview_desc": "O ContractGuard revisa contratos japoneses e entrega um relatório claro no seu idioma.",
+    "point_fast": "Análise rápida por foto, PDF ou texto",
+    "point_private": "O texto do contrato é apagado após a análise",
+    "point_multilingual": "Relatório entregue no idioma escolhido",
+    "link_label": "Link de compartilhamento",
+    "copy_link": "Copiar link",
+    "link_copied": "Link copiado",
+    "native_share": "Abrir compartilhamento do dispositivo",
+    "copy_order": "Copiar ID do pedido",
+    "order_copied": "ID do pedido copiado",
+    "close": "Fechar"
   },
   "privacy": {
     "page_title": "Política de Privacidade",

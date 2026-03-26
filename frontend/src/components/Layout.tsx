@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import clsx from 'clsx';
 import { SUPPORTED_LANGUAGES } from '../i18n';
 import styles from '../styles/layout.module.css';
@@ -11,11 +11,31 @@ interface LayoutProps {
 export default function Layout({ children }: LayoutProps) {
   const { t, i18n } = useTranslation();
   const location = useLocation();
+  const navigate = useNavigate();
   const homeHref = location.pathname === '/' ? '#top' : '/#top';
   const examplesHref = location.pathname === '/' ? '#examples' : '/#examples';
 
   const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     i18n.changeLanguage(e.target.value);
+  };
+
+  const navigateToAnchor = (targetId: 'top' | 'examples') => (event: React.MouseEvent<HTMLAnchorElement>) => {
+    if (location.pathname === '/') {
+      event.preventDefault();
+      const target = document.getElementById(targetId);
+      target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      if (targetId === 'top') {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+      return;
+    }
+
+    event.preventDefault();
+    navigate(`/#${targetId}`);
+    window.setTimeout(() => {
+      const target = document.getElementById(targetId);
+      target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 120);
   };
 
   const isActive = (path: string) => location.pathname === path;
@@ -32,12 +52,19 @@ export default function Layout({ children }: LayoutProps) {
             </span>
           </Link>
           <nav className={styles.headerNav}>
-            <a href={homeHref} className={clsx(styles.navLink, isActive('/') && styles.navLinkActive)}>
+            <a
+              href={homeHref}
+              onClick={navigateToAnchor('top')}
+              className={clsx(styles.navLink, isActive('/') && styles.navLinkActive)}
+            >
               {t('nav.home')}
             </a>
-            <a href={examplesHref} className={styles.navLink}>
+            <a href={examplesHref} onClick={navigateToAnchor('examples')} className={styles.navLink}>
               {t('nav.examples')}
             </a>
+            <Link to="/lookup" className={clsx(styles.navLink, isActive('/lookup') && styles.navLinkActive)}>
+              {t('nav.lookup')}
+            </Link>
           </nav>
           <label className={styles.languageShell}>
             <span className={styles.languageLabel}>{t('nav.language')}</span>
@@ -74,8 +101,9 @@ export default function Layout({ children }: LayoutProps) {
           </div>
         </div>
         <nav className={styles.footerNav}>
-          <a href={homeHref}>{t('nav.home')}</a>
-          <a href={examplesHref}>{t('nav.examples')}</a>
+          <a href={homeHref} onClick={navigateToAnchor('top')}>{t('nav.home')}</a>
+          <a href={examplesHref} onClick={navigateToAnchor('examples')}>{t('nav.examples')}</a>
+          <Link to="/lookup">{t('nav.lookup')}</Link>
           <Link to="/privacy">{t('footer.privacy')}</Link>
           <Link to="/terms">{t('footer.terms')}</Link>
         </nav>

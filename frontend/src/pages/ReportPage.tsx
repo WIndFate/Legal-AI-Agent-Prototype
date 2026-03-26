@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+
+import ShareSheet from '../components/common/ShareSheet';
 import { SUPPORTED_LANGUAGES } from '../i18n';
 
 // Shared report types
@@ -56,6 +58,7 @@ export default function ReportPage() {
   const [loading, setLoading] = useState(true);
   const [hoursLeft, setHoursLeft] = useState(0);
   const [expandedClauses, setExpandedClauses] = useState<Record<string, boolean>>({});
+  const [shareOpen, setShareOpen] = useState(false);
 
   const toggleClause = (clauseNumber: string) => {
     setExpandedClauses((prev) => ({
@@ -125,27 +128,6 @@ export default function ReportPage() {
     return () => clearInterval(interval);
   }, [data, i18n]);
 
-  // Share handler with Web Share API fallback to clipboard
-  const handleShare = async () => {
-    const url = window.location.href;
-    const text = t('report.share_text');
-
-    if (navigator.share) {
-      try {
-        await navigator.share({ title: t('report.title'), text, url });
-      } catch {
-        // User cancelled share dialog
-      }
-    } else {
-      // Fallback: copy link to clipboard
-      try {
-        await navigator.clipboard.writeText(url);
-      } catch {
-        // Clipboard API not available
-      }
-    }
-  };
-
   if (loading) {
     return (
       <div className="page report-page">
@@ -173,6 +155,12 @@ export default function ReportPage() {
 
   return (
     <div className="page report-page">
+      <ShareSheet
+        open={shareOpen}
+        onClose={() => setShareOpen(false)}
+        shareUrl={window.location.href}
+        orderId={data.order_id}
+      />
       <div className="report-summary-shell report-header-bar">
         <div className="report-hero-grid">
           <div className="report-hero-copy">
@@ -187,6 +175,11 @@ export default function ReportPage() {
                 {t('report.expires_in', { hours: hoursLeft })}
               </p>
             )}
+            <div className="order-inline-card order-inline-card-report">
+              <span>{t('order.order_id')}</span>
+              <strong>{data.order_id}</strong>
+              <p>{t('order.lookup_help_body')}</p>
+            </div>
           </div>
 
           <div className="report-hero-panel">
@@ -329,7 +322,7 @@ export default function ReportPage() {
 
       {/* Share button */}
       <div className="report-actions">
-        <button className="btn-primary btn-share" onClick={handleShare}>
+        <button className="btn-primary btn-share" onClick={() => setShareOpen(true)}>
           {t('report.share')}
         </button>
         <p className="share-note">{t('report.share_note')}</p>

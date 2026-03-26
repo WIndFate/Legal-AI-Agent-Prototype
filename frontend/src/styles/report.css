@@ -6,7 +6,7 @@
 
 .overall-risk-card,
 .report-actions {
-  padding: 22px;
+  padding: 26px;
   border-radius: var(--radius-lg);
   border: 1px solid rgba(31, 58, 95, 0.12);
   background: rgba(255, 255, 255, 0.8);
@@ -45,7 +45,7 @@
 
 .clause-card,
 .example-clause-card {
-  padding: 18px;
+  padding: 22px 24px;
   border-left: 3px solid;
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-sm);
@@ -67,7 +67,7 @@
 
 .clause-header {
   gap: 12px;
-  margin-bottom: 12px;
+  margin-bottom: 14px;
 }
 
 .clause-heading strong {
@@ -156,7 +156,7 @@
 }
 
 .analysis-block {
-  padding: 14px 0;
+  padding: 16px 0;
 }
 
 .analysis-block + .analysis-block {
@@ -190,7 +190,7 @@
 
 .inline-original-panel {
   min-width: 0;
-  padding: 16px;
+  padding: 18px;
   border-radius: var(--radius-md);
   border: 1px solid rgba(31, 58, 95, 0.12);
   background: rgba(244, 248, 252, 0.82);
@@ -224,6 +224,10 @@
 
 .report-actions {
   margin-top: 28px;
+}
+
+.report-actions .btn-share {
+  margin-top: 0;
 }
 
 .report-page .clause-card,

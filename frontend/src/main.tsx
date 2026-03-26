@@ -9,11 +9,13 @@ import './styles/home.css';
 import './styles/review.css';
 import './styles/report.css';
 import './styles/responsive.css';
+import './styles/ux.css';
 
 import Layout from './components/Layout';
 
 const HomePage = lazy(() => import('./pages/HomePage'));
 const PaymentPage = lazy(() => import('./pages/PaymentPage'));
+const LookupPage = lazy(() => import('./pages/LookupPage'));
 const ReviewPage = lazy(() => import('./pages/ReviewPage'));
 const ReportPage = lazy(() => import('./pages/ReportPage'));
 const PrivacyPage = lazy(() => import('./pages/PrivacyPage'));
@@ -64,6 +66,7 @@ function AppRoutes() {
         <Suspense fallback={<RouteFallback />}>
           <Routes>
             <Route path="/" element={<HomePage />} />
+            <Route path="/lookup" element={<LookupPage />} />
             <Route path="/payment/:orderId" element={<PaymentPage />} />
             <Route path="/review/:orderId" element={<ReviewPage />} />
             <Route path="/report/:orderId" element={<ReportPage />} />

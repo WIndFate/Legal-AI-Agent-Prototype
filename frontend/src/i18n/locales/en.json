@@ -9,7 +9,8 @@
   "nav": {
     "home": "Home",
     "language": "Language",
-    "examples": "Examples"
+    "examples": "Examples",
+    "lookup": "Lookup"
   },
   "upload": {
     "title": "Upload Your Contract",
@@ -70,6 +71,35 @@
     "waiting_note": "Processing payment. Please do not close this page.",
     "success_note": "Payment successful. Analysis will begin shortly."
   },
+  "order": {
+    "order_id": "Order ID",
+    "save_kicker": "Order details",
+    "screenshot_hint": "Take a screenshot or copy this order ID so you can look up your result later.",
+    "copy_id": "Copy order ID",
+    "copied": "Order ID copied",
+    "save_after_payment_title": "Save your order ID before analysis starts",
+    "save_after_payment_desc": "Your payment is confirmed. Save this order ID now so you can reopen the result later if you close the page.",
+    "save_after_review_title": "Save your order ID with the completed result",
+    "save_after_review_desc": "Your analysis is complete. Keep this order ID so you can reopen the report again from the lookup page.",
+    "continue_review": "Continue to analysis",
+    "open_report": "Open report",
+    "lookup_kicker": "Result lookup",
+    "lookup_title": "Open your result with an order ID",
+    "lookup_desc": "Enter an order ID and we will send you to the correct page for payment, analysis, or the finished report.",
+    "lookup_placeholder": "Example: 2f8d6f9b-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+    "lookup_action": "Find my result",
+    "lookup_checking": "Checking…",
+    "lookup_not_found": "We could not find that order. Please confirm the order ID and try again.",
+    "lookup_found_report": "Report found. Opening the result page…",
+    "lookup_found_processing": "Paid order found. Opening the analysis page…",
+    "lookup_found_payment": "Pending payment found. Opening the payment status page…",
+    "lookup_help_title": "Use your order ID anytime",
+    "lookup_help_body": "If you keep your order ID, you can reopen the payment, analysis, or report page from here.",
+    "lookup_help_payment": "Pending orders open the payment status page.",
+    "lookup_help_report": "Completed orders open the report page directly.",
+    "next_step_title": "Your quote is ready",
+    "next_step_body": "We revealed the payment form below. Continue there to move straight into the analysis flow."
+  },
   "review": {
     "title": "Analyzing",
     "analyzing": "Analyzing your contract...",
@@ -125,6 +155,24 @@
     "privacy": "Privacy Policy",
     "terms": "Terms of Service",
     "copyright": "© 2026 ContractGuard"
+  },
+  "share": {
+    "kicker": "Share",
+    "title": "Share from a polished panel",
+    "description": "Use a purpose-built share sheet with a promotional preview, copyable link, and native share when your device supports it.",
+    "preview_badge": "Share Kit",
+    "preview_title": "Understand Japanese contracts without guessing.",
+    "preview_desc": "ContractGuard reviews Japanese contracts and returns a clear risk report in your language.",
+    "point_fast": "Fast analysis from photo, PDF, or pasted text",
+    "point_private": "Contract text is deleted right after analysis",
+    "point_multilingual": "Report delivered in your selected language",
+    "link_label": "Share link",
+    "copy_link": "Copy link",
+    "link_copied": "Link copied",
+    "native_share": "Open device share",
+    "copy_order": "Copy order ID",
+    "order_copied": "Order ID copied",
+    "close": "Close"
   },
   "privacy": {
     "page_title": "Privacy Policy",
