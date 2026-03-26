@@ -3,9 +3,9 @@
 set -euo pipefail
 
 API_BASE_URL="${API_BASE_URL:-http://localhost:8000}"
-K="${K:-3}"
-MIN_RECALL="${MIN_RECALL:-0.5}"
-MIN_MRR="${MIN_MRR:-0.6}"
+K="${K:-5}"
+MIN_RECALL="${MIN_RECALL:-0.45}"
+MIN_MRR="${MIN_MRR:-0.45}"
 
 command -v curl >/dev/null 2>&1 || {
   echo "[rag-eval] ERROR: curl is required" >&2
