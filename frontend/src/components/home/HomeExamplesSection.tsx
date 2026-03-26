@@ -36,11 +36,11 @@ export default function HomeExamplesSection({ standalone = false }: HomeExamples
 
       {standalone ? (
         <div className={styles.galleryLayout}>
-          <div className={styles.scenarioRail}>
+          <div className={styles.curatedStrip}>
             <div className={styles.scenarioIntro}>
               <span className={styles.badge}>{t('nav.examples')}</span>
-              <h3>{t(`examples.${activeTab}_title`)}</h3>
-              <p className={styles.reportDesc}>{t(`examples.${activeTab}_desc`)}</p>
+              <h3>{t('examples.section_title')}</h3>
+              <p className={styles.reportDesc}>{t('examples.section_desc')}</p>
             </div>
             <div className={styles.scenarioList}>
               {tabs.map((tab) => (
@@ -49,8 +49,14 @@ export default function HomeExamplesSection({ standalone = false }: HomeExamples
                   className={clsx(styles.scenarioCard, activeTab === tab.key && styles.scenarioCardActive)}
                   onClick={() => setActiveTab(tab.key)}
                 >
-                  <span className={styles.scenarioEyebrow}>{t('examples.badge')}</span>
+                  <div className={styles.scenarioTopline}>
+                    <span className={styles.scenarioIndex}>
+                      {String(tabs.findIndex((item) => item.key === tab.key) + 1).padStart(2, '0')}
+                    </span>
+                    <span className={styles.scenarioEyebrow}>{t('examples.badge')}</span>
+                  </div>
                   <strong>{tab.label}</strong>
+                  <h4>{t(`examples.${tab.key}_title`)}</h4>
                   <p>{t(`examples.${tab.key}_desc`)}</p>
                 </button>
               ))}
@@ -58,10 +64,35 @@ export default function HomeExamplesSection({ standalone = false }: HomeExamples
           </div>
 
           <div className={styles.reportCard}>
+            <div className={styles.documentRibbon}>
+              <span>{t('report.title')}</span>
+              <span>{t('report.executive_kicker')}</span>
+            </div>
             <div className={styles.reportHeader}>
-              <span className={styles.badge}>{t('examples.badge')}</span>
-              <h3>{t(`examples.${activeTab}_title`)}</h3>
+              <div className={styles.reportHeaderTop}>
+                <div>
+                  <span className={styles.scenarioEyebrow}>{t('examples.badge')}</span>
+                  <h3>{t(`examples.${activeTab}_title`)}</h3>
+                </div>
+                <span className={styles.reportStatus}>
+                  {t('report.overall_risk')}: {report.overall_risk}
+                </span>
+              </div>
               <p className={styles.reportDesc}>{t(`examples.${activeTab}_desc`)}</p>
+              <div className={styles.reportMetaRow}>
+                <div className={styles.metaPill}>
+                  <span>{t('report.clause_count')}</span>
+                  <strong>{report.clauses.length}</strong>
+                </div>
+                <div className={styles.metaPill}>
+                  <span>{t('report.referenced_law')}</span>
+                  <strong>JP</strong>
+                </div>
+                <div className={styles.metaPill}>
+                  <span>{t('payment.title')}</span>
+                  <strong>{t('review.live_label')}</strong>
+                </div>
+              </div>
             </div>
 
             <div className={styles.overallRisk}>
@@ -98,6 +129,7 @@ export default function HomeExamplesSection({ standalone = false }: HomeExamples
                 >
                   <div className="clause-header">
                     <div className="clause-heading">
+                      <span className="clause-eyebrow">{t('report.finding_label')}</span>
                       <strong>{clause.clause_number}</strong>
                     </div>
                     <span
@@ -107,15 +139,28 @@ export default function HomeExamplesSection({ standalone = false }: HomeExamples
                       {clause.risk_level}
                     </span>
                   </div>
+                  <div className={styles.clauseMetaRow}>
+                    <div className={styles.clauseMetaCard}>
+                      <span>{t('report.original_clause_label')}</span>
+                      <strong>{t('report.comparison_title')}</strong>
+                    </div>
+                    <div className={styles.clauseMetaCard}>
+                      <span>{t('report.referenced_law')}</span>
+                      <strong>JP</strong>
+                    </div>
+                  </div>
                   <div className={styles.originalText}>{clause.original_text}</div>
-                  <p className="risk-reason">{t(`examples.${report.id}_c${idx + 1}_reason`)}</p>
+                  <div className="analysis-block">
+                    <span className="analysis-label">{t('report.assessment_label')}</span>
+                    <p className="risk-reason">{t(`examples.${report.id}_c${idx + 1}_reason`)}</p>
+                  </div>
                   <div className="suggestion">
-                    <strong>{t('report.suggestion')}:</strong>
+                    <span className="analysis-label">{t('report.suggestion_label')}</span>
                     <p>{t(`examples.${report.id}_c${idx + 1}_suggestion`)}</p>
                   </div>
                   {clause.referenced_law && (
                     <div className="reference">
-                      <strong>{t('report.referenced_law')}:</strong>
+                      <span className="analysis-label">{t('report.reference_label')}</span>
                       <p>{clause.referenced_law}</p>
                     </div>
                   )}
