@@ -14,11 +14,6 @@ def _get_paddle_ocr():
     return PaddleOCR(lang="japan", use_angle_cls=True, show_log=False)
 
 
-def local_ocr_available() -> bool:
-    """Return whether PaddleOCR is available in the current runtime."""
-    return _get_paddle_ocr() is not None
-
-
 def estimate_text_with_local_ocr(file_path: str) -> str:
     """Best-effort local OCR for pre-payment quote estimation.
 

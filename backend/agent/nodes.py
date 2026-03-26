@@ -1,6 +1,5 @@
 import json
 import logging
-import queue as _queue
 
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_openai import ChatOpenAI
@@ -87,16 +86,12 @@ def _fallback_clause_analysis(clause: dict) -> dict:
     }
 
 
-def _analyze_single_clause(clause: dict, event_queue: _queue.Queue | None = None) -> dict:
+def _analyze_single_clause(clause: dict) -> dict:
     clause_text = clause.get("text", "")
     clause_number = clause.get("number", "全文")
     clause_title = clause.get("title", "")
 
-    if event_queue:
-        event_queue.put({"type": "tool_call", "tool": "analyze_clause_risk", "clause": clause_text[:40]})
     legal_knowledge = analyze_clause_risk.invoke({"clause_text": clause_text})
-    if event_queue:
-        event_queue.put({"type": "tool_result", "tool": "analyze_clause_risk", "clause": clause_text[:40]})
 
     response = analysis_llm.invoke([
         SystemMessage(content=SYSTEM_PROMPT),
@@ -125,15 +120,11 @@ def _analyze_single_clause(clause: dict, event_queue: _queue.Queue | None = None
     suggestion = ""
 
     if risk_level in {"高", "中"} and risk_reason:
-        if event_queue:
-            event_queue.put({"type": "tool_call", "tool": "generate_suggestion", "clause": clause_text[:40]})
         suggestion = generate_suggestion.invoke({
             "clause_text": clause_text,
             "risk_reason": risk_reason,
             "risk_level": risk_level,
         })
-        if event_queue:
-            event_queue.put({"type": "tool_result", "tool": "generate_suggestion", "clause": clause_text[:40]})
 
     return {
         "clause_number": analysis.get("clause_number") or clause_number,
@@ -269,13 +260,3 @@ def _translate_report(
             target_lang, response.content[:200],
         )
         return summary, risk_analysis, overall_risk
-
-
-def analyze_risks_streaming(state: AgentState, event_queue: _queue.Queue) -> dict:
-    """Same as analyze_risks but emits per-clause progress events."""
-    clauses = state["clauses"]
-    risk_analysis = []
-    for clause in clauses:
-        event_queue.put({"type": "thinking"})
-        risk_analysis.append(_analyze_single_clause(clause, event_queue=event_queue))
-    return {"risk_analysis": risk_analysis, "messages": []}
