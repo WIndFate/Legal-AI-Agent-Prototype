@@ -34,81 +34,175 @@ export default function HomeExamplesSection({ standalone = false }: HomeExamples
       <h2>{t('examples.section_title')}</h2>
       <p className={styles.desc}>{t('examples.section_desc')}</p>
 
-      <div className="example-tabs">
-        {tabs.map((tab) => (
-          <button
-            key={tab.key}
-            className={clsx('tab', activeTab === tab.key && 'active')}
-            onClick={() => setActiveTab(tab.key)}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
-
-      <div className={styles.reportCard}>
-        <div className={styles.reportHeader}>
-          <span className={styles.badge}>{t('examples.badge')}</span>
-          <h3>{t(`examples.${activeTab}_title`)}</h3>
-          <p className={styles.reportDesc}>{t(`examples.${activeTab}_desc`)}</p>
-        </div>
-
-        <div className={styles.overallRisk}>
-          <span
-            className="risk-badge"
-            style={{ background: exampleRiskColor(report.overall_risk) }}
-          >
-            {t('report.overall_risk')}: {report.overall_risk}
-          </span>
-          <div className={styles.metaGrid}>
-            <div className="example-meta-item">
-              <span>{t('report.clause_count')}</span>
-              <strong>{report.clauses.length}</strong>
+      {standalone ? (
+        <div className={styles.galleryLayout}>
+          <div className={styles.scenarioRail}>
+            <div className={styles.scenarioIntro}>
+              <span className={styles.badge}>{t('nav.examples')}</span>
+              <h3>{t(`examples.${activeTab}_title`)}</h3>
+              <p className={styles.reportDesc}>{t(`examples.${activeTab}_desc`)}</p>
             </div>
-            <div className="example-meta-item">
-              <span>{t('report.referenced_law')}</span>
-              <strong>JP</strong>
+            <div className={styles.scenarioList}>
+              {tabs.map((tab) => (
+                <button
+                  key={tab.key}
+                  className={clsx(styles.scenarioCard, activeTab === tab.key && styles.scenarioCardActive)}
+                  onClick={() => setActiveTab(tab.key)}
+                >
+                  <span className={styles.scenarioEyebrow}>{t('examples.badge')}</span>
+                  <strong>{tab.label}</strong>
+                  <p>{t(`examples.${tab.key}_desc`)}</p>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className={styles.reportCard}>
+            <div className={styles.reportHeader}>
+              <span className={styles.badge}>{t('examples.badge')}</span>
+              <h3>{t(`examples.${activeTab}_title`)}</h3>
+              <p className={styles.reportDesc}>{t(`examples.${activeTab}_desc`)}</p>
+            </div>
+
+            <div className={styles.overallRisk}>
+              <div className={styles.overviewHeader}>
+                <span
+                  className="risk-badge"
+                  style={{ background: exampleRiskColor(report.overall_risk) }}
+                >
+                  {t('report.overall_risk')}: {report.overall_risk}
+                </span>
+                <p className={styles.overviewNote}>{t('pricing.assurance_delivery_desc')}</p>
+              </div>
+              <div className={styles.metaGrid}>
+                <div className={clsx('example-meta-item', styles.metaCard)}>
+                  <span>{t('report.clause_count')}</span>
+                  <strong>{report.clauses.length}</strong>
+                </div>
+                <div className={clsx('example-meta-item', styles.metaCard)}>
+                  <span>{t('report.referenced_law')}</span>
+                  <strong>JP</strong>
+                </div>
+              </div>
+            </div>
+
+            <div className={styles.clauseList}>
+              {report.clauses.map((clause, idx) => (
+                <div
+                  key={idx}
+                  className={styles.clauseCard}
+                  style={{
+                    borderLeftColor: exampleRiskColor(clause.risk_level),
+                    background: exampleRiskBg(clause.risk_level),
+                  }}
+                >
+                  <div className="clause-header">
+                    <div className="clause-heading">
+                      <strong>{clause.clause_number}</strong>
+                    </div>
+                    <span
+                      className="risk-tag"
+                      style={{ background: exampleRiskColor(clause.risk_level) }}
+                    >
+                      {clause.risk_level}
+                    </span>
+                  </div>
+                  <div className={styles.originalText}>{clause.original_text}</div>
+                  <p className="risk-reason">{t(`examples.${report.id}_c${idx + 1}_reason`)}</p>
+                  <div className="suggestion">
+                    <strong>{t('report.suggestion')}:</strong>
+                    <p>{t(`examples.${report.id}_c${idx + 1}_suggestion`)}</p>
+                  </div>
+                  {clause.referenced_law && (
+                    <div className="reference">
+                      <strong>{t('report.referenced_law')}:</strong>
+                      <p>{clause.referenced_law}</p>
+                    </div>
+                  )}
+                </div>
+              ))}
             </div>
           </div>
         </div>
+      ) : (
+        <>
+          <div className="example-tabs">
+            {tabs.map((tab) => (
+              <button
+                key={tab.key}
+                className={clsx('tab', activeTab === tab.key && 'active')}
+                onClick={() => setActiveTab(tab.key)}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
 
-        <div className={styles.clauseList}>
-          {report.clauses.map((clause, idx) => (
-            <div
-              key={idx}
-              className={styles.clauseCard}
-              style={{
-                borderLeftColor: exampleRiskColor(clause.risk_level),
-                background: exampleRiskBg(clause.risk_level),
-              }}
-            >
-              <div className="clause-header">
-                <div className="clause-heading">
-                  <strong>{clause.clause_number}</strong>
-                </div>
-                <span
-                  className="risk-tag"
-                  style={{ background: exampleRiskColor(clause.risk_level) }}
-                >
-                  {clause.risk_level}
-                </span>
-              </div>
-              <div className={styles.originalText}>{clause.original_text}</div>
-              <p className="risk-reason">{t(`examples.${report.id}_c${idx + 1}_reason`)}</p>
-              <div className="suggestion">
-                <strong>{t('report.suggestion')}:</strong>
-                <p>{t(`examples.${report.id}_c${idx + 1}_suggestion`)}</p>
-              </div>
-              {clause.referenced_law && (
-                <div className="reference">
-                  <strong>{t('report.referenced_law')}:</strong>
-                  <p>{clause.referenced_law}</p>
-                </div>
-              )}
+          <div className={styles.reportCard}>
+            <div className={styles.reportHeader}>
+              <span className={styles.badge}>{t('examples.badge')}</span>
+              <h3>{t(`examples.${activeTab}_title`)}</h3>
+              <p className={styles.reportDesc}>{t(`examples.${activeTab}_desc`)}</p>
             </div>
-          ))}
-        </div>
-      </div>
+
+            <div className={styles.overallRisk}>
+              <span
+                className="risk-badge"
+                style={{ background: exampleRiskColor(report.overall_risk) }}
+              >
+                {t('report.overall_risk')}: {report.overall_risk}
+              </span>
+              <div className={styles.metaGrid}>
+                <div className="example-meta-item">
+                  <span>{t('report.clause_count')}</span>
+                  <strong>{report.clauses.length}</strong>
+                </div>
+                <div className="example-meta-item">
+                  <span>{t('report.referenced_law')}</span>
+                  <strong>JP</strong>
+                </div>
+              </div>
+            </div>
+
+            <div className={styles.clauseList}>
+              {report.clauses.map((clause, idx) => (
+                <div
+                  key={idx}
+                  className={styles.clauseCard}
+                  style={{
+                    borderLeftColor: exampleRiskColor(clause.risk_level),
+                    background: exampleRiskBg(clause.risk_level),
+                  }}
+                >
+                  <div className="clause-header">
+                    <div className="clause-heading">
+                      <strong>{clause.clause_number}</strong>
+                    </div>
+                    <span
+                      className="risk-tag"
+                      style={{ background: exampleRiskColor(clause.risk_level) }}
+                    >
+                      {clause.risk_level}
+                    </span>
+                  </div>
+                  <div className={styles.originalText}>{clause.original_text}</div>
+                  <p className="risk-reason">{t(`examples.${report.id}_c${idx + 1}_reason`)}</p>
+                  <div className="suggestion">
+                    <strong>{t('report.suggestion')}:</strong>
+                    <p>{t(`examples.${report.id}_c${idx + 1}_suggestion`)}</p>
+                  </div>
+                  {clause.referenced_law && (
+                    <div className="reference">
+                      <strong>{t('report.referenced_law')}:</strong>
+                      <p>{clause.referenced_law}</p>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </>
+      )}
 
       <a href="/#upload-section" className={clsx('btn-primary', styles.cta)}>
         {t('examples.cta')}
