@@ -180,6 +180,62 @@ class LegalKnowledgeStore:
         except RuntimeError:
             return asyncio.run(self._search_async(query, n_results))
 
+    def search_batch(self, queries: list[str], n_results: int = 5) -> list[list[dict]]:
+        """Batch search: one embedding API call for all queries, then one DB query per query.
+
+        Returns a list of result lists, one per query, in the same order.
+        """
+        if not queries:
+            return []
+        import asyncio
+        try:
+            loop = asyncio.get_event_loop()
+            if loop.is_running():
+                import concurrent.futures
+                with concurrent.futures.ThreadPoolExecutor() as pool:
+                    return pool.submit(_search_batch_with_fresh_store, queries, n_results).result()
+            return loop.run_until_complete(self._search_batch_async(queries, n_results))
+        except RuntimeError:
+            return asyncio.run(self._search_batch_async(queries, n_results))
+
+    async def _search_batch_async(self, queries: list[str], n_results: int = 5) -> list[list[dict]]:
+        """Batch embedding + individual DB searches."""
+        await self._ensure_table()
+        embeddings = _get_embeddings_batch_sync(queries)
+        dsn = get_settings().DATABASE_URL.replace("+asyncpg", "")
+        conn = await asyncpg.connect(dsn)
+        try:
+            all_results: list[list[dict]] = []
+            for emb in embeddings:
+                emb_str = "[" + ",".join(str(x) for x in emb) + "]"
+                rows = await conn.fetch(
+                    """
+                        SELECT id, content, metadata,
+                               embedding <-> $1::vector AS distance
+                        FROM legal_knowledge_embeddings
+                        ORDER BY distance
+                        LIMIT $2
+                    """,
+                    emb_str,
+                    n_results,
+                )
+                output = []
+                for row in rows:
+                    metadata = row["metadata"]
+                    if isinstance(metadata, str):
+                        import json
+                        metadata = json.loads(metadata)
+                    output.append({
+                        "id": row["id"],
+                        "content": row["content"],
+                        "metadata": metadata,
+                        "distance": float(row["distance"]),
+                    })
+                all_results.append(output)
+            return all_results
+        finally:
+            await conn.close()
+
     async def _search_async(self, query: str, n_results: int = 5) -> list[dict]:
         await self._ensure_table()
         query_embedding = _get_embedding_sync(query)
@@ -235,3 +291,11 @@ def _search_with_fresh_store(query: str, n_results: int) -> list[dict]:
 
     fresh_store = LegalKnowledgeStore()
     return asyncio.run(fresh_store._search_async(query, n_results))
+
+
+def _search_batch_with_fresh_store(queries: list[str], n_results: int) -> list[list[dict]]:
+    """Run batch search on a fresh store bound to the worker thread's event loop."""
+    import asyncio
+
+    fresh_store = LegalKnowledgeStore()
+    return asyncio.run(fresh_store._search_batch_async(queries, n_results))

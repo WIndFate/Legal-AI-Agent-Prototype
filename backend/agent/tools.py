@@ -12,17 +12,11 @@ RAG_RESULTS_PER_CLAUSE = 2
 MAX_KNOWLEDGE_CHARS = 220
 
 
-@tool
-def analyze_clause_risk(clause_text: str) -> str:
-    """Analyze the risk level of a single contract clause by searching
-    relevant Japanese legal knowledge from the RAG knowledge base internally.
+def format_rag_results(clause_text: str, results: list[dict]) -> str:
+    """Format RAG search results into a knowledge prompt for clause analysis.
 
-    Args:
-        clause_text: The text of the contract clause to analyze.
+    Shared by the @tool (single clause) and the batch path in analyze_risks.
     """
-    store = get_store()
-    results = store.search(clause_text[:300], n_results=RAG_RESULTS_PER_CLAUSE)
-
     if not results:
         return (
             f"条項「{clause_text[:30]}...」: "
@@ -47,6 +41,19 @@ def analyze_clause_risk(clause_text: str) -> str:
         + "\n\n---\n\n".join(knowledge_parts)
         + "\n\n上記に基づきリスクレベルと理由を判定してください。"
     )
+
+
+@tool
+def analyze_clause_risk(clause_text: str) -> str:
+    """Analyze the risk level of a single contract clause by searching
+    relevant Japanese legal knowledge from the RAG knowledge base internally.
+
+    Args:
+        clause_text: The text of the contract clause to analyze.
+    """
+    store = get_store()
+    results = store.search(clause_text[:300], n_results=RAG_RESULTS_PER_CLAUSE)
+    return format_rag_results(clause_text, results)
 
 
 @tool

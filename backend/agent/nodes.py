@@ -7,8 +7,9 @@ from langchain_openai import ChatOpenAI
 logger = logging.getLogger(__name__)
 
 from backend.agent.state import AgentState
-from backend.agent.tools import analyze_clause_risk, generate_suggestion
+from backend.agent.tools import analyze_clause_risk, generate_suggestion, format_rag_results, RAG_RESULTS_PER_CLAUSE
 from backend.config import get_settings
+from backend.rag.store import get_store
 from backend.services.costing import log_model_usage
 
 settings = get_settings()
@@ -86,12 +87,14 @@ def _fallback_clause_analysis(clause: dict) -> dict:
     }
 
 
-def _analyze_single_clause(clause: dict) -> dict:
+def _analyze_single_clause(clause: dict, legal_knowledge: str | None = None) -> dict:
     clause_text = clause.get("text", "")
     clause_number = clause.get("number", "全文")
     clause_title = clause.get("title", "")
 
-    legal_knowledge = analyze_clause_risk.invoke({"clause_text": clause_text})
+    # Use pre-fetched knowledge from batch path, or fall back to single search
+    if legal_knowledge is None:
+        legal_knowledge = analyze_clause_risk.invoke({"clause_text": clause_text})
 
     response = analysis_llm.invoke([
         SystemMessage(content=SYSTEM_PROMPT),
@@ -136,9 +139,30 @@ def _analyze_single_clause(clause: dict) -> dict:
 
 
 def analyze_risks(state: AgentState) -> dict:
-    """Analyze clauses one by one to avoid multi-round prompt growth."""
+    """Analyze clauses one by one to avoid multi-round prompt growth.
+
+    Uses batch embedding to fetch RAG results for all clauses in a single API
+    call, then feeds pre-fetched knowledge into each clause analysis.
+    """
     clauses = state["clauses"]
-    risk_analysis = [_analyze_single_clause(clause) for clause in clauses]
+
+    # Batch RAG: one embedding API call for all clauses
+    clause_texts = [c.get("text", "")[:300] for c in clauses]
+    store = get_store()
+    try:
+        batch_results = store.search_batch(clause_texts, n_results=RAG_RESULTS_PER_CLAUSE)
+    except Exception:
+        logger.warning("Batch RAG search failed, falling back to per-clause search")
+        batch_results = None
+
+    risk_analysis = []
+    for i, clause in enumerate(clauses):
+        if batch_results is not None:
+            knowledge = format_rag_results(clause.get("text", ""), batch_results[i])
+            risk_analysis.append(_analyze_single_clause(clause, legal_knowledge=knowledge))
+        else:
+            risk_analysis.append(_analyze_single_clause(clause))
+
     return {"risk_analysis": risk_analysis, "messages": []}
 
 
