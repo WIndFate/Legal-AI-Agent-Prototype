@@ -4,6 +4,22 @@
   overflow: hidden;
 }
 
+.document-ribbon {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 24px 12px;
+  border-bottom: 1px solid rgba(31, 58, 95, 0.08);
+  background: rgba(31, 58, 95, 0.04);
+  color: var(--text-faint);
+  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
 .report-hero-grid {
   display: grid;
   gap: 20px;
@@ -14,6 +30,27 @@
   border-radius: var(--radius-lg);
   border: 1px solid rgba(31, 58, 95, 0.14);
   background: rgba(255, 255, 255, 0.66);
+}
+
+.report-hero-panel-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.report-status-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(31, 58, 95, 0.08);
+  color: var(--brand);
+  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 .review-live-header {

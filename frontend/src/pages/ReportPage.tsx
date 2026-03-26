@@ -212,6 +212,10 @@ export default function ReportPage() {
         </div>
       )}
       <div className="report-summary-shell report-header-bar">
+        <div className="document-ribbon">
+          <span>{t('report.title')}</span>
+          <span>{reportLanguageLabel}</span>
+        </div>
         <div className="report-hero-grid">
           <div className="report-hero-copy">
             <p className="section-kicker">{t('report.executive_kicker')}</p>
@@ -233,12 +237,15 @@ export default function ReportPage() {
           </div>
 
           <div className="report-hero-panel">
-            <span
-              className="risk-badge report-hero-badge"
-              style={{ background: riskColor(report.overall_risk_level) }}
-            >
-              {t('report.overall_risk')}: {report.overall_risk_level}
-            </span>
+            <div className="report-hero-panel-top">
+              <span className="report-status-chip">{t('report.overall_risk')}</span>
+              <span
+                className="risk-badge report-hero-badge"
+                style={{ background: riskColor(report.overall_risk_level) }}
+              >
+                {report.overall_risk_level}
+              </span>
+            </div>
             <div className="report-hero-stats">
               <div className="report-hero-stat">
                 <span>{t('report.clause_count')}</span>
