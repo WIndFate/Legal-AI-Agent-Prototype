@@ -207,6 +207,88 @@
   font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
 }
 
+.examplesEntryCard {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 16px;
+  align-items: center;
+  margin-bottom: 18px;
+  padding: 18px;
+  border-radius: 22px;
+  border: 1px solid rgba(31, 58, 95, 0.12);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.86) 0%, rgba(244, 248, 252, 0.92) 100%);
+  box-shadow: var(--shadow-sm);
+  text-decoration: none;
+}
+
+.examplesEntryIcon {
+  width: 46px;
+  height: 46px;
+  border-radius: 16px;
+  background:
+    linear-gradient(135deg, rgba(31, 58, 95, 0.12), rgba(95, 127, 163, 0.16));
+  position: relative;
+}
+
+.examplesEntryIcon::before,
+.examplesEntryIcon::after {
+  content: "";
+  position: absolute;
+  left: 11px;
+  right: 11px;
+  border-radius: 999px;
+  background: rgba(31, 58, 95, 0.62);
+}
+
+.examplesEntryIcon::before {
+  top: 14px;
+  height: 4px;
+}
+
+.examplesEntryIcon::after {
+  top: 24px;
+  height: 4px;
+}
+
+.examplesEntryCopy span {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--text-faint);
+  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.examplesEntryCopy strong {
+  display: block;
+  color: var(--brand-ink);
+  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
+  font-size: 1rem;
+}
+
+.examplesEntryCopy p {
+  margin-top: 6px;
+  color: var(--text-soft);
+  font-size: 0.9rem;
+  line-height: 1.7;
+}
+
+.examplesEntryLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--brand);
+  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.examplesEntryLink::after {
+  content: "→";
+}
+
 /* Pricing internals */
 .pricingQuoteMeta {
   margin-bottom: 16px;
@@ -289,5 +371,14 @@
   .heroPreviewBadge {
     min-width: 50px;
     min-height: 50px;
+  }
+
+  .examplesEntryCard {
+    grid-template-columns: auto 1fr;
+  }
+
+  .examplesEntryLink {
+    grid-column: 1 / -1;
+    justify-content: flex-start;
   }
 }

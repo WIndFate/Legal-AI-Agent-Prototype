@@ -4,41 +4,70 @@
   margin-bottom: 16px;
   font-size: 0.96rem;
   line-height: 1.8;
+  max-width: 48rem;
+  color: var(--text-soft);
+}
+
+.standaloneSection {
+  margin-top: 0;
+  padding: 34px 32px;
 }
 
 .reportCard {
   overflow: hidden;
-  border-radius: var(--radius-lg);
+  border-radius: 28px;
   border: 1px solid rgba(31, 58, 95, 0.12);
-  background: rgba(255, 255, 255, 0.76);
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow: var(--shadow-md);
   animation: fadeUp 0.9s ease both;
   animation-delay: 0.18s;
 }
 
 .reportHeader {
-  padding: 20px 18px 16px;
+  padding: 28px 24px 22px;
   background: linear-gradient(180deg, rgba(244, 248, 252, 0.92) 0%, rgba(255, 255, 255, 0.82) 100%);
   border-bottom: 1px solid rgba(31, 58, 95, 0.08);
 }
 
+.reportHeader h3 {
+  margin-top: 10px;
+  margin-bottom: 0;
+  color: var(--brand-ink);
+  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
+  font-size: 2rem;
+}
+
 .badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 12px;
+  border-radius: 999px;
   margin-bottom: 10px;
   color: var(--brand);
   background: rgba(31, 58, 95, 0.08);
   border: 1px solid rgba(31, 58, 95, 0.12);
+  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
+  font-size: 0.8rem;
+  font-weight: 700;
 }
 
 .reportDesc {
-  margin-top: 6px;
-  font-size: 0.84rem;
+  margin-top: 12px;
+  max-width: 36rem;
+  color: var(--text-soft);
+  font-size: 0.96rem;
+  line-height: 1.8;
 }
 
 .overallRisk {
-  padding: 14px 18px;
+  padding: 20px 24px 24px;
   border-bottom: 1px solid rgba(31, 58, 95, 0.08);
 }
 
 .metaGrid {
+  display: grid;
+  gap: 12px;
   margin-top: 12px;
 }
 
@@ -47,14 +76,18 @@
   flex-direction: column;
 }
 
+.clauseCard {
+  padding: 22px 24px 24px;
+}
+
 .clauseCard + .clauseCard {
   border-top: 1px solid rgba(31, 58, 95, 0.08);
 }
 
 .originalText {
   margin-bottom: 12px;
-  padding: 12px 14px;
-  border-radius: var(--radius-sm);
+  padding: 14px 16px;
+  border-radius: 16px;
   border: 1px solid rgba(31, 58, 95, 0.08);
   background: rgba(255, 255, 255, 0.72);
   color: var(--text-soft);
@@ -65,8 +98,46 @@
   word-break: break-word;
 }
 
+.clauseCard :global(.risk-reason),
+.clauseCard :global(.suggestion),
+.clauseCard :global(.reference) {
+  line-height: 1.8;
+}
+
+.clauseCard :global(.suggestion),
+.clauseCard :global(.reference) {
+  margin-top: 14px;
+  padding-top: 14px;
+}
+
 .cta {
   max-width: 280px;
-  margin: 20px auto 0;
+  margin: 26px auto 0;
   text-align: center;
+}
+
+@media (min-width: 768px) {
+  .metaGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 767px) {
+  .standaloneSection {
+    padding: 24px 18px;
+    border-radius: 24px;
+  }
+
+  .reportHeader {
+    padding: 22px 18px 18px;
+  }
+
+  .reportHeader h3 {
+    font-size: 1.75rem;
+  }
+
+  .overallRisk,
+  .clauseCard {
+    padding: 18px;
+  }
 }

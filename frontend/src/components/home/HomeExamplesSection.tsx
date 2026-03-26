@@ -9,7 +9,11 @@ import styles from '../../styles/examples.module.css';
 
 type TabKey = 'rental' | 'employment' | 'parttime';
 
-export default function HomeExamplesSection() {
+interface HomeExamplesSectionProps {
+  standalone?: boolean;
+}
+
+export default function HomeExamplesSection({ standalone = false }: HomeExamplesSectionProps) {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<TabKey>('rental');
 
@@ -22,7 +26,10 @@ export default function HomeExamplesSection() {
   const report: ExampleReport = exampleReports[activeTab];
 
   return (
-    <section className="examples-section" id="examples">
+    <section
+      className={clsx('examples-section', standalone && styles.standaloneSection)}
+      id={standalone ? undefined : 'examples'}
+    >
       <p className="section-kicker">{t('examples.section_kicker')}</p>
       <h2>{t('examples.section_title')}</h2>
       <p className={styles.desc}>{t('examples.section_desc')}</p>
@@ -103,7 +110,7 @@ export default function HomeExamplesSection() {
         </div>
       </div>
 
-      <a href="#upload-section" className={clsx('btn-primary', styles.cta)}>
+      <a href="/#upload-section" className={clsx('btn-primary', styles.cta)}>
         {t('examples.cta')}
       </a>
     </section>

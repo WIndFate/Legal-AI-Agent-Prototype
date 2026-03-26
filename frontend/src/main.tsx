@@ -14,6 +14,7 @@ import './styles/ux.css';
 import Layout from './components/Layout';
 
 const HomePage = lazy(() => import('./pages/HomePage'));
+const ExamplesPage = lazy(() => import('./pages/ExamplesPage'));
 const PaymentPage = lazy(() => import('./pages/PaymentPage'));
 const LookupPage = lazy(() => import('./pages/LookupPage'));
 const ReviewPage = lazy(() => import('./pages/ReviewPage'));
@@ -66,6 +67,7 @@ function AppRoutes() {
         <Suspense fallback={<RouteFallback />}>
           <Routes>
             <Route path="/" element={<HomePage />} />
+            <Route path="/examples" element={<ExamplesPage />} />
             <Route path="/lookup" element={<LookupPage />} />
             <Route path="/payment/:orderId" element={<PaymentPage />} />
             <Route path="/review/:orderId" element={<ReviewPage />} />

@@ -3,7 +3,6 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 
 import RevealSection from '../components/common/RevealSection';
-import HomeExamplesSection from '../components/home/HomeExamplesSection';
 import HomeFlowSection from '../components/home/HomeFlowSection';
 import HomeHeroSection from '../components/home/HomeHeroSection';
 import HomeUploadSection from '../components/home/HomeUploadSection';
@@ -124,10 +123,7 @@ export default function HomePage() {
       <RevealSection delayMs={80} variant="panel" className="home-scene home-scene-flow">
         <HomeFlowSection />
       </RevealSection>
-      <RevealSection delayMs={120} variant="panel" className="home-scene home-scene-examples">
-        <HomeExamplesSection />
-      </RevealSection>
-      <RevealSection delayMs={160} variant="panel" className="home-scene home-scene-upload">
+      <RevealSection delayMs={120} variant="panel" className="home-scene home-scene-upload">
         <HomeUploadSection
           inputMode={inputMode}
           setInputMode={setInputMode}

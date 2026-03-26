@@ -87,6 +87,16 @@ export default function HomeUploadSection({
         </div>
       </div>
 
+      <a href="/examples" className={styles.examplesEntryCard}>
+        <span className={styles.examplesEntryIcon} aria-hidden="true" />
+        <div className={styles.examplesEntryCopy}>
+          <span>{t('examples.section_kicker')}</span>
+          <strong>{t('examples.section_title')}</strong>
+          <p>{t('examples.section_desc')}</p>
+        </div>
+        <span className={styles.examplesEntryLink}>{t('nav.examples')}</span>
+      </a>
+
       <div className="input-tabs">
         <button
           className={clsx('tab', inputMode === 'image' && 'active')}

@@ -13,13 +13,12 @@ export default function Layout({ children }: LayoutProps) {
   const location = useLocation();
   const navigate = useNavigate();
   const homeHref = location.pathname === '/' ? '#top' : '/#top';
-  const examplesHref = location.pathname === '/' ? '#examples' : '/#examples';
 
   const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     i18n.changeLanguage(e.target.value);
   };
 
-  const navigateToAnchor = (targetId: 'top' | 'examples') => (event: React.MouseEvent<HTMLAnchorElement>) => {
+  const navigateToAnchor = (targetId: 'top') => (event: React.MouseEvent<HTMLAnchorElement>) => {
     if (location.pathname === '/') {
       event.preventDefault();
       const target = document.getElementById(targetId);
@@ -59,9 +58,9 @@ export default function Layout({ children }: LayoutProps) {
             >
               {t('nav.home')}
             </a>
-            <a href={examplesHref} onClick={navigateToAnchor('examples')} className={styles.navLink}>
+            <Link to="/examples" className={clsx(styles.navLink, isActive('/examples') && styles.navLinkActive)}>
               {t('nav.examples')}
-            </a>
+            </Link>
             <Link to="/lookup" className={clsx(styles.navLink, isActive('/lookup') && styles.navLinkActive)}>
               {t('nav.lookup')}
             </Link>
@@ -102,7 +101,7 @@ export default function Layout({ children }: LayoutProps) {
         </div>
         <nav className={styles.footerNav}>
           <a href={homeHref} onClick={navigateToAnchor('top')}>{t('nav.home')}</a>
-          <a href={examplesHref} onClick={navigateToAnchor('examples')}>{t('nav.examples')}</a>
+          <Link to="/examples">{t('nav.examples')}</Link>
           <Link to="/lookup">{t('nav.lookup')}</Link>
           <Link to="/privacy">{t('footer.privacy')}</Link>
           <Link to="/terms">{t('footer.terms')}</Link>
