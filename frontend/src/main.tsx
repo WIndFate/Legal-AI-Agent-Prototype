@@ -8,7 +8,6 @@ import './styles/layout.css';
 import './styles/home.css';
 import './styles/review.css';
 import './styles/report.css';
-import './styles/examples.css';
 import './styles/responsive.css';
 
 import Layout from './components/Layout';

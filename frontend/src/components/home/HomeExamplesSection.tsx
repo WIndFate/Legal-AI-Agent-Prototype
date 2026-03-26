@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import clsx from 'clsx';
 
 import { exampleReports } from '../../data/exampleReports';
 import type { ExampleReport } from '../../data/exampleReports';
 import { exampleRiskBg, exampleRiskColor } from './utils';
+import styles from '../../styles/examples.module.css';
 
 type TabKey = 'rental' | 'employment' | 'parttime';
 
@@ -23,13 +25,13 @@ export default function HomeExamplesSection() {
     <section className="examples-section" id="examples">
       <p className="section-kicker">{t('examples.section_kicker')}</p>
       <h2>{t('examples.section_title')}</h2>
-      <p className="examples-desc">{t('examples.section_desc')}</p>
+      <p className={styles.desc}>{t('examples.section_desc')}</p>
 
       <div className="example-tabs">
         {tabs.map((tab) => (
           <button
             key={tab.key}
-            className={`tab ${activeTab === tab.key ? 'active' : ''}`}
+            className={clsx('tab', activeTab === tab.key && 'active')}
             onClick={() => setActiveTab(tab.key)}
           >
             {tab.label}
@@ -37,21 +39,21 @@ export default function HomeExamplesSection() {
         ))}
       </div>
 
-      <div className="example-report-card">
-        <div className="example-report-header">
-          <span className="example-badge">{t('examples.badge')}</span>
+      <div className={styles.reportCard}>
+        <div className={styles.reportHeader}>
+          <span className={styles.badge}>{t('examples.badge')}</span>
           <h3>{t(`examples.${activeTab}_title`)}</h3>
-          <p className="example-report-desc">{t(`examples.${activeTab}_desc`)}</p>
+          <p className={styles.reportDesc}>{t(`examples.${activeTab}_desc`)}</p>
         </div>
 
-        <div className="example-overall-risk">
+        <div className={styles.overallRisk}>
           <span
             className="risk-badge"
             style={{ background: exampleRiskColor(report.overall_risk) }}
           >
             {t('report.overall_risk')}: {report.overall_risk}
           </span>
-          <div className="example-meta-grid">
+          <div className={styles.metaGrid}>
             <div className="example-meta-item">
               <span>{t('report.clause_count')}</span>
               <strong>{report.clauses.length}</strong>
@@ -63,11 +65,11 @@ export default function HomeExamplesSection() {
           </div>
         </div>
 
-        <div className="example-clause-list">
+        <div className={styles.clauseList}>
           {report.clauses.map((clause, idx) => (
             <div
               key={idx}
-              className="example-clause-card"
+              className={styles.clauseCard}
               style={{
                 borderLeftColor: exampleRiskColor(clause.risk_level),
                 background: exampleRiskBg(clause.risk_level),
@@ -84,7 +86,7 @@ export default function HomeExamplesSection() {
                   {clause.risk_level}
                 </span>
               </div>
-              <div className="example-original-text">{clause.original_text}</div>
+              <div className={styles.originalText}>{clause.original_text}</div>
               <p className="risk-reason">{t(`examples.${report.id}_c${idx + 1}_reason`)}</p>
               <div className="suggestion">
                 <strong>{t('report.suggestion')}:</strong>
@@ -101,7 +103,7 @@ export default function HomeExamplesSection() {
         </div>
       </div>
 
-      <a href="#upload-section" className="btn-primary example-cta">
+      <a href="#upload-section" className={clsx('btn-primary', styles.cta)}>
         {t('examples.cta')}
       </a>
     </section>
