@@ -1,0 +1,30 @@
+"""Add indexes for common query paths
+
+Revision ID: 004
+Revises: 003
+Create Date: 2026-03-26
+"""
+from typing import Sequence, Union
+
+from alembic import op
+
+# revision identifiers, used by Alembic.
+revision: str = "004"
+down_revision: Union[str, None] = "003"
+branch_labels: Union[str, Sequence[str], None] = None
+depends_on: Union[str, Sequence[str], None] = None
+
+
+def upgrade() -> None:
+    # orders: cleanup queries filter by payment_status and analysis_status
+    op.create_index("ix_orders_payment_status", "orders", ["payment_status"])
+    op.create_index("ix_orders_analysis_status", "orders", ["analysis_status"])
+
+    # reports: cleanup deletes rows past expires_at
+    op.create_index("ix_reports_expires_at", "reports", ["expires_at"])
+
+
+def downgrade() -> None:
+    op.drop_index("ix_reports_expires_at", table_name="reports")
+    op.drop_index("ix_orders_analysis_status", table_name="orders")
+    op.drop_index("ix_orders_payment_status", table_name="orders")
