@@ -39,7 +39,7 @@ export default function HomeHeroSection({ preview }: HomeHeroSectionProps) {
       </div>
 
       <div className={styles.heroPreviewCard}>
-        <div className="hero-preview-head">
+        <div className={`hero-preview-head ${styles.heroPreviewHead}`}>
           <span className={styles.heroPreviewLabel}>{t('report.title')}</span>
           <span
             className={`risk-badge ${styles.heroPreviewBadge}`}
@@ -51,10 +51,10 @@ export default function HomeHeroSection({ preview }: HomeHeroSectionProps) {
         <div className={styles.heroPreviewBody}>
           {preview.clauses.slice(0, 2).map((clause, idx) => (
             <div key={clause.clause_number} className={styles.heroPreviewItem}>
-              <div className="hero-preview-row">
-                <strong>{clause.clause_number}</strong>
+              <div className={`hero-preview-row ${styles.heroPreviewRow}`}>
+                <strong className={styles.heroPreviewClause}>{clause.clause_number}</strong>
                 <span
-                  className="risk-tag"
+                  className={`risk-tag ${styles.heroPreviewRiskTag}`}
                   style={{ background: exampleRiskColor(clause.risk_level) }}
                 >
                   {clause.risk_level}
