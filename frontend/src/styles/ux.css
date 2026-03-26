@@ -2,15 +2,57 @@
 
 .reveal-section {
   opacity: 0;
-  transform: translateY(34px) scale(0.985);
+  --scene-offset: 0px;
+  --scene-scale: 0.985;
+  --scene-progress: 0;
+  transform: translateY(calc(34px + var(--scene-offset))) scale(var(--scene-scale));
   transition:
     opacity 0.7s ease,
-    transform 0.7s ease;
+    transform 0.7s ease,
+    box-shadow 0.7s ease;
+  will-change: transform, opacity;
 }
 
 .reveal-section-visible {
   opacity: 1;
-  transform: translateY(0) scale(1);
+  transform: translateY(var(--scene-offset)) scale(var(--scene-scale));
+}
+
+.home-scene {
+  position: relative;
+}
+
+.home-scene::before {
+  content: "";
+  position: absolute;
+  inset: 26px 22px auto;
+  height: 72%;
+  border-radius: 40px;
+  background:
+    radial-gradient(circle at top right, rgba(95, 127, 163, calc(0.04 + var(--scene-progress) * 0.05)), transparent 48%),
+    radial-gradient(circle at bottom left, rgba(196, 162, 106, calc(0.03 + var(--scene-progress) * 0.04)), transparent 44%);
+  pointer-events: none;
+  filter: blur(8px);
+  opacity: calc(0.45 + var(--scene-progress) * 0.35);
+  transition: opacity 0.4s ease;
+}
+
+.reveal-scene-hero {
+  transform-origin: 50% 18%;
+}
+
+.reveal-scene-panel {
+  transform-origin: 50% 24%;
+}
+
+.home-scene-hero::before {
+  inset: 42px 36px auto;
+  height: 68%;
+}
+
+.home-scene-examples::before,
+.home-scene-upload::before {
+  height: 78%;
 }
 
 .spotlight-card {
@@ -400,6 +442,12 @@
 }
 
 @media (max-width: 767px) {
+  .home-scene::before {
+    inset: 18px 10px auto;
+    border-radius: 26px;
+    height: 62%;
+  }
+
   .dialog-shell,
   .lookup-shell {
     padding: 22px 18px;

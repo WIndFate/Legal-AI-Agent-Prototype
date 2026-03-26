@@ -118,16 +118,16 @@ export default function HomePage() {
 
   return (
     <div className="page home-page" id="top">
-      <RevealSection delayMs={0}>
+      <RevealSection delayMs={0} variant="hero" className="home-scene home-scene-hero">
         <HomeHeroSection preview={heroPreview} />
       </RevealSection>
-      <RevealSection delayMs={80}>
+      <RevealSection delayMs={80} variant="panel" className="home-scene home-scene-flow">
         <HomeFlowSection />
       </RevealSection>
-      <RevealSection delayMs={120}>
+      <RevealSection delayMs={120} variant="panel" className="home-scene home-scene-examples">
         <HomeExamplesSection />
       </RevealSection>
-      <RevealSection delayMs={160}>
+      <RevealSection delayMs={160} variant="panel" className="home-scene home-scene-upload">
         <HomeUploadSection
           inputMode={inputMode}
           setInputMode={setInputMode}
