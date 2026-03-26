@@ -28,5 +28,95 @@
     "query": "乙は業務上知り得た秘密情報を第三者に開示してはならない。期間の定めなし。",
     "relevant_ids": ["risk_confidentiality", "risk_confidentiality_period"],
     "description": "秘密保持期間無制限"
+  },
+  {
+    "id": "eval_006",
+    "query": "賃貸人は、賃借人が家賃を1ヶ月でも滞納した場合、直ちに契約を解除できる。",
+    "relevant_ids": ["egov_shakuchi_28", "egov_minpo_601", "egov_minpo_612"],
+    "description": "賃貸借契約の即時解除条項（借地借家法の正当事由要件）"
+  },
+  {
+    "id": "eval_007",
+    "query": "賃借人は契約期間中に中途解約することができない。",
+    "relevant_ids": ["egov_shakuchi_27", "egov_shakuchi_28", "egov_minpo_618"],
+    "description": "中途解約禁止条項"
+  },
+  {
+    "id": "eval_008",
+    "query": "退去時の原状回復として、通常損耗を含む全ての修繕費用は賃借人が負担する。",
+    "relevant_ids": ["egov_minpo_621", "egov_minpo_622", "egov_shohisha_keiyaku_10"],
+    "description": "賃貸借の原状回復（通常損耗の負担問題）"
+  },
+  {
+    "id": "eval_009",
+    "query": "使用者は、業務の都合により、従業員に対し1日12時間の労働を命じることができる。",
+    "relevant_ids": ["egov_roudou_kijun_32", "egov_roudou_kijun_36", "egov_roudou_kijun_37"],
+    "description": "労働時間上限超過（労働基準法32条違反の可能性）"
+  },
+  {
+    "id": "eval_010",
+    "query": "試用期間は6ヶ月とし、この期間中は理由なく解雇できる。",
+    "relevant_ids": ["egov_roudou_keiyaku_16", "egov_roudou_kijun_20", "egov_roudou_kijun_21"],
+    "description": "試用期間中の解雇権乱用"
+  },
+  {
+    "id": "eval_011",
+    "query": "退職する場合は3ヶ月前までに届け出なければならない。届出なき退職は違約金30万円。",
+    "relevant_ids": ["egov_roudou_kijun_16", "egov_roudou_keiyaku_16"],
+    "description": "退職の自由と違約金の禁止"
+  },
+  {
+    "id": "eval_012",
+    "query": "アルバイトの時給は正社員と同等の業務を行うが、正社員の半額とする。",
+    "relevant_ids": ["egov_parttime_8", "egov_parttime_9", "egov_roudou_kijun_3"],
+    "description": "同一労働同一賃金（パートタイム法の均等待遇）"
+  },
+  {
+    "id": "eval_013",
+    "query": "アルバイトには年次有給休暇を付与しない。",
+    "relevant_ids": ["egov_roudou_kijun_39", "egov_parttime_8"],
+    "description": "パートタイマーの有給休暇（労基法39条は全労働者に適用）"
+  },
+  {
+    "id": "eval_014",
+    "query": "委託業務の報酬は、成果物の納品後120日以内に支払う。",
+    "relevant_ids": ["egov_shitauke_2", "egov_shitauke_4", "egov_minpo_633"],
+    "description": "業務委託の支払遅延（下請法の60日ルール）"
+  },
+  {
+    "id": "eval_015",
+    "query": "発注者は、受注者に事前通知なく、業務内容を自由に変更できる。",
+    "relevant_ids": ["egov_shitauke_3", "egov_shitauke_4", "egov_minpo_632"],
+    "description": "業務委託の一方的仕様変更（下請法の不当な給付内容変更）"
+  },
+  {
+    "id": "eval_016",
+    "query": "購入後のいかなる場合も返品・返金は一切受け付けない。",
+    "relevant_ids": ["egov_tokusho_9", "egov_tokusho_15", "egov_shohisha_keiyaku_10"],
+    "description": "売買のクーリングオフ排除と返品拒否"
+  },
+  {
+    "id": "eval_017",
+    "query": "売主は商品の瑕疵について一切の責任を負わない。",
+    "relevant_ids": ["egov_minpo_562", "egov_minpo_563", "egov_shohisha_keiyaku_8"],
+    "description": "売買の瑕疵担保責任免除（消費者契約法の無効条項）"
+  },
+  {
+    "id": "eval_018",
+    "query": "事業者の過失により消費者に損害が生じた場合でも、事業者の損害賠償責任は免除される。",
+    "relevant_ids": ["egov_shohisha_keiyaku_8", "egov_shohisha_keiyaku_3"],
+    "description": "消費者契約法の不当条項（事業者免責条項の無効）"
+  },
+  {
+    "id": "eval_019",
+    "query": "更新料として賃料の2ヶ月分を支払うものとする。更新を拒否する場合は6ヶ月前に通知すること。",
+    "relevant_ids": ["egov_shakuchi_26", "egov_shakuchi_28", "egov_minpo_604"],
+    "description": "賃貸借の更新料と法定更新"
+  },
+  {
+    "id": "eval_020",
+    "query": "労働者が遅刻した場合、当日の賃金を全額カットする。",
+    "relevant_ids": ["egov_roudou_kijun_24", "egov_roudou_kijun_91"],
+    "description": "賃金全額払いの原則（ノーワーク・ノーペイの限界）"
   }
 ]
