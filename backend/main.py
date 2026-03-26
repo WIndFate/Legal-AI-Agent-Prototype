@@ -13,7 +13,7 @@ logging.basicConfig(
 
 from backend.config import get_settings
 from backend.db.session import init_db
-from backend.rag.loader import load_legal_knowledge, load_text_documents
+from backend.rag.loader import load_legal_knowledge
 from backend.routers import health, upload, payment, review, report, referral, eval
 
 logger = logging.getLogger(__name__)
@@ -37,9 +37,7 @@ async def lifespan(app: FastAPI):
     logger.info("Loading legal knowledge into RAG store...")
     try:
         count = await load_legal_knowledge()
-        logger.info(f"Loaded {count} JSON knowledge documents.")
-        chunk_count = await load_text_documents()
-        logger.info(f"Loaded {chunk_count} text chunks from .txt files.")
+        logger.info(f"Loaded {count} legal knowledge documents.")
     except Exception as e:
         logger.warning(f"Failed to load legal knowledge (will retry on first request): {e}")
 
