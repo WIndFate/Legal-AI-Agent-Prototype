@@ -137,8 +137,10 @@ docker compose up -d backend postgres redis
 - `scripts/smoke_local_flow.sh` 已兼容 SSE 正常收流时可能出现的 `curl` 退出码 `18`，会以实际流事件内容判断成功与否。
 - 原条款文本只存在于流式完成结果和同设备会话缓存中；数据库报告、Redis 缓存、分享链接和邮件链接都不会保存或暴露原文。
 - `scripts/check_locale_keys.sh` 会检查 9 个语言文件是否与 `ja.json` 保持相同键集合。
-- `scripts/check_rag_eval.sh` 会检查 `/api/eval/rag` 是否满足当前本地基线阈值（`Recall@3 >= 0.5`、`MRR >= 0.6`）。
+- 后端现在会在启动时加载 `backend/data/egov_laws.json` 中的官方 e-Gov 法条语料，当前本地评估集也已经扩展到 20 条人工标注样本。
+- `scripts/check_rag_eval.sh` 会检查 `/api/eval/rag` 是否满足当前本地基线阈值（`Recall@5 >= 0.45`、`MRR >= 0.45`）。
 - `scripts/run_backend_pytests.sh` 会在 Docker 内安装 backend dev 依赖并执行完整 `tests/` 回归单测。
+- `frontend/src/pages/HomePage.tsx` 现在只作为容器页，首屏、流程、案例、上传/支付区域已拆到独立的首页组件中。
 
 ## 仓库入口
 

@@ -137,8 +137,10 @@ docker compose up -d backend postgres redis
 - `scripts/smoke_local_flow.sh` は SSE 終了時に発生しうる `curl` 終了コード `18` を許容し、実際のストリーム内容で成功可否を判定します。
 - 元条項テキストはストリーミング完了結果と同一端末セッション内にのみ保持されます。DB レポート、Redis キャッシュ、共有リンク、メールリンクには保存・露出しません。
 - `scripts/check_locale_keys.sh` は 9 言語の locale ファイルが `ja.json` と同じキー集合を保っているかを確認します。
-- `scripts/check_rag_eval.sh` は `/api/eval/rag` を現在のローカル基準値（`Recall@3 >= 0.5`、`MRR >= 0.6`）でチェックします。
+- バックエンドは起動時に `backend/data/egov_laws.json` の公式 e-Gov 法令コーパスを読み込み、ローカル評価データセットも 20 件のラベル付きサンプルに拡張されています。
+- `scripts/check_rag_eval.sh` は `/api/eval/rag` を現在のローカル基準値（`Recall@5 >= 0.45`、`MRR >= 0.45`）でチェックします。
 - `scripts/run_backend_pytests.sh` は Docker 内で backend の dev 依存を入れた上で、完全な `tests/` 回帰テストを実行します。
+- `frontend/src/pages/HomePage.tsx` は現在コンテナページとして振る舞い、hero / flow / examples / upload-payment を個別コンポーネントに委譲します。
 
 ## 主要ファイル
 

@@ -137,8 +137,10 @@ docker compose up -d backend postgres redis
 - `scripts/smoke_local_flow.sh` tolerates curl exit code `18` on SSE shutdown and validates success from the actual streamed events instead.
 - Original clause text is available only in the live review payload and same-device session storage; persisted reports, Redis cache, shared links, and emailed links do not store or expose it.
 - `scripts/check_locale_keys.sh` verifies that all 9 locale files keep the same translation key set as `ja.json`.
-- `scripts/check_rag_eval.sh` checks `/api/eval/rag` against the current local baseline thresholds (`Recall@3 >= 0.5`, `MRR >= 0.6`).
+- The backend now loads the official e-Gov law corpus from `backend/data/egov_laws.json` on startup, and the local eval dataset has been expanded to 20 labeled samples.
+- `scripts/check_rag_eval.sh` checks `/api/eval/rag` against the current local baseline thresholds (`Recall@5 >= 0.45`, `MRR >= 0.45`).
 - `scripts/run_backend_pytests.sh` runs the backend regression tests inside Docker after installing dev dependencies in the running backend container, and now executes the full `tests/` suite.
+- `frontend/src/pages/HomePage.tsx` now acts as a container page and delegates the hero, flow, examples, and upload/payment areas to focused home components.
 
 ## Repo Pointers
 
