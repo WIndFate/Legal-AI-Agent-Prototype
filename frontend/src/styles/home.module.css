@@ -1,0 +1,206 @@
+/* ── Home page component-scoped styles ── */
+
+/* Hero section internals */
+.heroCopy {
+  position: relative;
+  z-index: 1;
+}
+
+.heroTitle {
+  margin-bottom: 14px;
+}
+
+.heroSubtitle {
+  max-width: 640px;
+  font-size: 1rem;
+  line-height: 1.9;
+}
+
+.trustStrip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.trustPill {
+  color: var(--brand);
+  background: rgba(245, 249, 255, 0.92);
+  border: 1px solid rgba(95, 127, 163, 0.22);
+}
+
+.heroPreviewCard {
+  position: relative;
+  z-index: 1;
+  padding: 18px;
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(31, 58, 95, 0.14);
+  background:
+    linear-gradient(180deg, rgba(31, 58, 95, 0.96) 0%, rgba(20, 40, 63, 0.96) 100%);
+  color: #edf2f8;
+  box-shadow: 0 24px 48px rgba(20, 40, 63, 0.22);
+  animation: fadeUp 0.8s ease both, glowFloat 7s ease-in-out infinite;
+}
+
+.heroPreviewLabel {
+  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
+  font-size: 0.74rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(237, 242, 248, 0.74);
+}
+
+.heroPreviewBody {
+  margin-top: 16px;
+  display: grid;
+  gap: 12px;
+}
+
+.heroPreviewItem {
+  padding: 14px;
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.heroPreviewItem strong,
+.heroPreviewText {
+  color: #edf2f8;
+}
+
+.heroPreviewText {
+  margin-top: 10px;
+  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
+  font-size: 0.9rem;
+  line-height: 1.7;
+}
+
+.heroPreviewBadge {
+  color: #fff;
+}
+
+/* Flow section internals */
+.flowSteps {
+  display: grid;
+  gap: 14px;
+}
+
+.flowStep {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr);
+  gap: 14px;
+  align-items: start;
+}
+
+.flowIndex {
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  color: var(--brand);
+  background: rgba(31, 58, 95, 0.08);
+  border: 1px solid rgba(31, 58, 95, 0.12);
+  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
+  font-weight: 700;
+}
+
+.flowStep strong {
+  display: block;
+  margin-bottom: 4px;
+  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
+  color: var(--brand-ink);
+}
+
+/* Upload section internals */
+.uploadArea textarea,
+.paymentForm input {
+  width: 100%;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(31, 58, 95, 0.14);
+  background: rgba(255, 255, 255, 0.78);
+  color: var(--text);
+  padding: 14px 16px;
+  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
+  font-size: 0.95rem;
+  line-height: 1.75;
+}
+
+.uploadArea textarea::placeholder,
+.paymentForm input::placeholder {
+  color: #9c9186;
+}
+
+.uploadArea textarea:focus,
+.paymentForm input:focus {
+  outline: none;
+  border-color: rgba(31, 58, 95, 0.34);
+  box-shadow: 0 0 0 4px rgba(95, 127, 163, 0.12);
+}
+
+.fileUpload {
+  padding: 34px;
+  text-align: center;
+  border-radius: var(--radius-lg);
+  border: 1px dashed rgba(31, 58, 95, 0.22);
+  background: rgba(255, 255, 255, 0.54);
+}
+
+.fileUpload input[type="file"] {
+  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
+  font-size: 0.9rem;
+}
+
+.fileName {
+  margin-top: 10px;
+  color: var(--text-soft);
+  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
+}
+
+/* Pricing internals */
+.pricingQuoteMeta {
+  margin-bottom: 16px;
+  padding: 12px 14px;
+  border-radius: var(--radius-md);
+  background: rgba(31, 58, 95, 0.05);
+  border: 1px solid rgba(31, 58, 95, 0.1);
+}
+
+.pricingQuoteMeta strong {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--brand-ink);
+  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
+  font-size: 0.88rem;
+}
+
+.pricingQuoteMeta p {
+  margin: 0;
+  color: var(--text-soft);
+  font-size: 0.84rem;
+  line-height: 1.7;
+}
+
+.priceAmount {
+  margin-top: 4px;
+  color: var(--gold);
+  font-size: 1.6rem;
+  font-weight: 700;
+}
+
+/* Payment form internals */
+.paymentForm {
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(31, 58, 95, 0.08);
+}
+
+.paymentForm label {
+  display: block;
+  margin-bottom: 14px;
+  color: var(--brand-ink);
+  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
+  font-size: 0.88rem;
+  font-weight: 600;
+}

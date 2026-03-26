@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next';
 
 import type { ExampleReport } from '../../data/exampleReports';
 import { exampleRiskColor } from './utils';
+import styles from '../../styles/home.module.css';
 
 interface HomeHeroSectionProps {
   preview: ExampleReport;
@@ -12,14 +13,14 @@ export default function HomeHeroSection({ preview }: HomeHeroSectionProps) {
 
   return (
     <section className="hero-card hero-grid">
-      <div className="hero-copy">
+      <div className={styles.heroCopy}>
         <p className="section-kicker">{t('upload.hero_kicker')}</p>
-        <h2 className="hero-title">{t('app.title')}</h2>
-        <p className="hero-subtitle">{t('upload.hero_body')}</p>
-        <div className="trust-strip">
-          <span className="trust-pill">{t('upload.trust_privacy')}</span>
-          <span className="trust-pill">{t('upload.trust_no_account')}</span>
-          <span className="trust-pill">{t('upload.trust_payg')}</span>
+        <h2 className={styles.heroTitle}>{t('app.title')}</h2>
+        <p className={styles.heroSubtitle}>{t('upload.hero_body')}</p>
+        <div className={styles.trustStrip}>
+          <span className={styles.trustPill}>{t('upload.trust_privacy')}</span>
+          <span className={styles.trustPill}>{t('upload.trust_no_account')}</span>
+          <span className={styles.trustPill}>{t('upload.trust_payg')}</span>
         </div>
         <div className="hero-metrics">
           <div className="hero-metric">
@@ -37,19 +38,19 @@ export default function HomeHeroSection({ preview }: HomeHeroSectionProps) {
         </div>
       </div>
 
-      <div className="hero-preview-card">
+      <div className={styles.heroPreviewCard}>
         <div className="hero-preview-head">
-          <span className="hero-preview-label">{t('report.title')}</span>
+          <span className={styles.heroPreviewLabel}>{t('report.title')}</span>
           <span
-            className="risk-badge hero-preview-badge"
+            className={`risk-badge ${styles.heroPreviewBadge}`}
             style={{ background: exampleRiskColor(preview.overall_risk) }}
           >
             {preview.overall_risk}
           </span>
         </div>
-        <div className="hero-preview-body">
+        <div className={styles.heroPreviewBody}>
           {preview.clauses.slice(0, 2).map((clause, idx) => (
-            <div key={clause.clause_number} className="hero-preview-item">
+            <div key={clause.clause_number} className={styles.heroPreviewItem}>
               <div className="hero-preview-row">
                 <strong>{clause.clause_number}</strong>
                 <span
@@ -59,7 +60,7 @@ export default function HomeHeroSection({ preview }: HomeHeroSectionProps) {
                   {clause.risk_level}
                 </span>
               </div>
-              <p className="hero-preview-text">{t(`examples.${preview.id}_c${idx + 1}_reason`)}</p>
+              <p className={styles.heroPreviewText}>{t(`examples.${preview.id}_c${idx + 1}_reason`)}</p>
             </div>
           ))}
         </div>

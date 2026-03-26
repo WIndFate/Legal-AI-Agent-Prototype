@@ -1,7 +1,9 @@
 import type { Dispatch, SetStateAction } from 'react';
 import { useTranslation } from 'react-i18next';
+import clsx from 'clsx';
 
 import type { InputMode, UploadResult } from './types';
+import styles from '../../styles/home.module.css';
 
 interface HomeUploadSectionProps {
   inputMode: InputMode;
@@ -85,26 +87,26 @@ export default function HomeUploadSection({
 
       <div className="input-tabs">
         <button
-          className={`tab ${inputMode === 'image' ? 'active' : ''}`}
+          className={clsx('tab', inputMode === 'image' && 'active')}
           onClick={() => setInputMode('image')}
         >
           {t('upload.camera')}
         </button>
         <button
-          className={`tab ${inputMode === 'pdf' ? 'active' : ''}`}
+          className={clsx('tab', inputMode === 'pdf' && 'active')}
           onClick={() => setInputMode('pdf')}
         >
           {t('upload.pdf')}
         </button>
         <button
-          className={`tab ${inputMode === 'text' ? 'active' : ''}`}
+          className={clsx('tab', inputMode === 'text' && 'active')}
           onClick={() => setInputMode('text')}
         >
           {t('upload.paste')}
         </button>
       </div>
 
-      <div className="upload-area">
+      <div className={styles.uploadArea}>
         {inputMode === 'text' ? (
           <textarea
             value={textInput}
@@ -113,14 +115,14 @@ export default function HomeUploadSection({
             rows={12}
           />
         ) : (
-          <div className="file-upload">
+          <div className={styles.fileUpload}>
             <input
               type="file"
               accept={inputMode === 'image' ? 'image/*' : '.pdf'}
               capture={inputMode === 'image' ? 'environment' : undefined}
               onChange={(e) => setFile(e.target.files?.[0] || null)}
             />
-            {file && <p className="file-name">{file.name}</p>}
+            {file && <p className={styles.fileName}>{file.name}</p>}
           </div>
         )}
       </div>
@@ -157,10 +159,10 @@ export default function HomeUploadSection({
             </div>
             <div className="pricing-price-lockup">
               <span>{t('pricing.price')}</span>
-              <p className="price-amount">¥{uploadResult.price_jpy.toLocaleString()}</p>
+              <p className={styles.priceAmount}>¥{uploadResult.price_jpy.toLocaleString()}</p>
             </div>
           </div>
-          <div className="pricing-quote-meta">
+          <div className={styles.pricingQuoteMeta}>
             <strong>{quoteLabel}</strong>
             <p>{quoteDescription}</p>
           </div>
@@ -190,7 +192,7 @@ export default function HomeUploadSection({
             </div>
           </div>
 
-          <div className="payment-form">
+          <div className={styles.paymentForm}>
             <h3>{t('payment.title')}</h3>
             <label>
               {t('payment.email_label')}
