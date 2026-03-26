@@ -327,6 +327,8 @@ Embeddings are generated via OpenAI API (httpx direct call, not langchain).
 - After payment success and after review completion, the UI should prompt the user to save the order ID for later lookup.
 - A dedicated lookup page should allow reopening payment, in-progress review, or the completed report from the order ID.
 - Sharing should open a first-party share sheet before optional native share, and should always offer copy-link plus copy-order-ID actions.
+- Lookup/report pages should explicitly handle weak-network states: invalid order IDs, offline banners, timeout-aware loading, and one-tap retry actions.
+- Lookup/report pages should explicitly handle weak-network states: invalid order IDs, offline banners, timeout-aware loading, and one-tap retry actions.
 
 ### RAG evaluation
 `GET /api/eval/rag` runs Recall@K and MRR against `eval_dataset.json`.

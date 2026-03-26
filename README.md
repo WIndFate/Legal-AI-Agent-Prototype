@@ -16,6 +16,7 @@ As of 2026-03-27, the local MVP flow is working in Docker:
 - A new `/lookup` page lets users reopen payment, analysis, or finished reports by order ID
 - Payment success and analysis completion now show an order reminder dialog so users can screenshot or copy their order ID before moving on
 - Report sharing now uses a custom share sheet with a promotional preview, copy-link, copy-order-ID, and native share fallback instead of relying only on direct Web Share calls
+- Lookup and report pages now distinguish invalid order IDs, unstable networks, offline states, and retryable loading failures more clearly
 - Route-level lazy loading and deferred analytics bootstrap now reduce the initial frontend bundle
 - Dev-mode payment works only when `APP_ENV=development` and `KOMOJU_SECRET_KEY` is absent
 - Deployment configs ready: `fly.toml` (NRT region, force HTTPS) and `vercel.json` (API proxy, security headers)
@@ -128,6 +129,7 @@ docker compose up -d backend postgres redis
 17. Payment success and review completion now open a reminder dialog that emphasizes saving the order ID for later lookup.
 18. A dedicated `/lookup` page can reopen pending-payment, in-progress review, or finished report states from the same order ID.
 19. The report page now opens a custom share sheet first, with promotional preview content, copy-link / copy-order-ID actions, and native device share as an optional second step.
+20. Lookup and report pages now surface clearer weak-network states, retry actions, offline banners, and timeout-aware loading feedback.
 
 ## Important Implementation Notes
 
