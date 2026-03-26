@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 
 import ShareSheet from '../components/common/ShareSheet';
@@ -50,8 +50,11 @@ function languageLabel(code: string): string {
   return SUPPORTED_LANGUAGES.find((lang) => lang.code === code)?.name || code;
 }
 
+const REPORT_TIMEOUT_MS = 12_000;
+
 export default function ReportPage() {
   const { orderId } = useParams<{ orderId: string }>();
+  const navigate = useNavigate();
   const { t, i18n } = useTranslation();
   const [data, setData] = useState<ReportData | null>(null);
   const [error, setError] = useState('');
@@ -59,6 +62,10 @@ export default function ReportPage() {
   const [hoursLeft, setHoursLeft] = useState(0);
   const [expandedClauses, setExpandedClauses] = useState<Record<string, boolean>>({});
   const [shareOpen, setShareOpen] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
+  const [isOffline, setIsOffline] = useState(
+    typeof navigator !== 'undefined' ? !navigator.onLine : false
+  );
 
   const toggleClause = (clauseNumber: string) => {
     setExpandedClauses((prev) => ({
@@ -68,9 +75,26 @@ export default function ReportPage() {
   };
 
   useEffect(() => {
+    const handleOnline = () => setIsOffline(false);
+    const handleOffline = () => setIsOffline(true);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
+  useEffect(() => {
     const fetchReport = async () => {
+      const controller = new AbortController();
+      const timer = window.setTimeout(() => controller.abort(), REPORT_TIMEOUT_MS);
+
       try {
-        const res = await fetch(`/api/report/${orderId}`);
+        setLoading(true);
+        setError('');
+        const res = await fetch(`/api/report/${orderId}`, { signal: controller.signal });
         if (res.status === 404) {
           setError(i18n.t('errors.report_expired'));
           return;
@@ -102,13 +126,14 @@ export default function ReportPage() {
         const diffHours = Math.max(0, Math.ceil((expires - Date.now()) / (1000 * 60 * 60)));
         setHoursLeft(diffHours);
       } catch {
-        setError(i18n.t('errors.not_found'));
+        setError(i18n.t('report.network_error'));
       } finally {
+        window.clearTimeout(timer);
         setLoading(false);
       }
     };
     fetchReport();
-  }, [i18n, orderId]);
+  }, [i18n, orderId, reloadKey]);
 
   // Update expiry countdown every minute
   useEffect(() => {
@@ -131,8 +156,15 @@ export default function ReportPage() {
   if (loading) {
     return (
       <div className="page report-page">
-        <div className="loading-state">
+        <div className="loading-state report-loading-card">
           <div className="spinner" />
+          <p className="status-text">{t('report.title')}</p>
+          <p className="status-subtext">{t('payment.waiting_note')}</p>
+          <div className="report-loading-skeleton">
+            <span />
+            <span />
+            <span />
+          </div>
         </div>
       </div>
     );
@@ -141,8 +173,21 @@ export default function ReportPage() {
   if (error && !data) {
     return (
       <div className="page report-page">
-        <div className="error-state">
+        <div className="error-state soft-error-panel">
+          {isOffline && (
+            <div className="offline-banner">
+              <strong>{t('report.network_error')}</strong>
+            </div>
+          )}
           <p className="error-message">{error}</p>
+          <div className="soft-error-actions">
+            <button className="btn-primary" onClick={() => setReloadKey((value) => value + 1)}>
+              {t('review.retry')}
+            </button>
+            <button className="btn-share dialog-secondary-btn" onClick={() => navigate('/lookup')}>
+              {t('nav.lookup')}
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -161,6 +206,11 @@ export default function ReportPage() {
         shareUrl={window.location.href}
         orderId={data.order_id}
       />
+      {isOffline && (
+        <div className="offline-banner report-offline-banner">
+          <strong>{t('report.network_error')}</strong>
+        </div>
+      )}
       <div className="report-summary-shell report-header-bar">
         <div className="report-hero-grid">
           <div className="report-hero-copy">

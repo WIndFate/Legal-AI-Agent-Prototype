@@ -1,6 +1,10 @@
-import { FormEvent, useState } from 'react';
+import { FormEvent, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+
+const LOOKUP_TIMEOUT_MS = 12_000;
+const UUID_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 export default function LookupPage() {
   const { t } = useTranslation();
@@ -9,25 +13,55 @@ export default function LookupPage() {
   const [statusText, setStatusText] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [isOffline, setIsOffline] = useState(
+    typeof navigator !== 'undefined' ? !navigator.onLine : false
+  );
 
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  useEffect(() => {
+    const handleOnline = () => setIsOffline(false);
+    const handleOffline = () => setIsOffline(true);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
+  const fetchWithTimeout = async (input: RequestInfo | URL, init?: RequestInit) => {
+    const controller = new AbortController();
+    const timer = window.setTimeout(() => controller.abort(), LOOKUP_TIMEOUT_MS);
+
+    try {
+      return await fetch(input, { ...init, signal: controller.signal });
+    } finally {
+      window.clearTimeout(timer);
+    }
+  };
+
+  const lookupOrder = async () => {
     if (!orderId.trim()) return;
-
     const trimmed = orderId.trim();
+    if (!UUID_PATTERN.test(trimmed)) {
+      setError(t('order.lookup_invalid'));
+      setStatusText('');
+      return;
+    }
+
     setLoading(true);
     setError('');
     setStatusText(t('order.lookup_checking'));
 
     try {
-      const reportRes = await fetch(`/api/report/${trimmed}`);
+      const reportRes = await fetchWithTimeout(`/api/report/${trimmed}`);
       if (reportRes.ok) {
         setStatusText(t('order.lookup_found_report'));
         navigate(`/report/${trimmed}`);
         return;
       }
 
-      const paymentRes = await fetch(`/api/payment/status/${trimmed}`);
+      const paymentRes = await fetchWithTimeout(`/api/payment/status/${trimmed}`);
       if (paymentRes.ok) {
         const data = await paymentRes.json();
         if (data.status === 'paid' || data.status === 'captured') {
@@ -46,11 +80,16 @@ export default function LookupPage() {
       setError(t('order.lookup_not_found'));
       setStatusText('');
     } catch {
-      setError(t('order.lookup_not_found'));
+      setError(t('order.lookup_network'));
       setStatusText('');
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    await lookupOrder();
   };
 
   return (
@@ -60,6 +99,12 @@ export default function LookupPage() {
         <h2>{t('order.lookup_title')}</h2>
         <p className="section-intro">{t('order.lookup_desc')}</p>
 
+        {isOffline && (
+          <div className="offline-banner">
+            <strong>{t('order.lookup_network')}</strong>
+          </div>
+        )}
+
         <form className="lookup-form" onSubmit={handleSubmit}>
           <label className="lookup-label">
             {t('order.order_id')}
@@ -68,6 +113,9 @@ export default function LookupPage() {
               value={orderId}
               onChange={(event) => setOrderId(event.target.value)}
               placeholder={t('order.lookup_placeholder')}
+              autoCapitalize="off"
+              autoCorrect="off"
+              spellCheck={false}
             />
           </label>
           <button type="submit" className="btn-primary" disabled={loading || !orderId.trim()}>
@@ -76,7 +124,21 @@ export default function LookupPage() {
         </form>
 
         {statusText && <div className="lookup-status">{statusText}</div>}
-        {error && <div className="error-message">{error}</div>}
+        {error && (
+          <div className="lookup-feedback-panel">
+            <p className="error-message">{error}</p>
+            <div className="lookup-actions">
+              <button
+                type="button"
+                className="btn-primary"
+                onClick={() => void lookupOrder()}
+                disabled={loading || !orderId.trim()}
+              >
+                {t('review.retry')}
+              </button>
+            </div>
+          </div>
+        )}
 
         <div className="lookup-help-grid">
           <div className="lookup-help-card">
