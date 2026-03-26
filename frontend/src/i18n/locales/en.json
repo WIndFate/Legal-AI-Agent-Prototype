@@ -85,7 +85,10 @@
     "phase_analyzing_title": "Evaluating Risks",
     "phase_analyzing_desc": "Analyzing each clause against relevant laws...",
     "phase_generating_title": "Generating Report",
-    "phase_generating_desc": "Compiling analysis results into a clear report..."
+    "phase_generating_desc": "Compiling analysis results into a clear report...",
+    "reconnecting": "Connection interrupted. Reconnecting...",
+    "reconnect_failed": "Unable to reconnect. Please tap the button below to try again.",
+    "retry": "Retry"
   },
   "report": {
     "title": "Analysis Report",

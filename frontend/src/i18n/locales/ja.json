@@ -85,7 +85,10 @@
     "phase_analyzing_title": "リスクを評価中",
     "phase_analyzing_desc": "各条項を関連法令に照らして分析しています…",
     "phase_generating_title": "レポートを作成中",
-    "phase_generating_desc": "分析結果を分かりやすいレポートにまとめています…"
+    "phase_generating_desc": "分析結果を分かりやすいレポートにまとめています…",
+    "reconnecting": "接続が中断されました。再接続しています…",
+    "reconnect_failed": "接続を再確立できませんでした。下のボタンで再試行してください。",
+    "retry": "再試行"
   },
   "report": {
     "title": "分析レポート",

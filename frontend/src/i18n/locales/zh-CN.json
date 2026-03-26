@@ -85,7 +85,10 @@
     "phase_analyzing_title": "正在评估风险",
     "phase_analyzing_desc": "正在对照相关法条分析各条款风险…",
     "phase_generating_title": "正在生成报告",
-    "phase_generating_desc": "正在将分析结果整理为易读报告…"
+    "phase_generating_desc": "正在将分析结果整理为易读报告…",
+    "reconnecting": "连接中断，正在重新连接…",
+    "reconnect_failed": "无法重新连接。请点击下方按钮重试。",
+    "retry": "重试"
   },
   "report": {
     "title": "分析报告",

@@ -85,7 +85,10 @@
     "phase_analyzing_title": "리스크 평가 중",
     "phase_analyzing_desc": "각 조항을 관련 법령에 비추어 분석하고 있습니다…",
     "phase_generating_title": "보고서 생성 중",
-    "phase_generating_desc": "분석 결과를 보기 쉬운 보고서로 정리하고 있습니다…"
+    "phase_generating_desc": "분석 결과를 보기 쉬운 보고서로 정리하고 있습니다…",
+    "reconnecting": "연결이 끊어졌습니다. 재연결 중...",
+    "reconnect_failed": "재연결에 실패했습니다. 아래 버튼을 눌러 다시 시도해 주세요.",
+    "retry": "다시 시도"
   },
   "report": {
     "title": "분석 보고서",

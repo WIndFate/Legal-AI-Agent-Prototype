@@ -85,7 +85,10 @@
     "phase_analyzing_title": "Mengevaluasi risiko",
     "phase_analyzing_desc": "Menganalisis setiap pasal berdasarkan hukum terkait…",
     "phase_generating_title": "Membuat laporan",
-    "phase_generating_desc": "Menyusun hasil analisis menjadi laporan yang jelas…"
+    "phase_generating_desc": "Menyusun hasil analisis menjadi laporan yang jelas…",
+    "reconnecting": "Koneksi terputus. Menyambung kembali...",
+    "reconnect_failed": "Gagal menyambung kembali. Silakan tekan tombol di bawah untuk mencoba lagi.",
+    "retry": "Coba lagi"
   },
   "report": {
     "title": "Laporan Analisis",

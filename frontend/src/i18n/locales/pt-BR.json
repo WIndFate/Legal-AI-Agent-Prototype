@@ -85,7 +85,10 @@
     "phase_analyzing_title": "Avaliando riscos",
     "phase_analyzing_desc": "Analisando cada cláusula com base na legislação relevante…",
     "phase_generating_title": "Gerando relatório",
-    "phase_generating_desc": "Compilando os resultados em um relatório claro…"
+    "phase_generating_desc": "Compilando os resultados em um relatório claro…",
+    "reconnecting": "Conexão interrompida. Reconectando...",
+    "reconnect_failed": "Não foi possível reconectar. Toque no botão abaixo para tentar novamente.",
+    "retry": "Tentar novamente"
   },
   "report": {
     "title": "Relatório de Análise",

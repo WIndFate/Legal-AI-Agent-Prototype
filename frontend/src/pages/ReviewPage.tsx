@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 
@@ -35,6 +35,13 @@ interface StreamEvent {
 
 type AnalysisStep = 'parsing' | 'analyzing' | 'generating';
 
+// Maximum number of automatic reconnection attempts
+const MAX_RECONNECT_ATTEMPTS = 3;
+// Base delay for exponential backoff (ms)
+const BASE_RECONNECT_DELAY_MS = 1000;
+// Inactivity timeout: treat stream as dead if no data for this long (ms)
+const STREAM_TIMEOUT_MS = 60_000;
+
 // Risk level color helpers
 function riskColor(level: string): string {
   if (level === '高' || level === 'High' || level === '高リスク') return '#dc2626';
@@ -69,16 +76,26 @@ export default function ReviewPage() {
   const [logLines, setLogLines] = useState<string[]>([]);
   const [expandedClauses, setExpandedClauses] = useState<Record<string, boolean>>({});
   const [phaseText, setPhaseText] = useState('');
-  const started = useRef(false);
+  const [reconnecting, setReconnecting] = useState(false);
 
-  const toolLabel = (toolName?: string) => {
+  // Refs to track reconnection state without causing re-renders
+  const started = useRef(false);
+  const reconnectAttempt = useRef(0);
+  const timeoutTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
+  // Track the total number of SSE events processed so far for deduplication on reconnect
+  const eventIndex = useRef(0);
+  // Whether the stream completed or received a server-side error (no reconnect needed)
+  const terminalReached = useRef(false);
+
+  const toolLabel = useCallback((toolName?: string) => {
     if (toolName === 'analyze_clause_risk') return t('review.tool_analyze_clause_risk');
     if (toolName === 'generate_suggestion') return t('review.tool_generate_suggestion');
     return t('review.tool_processing_clause');
-  };
+  }, [t]);
 
-  const pushLog = (line: string) =>
-    setLogLines((prev) => [...prev, line].slice(-5));
+  const pushLog = useCallback((line: string) =>
+    setLogLines((prev) => [...prev, line].slice(-5)), []);
 
   const toggleClause = (clauseNumber: string) => {
     setExpandedClauses((prev) => ({
@@ -87,7 +104,7 @@ export default function ReviewPage() {
     }));
   };
 
-  const phaseMeta = (step: AnalysisStep) => {
+  const phaseMeta = useCallback((step: AnalysisStep) => {
     if (step === 'parsing') {
       return { title: t('review.phase_parsing_title'), desc: t('review.phase_parsing_desc') };
     }
@@ -95,120 +112,257 @@ export default function ReviewPage() {
       return { title: t('review.phase_analyzing_title'), desc: t('review.phase_analyzing_desc') };
     }
     return { title: t('review.phase_generating_title'), desc: t('review.phase_generating_desc') };
-  };
+  }, [t]);
+
+  /** Clear the inactivity timeout timer */
+  const clearStreamTimeout = useCallback(() => {
+    if (timeoutTimer.current) {
+      clearTimeout(timeoutTimer.current);
+      timeoutTimer.current = null;
+    }
+  }, []);
+
+  /**
+   * Reset (or start) the inactivity timeout. If no data arrives within
+   * STREAM_TIMEOUT_MS, the callback fires to trigger a reconnect attempt.
+   */
+  const resetStreamTimeout = useCallback((onTimeout: () => void) => {
+    clearStreamTimeout();
+    timeoutTimer.current = setTimeout(onTimeout, STREAM_TIMEOUT_MS);
+  }, [clearStreamTimeout]);
+
+  /**
+   * Core SSE connection logic. Returns a promise that resolves when the
+   * stream ends (either normally or due to disconnection).
+   *
+   * - On `complete` or `error` events the promise resolves with `'terminal'`
+   *   meaning no reconnect is needed.
+   * - On unexpected end-of-stream or timeout it resolves with `'disconnected'`.
+   * - On 409 (already completed) it fetches the stored report and resolves `'terminal'`.
+   */
+  const connectSSE = useCallback(async (): Promise<'terminal' | 'disconnected'> => {
+    const abortController = new AbortController();
+    abortRef.current = abortController;
+
+    // The number of events already processed before this connection attempt.
+    // On reconnect the backend replays from the beginning, so we skip this many events.
+    const skipCount = eventIndex.current;
+
+    try {
+      const res = await fetch('/api/review/stream', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ order_id: orderId }),
+        signal: abortController.signal,
+      });
+
+      // If analysis already completed, fetch the stored report
+      if (res.status === 409) {
+        const reportRes = await fetch(`/api/report/${orderId}`);
+        if (reportRes.ok) {
+          const data = await reportRes.json();
+          const savedOriginals = sessionStorage.getItem(`report-originals:${orderId}`);
+          const originalByClause = savedOriginals ? JSON.parse(savedOriginals) as Record<string, string> : {};
+          const persistedReport = data.report || data;
+          setReport({
+            ...persistedReport,
+            clause_analyses: (persistedReport.clause_analyses || []).map((clause: ClauseAnalysis) => ({
+              ...clause,
+              original_text: originalByClause[clause.clause_number] || '',
+            })),
+          });
+        }
+        setLoading(false);
+        return 'terminal';
+      }
+
+      if (!res.ok) {
+        throw new Error(`Review failed: ${res.status}`);
+      }
+
+      // Parse SSE stream
+      const reader = res.body!.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+      let localEventIdx = 0;
+
+      // Set up inactivity timeout that will abort this connection
+      const handleTimeout = () => {
+        abortController.abort();
+      };
+      resetStreamTimeout(handleTimeout);
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        // Reset inactivity timer on every data chunk
+        resetStreamTimeout(handleTimeout);
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() ?? '';
+
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue;
+
+          // Deduplicate: skip events already processed in a previous connection
+          if (localEventIdx < skipCount) {
+            localEventIdx++;
+            eventIndex.current = Math.max(eventIndex.current, localEventIdx);
+            continue;
+          }
+          localEventIdx++;
+          eventIndex.current = Math.max(eventIndex.current, localEventIdx);
+
+          try {
+            const evt: StreamEvent = JSON.parse(line.slice(6));
+
+            switch (evt.type) {
+              case 'node_start': {
+                if (evt.label) pushLog(evt.label);
+                // Update step indicator based on node name
+                const matchedStep = STEP_DEFS.find(
+                  (s) => evt.node && evt.node.includes(s.nodeMatch)
+                );
+                if (matchedStep) {
+                  setCurrentStep(matchedStep.key);
+                  setPhaseText(phaseMeta(matchedStep.key).desc);
+                }
+                break;
+              }
+              case 'tool_call':
+                {
+                  const label = toolLabel(evt.tool);
+                  pushLog(label);
+                  setPhaseText(label);
+                }
+                break;
+              case 'tool_result':
+                if (evt.text) {
+                  pushLog(evt.text);
+                  setPhaseText(evt.text);
+                }
+                break;
+              case 'complete':
+                clearStreamTimeout();
+                if (evt.report) {
+                  const originalByClause = Object.fromEntries(
+                    evt.report.clause_analyses
+                      .filter((clause) => clause.original_text)
+                      .map((clause) => [clause.clause_number, clause.original_text as string])
+                  );
+                  sessionStorage.setItem(`report-originals:${orderId}`, JSON.stringify(originalByClause));
+                  setReport(evt.report);
+                  setLoading(false);
+                }
+                terminalReached.current = true;
+                return 'terminal';
+              case 'error':
+                clearStreamTimeout();
+                setError(evt.message || t('errors.review_failed'));
+                setLoading(false);
+                terminalReached.current = true;
+                return 'terminal';
+            }
+          } catch {
+            // Skip malformed SSE JSON
+          }
+        }
+      }
+
+      clearStreamTimeout();
+      // Stream ended without a terminal event — treat as unexpected disconnection
+      return 'disconnected';
+    } catch (e) {
+      clearStreamTimeout();
+      // AbortError from timeout or manual abort — treat as disconnection
+      if (e instanceof DOMException && e.name === 'AbortError') {
+        return 'disconnected';
+      }
+      // Network error — also treat as disconnection for retry
+      if (e instanceof TypeError) {
+        return 'disconnected';
+      }
+      // Other unexpected errors — surface to user
+      throw e;
+    }
+  }, [orderId, t, pushLog, toolLabel, phaseMeta, clearStreamTimeout, resetStreamTimeout]);
+
+  /**
+   * Initiate the SSE review stream with automatic reconnection.
+   * On unexpected disconnection, retries with exponential backoff
+   * up to MAX_RECONNECT_ATTEMPTS times.
+   */
+  const startReviewWithReconnect = useCallback(async () => {
+    reconnectAttempt.current = 0;
+    terminalReached.current = false;
+
+    while (true) {
+      try {
+        setReconnecting(reconnectAttempt.current > 0);
+        const result = await connectSSE();
+        setReconnecting(false);
+
+        if (result === 'terminal') {
+          // Stream completed normally or server returned an error — done
+          return;
+        }
+
+        // Disconnected unexpectedly — check if we can retry
+        if (terminalReached.current) return;
+
+        reconnectAttempt.current++;
+        if (reconnectAttempt.current > MAX_RECONNECT_ATTEMPTS) {
+          // Exhausted all retries — show error with manual retry option
+          setError(t('review.reconnect_failed'));
+          setLoading(false);
+          return;
+        }
+
+        // Exponential backoff: 1s, 2s, 4s
+        const delay = BASE_RECONNECT_DELAY_MS * Math.pow(2, reconnectAttempt.current - 1);
+        await new Promise((resolve) => setTimeout(resolve, delay));
+      } catch (e) {
+        // Non-retryable error
+        setError(e instanceof Error ? e.message : t('errors.review_failed'));
+        setLoading(false);
+        return;
+      }
+    }
+  }, [connectSSE, t]);
+
+  /** Manual retry handler — resets all state and starts fresh */
+  const handleManualRetry = useCallback(() => {
+    // Reset all relevant state
+    setError('');
+    setLoading(true);
+    setReport(null);
+    setCurrentStep('parsing');
+    setLogLines([]);
+    setPhaseText('');
+    setReconnecting(false);
+    reconnectAttempt.current = 0;
+    eventIndex.current = 0;
+    terminalReached.current = false;
+
+    startReviewWithReconnect();
+  }, [startReviewWithReconnect]);
 
   useEffect(() => {
     if (started.current) return;
     started.current = true;
 
-    const startReview = async () => {
-      try {
-        const res = await fetch('/api/review/stream', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ order_id: orderId }),
-        });
+    startReviewWithReconnect();
 
-        // If analysis already completed, fetch the stored report
-        if (res.status === 409) {
-          const reportRes = await fetch(`/api/report/${orderId}`);
-          if (reportRes.ok) {
-            const data = await reportRes.json();
-            const savedOriginals = sessionStorage.getItem(`report-originals:${orderId}`);
-            const originalByClause = savedOriginals ? JSON.parse(savedOriginals) as Record<string, string> : {};
-            const persistedReport = data.report || data;
-            setReport({
-              ...persistedReport,
-              clause_analyses: (persistedReport.clause_analyses || []).map((clause: ClauseAnalysis) => ({
-                ...clause,
-                original_text: originalByClause[clause.clause_number] || '',
-              })),
-            });
-          }
-          setLoading(false);
-          return;
-        }
-
-        if (!res.ok) {
-          throw new Error(`Review failed: ${res.status}`);
-        }
-
-        // Parse SSE stream
-        const reader = res.body!.getReader();
-        const decoder = new TextDecoder();
-        let buffer = '';
-
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          buffer += decoder.decode(value, { stream: true });
-          const lines = buffer.split('\n');
-          buffer = lines.pop() ?? '';
-
-          for (const line of lines) {
-            if (!line.startsWith('data: ')) continue;
-            try {
-              const evt: StreamEvent = JSON.parse(line.slice(6));
-
-              switch (evt.type) {
-                case 'node_start': {
-                  if (evt.label) pushLog(evt.label);
-                  // Update step indicator based on node name
-                  const matchedStep = STEP_DEFS.find(
-                    (s) => evt.node && evt.node.includes(s.nodeMatch)
-                  );
-                  if (matchedStep) {
-                    setCurrentStep(matchedStep.key);
-                    setPhaseText(phaseMeta(matchedStep.key).desc);
-                  }
-                  break;
-                }
-                case 'tool_call':
-                  {
-                    const line = toolLabel(evt.tool);
-                    pushLog(line);
-                    setPhaseText(line);
-                  }
-                  break;
-                case 'tool_result':
-                  if (evt.text) {
-                    pushLog(evt.text);
-                    setPhaseText(evt.text);
-                  }
-                  break;
-                case 'complete':
-                  if (evt.report) {
-                    const originalByClause = Object.fromEntries(
-                      evt.report.clause_analyses
-                        .filter((clause) => clause.original_text)
-                        .map((clause) => [clause.clause_number, clause.original_text as string])
-                    );
-                    sessionStorage.setItem(`report-originals:${orderId}`, JSON.stringify(originalByClause));
-                    setReport(evt.report);
-                    setLoading(false);
-                  }
-                  break;
-                case 'error':
-                  setError(evt.message || t('errors.review_failed'));
-                  setLoading(false);
-                  break;
-              }
-            } catch {
-              // Skip malformed SSE JSON
-            }
-          }
-        }
-
-        // If stream ended without complete event, stop loading
-        setLoading(false);
-      } catch (e) {
-        setError(e instanceof Error ? e.message : t('errors.review_failed'));
-        setLoading(false);
+    // Cleanup: abort any in-flight connection and clear timers on unmount
+    return () => {
+      clearStreamTimeout();
+      if (abortRef.current) {
+        abortRef.current.abort();
       }
     };
-
-    startReview();
-  }, [orderId, t]);
+  }, [startReviewWithReconnect, clearStreamTimeout]);
 
   // Determine step status for progress indicator
   const stepOrder: AnalysisStep[] = ['parsing', 'analyzing', 'generating'];
@@ -261,6 +415,14 @@ export default function ReviewPage() {
               })}
             </div>
 
+            {/* Reconnecting indicator */}
+            {reconnecting && (
+              <div className="reconnecting-banner">
+                <div className="spinner spinner-small" />
+                <span>{t('review.reconnecting')}</span>
+              </div>
+            )}
+
             {/* Spinner and live log */}
             <div className="stream-log polished-stream-log">
               <div className="spinner" />
@@ -290,8 +452,18 @@ export default function ReviewPage() {
         </div>
       )}
 
-      {/* Error display */}
-      {error && <div className="error-message">{error}</div>}
+      {/* Error display with optional manual retry button */}
+      {error && (
+        <div className="error-message">
+          <p>{error}</p>
+          <button
+            className="btn-primary btn-retry"
+            onClick={handleManualRetry}
+          >
+            {t('review.retry')}
+          </button>
+        </div>
+      )}
 
       {/* Report display */}
       {report && (

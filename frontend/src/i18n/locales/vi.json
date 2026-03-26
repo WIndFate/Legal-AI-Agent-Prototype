@@ -85,7 +85,10 @@
     "phase_analyzing_title": "Đang đánh giá rủi ro",
     "phase_analyzing_desc": "Đang phân tích từng điều khoản theo luật liên quan…",
     "phase_generating_title": "Đang tạo báo cáo",
-    "phase_generating_desc": "Đang tổng hợp kết quả phân tích thành báo cáo rõ ràng…"
+    "phase_generating_desc": "Đang tổng hợp kết quả phân tích thành báo cáo rõ ràng…",
+    "reconnecting": "Kết nối bị gián đoạn. Đang kết nối lại...",
+    "reconnect_failed": "Không thể kết nối lại. Vui lòng nhấn nút bên dưới để thử lại.",
+    "retry": "Thử lại"
   },
   "report": {
     "title": "Báo cáo phân tích",
