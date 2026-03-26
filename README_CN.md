@@ -152,7 +152,7 @@ docker compose up -d backend postgres redis
 - `scripts/check_rag_eval.sh` 会检查 `/api/eval/rag` 是否满足当前本地基线阈值（`Recall@5 >= 0.45`、`MRR >= 0.45`）。
 - `scripts/run_backend_pytests.sh` 会在 Docker 内安装 backend dev 依赖并执行完整 `tests/` 回归单测。
 - 集成测试覆盖全部 7 个 API 路由（health、upload、payment、review、report、referral、eval），共 39+ 测试函数。
-- `frontend/src/pages/HomePage.tsx` 现在只作为容器页，首屏、流程、案例、上传/支付区域已拆到独立的首页组件中（`HomeHeroSection`、`HomeFlowSection`、`HomeExamplesSection`、`HomeUploadSection`）。
+- `frontend/src/pages/HomePage.tsx` 现在只作为容器页，首屏、流程、上传/支付区域已拆到独立的首页组件中（`HomeHeroSection`、`HomeFlowSection`、`HomeUploadSection`）；案例展示已独立为 `/examples` 页面。
 - 首页在生成报价后会自动滚动到支付区域，并对支付卡片做短暂高亮，避免用户点击“开始分析”后误以为页面没有反应。
 - 现在新增 `/lookup` 结果查询页，用户输入订单号即可重新进入付款状态页、分析页或最终报告页。
 - 支付成功和分析完成后，前端会弹出订单提醒框，引导用户截图或复制订单号。
@@ -176,6 +176,7 @@ docker compose up -d backend postgres redis
 - [`frontend/src/components/home/HomeFlowSection.tsx`](./frontend/src/components/home/HomeFlowSection.tsx)：首页流程步骤组件
 - [`frontend/src/components/home/HomeExamplesSection.tsx`](./frontend/src/components/home/HomeExamplesSection.tsx)：首页案例展示组件
 - [`frontend/src/components/home/HomeUploadSection.tsx`](./frontend/src/components/home/HomeUploadSection.tsx)：首页上传界面组件
+- [`frontend/src/pages/ExamplesPage.tsx`](./frontend/src/pages/ExamplesPage.tsx)：独立案例展示页
 - [`frontend/src/pages/LookupPage.tsx`](./frontend/src/pages/LookupPage.tsx)：订单号结果查询页
 - [`frontend/src/components/common/OrderReminderDialog.tsx`](./frontend/src/components/common/OrderReminderDialog.tsx)：订单号保存提醒弹层
 - [`frontend/src/components/common/ShareSheet.tsx`](./frontend/src/components/common/ShareSheet.tsx)：自定义分享面板

@@ -152,7 +152,7 @@ docker compose up -d backend postgres redis
 - `scripts/check_rag_eval.sh` は `/api/eval/rag` を現在のローカル基準値（`Recall@5 >= 0.45`、`MRR >= 0.45`）でチェックします。
 - `scripts/run_backend_pytests.sh` は Docker 内で backend の dev 依存を入れた上で、完全な `tests/` 回帰テストを実行します。
 - 統合テストは全 7 API ルーター（health、upload、payment、review、report、referral、eval）を 39 件超のテスト関数でカバーしています。
-- `frontend/src/pages/HomePage.tsx` は現在コンテナページとして振る舞い、hero / flow / examples / upload-payment を個別コンポーネント（`HomeHeroSection`、`HomeFlowSection`、`HomeExamplesSection`、`HomeUploadSection`）に委譲します。
+- `frontend/src/pages/HomePage.tsx` は現在コンテナページとして振る舞い、hero / flow / upload-payment を個別コンポーネント（`HomeHeroSection`、`HomeFlowSection`、`HomeUploadSection`）に委譲します。事例紹介は `/examples` の独立ページに切り出されています。
 - 見積もり生成後、ホームページは自動で支払いパネルまでスクロールし、短時間ハイライトして次の導線を見失いにくくしています。
 - `/lookup` 結果照会ページが追加され、注文番号から支払い状態ページ・分析中ページ・完成レポートを再オープンできます。
 - 支払い完了時と分析完了時には、注文番号をスクリーンショット保存またはコピーするよう促すダイアログを表示します。
@@ -176,6 +176,7 @@ docker compose up -d backend postgres redis
 - [`frontend/src/components/home/HomeFlowSection.tsx`](./frontend/src/components/home/HomeFlowSection.tsx): ホームページフローステップ
 - [`frontend/src/components/home/HomeExamplesSection.tsx`](./frontend/src/components/home/HomeExamplesSection.tsx): ホームページサンプル展示
 - [`frontend/src/components/home/HomeUploadSection.tsx`](./frontend/src/components/home/HomeUploadSection.tsx): ホームページアップロード
+- [`frontend/src/pages/ExamplesPage.tsx`](./frontend/src/pages/ExamplesPage.tsx): 独立した事例紹介ページ
 - [`frontend/src/pages/LookupPage.tsx`](./frontend/src/pages/LookupPage.tsx): 注文番号ベースの結果照会ページ
 - [`frontend/src/components/common/OrderReminderDialog.tsx`](./frontend/src/components/common/OrderReminderDialog.tsx): 注文番号保存を促すダイアログ
 - [`frontend/src/components/common/ShareSheet.tsx`](./frontend/src/components/common/ShareSheet.tsx): 専用共有パネル

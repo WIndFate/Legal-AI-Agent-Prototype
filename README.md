@@ -22,7 +22,7 @@ As of 2026-03-27, the local MVP flow is working in Docker:
 - Deployment configs ready: `fly.toml` (NRT region, force HTTPS) and `vercel.json` (API proxy, security headers)
 - Integration test suite: 7 router test files with 39+ test functions covering all API endpoints
 - SSE reconnection with exponential backoff (3 attempts), event deduplication, and 60s inactivity timeout
-- HomePage split into focused section components (Hero, Flow, Examples, Upload)
+- Homepage split into focused section components (Hero, Flow, Upload), and examples moved into a dedicated `/examples` page
 - RAG embedding batching for reduced API calls
 - Dead code cleanup completed (removed unused `analyze_risks_streaming`)
 - Database indexes on commonly queried columns (email, payment_status, expires_at, analysis_status)
@@ -162,7 +162,7 @@ docker compose up -d backend postgres redis
 - `scripts/check_rag_eval.sh` checks `/api/eval/rag` against the current local baseline thresholds (`Recall@5 >= 0.45`, `MRR >= 0.45`).
 - `scripts/run_backend_pytests.sh` runs the backend regression tests inside Docker after installing dev dependencies in the running backend container, and now executes the full `tests/` suite.
 - Integration tests cover all 7 API routers (health, upload, payment, review, report, referral, eval) with 39+ test functions.
-- `frontend/src/pages/HomePage.tsx` now acts as a container page and delegates the hero, flow, examples, and upload/payment areas to focused home components (`HomeHeroSection`, `HomeFlowSection`, `HomeExamplesSection`, `HomeUploadSection`).
+- `frontend/src/pages/HomePage.tsx` now acts as a container page and delegates the hero, flow, and upload/payment areas to focused home components (`HomeHeroSection`, `HomeFlowSection`, `HomeUploadSection`), while `/examples` renders the standalone example showcase.
 - SSE reconnection uses exponential backoff (base 1s, max 3 attempts) with event deduplication and 60s inactivity timeout.
 - RAG embedding requests are batched via `_get_embeddings_batch_sync()` and `search_batch()` to reduce API calls.
 
@@ -181,6 +181,7 @@ docker compose up -d backend postgres redis
 - [`frontend/src/components/home/HomeFlowSection.tsx`](./frontend/src/components/home/HomeFlowSection.tsx): homepage flow steps component
 - [`frontend/src/components/home/HomeExamplesSection.tsx`](./frontend/src/components/home/HomeExamplesSection.tsx): homepage example showcase component
 - [`frontend/src/components/home/HomeUploadSection.tsx`](./frontend/src/components/home/HomeUploadSection.tsx): homepage upload interface component
+- [`frontend/src/pages/ExamplesPage.tsx`](./frontend/src/pages/ExamplesPage.tsx): dedicated examples page
 - [`frontend/src/pages/LookupPage.tsx`](./frontend/src/pages/LookupPage.tsx): order-ID based result lookup page
 - [`frontend/src/components/common/OrderReminderDialog.tsx`](./frontend/src/components/common/OrderReminderDialog.tsx): modal prompting users to save order details
 - [`frontend/src/components/common/ShareSheet.tsx`](./frontend/src/components/common/ShareSheet.tsx): custom share panel with copy/native-share actions

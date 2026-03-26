@@ -76,7 +76,7 @@ Current status as of 2026-03-27:
 - Eval dataset expanded to 20 labeled samples covering multiple contract types.
 - Integration test suite: 7 router test files with 39+ test functions covering all API endpoints.
 - SSE reconnection with exponential backoff, event deduplication, and inactivity timeout.
-- HomePage split into focused section components (Hero, Flow, Examples, Upload).
+- HomePage split into focused section components (Hero, Flow, Upload), with examples moved to a dedicated `/examples` page.
 - RAG embedding batching, database query indexes, and dead code cleanup completed.
 - CSS partially migrated to CSS Modules: layout, home, examples, legal use scoped modules; report/review remain global due to cross-page sharing and responsive dependencies.
 - Frontend UX polish now includes result lookup, order reminder dialogs, custom share sheet, and reveal-on-scroll homepage sections.
@@ -204,7 +204,8 @@ frontend/
       common/       # RevealSection + OrderReminderDialog + ShareSheet
       home/         # HomeHeroSection + HomeFlowSection + HomeExamplesSection + HomeUploadSection
     pages/
-      HomePage.tsx          # Homepage container composing hero/flow/examples/upload sections
+      HomePage.tsx          # Homepage container composing hero/flow/upload sections
+      ExamplesPage.tsx      # Dedicated examples page
       LookupPage.tsx        # Order-ID based result lookup page
       PaymentPage.tsx       # Payment polling + order reminder prompt
       ReviewPage.tsx        # SSE review progress + live report + completion prompt
@@ -308,7 +309,7 @@ Embeddings are generated via OpenAI API (httpx direct call, not langchain).
 - CSS-only brand mark (blue gradient shield via `clip-path: polygon()`)
 
 ### Frontend professional structure
-- Homepage: hero card + flow steps + example showcase (3 contract scenarios with tab switching) + upload section
+- Homepage: hero card + flow steps + upload section, plus a guided entry point to the standalone examples page
 - Example reports use i18n keys for `risk_reason`/`suggestion` (key pattern: `examples.{scenario}_c{n}_reason/suggestion`), while `original_text`, `referenced_law`, `clause_number` stay in Japanese in `exampleReports.ts`
 - Legal pages (`/privacy`, `/terms`): localized summary at top + hardcoded Japanese legal full text (required by law)
 - Layout: sticky header with brand mark + nav links + language selector; footer with nav links to all pages + legal disclaimer + copyright
