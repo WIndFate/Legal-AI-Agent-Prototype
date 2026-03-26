@@ -1,0 +1,341 @@
+/* ── Home page: hero, flow, upload, pricing, payment form ── */
+
+.hero-card {
+  padding: 28px;
+  position: relative;
+  overflow: hidden;
+  animation: fadeUp 0.65s ease both;
+}
+
+.hero-card::after {
+  content: "";
+  position: absolute;
+  inset: auto -120px -160px auto;
+  width: 320px;
+  height: 320px;
+  background: radial-gradient(circle, rgba(31, 58, 95, 0.14), transparent 68%);
+  pointer-events: none;
+}
+
+.hero-grid {
+  display: grid;
+  gap: 24px;
+}
+
+.hero-copy {
+  position: relative;
+  z-index: 1;
+}
+
+.hero-title {
+  margin-bottom: 14px;
+}
+
+.hero-subtitle {
+  max-width: 640px;
+  font-size: 1rem;
+  line-height: 1.9;
+}
+
+.trust-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.trust-pill {
+  color: var(--brand);
+  background: rgba(245, 249, 255, 0.92);
+  border: 1px solid rgba(95, 127, 163, 0.22);
+}
+
+.hero-metrics {
+  margin-top: 22px;
+}
+
+.hero-preview-card {
+  position: relative;
+  z-index: 1;
+  padding: 18px;
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(31, 58, 95, 0.14);
+  background:
+    linear-gradient(180deg, rgba(31, 58, 95, 0.96) 0%, rgba(20, 40, 63, 0.96) 100%);
+  color: #edf2f8;
+  box-shadow: 0 24px 48px rgba(20, 40, 63, 0.22);
+  animation: fadeUp 0.8s ease both, glowFloat 7s ease-in-out infinite;
+}
+
+.hero-preview-label {
+  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
+  font-size: 0.74rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(237, 242, 248, 0.74);
+}
+
+.hero-preview-body {
+  margin-top: 16px;
+  display: grid;
+  gap: 12px;
+}
+
+.hero-preview-item {
+  padding: 14px;
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.hero-preview-item strong,
+.hero-preview-text {
+  color: #edf2f8;
+}
+
+.hero-preview-text {
+  margin-top: 10px;
+  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
+  font-size: 0.9rem;
+  line-height: 1.7;
+}
+
+.hero-preview-badge {
+  color: #fff;
+}
+
+.flow-card,
+.upload-shell,
+.examples-section,
+.payment-status-card,
+.report-summary-shell {
+  margin-top: 20px;
+  padding: 26px 24px;
+}
+
+.flow-card h2,
+.examples-section h2,
+.upload-shell h2 {
+  margin-bottom: 18px;
+}
+
+.examples-section {
+  animation: fadeUp 0.8s ease both;
+  animation-delay: 0.12s;
+}
+
+.intake-trust-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.flow-steps {
+  display: grid;
+  gap: 14px;
+}
+
+.flow-step {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr);
+  gap: 14px;
+  align-items: start;
+}
+
+.flow-index {
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  color: var(--brand);
+  background: rgba(31, 58, 95, 0.08);
+  border: 1px solid rgba(31, 58, 95, 0.12);
+  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
+  font-weight: 700;
+}
+
+.flow-step strong {
+  display: block;
+  margin-bottom: 4px;
+  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
+  color: var(--brand-ink);
+}
+
+.input-tabs,
+.example-tabs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+
+.tab {
+  flex: 1;
+  min-width: 96px;
+  padding: 12px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(31, 58, 95, 0.12);
+  background: rgba(255, 255, 255, 0.7);
+  color: var(--text-soft);
+  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
+  font-size: 0.86rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.tab:hover,
+.tab.active {
+  color: var(--brand);
+  border-color: rgba(31, 58, 95, 0.24);
+  background: rgba(31, 58, 95, 0.06);
+}
+
+.upload-area textarea,
+.payment-form input {
+  width: 100%;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(31, 58, 95, 0.14);
+  background: rgba(255, 255, 255, 0.78);
+  color: var(--text);
+  padding: 14px 16px;
+  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
+  font-size: 0.95rem;
+  line-height: 1.75;
+}
+
+.upload-area textarea::placeholder,
+.payment-form input::placeholder {
+  color: #9c9186;
+}
+
+.upload-area textarea:focus,
+.payment-form input:focus {
+  outline: none;
+  border-color: rgba(31, 58, 95, 0.34);
+  box-shadow: 0 0 0 4px rgba(95, 127, 163, 0.12);
+}
+
+.file-upload {
+  padding: 34px;
+  text-align: center;
+  border-radius: var(--radius-lg);
+  border: 1px dashed rgba(31, 58, 95, 0.22);
+  background: rgba(255, 255, 255, 0.54);
+}
+
+.file-upload input[type="file"] {
+  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
+  font-size: 0.9rem;
+}
+
+.file-name {
+  margin-top: 10px;
+  color: var(--text-soft);
+  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
+}
+
+.pricing-card {
+  margin-top: 24px;
+  padding: 22px;
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(31, 58, 95, 0.14);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.84) 0%, rgba(248, 244, 238, 0.96) 100%);
+  box-shadow: var(--shadow-md);
+}
+
+.pricing-card h3,
+.payment-form h3,
+.example-report-header h3 {
+  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
+  color: var(--brand-ink);
+}
+
+.pricing-card-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+  margin-bottom: 16px;
+}
+
+.pricing-price-lockup {
+  min-width: 120px;
+  text-align: right;
+}
+
+.pricing-card h3 {
+  font-size: 1.08rem;
+  margin-bottom: 0;
+}
+
+.pricing-details,
+.pricing-assurance {
+  margin-bottom: 20px;
+}
+
+.pricing-quote-meta {
+  margin-bottom: 16px;
+  padding: 12px 14px;
+  border-radius: var(--radius-md);
+  background: rgba(31, 58, 95, 0.05);
+  border: 1px solid rgba(31, 58, 95, 0.1);
+}
+
+.pricing-quote-meta strong {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--brand-ink);
+  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
+  font-size: 0.88rem;
+}
+
+.pricing-quote-meta p {
+  margin: 0;
+  color: var(--text-soft);
+  font-size: 0.84rem;
+  line-height: 1.7;
+}
+
+.pricing-summary-item-wide,
+.payment-summary-item-wide {
+  grid-column: 1 / -1;
+}
+
+.price-amount {
+  margin-top: 4px;
+  color: var(--gold);
+  font-size: 1.6rem;
+  font-weight: 700;
+}
+
+.assurance-item strong {
+  display: block;
+  margin-bottom: 4px;
+  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
+  color: var(--brand-ink);
+}
+
+.assurance-item p {
+  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
+  color: var(--text-soft);
+  font-size: 0.84rem;
+}
+
+.payment-form {
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(31, 58, 95, 0.08);
+}
+
+.payment-form label {
+  display: block;
+  margin-bottom: 14px;
+  color: var(--brand-ink);
+  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
+  font-size: 0.88rem;
+  font-weight: 600;
+}

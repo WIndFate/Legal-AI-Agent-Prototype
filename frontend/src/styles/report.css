@@ -1,0 +1,234 @@
+/* ── Report page: clause cards, risk analysis, actions ── */
+
+.report-section {
+  padding-top: 10px;
+}
+
+.overall-risk-card,
+.report-actions {
+  padding: 22px;
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(31, 58, 95, 0.12);
+  background: rgba(255, 255, 255, 0.8);
+  box-shadow: var(--shadow-md);
+}
+
+.overall-risk-card {
+  margin-bottom: 24px;
+}
+
+.summary {
+  margin-top: 14px;
+  color: var(--text);
+  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
+  font-size: 0.98rem;
+  line-height: 1.85;
+}
+
+.stat.high {
+  color: var(--danger);
+}
+
+.stat.medium {
+  color: var(--warning);
+}
+
+.stat.low {
+  color: var(--success);
+}
+
+.clause-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.clause-card,
+.example-clause-card {
+  padding: 18px;
+  border-left: 3px solid;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+}
+
+.clause-card {
+  background: rgba(255, 255, 255, 0.82);
+  transition: box-shadow 0.18s ease, transform 0.18s ease;
+}
+
+.clause-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 18px 34px rgba(35, 26, 20, 0.07);
+}
+
+.clause-card-expanded {
+  box-shadow: 0 22px 40px rgba(31, 58, 95, 0.12);
+}
+
+.clause-header {
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.clause-heading strong {
+  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
+  font-size: 1rem;
+  color: var(--brand-ink);
+}
+
+.clause-eyebrow,
+.analysis-label {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--text-faint);
+  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.clause-meta-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.clause-meta-item {
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(31, 58, 95, 0.08);
+  background: rgba(255, 255, 255, 0.56);
+}
+
+.clause-meta-item span {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--text-faint);
+  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.clause-meta-item strong {
+  color: var(--brand-ink);
+  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
+  font-size: 0.88rem;
+}
+
+.risk-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 10px;
+  border-radius: 999px;
+  color: #fff;
+  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
+  font-size: 0.74rem;
+  font-weight: 700;
+}
+
+.clause-toolbar {
+  justify-content: flex-start;
+  margin-bottom: 12px;
+}
+
+.clause-toolbar-spacer {
+  height: 34px;
+}
+
+.clause-content {
+  display: block;
+}
+
+.clause-analysis-panel {
+  min-width: 0;
+}
+
+.suggestion,
+.reference {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(31, 58, 95, 0.08);
+  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
+  font-size: 0.84rem;
+}
+
+.analysis-block {
+  padding: 14px 0;
+}
+
+.analysis-block + .analysis-block {
+  border-top: 1px solid rgba(31, 58, 95, 0.08);
+}
+
+.suggestion strong,
+.reference strong,
+.inline-original-label {
+  color: var(--brand);
+  font-weight: 700;
+}
+
+.inline-toggle-btn {
+  appearance: none;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(31, 58, 95, 0.14);
+  background: rgba(255, 255, 255, 0.68);
+  color: var(--brand);
+  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.inline-toggle-btn:hover,
+.inline-toggle-btn-active {
+  background: rgba(31, 58, 95, 0.08);
+}
+
+.inline-original-panel {
+  min-width: 0;
+  padding: 16px;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(31, 58, 95, 0.12);
+  background: rgba(244, 248, 252, 0.82);
+}
+
+.inline-original-label {
+  margin-bottom: 8px;
+  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
+  font-size: 0.76rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.inline-original-text {
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 18rem;
+  overflow-y: auto;
+  color: var(--text);
+  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
+  font-size: 0.88rem;
+  line-height: 1.75;
+}
+
+.inline-original-note {
+  margin-top: 10px;
+  color: var(--text-faint);
+  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
+  font-size: 0.76rem;
+}
+
+.report-actions {
+  margin-top: 28px;
+}
+
+.report-page .clause-card,
+.report-page .overall-risk-card,
+.report-page .report-summary-shell,
+.report-page .report-actions {
+  break-inside: avoid;
+}

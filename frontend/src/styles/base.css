@@ -1,0 +1,346 @@
+/* ── Root variables, resets, keyframes, shared patterns ── */
+
+:root {
+  --bg: #f3efe8;
+  --bg-elevated: rgba(255, 252, 247, 0.82);
+  --panel: #fffdfa;
+  --panel-strong: #ffffff;
+  --panel-muted: #f8f4ee;
+  --line: rgba(51, 42, 34, 0.12);
+  --line-strong: rgba(31, 58, 95, 0.22);
+  --text: #171411;
+  --text-soft: #625b54;
+  --text-faint: #8a8178;
+  --brand: #1f3a5f;
+  --brand-soft: #5f7fa3;
+  --brand-ink: #14283f;
+  --gold: #b08a4a;
+  --success: #2d7b62;
+  --danger: #a84f44;
+  --warning: #b57a2c;
+  --shadow-lg: 0 24px 60px rgba(35, 26, 20, 0.08);
+  --shadow-md: 0 18px 38px rgba(35, 26, 20, 0.06);
+  --shadow-sm: 0 10px 22px rgba(35, 26, 20, 0.04);
+  --radius-xl: 28px;
+  --radius-lg: 22px;
+  --radius-md: 16px;
+  --radius-sm: 12px;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: "Iowan Old Style", "Palatino Linotype", "Noto Serif JP", "Hiragino Mincho ProN", serif;
+  color: var(--text);
+  background:
+    radial-gradient(circle at top left, rgba(95, 127, 163, 0.13), transparent 30%),
+    radial-gradient(circle at top right, rgba(176, 138, 74, 0.08), transparent 28%),
+    linear-gradient(180deg, #f8f4ed 0%, #f2ede5 46%, #efe9e0 100%);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes glowFloat {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Shared card base ── */
+
+.hero-card,
+.flow-card,
+.upload-shell,
+.payment-status-card,
+.report-summary-shell,
+.examples-section {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.88) 0%, rgba(255, 251, 246, 0.94) 100%);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
+}
+
+/* ── Shared text styles ── */
+
+.hero-subtitle,
+.flow-step p,
+.examples-desc,
+.report-comparison-hint,
+.risk-reason,
+.suggestion p,
+.reference p,
+.status-subtext,
+.share-note,
+.example-report-desc,
+.payment-note {
+  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
+  color: var(--text-soft);
+}
+
+/* ── Shared pill styles ── */
+
+.trust-pill,
+.report-language-note,
+.expiry-notice,
+.example-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 9px 13px;
+  border-radius: 999px;
+  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
+  font-size: 0.76rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}
+
+/* ── Shared grid patterns ── */
+
+.hero-metrics,
+.payment-summary-grid,
+.report-hero-stats,
+.summary-metrics,
+.pricing-summary-grid,
+.review-assurance-grid,
+.example-meta-grid,
+.review-phase-stats {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.hero-metric,
+.payment-summary-item,
+.report-hero-stat,
+.summary-metric,
+.pricing-summary-item,
+.assurance-item {
+  padding: 14px 16px;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(31, 58, 95, 0.1);
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.hero-metric span,
+.payment-summary-item span,
+.report-hero-stat span,
+.summary-metric span,
+.pricing-summary-item span {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--text-faint);
+  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.hero-metric strong,
+.payment-summary-item strong,
+.report-hero-stat strong,
+.summary-metric strong,
+.pricing-summary-item strong {
+  color: var(--brand-ink);
+  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
+  font-size: 1.02rem;
+}
+
+/* ── Shared flex patterns ── */
+
+.hero-preview-head,
+.hero-preview-row,
+.clause-header,
+.header-inner,
+.footer-brand,
+.clause-toolbar {
+  display: flex;
+  align-items: center;
+}
+
+.hero-preview-head,
+.hero-preview-row,
+.clause-header {
+  justify-content: space-between;
+}
+
+/* ── Shared trust/assurance card patterns ── */
+
+.intake-trust-card,
+.review-assurance-card,
+.example-meta-item {
+  padding: 14px 16px;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(31, 58, 95, 0.1);
+  background: rgba(255, 255, 255, 0.62);
+}
+
+.intake-trust-card span,
+.review-assurance-card span,
+.example-meta-item span,
+.pricing-price-lockup span,
+.review-phase-stat span {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--text-faint);
+  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.intake-trust-card strong,
+.review-assurance-card strong,
+.example-meta-item strong,
+.review-phase-stat strong {
+  display: block;
+  color: var(--brand-ink);
+  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
+  font-size: 0.98rem;
+}
+
+.intake-trust-card p,
+.review-assurance-card p {
+  margin-top: 6px;
+  color: var(--text-soft);
+  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
+  font-size: 0.83rem;
+  line-height: 1.65;
+}
+
+/* ── Buttons ── */
+
+.btn-primary,
+.btn-share {
+  display: block;
+  width: 100%;
+  min-height: 50px;
+  margin-top: 16px;
+  padding: 14px 20px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: transform 0.16s ease, box-shadow 0.16s ease, background 0.16s ease;
+}
+
+.btn-primary {
+  color: #fff;
+  background: linear-gradient(135deg, #26466e 0%, #16324f 100%);
+  box-shadow: 0 18px 30px rgba(20, 40, 63, 0.18);
+}
+
+.btn-primary:hover:not(:disabled),
+.btn-share:hover {
+  transform: translateY(-1px);
+}
+
+.btn-primary:disabled {
+  background: #bcb2a6;
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+.btn-pay {
+  background: linear-gradient(135deg, #2e745f 0%, #235949 100%);
+}
+
+.btn-share {
+  color: var(--brand);
+  background: rgba(255, 255, 255, 0.72);
+  border-color: rgba(31, 58, 95, 0.14);
+}
+
+/* ── Error / PII warning ── */
+
+.error-message,
+.pii-warning {
+  margin-top: 16px;
+  padding: 14px 16px;
+  border-radius: var(--radius-md);
+  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
+  font-size: 0.88rem;
+}
+
+.error-message {
+  color: #8f3f37;
+  background: rgba(237, 219, 214, 0.78);
+  border: 1px solid rgba(168, 79, 68, 0.2);
+}
+
+.pii-warning {
+  color: #7d5d2d;
+  background: rgba(250, 241, 222, 0.9);
+  border: 1px solid rgba(176, 138, 74, 0.18);
+}
+
+.pii-warning p {
+  margin-bottom: 8px;
+  font-weight: 700;
+}
+
+.pii-warning ul {
+  list-style: none;
+}
+
+.pii-warning li + li {
+  margin-top: 4px;
+}
+
+.pii-warning code {
+  padding: 2px 6px;
+  border-radius: 6px;
+  background: rgba(176, 138, 74, 0.12);
+}
+
+/* ── Shared note styles ── */
+
+.payment-note,
+.status-subtext,
+.share-note {
+  margin-top: 10px;
+  font-size: 0.84rem;
+  line-height: 1.7;
+}

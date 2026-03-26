@@ -1,0 +1,159 @@
+/* ── Responsive breakpoints, reduced motion, print ── */
+
+@media (max-width: 767px) {
+  .header-nav {
+    display: none;
+  }
+
+  .header-inner {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .language-shell {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .hero-card,
+  .flow-card,
+  .upload-shell,
+  .payment-status-card,
+  .report-summary-shell,
+  .examples-section {
+    padding: 22px 18px;
+    border-radius: 22px;
+  }
+
+  .page h2 {
+    font-size: 2.05rem;
+  }
+
+  .pricing-card-header {
+    flex-direction: column;
+  }
+
+  .pricing-price-lockup {
+    text-align: left;
+  }
+
+  .clause-meta-row {
+    grid-template-columns: 1fr;
+  }
+
+  .btn-primary,
+  .btn-share {
+    min-height: 52px;
+  }
+}
+
+@media (min-width: 768px) {
+  .main-content {
+    padding: 32px 24px 56px;
+  }
+
+  .header {
+    padding: 18px 24px;
+  }
+
+  .hero-grid,
+  .report-hero-grid,
+  .review-live-header {
+    grid-template-columns: minmax(0, 1.2fr) minmax(300px, 0.8fr);
+    align-items: stretch;
+  }
+
+  .intake-trust-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .clause-content-split {
+    display: grid;
+    grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.25fr);
+    gap: 16px;
+    align-items: start;
+  }
+}
+
+@media (min-width: 1024px) {
+  .hero-card,
+  .flow-card,
+  .upload-shell,
+  .payment-status-card,
+  .report-summary-shell,
+  .examples-section {
+    padding: 32px;
+  }
+
+  .hero-metrics,
+  .payment-summary-grid,
+  .summary-metrics,
+  .report-hero-stats,
+  .pricing-summary-grid,
+  .review-assurance-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@media print {
+  body {
+    background: #fff;
+    color: #000;
+  }
+
+  .header,
+  .footer,
+  .disclaimer-banner,
+  .report-actions,
+  .inline-toggle-btn,
+  .share-note {
+    display: none !important;
+  }
+
+  .main-content {
+    max-width: none;
+    padding: 0;
+  }
+
+  .page,
+  .report-section {
+    padding: 0;
+  }
+
+  .hero-card,
+  .flow-card,
+  .upload-shell,
+  .payment-status-card,
+  .report-summary-shell,
+  .examples-section,
+  .overall-risk-card,
+  .clause-card {
+    box-shadow: none !important;
+    background: #fff !important;
+    border-color: rgba(0, 0, 0, 0.14) !important;
+  }
+
+  .report-summary-shell,
+  .overall-risk-card,
+  .clause-card {
+    margin-top: 0;
+    margin-bottom: 12pt;
+  }
+
+  .risk-badge,
+  .risk-tag {
+    color: #fff !important;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+}

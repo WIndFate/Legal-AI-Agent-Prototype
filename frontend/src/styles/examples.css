@@ -1,0 +1,72 @@
+/* ── Example reports section ── */
+
+.examples-desc {
+  margin-bottom: 16px;
+  font-size: 0.96rem;
+  line-height: 1.8;
+}
+
+.example-report-card {
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(31, 58, 95, 0.12);
+  background: rgba(255, 255, 255, 0.76);
+  animation: fadeUp 0.9s ease both;
+  animation-delay: 0.18s;
+}
+
+.example-report-header {
+  padding: 20px 18px 16px;
+  background: linear-gradient(180deg, rgba(244, 248, 252, 0.92) 0%, rgba(255, 255, 255, 0.82) 100%);
+  border-bottom: 1px solid rgba(31, 58, 95, 0.08);
+}
+
+.example-badge {
+  margin-bottom: 10px;
+  color: var(--brand);
+  background: rgba(31, 58, 95, 0.08);
+  border: 1px solid rgba(31, 58, 95, 0.12);
+}
+
+.example-report-desc {
+  margin-top: 6px;
+  font-size: 0.84rem;
+}
+
+.example-overall-risk {
+  padding: 14px 18px;
+  border-bottom: 1px solid rgba(31, 58, 95, 0.08);
+}
+
+.example-meta-grid {
+  margin-top: 12px;
+}
+
+.example-clause-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.example-clause-card + .example-clause-card {
+  border-top: 1px solid rgba(31, 58, 95, 0.08);
+}
+
+.example-original-text {
+  margin-bottom: 12px;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(31, 58, 95, 0.08);
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--text-soft);
+  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
+  font-size: 0.82rem;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.example-cta {
+  max-width: 280px;
+  margin: 20px auto 0;
+  text-align: center;
+}

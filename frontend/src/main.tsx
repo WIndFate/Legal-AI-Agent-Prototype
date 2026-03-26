@@ -3,7 +3,14 @@ import { createRoot } from 'react-dom/client';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 
 import './i18n';
-import './App.css';
+import './styles/base.css';
+import './styles/layout.css';
+import './styles/home.css';
+import './styles/review.css';
+import './styles/report.css';
+import './styles/examples.css';
+import './styles/legal.css';
+import './styles/responsive.css';
 
 import Layout from './components/Layout';
 
