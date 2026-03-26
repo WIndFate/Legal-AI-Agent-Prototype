@@ -6,20 +6,29 @@
 
 ## 当前状态
 
-截至 2026-03-26，本地 Docker MVP 流程已经跑通：
+截至 2026-03-27，本地 Docker MVP 流程已经跑通：
 
 - `upload -> payment/create -> review/stream -> report -> 合同文本删除`
-- 文本和可提取文本 PDF 会在付款前直接按文本估价；图片 / 扫描 PDF 现在走“双层 OCR”路径：先临时暂存并预估，付款后再做正式 OCR
-- `pgvector` RAG 已运行在 PostgreSQL 中
+- 文本和可提取文本 PDF 会在付款前直接按文本估价；图片 / 扫描 PDF 现在走”双层 OCR”路径：先临时暂存并预估，付款后再做正式 OCR
+- `pgvector` RAG 已运行在 PostgreSQL 中，覆盖 10 个法律类别共 331+ 条法律条文（租赁、劳动、兼职、业务委托、买卖等）
 - 前端 9 语言界面已实现，包含品牌标识（ContractGuard）、隐私政策/服务条款页面、交互式示例展示
 - 前端已加入路由级懒加载和延迟分析初始化，降低首屏 bundle 压力
 - 仅当 `APP_ENV=development` 且 `KOMOJU_SECRET_KEY` 为空时，本地开发可走自动支付
+- 部署配置已就绪：`fly.toml`（NRT 东京区域，强制 HTTPS）+ `vercel.json`（API 代理 + 安全头）
+- 集成测试套件：7 个路由测试文件，39+ 测试函数，覆盖全部 API 端点
+- SSE 断线重连：指数退避（3 次上限）+ 事件去重 + 60 秒无活动超时
+- 首页已拆分为独立子组件（Hero、Flow、Examples、Upload）
+- RAG embedding 批量化，减少 API 调用次数
+- 死代码已清理（移除未使用的 `analyze_risks_streaming`）
+- 数据库已为常用查询路径添加索引（email、payment_status、expires_at、analysis_status）
 
 仓库外仍待完成：
 
-- Fly.io / Vercel / Supabase 生产部署
-- KOMOJU、Resend、Sentry、PostHog 生产密钥
+- KOMOJU、Resend、Sentry、PostHog 生产密钥与真实联调
 - 真机拍照和跨设备手动测试
+- 用户反馈收集机制（P2）
+- OG tags 与社交媒体分享优化（P2）
+- CSS 模块化迁移（P3）
 
 ## 架构
 
@@ -137,10 +146,13 @@ docker compose up -d backend postgres redis
 - `scripts/smoke_local_flow.sh` 已兼容 SSE 正常收流时可能出现的 `curl` 退出码 `18`，会以实际流事件内容判断成功与否。
 - 原条款文本只存在于流式完成结果和同设备会话缓存中；数据库报告、Redis 缓存、分享链接和邮件链接都不会保存或暴露原文。
 - `scripts/check_locale_keys.sh` 会检查 9 个语言文件是否与 `ja.json` 保持相同键集合。
-- 后端现在会在启动时加载 `backend/data/egov_laws.json` 中的官方 e-Gov 法条语料，当前本地评估集也已经扩展到 20 条人工标注样本。
+- 后端现在会在启动时加载 `backend/data/egov_laws.json` 中的官方 e-Gov 法条语料，覆盖 10 个法律类别共 331+ 条文。当前本地评估集已扩展到 20 条人工标注样本，覆盖损害赔偿、竞业禁止、单方解约、NDA、租赁等场景。
 - `scripts/check_rag_eval.sh` 会检查 `/api/eval/rag` 是否满足当前本地基线阈值（`Recall@5 >= 0.45`、`MRR >= 0.45`）。
 - `scripts/run_backend_pytests.sh` 会在 Docker 内安装 backend dev 依赖并执行完整 `tests/` 回归单测。
-- `frontend/src/pages/HomePage.tsx` 现在只作为容器页，首屏、流程、案例、上传/支付区域已拆到独立的首页组件中。
+- 集成测试覆盖全部 7 个 API 路由（health、upload、payment、review、report、referral、eval），共 39+ 测试函数。
+- `frontend/src/pages/HomePage.tsx` 现在只作为容器页，首屏、流程、案例、上传/支付区域已拆到独立的首页组件中（`HomeHeroSection`、`HomeFlowSection`、`HomeExamplesSection`、`HomeUploadSection`）。
+- SSE 断线重连采用指数退避（基础延迟 1 秒，最多 3 次）+ 事件去重 + 60 秒无活动超时机制。
+- RAG embedding 请求已批量化，通过 `_get_embeddings_batch_sync()` 和 `search_batch()` 减少 API 调用。
 
 ## 仓库入口
 
@@ -153,5 +165,10 @@ docker compose up -d backend postgres redis
 - [`scripts/check_rag_eval.sh`](./scripts/check_rag_eval.sh)：本地 RAG 指标回归检查
 - [`scripts/run_backend_pytests.sh`](./scripts/run_backend_pytests.sh)：Docker 内 backend pytest 运行脚本
 - [`frontend/src/main.tsx`](./frontend/src/main.tsx)：前端路由、i18n、懒加载与延迟分析初始化
+- [`frontend/src/pages/HomeHeroSection.tsx`](./frontend/src/pages/HomeHeroSection.tsx)：首页 hero 区域组件
+- [`frontend/src/pages/HomeFlowSection.tsx`](./frontend/src/pages/HomeFlowSection.tsx)：首页流程步骤组件
+- [`frontend/src/pages/HomeExamplesSection.tsx`](./frontend/src/pages/HomeExamplesSection.tsx)：首页案例展示组件
+- [`frontend/src/pages/HomeUploadSection.tsx`](./frontend/src/pages/HomeUploadSection.tsx)：首页上传界面组件
+- [`tests/`](./tests/)：全部 7 个 API 路由的集成测试 + 单元测试
 - [`SPEC.md`](./SPEC.md)：详细进度、待办和风险
 - [`DESIGN.md`](./DESIGN.md)：产品设计和商业定位

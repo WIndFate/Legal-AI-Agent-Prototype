@@ -6,20 +6,29 @@
 
 ## 現在の状況
 
-2026-03-26 時点で、ローカル Docker 上の MVP フローは動作確認済みです。
+2026-03-27 時点で、ローカル Docker 上の MVP フローは動作確認済みです。
 
 - `upload -> payment/create -> review/stream -> report -> 契約本文削除`
 - テキスト入力とテキスト抽出可能な PDF は支払い前にそのまま見積もりし、画像 / スキャン PDF は一時保存 + 支払い後の正式 OCR を使う二段階 OCR フローになりました
-- `pgvector` RAG は PostgreSQL 上で稼働
+- `pgvector` RAG は PostgreSQL 上で稼働し、10 法令カテゴリ・331 件超の法条（賃貸借・労働・パート・業務委託・売買等）を収録
 - フロントエンドの 9 言語 UI は実装済み。ブランド（ContractGuard）、プライバシーポリシー/利用規約ページ、インタラクティブなサンプルレポート展示を含む
 - ルート単位の遅延読み込みと分析 SDK の遅延初期化により、初期フロントエンド bundle を軽量化
 - `APP_ENV=development` かつ `KOMOJU_SECRET_KEY` 未設定の場合のみ、ローカル開発では自動的に支払い済み扱いになります
+- デプロイ設定済み: `fly.toml`（NRT リージョン、HTTPS 強制）+ `vercel.json`（API プロキシ + セキュリティヘッダー）
+- 統合テストスイート: 7 つのルーターテストファイル、39 件超のテスト関数で全 API エンドポイントをカバー
+- SSE 再接続: 指数バックオフ（最大 3 回）+ イベント重複排除 + 60 秒の無活動タイムアウト
+- ホームページを独立コンポーネントに分割（Hero / Flow / Examples / Upload）
+- RAG embedding バッチ化により API 呼び出し回数を削減
+- 不要コードのクリーンアップ完了（未使用の `analyze_risks_streaming` を削除）
+- よく使うクエリパスにデータベースインデックスを追加（email, payment_status, expires_at, analysis_status）
 
 リポジトリ外で未完了の項目:
 
-- Fly.io / Vercel / Supabase の本番デプロイ
-- KOMOJU、Resend、Sentry、PostHog の本番用認証情報
+- KOMOJU、Resend、Sentry、PostHog の本番用認証情報と実結合テスト
 - モバイル撮影と実機での手動テスト
+- ユーザーフィードバック収集機能（P2）
+- OG タグとソーシャルメディア共有最適化（P2）
+- CSS モジュール化移行（P3）
 
 ## アーキテクチャ
 
@@ -137,10 +146,13 @@ docker compose up -d backend postgres redis
 - `scripts/smoke_local_flow.sh` は SSE 終了時に発生しうる `curl` 終了コード `18` を許容し、実際のストリーム内容で成功可否を判定します。
 - 元条項テキストはストリーミング完了結果と同一端末セッション内にのみ保持されます。DB レポート、Redis キャッシュ、共有リンク、メールリンクには保存・露出しません。
 - `scripts/check_locale_keys.sh` は 9 言語の locale ファイルが `ja.json` と同じキー集合を保っているかを確認します。
-- バックエンドは起動時に `backend/data/egov_laws.json` の公式 e-Gov 法令コーパスを読み込み、ローカル評価データセットも 20 件のラベル付きサンプルに拡張されています。
+- バックエンドは起動時に `backend/data/egov_laws.json` の公式 e-Gov 法令コーパスを読み込みます。10 法令カテゴリ・331 件超の法条を収録。ローカル評価データセットも 20 件のラベル付きサンプルに拡張されています（損害賠償、競業禁止、解約、NDA、賃貸借等をカバー）。
 - `scripts/check_rag_eval.sh` は `/api/eval/rag` を現在のローカル基準値（`Recall@5 >= 0.45`、`MRR >= 0.45`）でチェックします。
 - `scripts/run_backend_pytests.sh` は Docker 内で backend の dev 依存を入れた上で、完全な `tests/` 回帰テストを実行します。
-- `frontend/src/pages/HomePage.tsx` は現在コンテナページとして振る舞い、hero / flow / examples / upload-payment を個別コンポーネントに委譲します。
+- 統合テストは全 7 API ルーター（health、upload、payment、review、report、referral、eval）を 39 件超のテスト関数でカバーしています。
+- `frontend/src/pages/HomePage.tsx` は現在コンテナページとして振る舞い、hero / flow / examples / upload-payment を個別コンポーネント（`HomeHeroSection`、`HomeFlowSection`、`HomeExamplesSection`、`HomeUploadSection`）に委譲します。
+- SSE 再接続は指数バックオフ（ベース 1 秒、最大 3 回）+ イベント重複排除 + 60 秒の無活動タイムアウトを実装しています。
+- RAG embedding リクエストは `_get_embeddings_batch_sync()` と `search_batch()` によりバッチ化され、API 呼び出し回数を削減しています。
 
 ## 主要ファイル
 
@@ -153,5 +165,10 @@ docker compose up -d backend postgres redis
 - [`scripts/check_rag_eval.sh`](./scripts/check_rag_eval.sh): ローカル RAG 回帰チェック
 - [`scripts/run_backend_pytests.sh`](./scripts/run_backend_pytests.sh): Docker ベースの backend pytest 実行スクリプト
 - [`frontend/src/main.tsx`](./frontend/src/main.tsx): ルーター、i18n、遅延読み込み、分析初期化
+- [`frontend/src/pages/HomeHeroSection.tsx`](./frontend/src/pages/HomeHeroSection.tsx): ホームページ hero セクション
+- [`frontend/src/pages/HomeFlowSection.tsx`](./frontend/src/pages/HomeFlowSection.tsx): ホームページフローステップ
+- [`frontend/src/pages/HomeExamplesSection.tsx`](./frontend/src/pages/HomeExamplesSection.tsx): ホームページサンプル展示
+- [`frontend/src/pages/HomeUploadSection.tsx`](./frontend/src/pages/HomeUploadSection.tsx): ホームページアップロード
+- [`tests/`](./tests/): 全 7 API ルーターの統合テスト + ユニットテスト
 - [`SPEC.md`](./SPEC.md): 詳細な進捗、未完了項目、リスク
 - [`DESIGN.md`](./DESIGN.md): プロダクト設計とビジネス方針

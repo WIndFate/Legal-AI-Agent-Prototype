@@ -6,20 +6,29 @@ AI-powered Japanese contract risk analysis for foreign residents in Japan. Users
 
 ## Status
 
-As of 2026-03-26, the local MVP flow is working in Docker:
+As of 2026-03-27, the local MVP flow is working in Docker:
 
 - `upload -> payment/create -> review/stream -> report retrieval -> contract deletion`
 - Text and text-layer PDFs are quoted before payment from extracted text; image/scanned PDF uploads now use a dual-OCR path with temporary staging plus post-payment formal OCR
-- `pgvector` RAG is running in PostgreSQL
+- `pgvector` RAG is running in PostgreSQL with 331+ law articles across 10 legal categories (rental, labor, part-time, business outsourcing, sales, etc.)
 - 9-language frontend with professional branding (ContractGuard), privacy/terms pages, and interactive example showcase
 - Route-level lazy loading and deferred analytics bootstrap now reduce the initial frontend bundle
 - Dev-mode payment works only when `APP_ENV=development` and `KOMOJU_SECRET_KEY` is absent
+- Deployment configs ready: `fly.toml` (NRT region, force HTTPS) and `vercel.json` (API proxy, security headers)
+- Integration test suite: 7 router test files with 39+ test functions covering all API endpoints
+- SSE reconnection with exponential backoff (3 attempts), event deduplication, and 60s inactivity timeout
+- HomePage split into focused section components (Hero, Flow, Examples, Upload)
+- RAG embedding batching for reduced API calls
+- Dead code cleanup completed (removed unused `analyze_risks_streaming`)
+- Database indexes on commonly queried columns (email, payment_status, expires_at, analysis_status)
 
 Still pending outside the repo:
 
-- Fly.io / Vercel / Supabase production deployment
-- KOMOJU, Resend, Sentry, and PostHog production credentials
+- KOMOJU, Resend, Sentry, and PostHog production credentials and live testing
 - Mobile camera/manual cross-device testing
+- User feedback collection on report page (P2)
+- OG tags and social media sharing optimization (P2)
+- CSS modules migration (P3)
 
 ## Architecture
 
@@ -137,10 +146,13 @@ docker compose up -d backend postgres redis
 - `scripts/smoke_local_flow.sh` tolerates curl exit code `18` on SSE shutdown and validates success from the actual streamed events instead.
 - Original clause text is available only in the live review payload and same-device session storage; persisted reports, Redis cache, shared links, and emailed links do not store or expose it.
 - `scripts/check_locale_keys.sh` verifies that all 9 locale files keep the same translation key set as `ja.json`.
-- The backend now loads the official e-Gov law corpus from `backend/data/egov_laws.json` on startup, and the local eval dataset has been expanded to 20 labeled samples.
+- The backend now loads the official e-Gov law corpus from `backend/data/egov_laws.json` on startup, covering 10 legal categories with 331+ articles. The local eval dataset has been expanded to 20 labeled samples covering damages, non-compete, termination, NDAs, lease, and more.
 - `scripts/check_rag_eval.sh` checks `/api/eval/rag` against the current local baseline thresholds (`Recall@5 >= 0.45`, `MRR >= 0.45`).
 - `scripts/run_backend_pytests.sh` runs the backend regression tests inside Docker after installing dev dependencies in the running backend container, and now executes the full `tests/` suite.
-- `frontend/src/pages/HomePage.tsx` now acts as a container page and delegates the hero, flow, examples, and upload/payment areas to focused home components.
+- Integration tests cover all 7 API routers (health, upload, payment, review, report, referral, eval) with 39+ test functions.
+- `frontend/src/pages/HomePage.tsx` now acts as a container page and delegates the hero, flow, examples, and upload/payment areas to focused home components (`HomeHeroSection`, `HomeFlowSection`, `HomeExamplesSection`, `HomeUploadSection`).
+- SSE reconnection uses exponential backoff (base 1s, max 3 attempts) with event deduplication and 60s inactivity timeout.
+- RAG embedding requests are batched via `_get_embeddings_batch_sync()` and `search_batch()` to reduce API calls.
 
 ## Repo Pointers
 
@@ -153,5 +165,10 @@ docker compose up -d backend postgres redis
 - [`scripts/check_rag_eval.sh`](./scripts/check_rag_eval.sh): local RAG metric regression check
 - [`scripts/run_backend_pytests.sh`](./scripts/run_backend_pytests.sh): Docker-based backend pytest runner
 - [`frontend/src/main.tsx`](./frontend/src/main.tsx): router entry, i18n, lazy route loading, deferred analytics bootstrap
+- [`frontend/src/pages/HomeHeroSection.tsx`](./frontend/src/pages/HomeHeroSection.tsx): homepage hero section component
+- [`frontend/src/pages/HomeFlowSection.tsx`](./frontend/src/pages/HomeFlowSection.tsx): homepage flow steps component
+- [`frontend/src/pages/HomeExamplesSection.tsx`](./frontend/src/pages/HomeExamplesSection.tsx): homepage example showcase component
+- [`frontend/src/pages/HomeUploadSection.tsx`](./frontend/src/pages/HomeUploadSection.tsx): homepage upload interface component
+- [`tests/`](./tests/): integration tests for all 7 API routers + unit tests
 - [`SPEC.md`](./SPEC.md): detailed implementation status, pending work, and risks
 - [`DESIGN.md`](./DESIGN.md): product rationale and go-to-market plan

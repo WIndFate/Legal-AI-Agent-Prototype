@@ -67,11 +67,18 @@ Built with LangGraph (agentic loop), PostgreSQL pgvector (RAG), FastAPI (REST + 
 
 **Target MVP pipeline (per DESIGN.md):** `upload_contract → recognize_text (OCR) → parse_contract → analyze_risks → generate_report → output_chinese_report`
 
-Current status as of 2026-03-26:
+Current status as of 2026-03-27:
 - Local Docker end-to-end flow is verified through upload, payment creation, SSE review, report retrieval, and contract deletion.
 - `APP_ENV=development` enables local-only conveniences such as auto table bootstrap and dev payment bypass.
 - Dual-OCR groundwork is now in code: text/text-layer PDFs are quoted before payment, while image/scanned PDFs can be staged for local pre-estimation and formal OCR after payment.
-- Production deployment and third-party production credentials are still pending.
+- Deployment configs ready: `fly.toml` (NRT, force_https) + `vercel.json` (API proxy, security headers) + Alembic 4-step migration chain.
+- RAG knowledge base expanded to 331+ law articles across 10 legal categories (rental, labor, part-time, business outsourcing, sales, etc.).
+- Eval dataset expanded to 20 labeled samples covering multiple contract types.
+- Integration test suite: 7 router test files with 39+ test functions covering all API endpoints.
+- SSE reconnection with exponential backoff, event deduplication, and inactivity timeout.
+- HomePage split into focused section components (Hero, Flow, Examples, Upload).
+- RAG embedding batching, database query indexes, and dead code cleanup completed.
+- Production credentials and live third-party testing still pending.
 
 ---
 
@@ -178,6 +185,13 @@ tests/
   test_cost_analysis.py    # Cost aggregation + pricing recommendation unit tests
   test_token_estimator.py  # Token estimation + pricing unit tests
   test_pii_detector.py     # PII detection unit tests
+  test_router_health.py    # Health endpoint integration test
+  test_router_upload.py    # Upload endpoint integration tests
+  test_router_payment.py   # Payment endpoint integration tests
+  test_router_review.py    # SSE review stream integration tests
+  test_router_report.py    # Report retrieval integration tests
+  test_router_referral.py  # Referral endpoint integration tests
+  test_router_eval.py      # Eval endpoint integration tests
 frontend/
   src/
     main.tsx      # Router entry + i18n + lazy route loading + deferred analytics bootstrap
@@ -186,12 +200,16 @@ frontend/
     components/
       Layout.tsx    # Header (brand + nav + lang) + footer (links + disclaimer)
     pages/
-      HomePage.tsx    # Homepage container composing hero/flow/examples/upload sections
-      PaymentPage.tsx # Payment polling / redirect
-      ReviewPage.tsx  # SSE review progress + live report
-      ReportPage.tsx  # Saved report page
-      PrivacyPage.tsx # Privacy policy (i18n summary + JP legal text)
-      TermsPage.tsx   # Terms of service (i18n summary + JP legal text)
+      HomePage.tsx          # Homepage container composing hero/flow/examples/upload sections
+      HomeHeroSection.tsx   # Homepage hero section component
+      HomeFlowSection.tsx   # Homepage flow steps component
+      HomeExamplesSection.tsx # Homepage example showcase component
+      HomeUploadSection.tsx # Homepage upload interface component
+      PaymentPage.tsx       # Payment polling / redirect
+      ReviewPage.tsx        # SSE review progress + live report + exponential backoff reconnection
+      ReportPage.tsx        # Saved report page
+      PrivacyPage.tsx       # Privacy policy (i18n summary + JP legal text)
+      TermsPage.tsx         # Terms of service (i18n summary + JP legal text)
 docker-compose.yml  # backend + frontend + pgvector/pg16 + redis:7-alpine
 scripts/
   smoke_local_flow.sh  # local end-to-end regression script
@@ -309,6 +327,23 @@ Embeddings are generated via OpenAI API (httpx direct call, not langchain).
 `GET /api/eval/costs` aggregates persisted `reports.cost_summary` samples and returns pricing-oriented cost summaries.
 Eval references the explicit document IDs in `egov_laws.json`.
 - `scripts/check_rag_eval.sh` wraps the endpoint with the current local baseline thresholds (`Recall@5 >= 0.45`, `MRR >= 0.45`).
+
+### SSE reconnection
+- `ReviewPage.tsx` implements exponential backoff reconnection (base 1s delay, max 3 attempts).
+- Event deduplication via `eventIndex` ref prevents replaying already-processed events on reconnect.
+- 60-second inactivity timeout triggers reconnection if no events arrive.
+- Terminal states (complete, error, fatal) prevent unnecessary reconnection attempts.
+- A `reconnecting` state provides UI feedback to the user during reconnection.
+
+### RAG embedding batching
+- `store.py` implements `_get_embeddings_batch_sync()` for batched embedding API calls.
+- `search_batch()` enables multiple clause searches in a single batch to reduce API round-trips.
+- Batch results preserve original ordering by index for correct clause-to-result mapping.
+
+### Integration test coverage
+- 7 router test files covering all API endpoints: health, upload, payment, review, report, referral, eval.
+- 39+ test functions with 1877 lines of test code.
+- Tests use FastAPI `TestClient` with mocked dependencies (DB, Redis, external APIs).
 
 ### Regression checks
 - `scripts/check_locale_keys.sh` ensures all 9 locale files keep the same translation key set as `frontend/src/i18n/locales/ja.json`.
