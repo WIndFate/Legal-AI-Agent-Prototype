@@ -1,6 +1,8 @@
 import { useTranslation } from 'react-i18next';
 import { Link, useLocation } from 'react-router-dom';
+import clsx from 'clsx';
 import { SUPPORTED_LANGUAGES } from '../i18n';
+import styles from '../styles/layout.module.css';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -20,27 +22,27 @@ export default function Layout({ children }: LayoutProps) {
 
   return (
     <div className="app">
-      <header className="header">
-        <div className="header-inner">
-          <Link to="/" className="brand">
-            <span className="brand-mark" aria-hidden="true" />
-            <span className="brand-copy">
-              <span className="brand-name">{t('app.title')}</span>
-              <span className="brand-subtitle">{t('app.subtitle')}</span>
+      <header className={styles.header}>
+        <div className={styles.headerInner}>
+          <Link to="/" className={styles.brand}>
+            <span className={styles.brandMark} aria-hidden="true" />
+            <span className={styles.brandCopy}>
+              <span className={styles.brandName}>{t('app.title')}</span>
+              <span className={styles.brandSubtitle}>{t('app.subtitle')}</span>
             </span>
           </Link>
-          <nav className="header-nav">
-            <a href={homeHref} className={`nav-link ${isActive('/') ? 'nav-link-active' : ''}`}>
+          <nav className={styles.headerNav}>
+            <a href={homeHref} className={clsx(styles.navLink, isActive('/') && styles.navLinkActive)}>
               {t('nav.home')}
             </a>
-            <a href={examplesHref} className="nav-link">
+            <a href={examplesHref} className={styles.navLink}>
               {t('nav.examples')}
             </a>
           </nav>
-          <label className="language-shell">
-            <span className="language-label">{t('nav.language')}</span>
+          <label className={styles.languageShell}>
+            <span className={styles.languageLabel}>{t('nav.language')}</span>
             <select
-              className="language-select"
+              className={styles.languageSelect}
               value={i18n.language}
               onChange={handleLanguageChange}
               aria-label={t('nav.language')}
@@ -55,32 +57,32 @@ export default function Layout({ children }: LayoutProps) {
         </div>
       </header>
 
-      <div className="disclaimer-banner">
+      <div className={styles.disclaimerBanner}>
         {t('disclaimer.banner')}
       </div>
 
-      <main className="main-content">
+      <main className={styles.mainContent}>
         {children}
       </main>
 
-      <footer className="footer">
-        <div className="footer-brand">
-          <span className="brand-mark brand-mark-sm" aria-hidden="true" />
+      <footer className={styles.footer}>
+        <div className={styles.footerBrand}>
+          <span className={clsx(styles.brandMark, styles.brandMarkSm)} aria-hidden="true" />
           <div>
-            <p className="footer-brand-name">{t('app.title')}</p>
-            <p className="footer-tagline">{t('app.subtitle')}</p>
+            <p className={styles.footerBrandName}>{t('app.title')}</p>
+            <p className={styles.footerTagline}>{t('app.subtitle')}</p>
           </div>
         </div>
-        <nav className="footer-nav">
+        <nav className={styles.footerNav}>
           <a href={homeHref}>{t('nav.home')}</a>
           <a href={examplesHref}>{t('nav.examples')}</a>
           <Link to="/privacy">{t('footer.privacy')}</Link>
           <Link to="/terms">{t('footer.terms')}</Link>
         </nav>
-        <p className="footer-disclaimer">
+        <p className={styles.footerDisclaimer}>
           {t('footer.disclaimer')}
         </p>
-        <p className="footer-copyright">{t('footer.copyright')}</p>
+        <p className={styles.footerCopyright}>{t('footer.copyright')}</p>
       </footer>
     </div>
   );
