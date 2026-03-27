@@ -1,3 +1,4 @@
+import { useId } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
 import { useTranslation } from 'react-i18next';
 import clsx from 'clsx';
@@ -45,6 +46,7 @@ export default function HomeUploadSection({
   spotlightResult,
 }: HomeUploadSectionProps) {
   const { t } = useTranslation();
+  const fileInputId = useId();
 
   const tierLabel = (tier: string) => {
     const key = `pricing.tier_${tier}` as const;
@@ -123,12 +125,30 @@ export default function HomeUploadSection({
           <div className={styles.fileUpload}>
             <p className={styles.fileUploadTitle}>{t('upload.file')}</p>
             <p className={styles.fileUploadHint}>{t('upload.file_hint')}</p>
+            <div className={styles.fileUploadActions}>
+              <label htmlFor={fileInputId} className={styles.filePickerButton}>
+                {t('upload.file')}
+              </label>
+              <span className={styles.filePickerCaption}>JPG / PNG / PDF</span>
+            </div>
             <input
+              id={fileInputId}
+              className={styles.fileInput}
               type="file"
               accept="image/*,.pdf,application/pdf"
               onChange={(e) => setFile(e.target.files?.[0] || null)}
             />
-            {file && <p className={styles.fileName}>{file.name}</p>}
+            <div className={styles.formatPills}>
+              <span className={styles.formatPill}>JPG</span>
+              <span className={styles.formatPill}>PNG</span>
+              <span className={styles.formatPill}>PDF</span>
+            </div>
+            {file && (
+              <div className={styles.fileSummaryCard}>
+                <span>{t('upload.file')}</span>
+                <strong>{file.name}</strong>
+              </div>
+            )}
           </div>
         )}
       </div>

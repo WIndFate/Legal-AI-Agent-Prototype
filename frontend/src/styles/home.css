@@ -68,12 +68,13 @@
   padding: 12px 14px;
   border-radius: 999px;
   border: 1px solid rgba(31, 58, 95, 0.12);
-  background: rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.82);
   color: var(--text-soft);
   font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
   font-size: 0.86rem;
   font-weight: 600;
   cursor: pointer;
+  box-shadow: 0 8px 18px rgba(35, 26, 20, 0.03);
   transition: all 0.18s ease;
 }
 
@@ -81,7 +82,8 @@
 .tab.active {
   color: var(--brand);
   border-color: rgba(31, 58, 95, 0.24);
-  background: rgba(31, 58, 95, 0.06);
+  background: linear-gradient(180deg, rgba(244, 248, 252, 0.98) 0%, rgba(255, 255, 255, 0.94) 100%);
+  box-shadow: 0 14px 24px rgba(31, 58, 95, 0.08);
 }
 
 .pricing-card {
