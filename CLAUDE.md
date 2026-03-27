@@ -49,7 +49,7 @@ All five docs must stay consistent with the actual codebase. Do not commit code-
 
 ## Project Overview
 
-**契約チェッカー** — An AI-powered contract risk analysis service for foreign residents in Japan. Users upload Japanese contracts (photo/PDF/text), pay per use (¥299–¥1,299), and receive a report in their selected language via SSE streaming.
+**契約チェッカー** — An AI-powered contract risk analysis service for foreign residents in Japan. Users upload Japanese contracts (photo/PDF/text), pay per use (¥299–¥1,599), and receive a report in their selected language via SSE streaming.
 
 **Target Users:** Chinese people living in Japan (~800K) who need to understand Japanese legal contracts but face language barriers.
 
@@ -79,7 +79,7 @@ Current status as of 2026-03-27:
 - HomePage split into focused section components (Hero, Flow, Upload), with examples moved to a dedicated `/examples` page.
 - RAG embedding batching, database query indexes, and dead code cleanup completed.
 - CSS partially migrated to CSS Modules: layout, home, examples, legal use scoped modules; report/review remain global due to cross-page sharing and responsive dependencies.
-- Frontend UX polish now includes result lookup, order reminder dialogs, custom share sheet, reveal-on-scroll homepage sections, a curated standalone examples gallery whose report sample layout mirrors the real report page more closely, and a simplified homepage upload flow (`Upload File` / `Paste Text`).
+- Frontend UX polish now includes result lookup, order reminder dialogs, a custom share sheet with referral-link generation and `?ref=` landing support, reveal-on-scroll homepage sections, a curated standalone examples gallery whose report sample layout mirrors the real report page more closely, mobile-specific compact header and example-switching refinements, and a simplified homepage upload flow (`Upload File` / `Paste Text`).
 - Production credentials and live third-party testing still pending.
 
 ---

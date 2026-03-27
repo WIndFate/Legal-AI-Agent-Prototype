@@ -13,11 +13,13 @@ As of 2026-03-27, the local MVP flow is working in Docker:
 - `pgvector` RAG is running in PostgreSQL with 331+ law articles across 10 legal categories (rental, labor, part-time, business outsourcing, sales, etc.)
 - 9-language frontend with professional branding (ContractGuard), privacy/terms pages, and a dedicated examples gallery with report-style samples
 - The standalone `/examples` page now uses a curated chapter-switching layout, and its report sample styling is intentionally closer to the real report page
+- Mobile UI now uses a more compact header, a badge-style language switcher, immediate reveal rendering, and example switching that scrolls the refreshed report into view
 - Homepage UX now includes reveal-on-scroll sections, auto-scroll into the payment panel after quote generation, and broader spacing/padding cleanup across upload, payment, review, and report surfaces
 - The homepage upload flow now uses just two entry modes: `Upload File` and `Paste Text`. Image and PDF uploads are accepted through a single file picker with format guidance.
 - A new `/lookup` page lets users reopen payment, analysis, or finished reports by order ID
 - Payment success and analysis completion now show an order reminder dialog so users can screenshot or copy their order ID before moving on
-- Report sharing now uses a custom share sheet with a promotional preview, copy-link, copy-order-ID, and native share fallback instead of relying only on direct Web Share calls
+- Report sharing now uses a custom share sheet with a promotional preview, a copyable report link, personal referral-link generation, copy-order-ID, and native share fallback instead of relying only on direct Web Share calls
+- Referral links now return to the homepage with `?ref=` so the referral code is carried into the payment form automatically
 - Lookup and report pages now distinguish invalid order IDs, unstable networks, offline states, and retryable loading failures more clearly
 - Route-level lazy loading and deferred analytics bootstrap now reduce the initial frontend bundle
 - Dev-mode payment works only when `APP_ENV=development` and `KOMOJU_SECRET_KEY` is absent
@@ -130,8 +132,9 @@ docker compose up -d backend postgres redis
 16. After a quote is generated, the homepage automatically scrolls to the payment panel and highlights the next-step area so users do not miss that the flow has advanced.
 17. Payment success and review completion now open a reminder dialog that emphasizes saving the order ID for later lookup.
 18. A dedicated `/lookup` page can reopen pending-payment, in-progress review, or finished report states from the same order ID.
-19. The report page now opens a custom share sheet first, with promotional preview content, copy-link / copy-order-ID actions, and native device share as an optional second step.
-20. Lookup and report pages now surface clearer weak-network states, retry actions, offline banners, and timeout-aware loading feedback.
+19. The report page now opens a custom share sheet first, with promotional preview content, a copyable report link, personal referral-link generation, copy-order-ID actions, and native device share as an optional second step.
+20. Referral links now return to the homepage with `?ref=` so the referral code is prefilled for the next user.
+21. Lookup and report pages now surface clearer weak-network states, retry actions, offline banners, and timeout-aware loading feedback.
 
 ## Important Implementation Notes
 

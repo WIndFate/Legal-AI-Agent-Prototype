@@ -13,6 +13,7 @@
 - `pgvector` RAG 已运行在 PostgreSQL 中，覆盖 10 个法律类别共 331+ 条法律条文（租赁、劳动、兼职、业务委托、买卖等）
 - 前端 9 语言界面已实现，包含品牌标识（ContractGuard）、隐私政策/服务条款页面、独立案例画廊与报告样张展示
 - 独立 `/examples` 案例页已升级为横向策展式章节切换，报告样张的版式也进一步贴近真实报告页
+- 移动端 UI 现已采用更紧凑的顶部结构、徽章式语言切换、直接显示的 reveal 内容，以及点击案例后自动把新报告滚动到可视区
 - 首页上传入口现已简化为“上传文件 / 粘贴文本”两种模式，图片与 PDF 统一通过一个文件选择器接入，并明确提示支持格式
 - 前端已加入路由级懒加载和延迟分析初始化，降低首屏 bundle 压力
 - 仅当 `APP_ENV=development` 且 `KOMOJU_SECRET_KEY` 为空时，本地开发可走自动支付
@@ -143,7 +144,7 @@ docker compose up -d backend postgres redis
 - 生产环境如果缺少 KOMOJU / Resend 关键配置，或 `FRONTEND_URL` 仍指向 `localhost`，启动会直接失败。
 - 支付、审查、邮件、报告读取路径现在会输出结构化应用日志，并补充 PostHog 埋点，便于联调定位问题。
 - 前端页面采用路由懒加载，分析相关 SDK 改为异步初始化，避免把 observability 依赖塞进首屏主 chunk。
-- 前端现在新增了 `RevealSection`、`OrderReminderDialog`、`ShareSheet` 三类通用 UX 组件，分别用于滚动显现、订单号提醒弹层和自定义分享面板。
+- 前端现在新增了 `RevealSection`、`OrderReminderDialog`、`ShareSheet` 三类通用 UX 组件，分别用于滚动显现、订单号提醒弹层和自定义分享面板；其中分享面板已补齐专属推荐链接生成、复制与原生分享。
 - `/api/report/{order_id}` 在 Redis 命中和 PostgreSQL fallback 两种情况下，现在都会返回一致的 payload 结构。
 - `analyze_clause_risk` 工具内部直接做 RAG 检索，没有单独的 retrieval node。
 - `scripts/smoke_local_flow.sh` 是标准本地回归入口，会验证 `health -> upload -> payment -> review -> report -> contract deletion`。
@@ -158,7 +159,8 @@ docker compose up -d backend postgres redis
 - 首页在生成报价后会自动滚动到支付区域，并对支付卡片做短暂高亮，避免用户点击“开始分析”后误以为页面没有反应。
 - 现在新增 `/lookup` 结果查询页，用户输入订单号即可重新进入付款状态页、分析页或最终报告页。
 - 支付成功和分析完成后，前端会弹出订单提醒框，引导用户截图或复制订单号。
-- 报告页分享按钮现在先打开自定义分享面板，支持宣传型预览、复制链接、复制订单号，以及设备支持时的原生分享入口。
+- 报告页分享按钮现在先打开自定义分享面板，支持宣传型预览、复制报告链接、生成并分享专属推荐链接、复制订单号，以及设备支持时的原生分享入口。
+- 推荐链接现在会以 `?ref=` 的形式回到首页，并自动带入支付表单中的推荐码。
 - 查询页和报告页现在会更明确地区分订单号格式错误、弱网、离线和可重试失败状态。
 - SSE 断线重连采用指数退避（基础延迟 1 秒，最多 3 次）+ 事件去重 + 60 秒无活动超时机制。
 - RAG embedding 请求已批量化，通过 `_get_embeddings_batch_sync()` 和 `search_batch()` 减少 API 调用。
