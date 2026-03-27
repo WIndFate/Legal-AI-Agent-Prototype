@@ -18,7 +18,9 @@ As of 2026-03-28, the local MVP flow is working in Docker:
 - The homepage upload flow now uses just two entry modes: `Upload File` and `Paste Text`. Image and PDF uploads are accepted through a single file picker with format guidance.
 - A new `/lookup` page lets users reopen payment, analysis, or finished reports by order ID
 - Payment success and analysis completion now show an order reminder dialog so users can screenshot or copy their order ID before moving on
-- Report sharing now uses a custom share sheet with a promotional preview, a copyable report link, personal referral-link generation, copy-order-ID, and native share fallback instead of relying only on direct Web Share calls
+- Review now acts as a processing surface only; once analysis finishes, the user is redirected straight into the saved `/report/{orderId}` page
+- The saved report page now supports risk-level filtering, denser clause cards, and a more compact one-row summary on desktop
+- Report sharing now uses a minimal custom share sheet that generates a referral-tagged report link behind the scenes, then offers copy-link and optional native share actions
 - Referral links now return to the homepage with `?ref=` so the referral code is carried into the payment form automatically
 - Lookup and report pages now distinguish invalid order IDs, unstable networks, offline states, and retryable loading failures more clearly
 - Route-level lazy loading and deferred analytics bootstrap now reduce the initial frontend bundle
@@ -119,11 +121,12 @@ docker compose up -d backend postgres redis
 3. Create payment.
 4. In local dev, if `APP_ENV=development` and `KOMOJU_SECRET_KEY` is empty, the order is auto-marked as paid and redirected to review.
 5. `/review/:orderId` starts or resumes the persistent analysis task, restores saved progress events, and then subscribes to new updates.
-6. Retrieve the saved report on `/report/:orderId`.
-7. During the live review, the UI now shows user-facing progress text instead of raw internal tool names.
-8. The saved report keeps the language chosen at payment time; switching the site language later only changes the page chrome.
-9. On the same device session that uploaded the contract, each clause analysis can expand its matching original clause inline for direct comparison. Shared links and emailed links do not include that original text.
-10. Expanded clause comparison is optimized for readability: mobile keeps a stacked reading flow, while larger screens place the original clause beside the analysis content.
+6. When analysis completes, the UI redirects directly into `/report/:orderId`.
+7. The saved report page supports risk-level filtering so long reports can be narrowed to high / medium / low findings.
+8. During the live review, the UI now shows user-facing progress text instead of raw internal tool names.
+9. The saved report keeps the language chosen at payment time; switching the site language later only changes the page chrome.
+10. On the same device session that uploaded the contract, each clause analysis can expand its matching original clause inline for direct comparison. Shared links and emailed links do not include that original text.
+11. Expanded clause comparison is optimized for readability: mobile keeps a stacked reading flow, while larger screens place the original clause beside the analysis content.
 11. The standalone `/examples` page presents three contract scenarios (rental, employment, part-time) as a gallery-style report showcase with localized clause analysis in all 9 languages.
 12. Privacy policy (`/privacy`) and Terms of service (`/terms`) pages combine localized summaries with hardcoded Japanese legal text.
 13. Referenced law citations (`referenced_law`) in reports are always kept in Japanese original text, regardless of the user's selected language.
@@ -132,9 +135,9 @@ docker compose up -d backend postgres redis
 16. After a quote is generated, the homepage automatically scrolls to the payment panel and highlights the next-step area so users do not miss that the flow has advanced.
 17. Payment success and review completion now open a reminder dialog that emphasizes saving the order ID for later lookup.
 18. A dedicated `/lookup` page can reopen pending-payment, in-progress review, or finished report states from the same order ID.
-19. The report page now opens a custom share sheet first, with promotional preview content, a copyable report link, personal referral-link generation, copy-order-ID actions, and native device share as an optional second step.
-20. Referral links now return to the homepage with `?ref=` so the referral code is prefilled for the next user.
-21. Lookup and report pages now surface clearer weak-network states, retry actions, offline banners, and timeout-aware loading feedback.
+20. The report page now opens a compact custom share sheet first, silently appends the personal referral code to the report URL, and exposes only copy-link plus optional native-share actions.
+21. Referral links now return to the homepage with `?ref=` so the referral code is prefilled for the next user.
+22. Lookup and report pages now surface clearer weak-network states, retry actions, offline banners, timeout-aware loading feedback, and a dedicated expired-report fallback back to home.
 
 ## Important Implementation Notes
 

@@ -79,7 +79,7 @@ Current status as of 2026-03-28:
 - HomePage split into focused section components (Hero, Flow, Upload), with examples moved to a dedicated `/examples` page.
 - RAG embedding batching, database query indexes, and dead code cleanup completed.
 - CSS partially migrated to CSS Modules: layout, home, examples, legal use scoped modules; report/review remain global due to cross-page sharing and responsive dependencies.
-- Frontend UX polish now includes result lookup, order reminder dialogs, a custom share sheet with referral-link generation and `?ref=` landing support, reveal-on-scroll homepage sections, a curated standalone examples gallery whose report sample layout mirrors the real report page more closely, mobile-specific compact header and example-switching refinements, and a simplified homepage upload flow (`Upload File` / `Paste Text`).
+- Frontend UX polish now includes result lookup, order reminder dialogs, a compact share sheet that silently appends referral codes to report links, direct review-to-report handoff on completion, report risk-level filters, reveal-on-scroll homepage sections, a curated standalone examples gallery whose report sample layout mirrors the real report page more closely, mobile-specific compact header and example-switching refinements, and a simplified homepage upload flow (`Upload File` / `Paste Text`).
 - Persistent analysis-task architecture is now the primary runtime flow: `analysis_jobs` / `analysis_events`, event bus, extracted report persistence helpers, new analysis start/status/events/stream routes, and frontend snapshot-plus-replay event restoration are all in code.
 - Production credentials and live third-party testing still pending.
 
@@ -321,7 +321,7 @@ Embeddings are generated via OpenAI API (httpx direct call, not langchain).
 - Frontend routes should stay lazy-loaded where practical, and analytics/observability SDKs should bootstrap asynchronously so they do not bloat the initial application chunk
 
 ### Review/report UX behavior
-- The review page should show user-facing progress text during persistent event-stream playback; do not expose raw internal tool names like `analyze_clause_risk` to end users.
+- The review page is now a processing-only surface. It should show user-facing progress text during persistent event-stream playback and redirect into `/report/:orderId` once the saved report is ready; do not expose raw internal tool names like `analyze_clause_risk` to end users.
 - `/api/report/{order_id}` must return the same payload shape whether data comes from Redis or PostgreSQL.
 - Report content is fixed in the language chosen at payment time; later UI language switches only affect surrounding page chrome unless an explicit re-translation feature is implemented.
 - Same-session original contract comparison should be clause-level and inline with each analysis card, not as a full-document dump at the bottom of the page.
@@ -331,7 +331,8 @@ Embeddings are generated via OpenAI API (httpx direct call, not langchain).
 - After quote generation, the homepage should visibly advance the user to the payment area instead of leaving the next step off-screen.
 - After payment success and after review completion, the UI should prompt the user to save the order ID for later lookup.
 - A dedicated lookup page should allow reopening payment, in-progress review, or the completed report from the order ID.
-- Sharing should open a first-party share sheet before optional native share, and should always offer copy-link plus copy-order-ID actions.
+- Sharing should open a first-party share sheet before optional native share, keep the UI minimal, and generate a referral-tagged report URL behind the scenes while exposing only copy-link and optional native-share actions.
+- The saved report page should support multi-select filtering by risk level so long reports can be narrowed to high / medium / low findings without changing the stored report data.
 - Lookup/report pages should explicitly handle weak-network states: invalid order IDs, offline banners, timeout-aware loading, and one-tap retry actions.
 - Lookup/report pages should explicitly handle weak-network states: invalid order IDs, offline banners, timeout-aware loading, and one-tap retry actions.
 
