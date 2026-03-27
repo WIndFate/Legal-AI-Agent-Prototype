@@ -125,7 +125,7 @@ docker compose up -d backend postgres redis
 7. The saved report page supports risk-level filtering so long reports can be narrowed to high / medium / low findings.
 8. During the live review, the UI now shows user-facing progress text instead of raw internal tool names.
 9. The saved report keeps the language chosen at payment time; switching the site language later only changes the page chrome.
-10. On the same device session that uploaded the contract, each clause analysis can expand its matching original clause inline for direct comparison. Shared links and emailed links do not include that original text.
+10. Each clause analysis can expand its matching original clause excerpt inline for direct comparison throughout the 24-hour report lifetime, including reopened report links.
 11. Expanded clause comparison is optimized for readability: mobile keeps a stacked reading flow, while larger screens place the original clause beside the analysis content.
 11. The standalone `/examples` page presents three contract scenarios (rental, employment, part-time) as a gallery-style report showcase with localized clause analysis in all 9 languages.
 12. Privacy policy (`/privacy`) and Terms of service (`/terms`) pages combine localized summaries with hardcoded Japanese legal text.
@@ -163,7 +163,7 @@ docker compose up -d backend postgres redis
 - `/api/report/{order_id}` now returns the same payload shape for both Redis cache hits and PostgreSQL fallback reads.
 - `analyze_clause_risk` performs RAG lookup internally; there is no separate retrieval node.
 - `scripts/smoke_local_flow.sh` now exercises the persistent-analysis flow end to end: health -> upload -> payment -> analysis/start -> orders/{id}/stream -> report -> contract deletion.
-- Original clause text is available only in the live review payload and same-device session storage; persisted reports, Redis cache, shared links, and emailed links do not store or expose it.
+- Full contract text is never persisted after analysis, but each saved 24-hour report now keeps only the clause-level original excerpts tied to findings so reopened links and shared reports retain inline comparison.
 - `scripts/check_locale_keys.sh` verifies that all 9 locale files keep the same translation key set as `ja.json`.
 - The backend now loads the official e-Gov law corpus from `backend/data/egov_laws.json` on startup, covering 10 legal categories with 331+ articles. The local eval dataset has been expanded to 20 labeled samples covering damages, non-compete, termination, NDAs, lease, and more.
 - `scripts/check_rag_eval.sh` checks `/api/eval/rag` against the current local baseline thresholds (`Recall@5 >= 0.45`, `MRR >= 0.45`).

@@ -283,7 +283,7 @@ Embeddings are generated via OpenAI API (httpx direct call, not langchain).
 - `cleanup.py` runs every hour via APScheduler in lifespan
 - Deletes expired reports (past `expires_at`)
 - Nullifies `contract_text` for completed orders (defense in depth)
-- The frontend may keep a session-only copy of the uploaded contract text in `sessionStorage` for on-device comparison on review/report pages; this does not change the backend rule that contract text is deleted after analysis and is never included in shared links.
+- The backend still deletes full contract text after analysis, but each 24-hour report may retain only clause-level original excerpts tied to findings so reopened links can preserve inline comparison without storing the full contract body.
 
 ### Local startup bootstrap
 - `main.py` calls `init_db()` only when `APP_ENV=development`, so local Docker development can create `orders`, `reports`, and `referrals` automatically.
@@ -324,9 +324,9 @@ Embeddings are generated via OpenAI API (httpx direct call, not langchain).
 - The review page is now a processing-only surface. It should show user-facing progress text during persistent event-stream playback and redirect into `/report/:orderId` once the saved report is ready; do not expose raw internal tool names like `analyze_clause_risk` to end users.
 - `/api/report/{order_id}` must return the same payload shape whether data comes from Redis or PostgreSQL.
 - Report content is fixed in the language chosen at payment time; later UI language switches only affect surrounding page chrome unless an explicit re-translation feature is implemented.
-- Same-session original contract comparison should be clause-level and inline with each analysis card, not as a full-document dump at the bottom of the page.
+- Original contract comparison should be clause-level and inline with each analysis card, not as a full-document dump at the bottom of the page.
 - On larger screens, inline clause comparison can use a split layout, but mobile should preserve a single-column reading flow.
-- Original clause text may be present in the in-session completion payload and same-session frontend storage, but must be stripped before database persistence, Redis caching, shared-link rendering, and email delivery.
+- Full contract text must still be stripped after analysis, but clause-level original excerpts tied to findings may remain inside the 24-hour persisted report, Redis cache, shared-link rendering, and emailed report links.
 - The saved report page should read like a concise professional review memo, and print / save-as-PDF from the browser should hide site chrome and preserve the report body cleanly.
 - After quote generation, the homepage should visibly advance the user to the payment area instead of leaving the next step off-screen.
 - After payment success and after review completion, the UI should prompt the user to save the order ID for later lookup.
