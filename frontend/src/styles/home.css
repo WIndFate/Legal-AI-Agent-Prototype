@@ -148,3 +148,65 @@
   font-size: 0.84rem;
   line-height: 1.7;
 }
+
+@media (max-width: 767px) {
+  .hero-card {
+    padding: 22px 18px 18px;
+  }
+
+  .hero-grid {
+    gap: 16px;
+  }
+
+  .hero-metrics {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    margin-top: 18px;
+  }
+
+  .hero-metric:last-child {
+    grid-column: 1 / -1;
+  }
+
+  .flow-card,
+  .upload-shell,
+  .examples-section,
+  .payment-status-card,
+  .report-summary-shell {
+    margin-top: 14px;
+    padding: 22px 18px;
+  }
+
+  .input-tabs,
+  .example-tabs {
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+
+  .intake-trust-grid {
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+
+  .tab {
+    min-width: 0;
+    padding: 11px 12px;
+    font-size: 0.82rem;
+  }
+
+  .pricing-card {
+    margin-top: 18px;
+    padding: 20px 16px;
+  }
+
+  .pricing-card-header {
+    gap: 12px;
+    flex-direction: column;
+  }
+
+  .pricing-price-lockup {
+    width: 100%;
+    text-align: left;
+  }
+}

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import clsx from 'clsx';
 
@@ -16,6 +16,7 @@ interface HomeExamplesSectionProps {
 export default function HomeExamplesSection({ standalone = false }: HomeExamplesSectionProps) {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<TabKey>('rental');
+  const reportCardRef = useRef<HTMLDivElement | null>(null);
 
   const tabs: { key: TabKey; label: string }[] = [
     { key: 'rental', label: t('examples.tab_rental') },
@@ -24,6 +25,18 @@ export default function HomeExamplesSection({ standalone = false }: HomeExamples
   ];
 
   const report: ExampleReport = exampleReports[activeTab];
+
+  const handleTabChange = (tab: TabKey) => {
+    setActiveTab(tab);
+
+    if (!standalone || !window.matchMedia('(max-width: 767px)').matches) {
+      return;
+    }
+
+    window.setTimeout(() => {
+      reportCardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 80);
+  };
 
   return (
     <section
@@ -47,7 +60,7 @@ export default function HomeExamplesSection({ standalone = false }: HomeExamples
                 <button
                   key={tab.key}
                   className={clsx(styles.scenarioCard, activeTab === tab.key && styles.scenarioCardActive)}
-                  onClick={() => setActiveTab(tab.key)}
+                  onClick={() => handleTabChange(tab.key)}
                 >
                   <div className={styles.scenarioTopline}>
                     <span className={styles.scenarioIndex}>
@@ -63,7 +76,7 @@ export default function HomeExamplesSection({ standalone = false }: HomeExamples
             </div>
           </div>
 
-          <div className={styles.reportCard}>
+          <div ref={reportCardRef} className={styles.reportCard}>
             <div className={styles.documentRibbon}>
               <span>{t('report.title')}</span>
               <span>{t('report.executive_kicker')}</span>
@@ -176,7 +189,7 @@ export default function HomeExamplesSection({ standalone = false }: HomeExamples
               <button
                 key={tab.key}
                 className={clsx('tab', activeTab === tab.key && 'active')}
-                onClick={() => setActiveTab(tab.key)}
+                onClick={() => handleTabChange(tab.key)}
               >
                 {tab.label}
               </button>

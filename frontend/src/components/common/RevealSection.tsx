@@ -21,6 +21,12 @@ export default function RevealSection({
     const node = ref.current;
     if (!node) return;
 
+    const isMobileViewport = window.matchMedia('(max-width: 767px)').matches;
+    if (isMobileViewport) {
+      setVisible(true);
+      return;
+    }
+
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {

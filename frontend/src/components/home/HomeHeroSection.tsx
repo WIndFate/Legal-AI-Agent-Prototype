@@ -17,6 +17,14 @@ export default function HomeHeroSection({ preview }: HomeHeroSectionProps) {
         <p className="section-kicker">{t('upload.hero_kicker')}</p>
         <h2 className={styles.heroTitle}>{t('app.title')}</h2>
         <p className={styles.heroSubtitle}>{t('upload.hero_body')}</p>
+        <div className={styles.heroActions}>
+          <a href="#upload-section" className={styles.heroPrimaryAction}>
+            {t('upload.submit')}
+          </a>
+          <a href="/examples" className={styles.heroSecondaryAction}>
+            {t('nav.examples')}
+          </a>
+        </div>
         <div className={styles.trustStrip}>
           <span className={styles.trustPill}>{t('upload.trust_privacy')}</span>
           <span className={styles.trustPill}>{t('upload.trust_no_account')}</span>
@@ -50,7 +58,10 @@ export default function HomeHeroSection({ preview }: HomeHeroSectionProps) {
         </div>
         <div className={styles.heroPreviewBody}>
           {preview.clauses.slice(0, 2).map((clause, idx) => (
-            <div key={clause.clause_number} className={styles.heroPreviewItem}>
+            <div
+              key={clause.clause_number}
+              className={`${styles.heroPreviewItem} ${idx > 0 ? styles.heroPreviewItemSecondary : ''}`}
+            >
               <div className={`hero-preview-row ${styles.heroPreviewRow}`}>
                 <strong className={styles.heroPreviewClause}>{clause.clause_number}</strong>
                 <span

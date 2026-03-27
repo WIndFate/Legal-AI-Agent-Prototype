@@ -49,3 +49,25 @@
   line-height: 1.8;
   max-width: 640px;
 }
+
+@media (max-width: 767px) {
+  .page h2 {
+    font-size: clamp(1.95rem, 8vw, 2.4rem);
+  }
+
+  #top,
+  #examples,
+  #upload-section {
+    scroll-margin-top: 84px;
+  }
+
+  .section-kicker {
+    margin-bottom: 10px;
+    font-size: 0.82rem;
+  }
+
+  .section-intro {
+    font-size: 0.9rem;
+    line-height: 1.7;
+  }
+}

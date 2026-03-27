@@ -13,6 +13,7 @@ export default function Layout({ children }: LayoutProps) {
   const location = useLocation();
   const navigate = useNavigate();
   const homeHref = location.pathname === '/' ? '#top' : '/#top';
+  const languageBadge = getLanguageBadge(i18n.language);
 
   const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     i18n.changeLanguage(e.target.value);
@@ -67,6 +68,7 @@ export default function Layout({ children }: LayoutProps) {
           </nav>
           <label className={styles.languageShell}>
             <span className={styles.languageLabel}>{t('nav.language')}</span>
+            <span className={styles.languageCurrent} aria-hidden="true">{languageBadge}</span>
             <select
               className={styles.languageSelect}
               value={i18n.language}
@@ -113,4 +115,11 @@ export default function Layout({ children }: LayoutProps) {
       </footer>
     </div>
   );
+}
+
+function getLanguageBadge(code: string) {
+  if (code === 'zh-CN') return 'CN';
+  if (code === 'zh-TW') return 'TW';
+  if (code === 'pt-BR') return 'PT';
+  return code.slice(0, 2).toUpperCase();
 }

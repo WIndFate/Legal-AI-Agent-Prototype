@@ -244,3 +244,121 @@
 .report-page .report-actions {
   break-inside: avoid;
 }
+
+@media (max-width: 767px) {
+  .report-section {
+    padding-top: 4px;
+  }
+
+  .overall-risk-card,
+  .report-actions {
+    padding: 18px 16px;
+    border-radius: 18px;
+  }
+
+  .overall-risk-card {
+    margin-bottom: 16px;
+  }
+
+  .summary {
+    margin-top: 10px;
+    font-size: 0.9rem;
+    line-height: 1.72;
+  }
+
+  .clause-list {
+    gap: 10px;
+  }
+
+  .clause-card,
+  .example-clause-card {
+    padding: 16px 16px 18px;
+    border-radius: 16px;
+  }
+
+  .clause-header {
+    margin-bottom: 10px;
+    align-items: flex-start;
+  }
+
+  .clause-heading strong {
+    font-size: 0.94rem;
+    line-height: 1.4;
+  }
+
+  .clause-eyebrow,
+  .analysis-label {
+    margin-bottom: 4px;
+    font-size: 0.66rem;
+  }
+
+  .clause-meta-row {
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  .clause-meta-item {
+    padding: 9px 10px;
+    border-radius: 12px;
+  }
+
+  .clause-meta-item span {
+    font-size: 0.64rem;
+  }
+
+  .clause-meta-item strong {
+    font-size: 0.82rem;
+  }
+
+  .risk-tag {
+    padding: 5px 8px;
+    font-size: 0.7rem;
+  }
+
+  .clause-toolbar {
+    margin-bottom: 10px;
+  }
+
+  .inline-toggle-btn {
+    width: 100%;
+    justify-content: center;
+    padding: 9px 12px;
+    font-size: 0.76rem;
+  }
+
+  .inline-original-panel {
+    padding: 14px;
+    border-radius: 14px;
+  }
+
+  .inline-original-text {
+    font-size: 0.82rem;
+    line-height: 1.66;
+  }
+
+  .inline-original-note {
+    font-size: 0.72rem;
+  }
+
+  .analysis-block {
+    padding: 12px 0;
+  }
+
+  .risk-reason,
+  .suggestion p,
+  .reference p {
+    font-size: 0.84rem;
+    line-height: 1.72;
+  }
+
+  .suggestion,
+  .reference {
+    margin-top: 10px;
+    padding-top: 10px;
+    font-size: 0.82rem;
+  }
+
+  .report-actions {
+    margin-top: 18px;
+  }
+}

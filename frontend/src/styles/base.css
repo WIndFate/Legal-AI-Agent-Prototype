@@ -247,6 +247,51 @@ a {
   line-height: 1.65;
 }
 
+@media (max-width: 767px) {
+  .hero-metric,
+  .payment-summary-item,
+  .report-hero-stat,
+  .summary-metric,
+  .pricing-summary-item,
+  .assurance-item,
+  .intake-trust-card,
+  .review-assurance-card,
+  .example-meta-item {
+    padding: 12px 13px;
+    border-radius: 14px;
+  }
+
+  .hero-metric span,
+  .payment-summary-item span,
+  .report-hero-stat span,
+  .summary-metric span,
+  .pricing-summary-item span,
+  .intake-trust-card span,
+  .review-assurance-card span,
+  .example-meta-item span {
+    margin-bottom: 4px;
+    font-size: 0.66rem;
+  }
+
+  .hero-metric strong,
+  .payment-summary-item strong,
+  .report-hero-stat strong,
+  .summary-metric strong,
+  .pricing-summary-item strong,
+  .intake-trust-card strong,
+  .review-assurance-card strong,
+  .example-meta-item strong {
+    font-size: 0.9rem;
+  }
+
+  .intake-trust-card p,
+  .review-assurance-card p {
+    margin-top: 4px;
+    font-size: 0.78rem;
+    line-height: 1.55;
+  }
+}
+
 /* ── Buttons ── */
 
 .btn-primary,

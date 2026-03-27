@@ -100,6 +100,18 @@
   background: rgba(255, 255, 255, 0.56);
 }
 
+.languageCurrent {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.9rem;
+  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--brand);
+}
+
 .languageLabel {
   font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
   font-size: 0.68rem;
@@ -198,18 +210,72 @@
 /* ── Responsive overrides for layout ── */
 
 @media (max-width: 767px) {
+  .header {
+    padding: 10px 12px;
+  }
+
   .headerNav {
     display: none;
   }
 
   .headerInner {
-    align-items: flex-start;
-    flex-wrap: wrap;
+    align-items: center;
+    flex-wrap: nowrap;
+    gap: 12px;
+  }
+
+  .brand {
+    gap: 10px;
+  }
+
+  .brandMark {
+    width: 28px;
+    height: 32px;
+    border-radius: 9px;
+  }
+
+  .brandName {
+    font-size: 0.98rem;
+  }
+
+  .brandSubtitle {
+    display: none;
   }
 
   .languageShell {
-    width: 100%;
-    justify-content: space-between;
+    position: relative;
+    width: 42px;
+    height: 42px;
+    min-width: 42px;
+    padding: 0;
+    justify-content: center;
+    gap: 0;
+    border-radius: 999px;
+    overflow: hidden;
+  }
+
+  .languageLabel {
+    display: none;
+  }
+
+  .languageCurrent {
+    display: inline-flex;
+  }
+
+  .languageSelect {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+
+  .disclaimerBanner {
+    padding: 9px 12px;
+    font-size: 0.72rem;
+  }
+
+  .mainContent {
+    padding: 14px 12px 40px;
   }
 }
 
