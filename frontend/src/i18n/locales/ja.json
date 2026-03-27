@@ -152,7 +152,14 @@
     "original_contract_shared_note": "契約書をアップロードした同じ端末の現在セッションでのみ表示されます。プライバシー保護のため、共有リンクやメールリンクには元契約本文は含まれません。",
     "executive_kicker": "リスクサマリー",
     "comparison_hint": "各条項の分析カード内で元の条項と比較できます",
-    "clause_count": "条項数"
+    "clause_count": "条項数",
+    "filter_label": "条項を絞り込む",
+    "filter_all": "すべての条項",
+    "filter_empty": "現在の条件に一致する条項はありません。",
+    "expired_kicker": "レポート期限切れ",
+    "expired_title": "このレポートは 24 時間を過ぎました",
+    "expired_body": "プライバシー保護のため、レポートは自動削除されました。新しい契約をアップロードして再度分析してください。",
+    "expired_action": "ホームに戻る"
   },
   "errors": {
     "upload_failed": "アップロードに失敗しました。もう一度お試しください。",

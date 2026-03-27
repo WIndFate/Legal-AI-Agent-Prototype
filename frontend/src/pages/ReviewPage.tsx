@@ -2,27 +2,6 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 
-import ShareSheet from '../components/common/ShareSheet';
-
-interface ClauseAnalysis {
-  clause_number: string;
-  risk_level: string;
-  risk_reason: string;
-  suggestion: string;
-  referenced_law: string;
-  original_text?: string;
-}
-
-interface ReviewReport {
-  overall_risk_level: string;
-  summary: string;
-  clause_analyses: ClauseAnalysis[];
-  high_risk_count: number;
-  medium_risk_count: number;
-  low_risk_count: number;
-  total_clauses: number;
-}
-
 interface AnalysisEventItem {
   seq: number;
   event_type: 'node_start' | 'tool_call' | 'tool_result' | 'complete' | 'error';
@@ -50,20 +29,6 @@ type AnalysisStep = 'parsing' | 'analyzing' | 'generating';
 const MAX_RECONNECT_ATTEMPTS = 3;
 const BASE_RECONNECT_DELAY_MS = 1000;
 
-function riskColor(level: string): string {
-  if (level === '高' || level === 'High' || level === '高リスク') return '#dc2626';
-  if (level === '中' || level === 'Medium' || level === '中リスク') return '#f59e0b';
-  if (level === '低' || level === 'Low' || level === '低リスク') return '#16a34a';
-  return '#6b7280';
-}
-
-function riskBg(level: string): string {
-  if (level === '高' || level === 'High' || level === '高リスク') return '#fef2f2';
-  if (level === '中' || level === 'Medium' || level === '中リスク') return '#fffbeb';
-  if (level === '低' || level === 'Low' || level === '低リスク') return '#f0fdf4';
-  return '#f9fafb';
-}
-
 const STEP_DEFS: { key: AnalysisStep }[] = [
   { key: 'parsing' },
   { key: 'analyzing' },
@@ -75,16 +40,13 @@ export default function ReviewPage() {
   const navigate = useNavigate();
   const { t } = useTranslation();
 
-  const [report, setReport] = useState<ReviewReport | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [analysisStatus, setAnalysisStatus] = useState<OrderStatusResponse['analysis_status']>('queued');
   const [currentStep, setCurrentStep] = useState<AnalysisStep>('parsing');
   const [logLines, setLogLines] = useState<string[]>([]);
-  const [expandedClauses, setExpandedClauses] = useState<Record<string, boolean>>({});
   const [phaseText, setPhaseText] = useState('');
   const [reconnecting, setReconnecting] = useState(false);
-  const [shareOpen, setShareOpen] = useState(false);
 
   const started = useRef(false);
   const reconnectAttempt = useRef(0);
@@ -98,13 +60,6 @@ export default function ReviewPage() {
       return [...prev, line].slice(-6);
     });
   }, []);
-
-  const toggleClause = (clauseNumber: string) => {
-    setExpandedClauses((prev) => ({
-      ...prev,
-      [clauseNumber]: !prev[clauseNumber],
-    }));
-  };
 
   const phaseMeta = useCallback((step: AnalysisStep) => {
     if (step === 'parsing') {
@@ -164,23 +119,6 @@ export default function ReviewPage() {
     return evt.message;
   }, [t]);
 
-  const loadReport = useCallback(async () => {
-    const res = await fetch(`/api/report/${orderId}`);
-    if (!res.ok) throw new Error(t('report.network_error'));
-    const raw = await res.json();
-    const persistedReport = raw.report || raw;
-    const savedOriginals = sessionStorage.getItem(`report-originals:${orderId}`);
-    const originalByClause = savedOriginals ? JSON.parse(savedOriginals) as Record<string, string> : {};
-    setReport({
-      ...persistedReport,
-      clause_analyses: (persistedReport.clause_analyses || []).map((clause: ClauseAnalysis) => ({
-        ...clause,
-        original_text: clause.original_text || originalByClause[clause.clause_number] || '',
-      })),
-    });
-    setLoading(false);
-  }, [orderId, t]);
-
   const applyStatusSnapshot = useCallback((status: OrderStatusResponse) => {
     setAnalysisStatus(status.analysis_status);
     if (status.current_step) {
@@ -191,7 +129,7 @@ export default function ReviewPage() {
     }
   }, [phaseMeta]);
 
-  const processEvent = useCallback((evt: AnalysisEventItem, options?: { replay?: boolean }) => {
+  const processEvent = useCallback((evt: AnalysisEventItem) => {
     lastSeqRef.current = Math.max(lastSeqRef.current, evt.seq);
     const eventMessage = resolveEventMessage(evt);
 
@@ -210,8 +148,8 @@ export default function ReviewPage() {
         break;
       case 'complete':
         setAnalysisStatus('completed');
-        if (!options?.replay) {
-          void loadReport();
+        if (orderId) {
+          navigate(`/report/${orderId}`);
         }
         break;
       case 'error':
@@ -229,7 +167,7 @@ export default function ReviewPage() {
     setLogLines([]);
     lastSeqRef.current = 0;
     for (const evt of data.events as AnalysisEventItem[]) {
-      processEvent(evt, { replay: true });
+      processEvent(evt);
     }
   }, [orderId, processEvent, t]);
 
@@ -313,17 +251,12 @@ export default function ReviewPage() {
     }
   }, [connectStream, t]);
 
-  const bootstrap = useCallback(async (forceRestart = false, retryFailed = false) => {
+  const bootstrap = useCallback(async (retryFailed = false) => {
     if (!orderId) return;
 
     streamAbortRef.current?.abort();
     setLoading(true);
     setError('');
-    setReport(null);
-    if (forceRestart) {
-      setLogLines([]);
-      lastSeqRef.current = 0;
-    }
 
     let status = await fetchOrderStatus();
 
@@ -334,7 +267,7 @@ export default function ReviewPage() {
     applyStatusSnapshot(status);
 
     if (status.report_ready && status.analysis_status === 'completed') {
-      await loadReport();
+      navigate(`/report/${orderId}`);
       return;
     }
 
@@ -360,7 +293,7 @@ export default function ReviewPage() {
         return;
       }
       if (status.report_ready && status.analysis_status === 'completed') {
-        await loadReport();
+        navigate(`/report/${orderId}`);
         return;
       }
     }
@@ -368,10 +301,10 @@ export default function ReviewPage() {
     await loadHistory();
     setLoading(true);
     await startStreamLoop();
-  }, [applyStatusSnapshot, fetchOrderStatus, loadHistory, loadReport, navigate, orderId, requestAnalysisStart, startStreamLoop, t]);
+  }, [applyStatusSnapshot, fetchOrderStatus, loadHistory, navigate, orderId, requestAnalysisStart, startStreamLoop, t]);
 
   const handleManualRetry = useCallback(() => {
-    void bootstrap(true, true);
+    void bootstrap(true);
   }, [bootstrap]);
 
   useEffect(() => {
@@ -389,15 +322,7 @@ export default function ReviewPage() {
 
   return (
     <div className="page review-page">
-      {orderId && (
-        <ShareSheet
-          open={shareOpen}
-          onClose={() => setShareOpen(false)}
-          shareUrl={`${window.location.origin}/report/${orderId}`}
-          orderId={orderId}
-        />
-      )}
-      {loading && !report && (
+      {loading && (
         <div className="analyzing-section">
           <div className="review-live-card">
             <div className="review-live-header">
@@ -480,7 +405,7 @@ export default function ReviewPage() {
         </div>
       )}
 
-      {error && !report && (
+      {error && (
         <div className="error-message">
           <p>{error}</p>
           <button
@@ -489,139 +414,6 @@ export default function ReviewPage() {
           >
             {t('review.retry')}
           </button>
-        </div>
-      )}
-
-      {report && (
-        <div className="report-section">
-          <div className="report-summary-shell">
-            <p className="section-kicker">{t('report.executive_kicker')}</p>
-            <h2>{t('report.title')}</h2>
-            <p className="report-comparison-hint">{t('report.comparison_hint')}</p>
-            {orderId && (
-              <div className="order-inline-card order-inline-card-report">
-                <span>{t('order.order_id')}</span>
-                <strong>{orderId}</strong>
-                <p>{t('order.lookup_help_body')}</p>
-              </div>
-            )}
-          </div>
-
-          <div
-            className="overall-risk-card"
-            style={{
-              borderColor: riskColor(report.overall_risk_level),
-              background: riskBg(report.overall_risk_level),
-            }}
-          >
-            <span
-              className="risk-badge"
-              style={{ background: riskColor(report.overall_risk_level) }}
-            >
-              {t('report.overall_risk')}: {report.overall_risk_level}
-            </span>
-            <p className="summary">{report.summary}</p>
-            <div className="summary-metrics">
-              <div className="summary-metric">
-                <span>{t('report.clause_count')}</span>
-                <strong>{report.total_clauses}</strong>
-              </div>
-              <div className="summary-metric">
-                <span>{t('report.high_risk')}</span>
-                <strong className="stat high">{report.high_risk_count}</strong>
-              </div>
-              <div className="summary-metric">
-                <span>{t('report.medium_risk')}</span>
-                <strong className="stat medium">{report.medium_risk_count}</strong>
-              </div>
-              <div className="summary-metric">
-                <span>{t('report.low_risk')}</span>
-                <strong className="stat low">{report.low_risk_count}</strong>
-              </div>
-            </div>
-          </div>
-
-          <div className="clause-list">
-            {report.clause_analyses.map((clause, idx) => (
-              <div
-                key={idx}
-                className={`clause-card ${expandedClauses[clause.clause_number] ? 'clause-card-expanded' : ''}`}
-                style={{
-                  borderLeftColor: riskColor(clause.risk_level),
-                  background: riskBg(clause.risk_level),
-                }}
-              >
-                <div className="clause-header">
-                  <div className="clause-heading">
-                    <strong>{clause.clause_number}</strong>
-                  </div>
-                  <span
-                    className="risk-tag"
-                    style={{ background: riskColor(clause.risk_level) }}
-                  >
-                    {clause.risk_level}
-                  </span>
-                </div>
-                <div className="clause-toolbar">
-                  {clause.original_text ? (
-                    <button
-                      type="button"
-                      className={`inline-toggle-btn ${expandedClauses[clause.clause_number] ? 'inline-toggle-btn-active' : ''}`}
-                      onClick={() => toggleClause(clause.clause_number)}
-                    >
-                      {expandedClauses[clause.clause_number]
-                        ? t('report.hide_original_clause')
-                        : t('report.show_original_clause')}
-                    </button>
-                  ) : (
-                    <span className="clause-toolbar-spacer" />
-                  )}
-                </div>
-                <div className={`clause-content ${expandedClauses[clause.clause_number] && clause.original_text ? 'clause-content-split' : ''}`}>
-                  {expandedClauses[clause.clause_number] && clause.original_text && (
-                    <div className="inline-original-panel">
-                      <p className="inline-original-label">{t('report.original_clause_label')}</p>
-                      <pre className="inline-original-text">{clause.original_text}</pre>
-                      <p className="inline-original-note">{t('report.original_contract_session_note')}</p>
-                    </div>
-                  )}
-                  <div className="clause-analysis-panel">
-                    <p className="risk-reason">{clause.risk_reason}</p>
-                    {clause.suggestion && (
-                      <div className="suggestion">
-                        <strong>{t('report.suggestion')}:</strong>
-                        <p>{clause.suggestion}</p>
-                      </div>
-                    )}
-                    {clause.referenced_law && (
-                      <div className="reference">
-                        <strong>{t('report.referenced_law')}:</strong>
-                        <p>{clause.referenced_law}</p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="report-actions">
-            <button
-              className="btn-primary btn-share"
-              onClick={() => setShareOpen(true)}
-            >
-              {t('report.share')}
-            </button>
-            {orderId && (
-              <button
-                className="btn-share dialog-secondary-btn"
-                onClick={() => navigate(`/report/${orderId}`)}
-              >
-                {t('order.open_report')}
-              </button>
-            )}
-            <p className="share-note">{t('report.share_note')}</p>
-          </div>
         </div>
       )}
     </div>

@@ -152,7 +152,14 @@
     "original_contract_shared_note": "Chỉ hiển thị trong phiên hiện tại trên đúng thiết bị đã tải hợp đồng lên. Vì lý do riêng tư, liên kết chia sẻ và liên kết email không bao gồm toàn văn hợp đồng gốc.",
     "executive_kicker": "Tóm tắt rủi ro",
     "comparison_hint": "So sánh với điều khoản gốc trong mỗi thẻ phân tích",
-    "clause_count": "Số điều khoản"
+    "clause_count": "Số điều khoản",
+    "filter_label": "Lọc điều khoản",
+    "filter_all": "Tất cả điều khoản",
+    "filter_empty": "Không có điều khoản nào phù hợp với bộ lọc hiện tại.",
+    "expired_kicker": "Báo cáo đã hết hạn",
+    "expired_title": "Báo cáo này đã quá 24 giờ",
+    "expired_body": "Vì quyền riêng tư, báo cáo đã được xóa tự động. Hãy tải lên hợp đồng mới để phân tích lại.",
+    "expired_action": "Về trang chủ"
   },
   "errors": {
     "upload_failed": "Tải lên thất bại. Vui lòng thử lại.",

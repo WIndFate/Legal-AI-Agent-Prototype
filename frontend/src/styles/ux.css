@@ -226,190 +226,61 @@
 }
 
 .share-dialog {
-  width: min(100%, 640px);
+  width: min(100%, 520px);
 }
 
-.share-preview-card {
-  margin-top: 18px;
-  padding: 22px;
-  border-radius: 26px;
-  background:
-    linear-gradient(160deg, rgba(20, 40, 63, 0.98) 0%, rgba(31, 58, 95, 0.98) 42%, rgba(95, 127, 163, 0.9) 100%);
-  color: #f3f7fb;
-  box-shadow: 0 24px 54px rgba(20, 40, 63, 0.22);
+.share-dialog-compact {
+  padding: 24px;
 }
 
-.share-preview-header {
-  display: flex;
-  justify-content: space-between;
-  gap: 14px;
-  align-items: flex-start;
+.share-dialog-title-compact {
+  font-size: clamp(1.3rem, 2.5vw, 1.8rem);
 }
 
-.share-preview-header strong {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  color: #fff;
-  font-size: 1.02rem;
-}
-
-.share-brand-mark {
-  display: inline-block;
-  width: 18px;
-  height: 20px;
-  border-radius: 6px;
-  background: linear-gradient(135deg, #b7cae1 0%, #eef4fb 100%);
-  clip-path: polygon(50% 0%, 96% 18%, 96% 72%, 50% 100%, 4% 72%, 4% 18%);
-}
-
-.share-preview-badge {
-  padding: 7px 10px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.12);
-  color: rgba(255, 255, 255, 0.84);
-  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
-  font-size: 0.72rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.share-preview-card h3 {
-  margin-top: 20px;
-  color: #fff;
-  font-size: 1.5rem;
-}
-
-.share-preview-card p {
-  margin-top: 10px;
-  color: rgba(243, 247, 251, 0.84);
-  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
-  line-height: 1.75;
-}
-
-.share-preview-points {
+.share-inline-row {
   display: grid;
-  gap: 10px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
   margin-top: 18px;
-}
-
-.share-preview-points div {
-  padding: 12px 14px;
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.08);
-  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
-  font-size: 0.9rem;
 }
 
 .share-url-block {
-  margin-top: 18px;
+  margin-top: 0;
 }
 
 .share-url-block-compact {
-  margin-top: 14px;
+  padding: 14px 16px;
 }
 
 .share-url-block strong {
-  font-size: 0.94rem;
-  line-height: 1.7;
+  font-size: 0.88rem;
+  line-height: 1.55;
+  word-break: break-all;
 }
 
-.referral-panel {
-  margin-top: 18px;
-  padding: 20px;
-  border-radius: 24px;
-  border: 1px solid rgba(31, 58, 95, 0.12);
-  background: linear-gradient(180deg, rgba(245, 248, 252, 0.96) 0%, rgba(255, 251, 246, 0.98) 100%);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72);
-}
-
-.referral-panel-header {
+.share-icon-actions {
   display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  align-items: flex-start;
+  gap: 10px;
 }
 
-.referral-panel-kicker {
-  display: block;
-  margin-bottom: 8px;
-  color: var(--text-faint);
+.share-icon-btn {
+  width: 52px;
+  height: 52px;
+  border: 1px solid rgba(31, 58, 95, 0.12);
+  border-radius: 50%;
+  background: rgba(31, 58, 95, 0.92);
+  color: #fff;
   font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
-  font-size: 0.72rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.referral-panel-header strong {
-  display: block;
-  color: var(--brand-ink);
-  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
-  font-size: 1.05rem;
-  line-height: 1.5;
-}
-
-.referral-code-chip {
-  padding: 8px 12px;
-  border-radius: 999px;
-  background: rgba(31, 58, 95, 0.08);
-  color: var(--brand);
-  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   font-weight: 700;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.04em;
+  cursor: pointer;
 }
 
-.referral-panel-desc {
-  margin-top: 12px;
-  color: var(--text-soft);
-  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
-  line-height: 1.75;
-}
-
-.referral-status {
-  margin-top: 14px;
-  padding: 14px 16px;
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.78);
-  color: var(--text-soft);
-  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
-  line-height: 1.7;
-}
-
-.referral-status-error {
-  border: 1px solid rgba(176, 82, 74, 0.18);
-  background: rgba(255, 244, 242, 0.96);
-  color: #9a4b38;
-}
-
-.referral-meta-grid {
-  display: grid;
-  gap: 12px;
-  margin-top: 14px;
-}
-
-.referral-meta-card {
-  padding: 14px 16px;
-  border-radius: 16px;
-  border: 1px solid rgba(31, 58, 95, 0.1);
-  background: rgba(255, 255, 255, 0.72);
-}
-
-.referral-meta-card span {
-  display: block;
-  margin-bottom: 6px;
-  color: var(--text-faint);
-  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
-  font-size: 0.72rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.referral-meta-card strong {
-  color: var(--brand-ink);
-  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
-  font-size: 0.96rem;
-  line-height: 1.6;
+.share-icon-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 28px rgba(31, 58, 95, 0.16);
 }
 
 .lookup-shell {
@@ -516,6 +387,27 @@
   background: linear-gradient(90deg, rgba(225, 231, 239, 0.6), rgba(245, 247, 250, 1), rgba(225, 231, 239, 0.6));
   background-size: 200% 100%;
   animation: skeletonShift 1.4s ease infinite;
+}
+
+@media (max-width: 767px) {
+  .share-dialog-compact {
+    padding: 20px 18px 18px;
+    border-radius: 24px;
+  }
+
+  .share-inline-row {
+    grid-template-columns: 1fr;
+  }
+
+  .share-icon-actions {
+    justify-content: flex-end;
+  }
+
+  .share-icon-btn {
+    width: 48px;
+    height: 48px;
+    font-size: 0.72rem;
+  }
 }
 
 .report-loading-skeleton span:nth-child(2) {

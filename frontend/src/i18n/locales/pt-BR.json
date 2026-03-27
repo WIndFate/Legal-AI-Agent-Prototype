@@ -152,7 +152,14 @@
     "original_contract_shared_note": "Visível apenas na sessão atual do mesmo dispositivo que enviou o contrato. Por privacidade, links compartilhados e links por e-mail nunca incluem o texto original do contrato.",
     "executive_kicker": "Resumo de Riscos",
     "comparison_hint": "Compare com a cláusula original dentro de cada cartão de análise",
-    "clause_count": "Cláusulas"
+    "clause_count": "Cláusulas",
+    "filter_label": "Filtrar cláusulas",
+    "filter_all": "Todas as cláusulas",
+    "filter_empty": "Nenhuma cláusula corresponde ao filtro atual.",
+    "expired_kicker": "Relatório expirado",
+    "expired_title": "Este relatório já passou de 24 horas",
+    "expired_body": "Por privacidade, o relatório já foi excluído automaticamente. Envie um novo contrato para iniciar outra análise.",
+    "expired_action": "Voltar para a página inicial"
   },
   "errors": {
     "upload_failed": "Falha no envio. Tente novamente.",

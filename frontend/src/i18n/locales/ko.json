@@ -152,7 +152,14 @@
     "original_contract_shared_note": "계약서를 업로드한 동일 기기의 현재 세션에서만 볼 수 있습니다. 개인정보 보호를 위해 공유 링크와 이메일 링크에는 원문 계약서가 포함되지 않습니다.",
     "executive_kicker": "리스크 요약",
     "comparison_hint": "각 조항 분석 카드에서 원문과 비교할 수 있습니다",
-    "clause_count": "조항 수"
+    "clause_count": "조항 수",
+    "filter_label": "조항 필터",
+    "filter_all": "전체 조항",
+    "filter_empty": "현재 필터에 맞는 조항이 없습니다.",
+    "expired_kicker": "보고서 만료",
+    "expired_title": "이 보고서는 24시간이 지났습니다",
+    "expired_body": "개인정보 보호를 위해 보고서가 이미 삭제되었습니다. 새 계약서를 업로드해 다시 분석해 주세요.",
+    "expired_action": "홈으로 돌아가기"
   },
   "errors": {
     "upload_failed": "업로드에 실패했습니다. 다시 시도해 주세요.",

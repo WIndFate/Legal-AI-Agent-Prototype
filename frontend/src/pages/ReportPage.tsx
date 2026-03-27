@@ -1,11 +1,10 @@
 import { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 
 import ShareSheet from '../components/common/ShareSheet';
 import { SUPPORTED_LANGUAGES } from '../i18n';
 
-// Shared report types
 interface ClauseAnalysis {
   clause_number: string;
   risk_level: string;
@@ -31,7 +30,8 @@ interface ReportData {
   expires_at: string;
 }
 
-// Risk level color helpers
+type RiskFilter = 'high' | 'medium' | 'low';
+
 function riskColor(level: string): string {
   if (level === '高' || level === 'High' || level === '高リスク') return '#dc2626';
   if (level === '中' || level === 'Medium' || level === '中リスク') return '#f59e0b';
@@ -46,16 +46,26 @@ function riskBg(level: string): string {
   return '#f9fafb';
 }
 
+function normalizeRiskLevel(level: string): RiskFilter | null {
+  if (level === '高' || level === 'High' || level === '高リスク') return 'high';
+  if (level === '中' || level === 'Medium' || level === '中リスク') return 'medium';
+  if (level === '低' || level === 'Low' || level === '低リスク') return 'low';
+  return null;
+}
+
 function languageLabel(code: string): string {
   return SUPPORTED_LANGUAGES.find((lang) => lang.code === code)?.name || code;
 }
 
 const REPORT_TIMEOUT_MS = 12_000;
+const DEFAULT_FILTERS: RiskFilter[] = ['high', 'medium', 'low'];
 
 export default function ReportPage() {
   const { orderId } = useParams<{ orderId: string }>();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { t, i18n } = useTranslation();
+
   const [data, setData] = useState<ReportData | null>(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
@@ -63,15 +73,25 @@ export default function ReportPage() {
   const [expandedClauses, setExpandedClauses] = useState<Record<string, boolean>>({});
   const [shareOpen, setShareOpen] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
+  const [expired, setExpired] = useState(false);
+  const [selectedRisks, setSelectedRisks] = useState<RiskFilter[]>(DEFAULT_FILTERS);
   const [isOffline, setIsOffline] = useState(
     typeof navigator !== 'undefined' ? !navigator.onLine : false
   );
+
+  const referralCode = searchParams.get('ref');
 
   const toggleClause = (clauseNumber: string) => {
     setExpandedClauses((prev) => ({
       ...prev,
       [clauseNumber]: !prev[clauseNumber],
     }));
+  };
+
+  const toggleRiskFilter = (risk: RiskFilter) => {
+    setSelectedRisks((prev) => (
+      prev.includes(risk) ? prev.filter((item) => item !== risk) : [...prev, risk]
+    ));
   };
 
   useEffect(() => {
@@ -94,12 +114,16 @@ export default function ReportPage() {
       try {
         setLoading(true);
         setError('');
+        setExpired(false);
+
         const res = await fetch(`/api/report/${orderId}`, { signal: controller.signal });
         if (res.status === 404) {
+          setExpired(true);
           setError(i18n.t('errors.report_expired'));
           return;
         }
         if (!res.ok) throw new Error(`Failed: ${res.status}`);
+
         const raw = await res.json();
         const json: ReportData = raw.report ? raw : {
           order_id: orderId || '',
@@ -121,7 +145,6 @@ export default function ReportPage() {
           },
         });
 
-        // Calculate initial hours remaining
         const expires = new Date(json.expires_at).getTime();
         const diffHours = Math.max(0, Math.ceil((expires - Date.now()) / (1000 * 60 * 60)));
         setHoursLeft(diffHours);
@@ -132,10 +155,10 @@ export default function ReportPage() {
         setLoading(false);
       }
     };
-    fetchReport();
+
+    void fetchReport();
   }, [i18n, orderId, reloadKey]);
 
-  // Update expiry countdown every minute
   useEffect(() => {
     if (!data?.expires_at) return;
 
@@ -145,6 +168,7 @@ export default function ReportPage() {
       setHoursLeft(diffHours);
 
       if (diffHours <= 0) {
+        setExpired(true);
         setError(i18n.t('errors.report_expired'));
         setData(null);
       }
@@ -164,6 +188,26 @@ export default function ReportPage() {
             <span />
             <span />
             <span />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (expired) {
+    return (
+      <div className="page report-page">
+        <div className="soft-error-panel report-expired-panel">
+          <p className="section-kicker">{t('report.expired_kicker')}</p>
+          <h2>{t('report.expired_title')}</h2>
+          <p className="dialog-body">{t('report.expired_body')}</p>
+          <div className="soft-error-actions">
+            <button
+              className="btn-primary"
+              onClick={() => navigate(referralCode ? `/?ref=${encodeURIComponent(referralCode)}` : '/')}
+            >
+              {t('report.expired_action')}
+            </button>
           </div>
         </div>
       </div>
@@ -197,13 +241,17 @@ export default function ReportPage() {
 
   const report = data.report;
   const reportLanguageLabel = languageLabel(data.language);
+  const filteredClauses = report.clause_analyses.filter((clause) => {
+    const normalized = normalizeRiskLevel(clause.risk_level);
+    return normalized ? selectedRisks.includes(normalized) : true;
+  });
 
   return (
     <div className="page report-page">
       <ShareSheet
         open={shareOpen}
         onClose={() => setShareOpen(false)}
-        shareUrl={window.location.href}
+        shareUrl={`${window.location.origin}/report/${data.order_id}`}
         orderId={data.order_id}
       />
       {isOffline && (
@@ -211,6 +259,7 @@ export default function ReportPage() {
           <strong>{t('report.network_error')}</strong>
         </div>
       )}
+
       <div className="report-summary-shell report-header-bar">
         <div className="document-ribbon">
           <span>{t('report.title')}</span>
@@ -220,20 +269,12 @@ export default function ReportPage() {
           <div className="report-hero-copy">
             <p className="section-kicker">{t('report.executive_kicker')}</p>
             <h2>{t('report.title')}</h2>
-            <p className="report-comparison-hint">{t('report.comparison_hint')}</p>
-            <p className="report-language-note">
-              {t('report.language_locked_note', { language: reportLanguageLabel })}
-            </p>
+            <p className="summary">{report.summary}</p>
             {hoursLeft > 0 && (
               <p className="expiry-notice">
                 {t('report.expires_in', { hours: hoursLeft })}
               </p>
             )}
-            <div className="order-inline-card order-inline-card-report">
-              <span>{t('order.order_id')}</span>
-              <strong>{data.order_id}</strong>
-              <p>{t('order.lookup_help_body')}</p>
-            </div>
           </div>
 
           <div className="report-hero-panel">
@@ -246,7 +287,7 @@ export default function ReportPage() {
                 {report.overall_risk_level}
               </span>
             </div>
-            <div className="report-hero-stats">
+            <div className="report-hero-stats report-hero-stats-compact">
               <div className="report-hero-stat">
                 <span>{t('report.clause_count')}</span>
                 <strong>{report.total_clauses}</strong>
@@ -259,12 +300,20 @@ export default function ReportPage() {
                 <span>{t('report.medium_risk')}</span>
                 <strong className="stat medium">{report.medium_risk_count}</strong>
               </div>
+              <div className="report-hero-stat">
+                <span>{t('report.low_risk')}</span>
+                <strong className="stat low">{report.low_risk_count}</strong>
+              </div>
+            </div>
+            <div className="order-inline-card order-inline-card-report">
+              <span>{t('order.order_id')}</span>
+              <strong>{data.order_id}</strong>
+              <p>{t('order.lookup_help_body')}</p>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Overall risk card */}
       <div
         className="overall-risk-card"
         style={{
@@ -272,14 +321,18 @@ export default function ReportPage() {
           background: riskBg(report.overall_risk_level),
         }}
       >
-        <span
-          className="risk-badge"
-          style={{ background: riskColor(report.overall_risk_level) }}
-        >
-          {t('report.overall_risk')}: {report.overall_risk_level}
-        </span>
-        <p className="summary">{report.summary}</p>
-        <div className="summary-metrics">
+        <div className="report-toolbar">
+          <span
+            className="risk-badge"
+            style={{ background: riskColor(report.overall_risk_level) }}
+          >
+            {t('report.overall_risk')}: {report.overall_risk_level}
+          </span>
+          <button className="btn-primary btn-share report-share-trigger" onClick={() => setShareOpen(true)}>
+            {t('report.share')}
+          </button>
+        </div>
+        <div className="summary-metrics report-summary-metrics">
           <div className="summary-metric">
             <span>{t('report.clause_count')}</span>
             <strong>{report.total_clauses}</strong>
@@ -297,96 +350,126 @@ export default function ReportPage() {
             <strong className="stat low">{report.low_risk_count}</strong>
           </div>
         </div>
-      </div>
-
-      {/* Clause cards */}
-      <div className="clause-list">
-        {report.clause_analyses.map((clause, idx) => (
-          <div
-            key={idx}
-            className={`clause-card ${expandedClauses[clause.clause_number] ? 'clause-card-expanded' : ''}`}
-            style={{
-              borderLeftColor: riskColor(clause.risk_level),
-              background: riskBg(clause.risk_level),
-            }}
-          >
-            <div className="clause-header">
-              <div className="clause-heading">
-                <span className="clause-eyebrow">
-                  {t('report.finding_label')} #{String(idx + 1).padStart(2, '0')}
-                </span>
-                <strong>{clause.clause_number}</strong>
-              </div>
-              <span
-                className="risk-tag"
-                style={{ background: riskColor(clause.risk_level) }}
-              >
-                {clause.risk_level}
-              </span>
-            </div>
-            <div className="clause-meta-row">
-              <div className="clause-meta-item">
-                <span>{t('report.overall_risk')}</span>
-                <strong>{clause.risk_level}</strong>
-              </div>
-              <div className="clause-meta-item">
-                <span>{t('report.referenced_law')}</span>
-                <strong>{t('report.japanese_original')}</strong>
-              </div>
-            </div>
-            <div className="clause-toolbar">
-              {clause.original_text ? (
-                <button
-                  type="button"
-                  className={`inline-toggle-btn ${expandedClauses[clause.clause_number] ? 'inline-toggle-btn-active' : ''}`}
-                  onClick={() => toggleClause(clause.clause_number)}
-                >
-                  {expandedClauses[clause.clause_number]
-                    ? t('report.hide_original_clause')
-                    : t('report.show_original_clause')}
-                </button>
-              ) : (
-                <span className="clause-toolbar-spacer" />
-              )}
-            </div>
-            <div className={`clause-content ${expandedClauses[clause.clause_number] && clause.original_text ? 'clause-content-split' : ''}`}>
-              {expandedClauses[clause.clause_number] && clause.original_text && (
-                <div className="inline-original-panel">
-                  <p className="inline-original-label">{t('report.original_clause_label')}</p>
-                  <pre className="inline-original-text">{clause.original_text}</pre>
-                  <p className="inline-original-note">{t('report.original_contract_shared_note')}</p>
-                </div>
-              )}
-              <div className="clause-analysis-panel">
-                <div className="analysis-block">
-                  <p className="analysis-label">{t('report.assessment_label')}</p>
-                  <p className="risk-reason">{clause.risk_reason}</p>
-                </div>
-                {clause.suggestion && (
-                  <div className="suggestion analysis-block">
-                    <p className="analysis-label">{t('report.suggestion_label')}</p>
-                    <p>{clause.suggestion}</p>
-                  </div>
-                )}
-                {clause.referenced_law && (
-                  <div className="reference analysis-block">
-                    <p className="analysis-label">{t('report.reference_label')}</p>
-                    <p>{clause.referenced_law}</p>
-                  </div>
-                )}
-              </div>
-            </div>
+        <div className="report-filter-bar">
+          <span className="report-filter-label">{t('report.filter_label')}</span>
+          <div className="report-filter-chips">
+            <button
+              type="button"
+              className={`report-filter-chip ${selectedRisks.length === DEFAULT_FILTERS.length ? 'report-filter-chip-active' : ''}`}
+              onClick={() => setSelectedRisks(DEFAULT_FILTERS)}
+            >
+              {t('report.filter_all')}
+            </button>
+            <button
+              type="button"
+              className={`report-filter-chip ${selectedRisks.includes('high') ? 'report-filter-chip-active report-filter-chip-high' : ''}`}
+              onClick={() => toggleRiskFilter('high')}
+            >
+              {t('report.high_risk')}
+            </button>
+            <button
+              type="button"
+              className={`report-filter-chip ${selectedRisks.includes('medium') ? 'report-filter-chip-active report-filter-chip-medium' : ''}`}
+              onClick={() => toggleRiskFilter('medium')}
+            >
+              {t('report.medium_risk')}
+            </button>
+            <button
+              type="button"
+              className={`report-filter-chip ${selectedRisks.includes('low') ? 'report-filter-chip-active report-filter-chip-low' : ''}`}
+              onClick={() => toggleRiskFilter('low')}
+            >
+              {t('report.low_risk')}
+            </button>
           </div>
-        ))}
+        </div>
       </div>
 
-      {/* Share button */}
-      <div className="report-actions">
-        <button className="btn-primary btn-share" onClick={() => setShareOpen(true)}>
-          {t('report.share')}
-        </button>
-        <p className="share-note">{t('report.share_note')}</p>
-      </div>
+      {filteredClauses.length === 0 ? (
+        <div className="report-actions report-empty-state">
+          <p className="share-note">{t('report.filter_empty')}</p>
+        </div>
+      ) : (
+        <div className="clause-list">
+          {filteredClauses.map((clause, idx) => (
+            <div
+              key={`${clause.clause_number}-${idx}`}
+              className={`clause-card ${expandedClauses[clause.clause_number] ? 'clause-card-expanded' : ''}`}
+              style={{
+                borderLeftColor: riskColor(clause.risk_level),
+                background: riskBg(clause.risk_level),
+              }}
+            >
+              <div className="clause-header">
+                <div className="clause-heading">
+                  <span className="clause-eyebrow">
+                    {t('report.finding_label')} #{String(idx + 1).padStart(2, '0')}
+                  </span>
+                  <strong>{clause.clause_number}</strong>
+                </div>
+                <span
+                  className="risk-tag"
+                  style={{ background: riskColor(clause.risk_level) }}
+                >
+                  {clause.risk_level}
+                </span>
+              </div>
+              <div className="clause-meta-row">
+                <div className="clause-meta-item">
+                  <span>{t('report.overall_risk')}</span>
+                  <strong>{clause.risk_level}</strong>
+                </div>
+                <div className="clause-meta-item">
+                  <span>{t('report.referenced_law')}</span>
+                  <strong>{t('report.japanese_original')}</strong>
+                </div>
+              </div>
+              <div className="clause-toolbar">
+                {clause.original_text ? (
+                  <button
+                    type="button"
+                    className={`inline-toggle-btn ${expandedClauses[clause.clause_number] ? 'inline-toggle-btn-active' : ''}`}
+                    onClick={() => toggleClause(clause.clause_number)}
+                  >
+                    {expandedClauses[clause.clause_number]
+                      ? t('report.hide_original_clause')
+                      : t('report.show_original_clause')}
+                  </button>
+                ) : (
+                  <span className="clause-toolbar-spacer" />
+                )}
+              </div>
+              <div className={`clause-content ${expandedClauses[clause.clause_number] && clause.original_text ? 'clause-content-split' : ''}`}>
+                {expandedClauses[clause.clause_number] && clause.original_text && (
+                  <div className="inline-original-panel">
+                    <p className="inline-original-label">{t('report.original_clause_label')}</p>
+                    <pre className="inline-original-text">{clause.original_text}</pre>
+                    <p className="inline-original-note">{t('report.original_contract_shared_note')}</p>
+                  </div>
+                )}
+                <div className="clause-analysis-panel">
+                  <div className="analysis-block">
+                    <p className="analysis-label">{t('report.assessment_label')}</p>
+                    <p className="risk-reason">{clause.risk_reason}</p>
+                  </div>
+                  {clause.suggestion && (
+                    <div className="suggestion analysis-block">
+                      <p className="analysis-label">{t('report.suggestion_label')}</p>
+                      <p>{clause.suggestion}</p>
+                    </div>
+                  )}
+                  {clause.referenced_law && (
+                    <div className="reference analysis-block">
+                      <p className="analysis-label">{t('report.reference_label')}</p>
+                      <p>{clause.referenced_law}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

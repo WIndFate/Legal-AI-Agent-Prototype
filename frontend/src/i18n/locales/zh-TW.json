@@ -152,7 +152,14 @@
     "original_contract_shared_note": "僅在上傳合約的同一裝置目前工作階段中可見。基於隱私保護，分享連結與郵件連結都不會帶出原合約全文。",
     "executive_kicker": "風險概要",
     "comparison_hint": "可在各條款分析卡內查看對應原文對比",
-    "clause_count": "條款數"
+    "clause_count": "條款數",
+    "filter_label": "篩選條款",
+    "filter_all": "全部條款",
+    "filter_empty": "目前篩選條件下沒有可顯示的條款。",
+    "expired_kicker": "報告已過期",
+    "expired_title": "此報告已超過 24 小時",
+    "expired_body": "為保護隱私，報告已自動刪除。建議重新上傳合約並開始新的分析。",
+    "expired_action": "返回首頁"
   },
   "errors": {
     "upload_failed": "上傳失敗，請重試。",

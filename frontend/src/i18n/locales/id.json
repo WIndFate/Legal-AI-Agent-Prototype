@@ -152,7 +152,14 @@
     "original_contract_shared_note": "Hanya terlihat pada sesi saat ini di perangkat yang sama yang mengunggah kontrak. Demi privasi, tautan bagikan dan tautan email tidak pernah menyertakan teks kontrak asli.",
     "executive_kicker": "Ringkasan Risiko",
     "comparison_hint": "Bandingkan dengan klausul asli di dalam setiap kartu analisis",
-    "clause_count": "Jumlah pasal"
+    "clause_count": "Jumlah pasal",
+    "filter_label": "Filter klausul",
+    "filter_all": "Semua klausul",
+    "filter_empty": "Tidak ada klausul yang cocok dengan filter saat ini.",
+    "expired_kicker": "Laporan kedaluwarsa",
+    "expired_title": "Laporan ini sudah lebih dari 24 jam",
+    "expired_body": "Untuk privasi, laporan ini sudah dihapus otomatis. Unggah kontrak baru untuk memulai analisis lagi.",
+    "expired_action": "Kembali ke beranda"
   },
   "errors": {
     "upload_failed": "Gagal mengunggah. Silakan coba lagi.",

@@ -152,7 +152,14 @@
     "original_contract_shared_note": "Visible only in the current session on the device that uploaded the contract. For privacy reasons, shared links and emailed links never include the original contract text.",
     "executive_kicker": "Risk Summary",
     "comparison_hint": "Compare with the original clause inside each analysis card",
-    "clause_count": "Clauses"
+    "clause_count": "Clauses",
+    "filter_label": "Filter clauses",
+    "filter_all": "All clauses",
+    "filter_empty": "No clauses match the current filter.",
+    "expired_kicker": "Report expired",
+    "expired_title": "This report is older than 24 hours",
+    "expired_body": "For privacy, the report has already been deleted. Upload a new contract to start a fresh analysis.",
+    "expired_action": "Back to home"
   },
   "errors": {
     "upload_failed": "Upload failed. Please try again.",

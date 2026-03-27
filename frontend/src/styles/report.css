@@ -10,7 +10,7 @@
 
 .overall-risk-card,
 .report-actions {
-  padding: 26px;
+  padding: 20px 22px;
   border-radius: var(--radius-lg);
   border: 1px solid rgba(31, 58, 95, 0.12);
   background: rgba(255, 255, 255, 0.8);
@@ -18,15 +18,15 @@
 }
 
 .overall-risk-card {
-  margin-bottom: 24px;
+  margin-bottom: 18px;
 }
 
 .summary {
-  margin-top: 14px;
+  margin-top: 10px;
   color: var(--text);
   font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
-  font-size: 0.98rem;
-  line-height: 1.85;
+  font-size: 0.95rem;
+  line-height: 1.72;
 }
 
 .stat.high {
@@ -44,12 +44,12 @@
 .clause-list {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
 }
 
 .clause-card,
 .example-clause-card {
-  padding: 22px 24px;
+  padding: 18px 20px;
   border-left: 3px solid;
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-sm);
@@ -72,7 +72,7 @@
 
 .clause-header {
   gap: 12px;
-  margin-bottom: 14px;
+  margin-bottom: 10px;
 }
 
 .clause-heading strong {
@@ -96,12 +96,12 @@
 .clause-meta-row {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
-  margin-bottom: 14px;
+  gap: 8px;
+  margin-bottom: 10px;
 }
 
 .clause-meta-item {
-  padding: 10px 12px;
+  padding: 9px 11px;
   border-radius: var(--radius-sm);
   border: 1px solid rgba(31, 58, 95, 0.08);
   background: rgba(255, 255, 255, 0.56);
@@ -136,7 +136,7 @@
 
 .clause-toolbar {
   justify-content: flex-start;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
 }
 
 .clause-toolbar-spacer {
@@ -153,15 +153,15 @@
 
 .suggestion,
 .reference {
-  margin-top: 12px;
-  padding-top: 12px;
+  margin-top: 10px;
+  padding-top: 10px;
   border-top: 1px solid rgba(31, 58, 95, 0.08);
   font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
   font-size: 0.84rem;
 }
 
 .analysis-block {
-  padding: 16px 0;
+  padding: 12px 0;
 }
 
 .analysis-block + .analysis-block {
@@ -202,7 +202,7 @@
 
 .inline-original-panel {
   min-width: 0;
-  padding: 18px;
+  padding: 14px;
   border-radius: var(--radius-md);
   border: 1px solid rgba(31, 58, 95, 0.12);
   background: rgba(244, 248, 252, 0.82);
@@ -235,11 +235,96 @@
 }
 
 .report-actions {
-  margin-top: 28px;
+  margin-top: 18px;
 }
 
 .report-actions .btn-share {
   margin-top: 0;
+}
+
+.report-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.report-share-trigger {
+  min-width: 132px;
+  margin-top: 0;
+}
+
+.report-summary-metrics,
+.report-page .summary-metrics {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.report-filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(31, 58, 95, 0.08);
+}
+
+.report-filter-label {
+  color: var(--text-faint);
+  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.report-filter-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.report-filter-chip {
+  appearance: none;
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(31, 58, 95, 0.12);
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--brand-ink);
+  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.report-filter-chip-active {
+  background: rgba(31, 58, 95, 0.08);
+  border-color: rgba(31, 58, 95, 0.2);
+}
+
+.report-filter-chip-high.report-filter-chip-active {
+  background: rgba(220, 38, 38, 0.1);
+  color: #b42318;
+}
+
+.report-filter-chip-medium.report-filter-chip-active {
+  background: rgba(245, 158, 11, 0.12);
+  color: #b7791f;
+}
+
+.report-filter-chip-low.report-filter-chip-active {
+  background: rgba(22, 163, 74, 0.1);
+  color: #1d7a46;
+}
+
+.report-empty-state {
+  text-align: center;
+}
+
+.report-expired-panel {
+  max-width: 620px;
+  margin: 0 auto;
 }
 
 .report-page .clause-card,
@@ -391,6 +476,33 @@
 
   .report-actions {
     margin-top: 18px;
+  }
+
+  .report-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .report-share-trigger {
+    width: 100%;
+  }
+
+  .report-page .summary-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .report-filter-bar {
+    gap: 10px;
+  }
+
+  .report-filter-chips {
+    width: 100%;
+  }
+
+  .report-filter-chip {
+    flex: 1 1 calc(50% - 8px);
+    justify-content: center;
+    text-align: center;
   }
 
   .report-actions .btn-share,

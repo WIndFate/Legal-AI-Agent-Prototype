@@ -152,7 +152,14 @@
     "original_contract_shared_note": "仅在上传合同的同一设备当前会话中可见。出于隐私保护，分享链接和邮件链接都不会带出原合同全文。",
     "executive_kicker": "风险概要",
     "comparison_hint": "可在各条款分析卡内查看对应原文对比",
-    "clause_count": "条款数"
+    "clause_count": "条款数",
+    "filter_label": "筛选条款",
+    "filter_all": "全部条款",
+    "filter_empty": "当前筛选下没有可显示的条款。",
+    "expired_kicker": "报告已过期",
+    "expired_title": "该报告已超过 24 小时",
+    "expired_body": "为了保护隐私，报告已自动删除。建议重新上传合同并开始新的分析。",
+    "expired_action": "返回首页"
   },
   "errors": {
     "upload_failed": "上传失败，请重试。",
