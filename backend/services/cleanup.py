@@ -5,6 +5,8 @@ from sqlalchemy import delete, update, and_, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.db.session import get_session_factory
+from backend.models.analysis_event import AnalysisEvent
+from backend.models.analysis_job import AnalysisJob
 from backend.models.order import Order
 from backend.models.report import Report
 from backend.services.temp_uploads import delete_temp_upload
@@ -76,8 +78,54 @@ async def cleanup_staged_uploads() -> int:
         return len(orders)
 
 
+async def fail_stale_analysis_jobs() -> int:
+    """Mark long-stuck processing jobs as failed."""
+    factory = get_session_factory()
+    cutoff = datetime.now(timezone.utc) - timedelta(minutes=30)
+    async with factory() as session:
+        result = await session.execute(
+            select(AnalysisJob, Order)
+            .join(Order, AnalysisJob.order_id == Order.id)
+            .where(
+                AnalysisJob.status == "processing",
+                or_(
+                    AnalysisJob.last_event_at.is_(None),
+                    AnalysisJob.last_event_at < cutoff,
+                ),
+            )
+        )
+        rows = list(result.all())
+        now = datetime.now(timezone.utc)
+        for job, order in rows:
+            job.status = "failed"
+            job.error_message = "Analysis timed out"
+            job.failed_at = now
+            order.analysis_status = "failed"
+        await session.commit()
+        if rows:
+            logger.info("Marked %d stale analysis jobs as failed", len(rows))
+        return len(rows)
+
+
+async def cleanup_expired_analysis_events() -> int:
+    """Delete old analysis events after report/event retention window."""
+    factory = get_session_factory()
+    cutoff = datetime.now(timezone.utc) - timedelta(hours=24)
+    async with factory() as session:
+        result = await session.execute(
+            delete(AnalysisEvent).where(AnalysisEvent.created_at < cutoff)
+        )
+        await session.commit()
+        count = result.rowcount
+        if count:
+            logger.info("Deleted %d expired analysis events", count)
+        return count
+
+
 async def run_cleanup() -> None:
     """Run all cleanup tasks. Called by APScheduler."""
+    await fail_stale_analysis_jobs()
     await cleanup_expired_reports()
+    await cleanup_expired_analysis_events()
     await nullify_completed_contracts()
     await cleanup_staged_uploads()

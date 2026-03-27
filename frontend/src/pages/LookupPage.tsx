@@ -57,27 +57,41 @@ export default function LookupPage() {
     setStatusText(t('order.lookup_checking'));
 
     try {
-      const reportRes = await fetchWithTimeout(`/api/report/${trimmed}`);
-      if (reportRes.ok) {
+      const statusRes = await fetchWithTimeout(`/api/orders/${trimmed}/status`);
+      if (!statusRes.ok) {
+        if (statusRes.status === 404) {
+          setError(t('order.lookup_not_found'));
+          setErrorKind('not_found');
+          setStatusText('');
+          return;
+        }
+        throw new Error(`Lookup failed: ${statusRes.status}`);
+      }
+
+      const data = await statusRes.json();
+
+      if (data.report_ready || data.analysis_status === 'completed') {
         setStatusText(t('order.lookup_found_report'));
         navigate(`/report/${trimmed}`);
         return;
       }
 
-      const paymentRes = await fetchWithTimeout(`/api/payment/status/${trimmed}`);
-      if (paymentRes.ok) {
-        const data = await paymentRes.json();
-        if (data.status === 'paid' || data.status === 'captured') {
-          setStatusText(t('order.lookup_found_processing'));
-          navigate(`/review/${trimmed}`);
-          return;
-        }
+      if (data.analysis_status === 'failed' || data.analysis_status === 'queued' || data.analysis_status === 'processing') {
+        setStatusText(t('order.lookup_found_processing'));
+        navigate(`/review/${trimmed}`);
+        return;
+      }
 
-        if (data.status === 'pending') {
-          setStatusText(t('order.lookup_found_payment'));
-          navigate(`/payment/${trimmed}`);
-          return;
-        }
+      if (data.payment_status === 'paid' || data.payment_status === 'captured') {
+        setStatusText(t('order.lookup_found_processing'));
+        navigate(`/review/${trimmed}`);
+        return;
+      }
+
+      if (data.payment_status === 'pending') {
+        setStatusText(t('order.lookup_found_payment'));
+        navigate(`/payment/${trimmed}`);
+        return;
       }
 
       setError(t('order.lookup_not_found'));

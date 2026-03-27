@@ -21,29 +21,32 @@ export default function PaymentPage() {
 
     const checkStatus = async () => {
       try {
-        // First check if report already exists (analysis already done)
-        const reportRes = await fetch(`/api/report/${orderId}`);
-        if (reportRes.ok) {
+        const statusRes = await fetch(`/api/orders/${orderId}/status`);
+        if (!statusRes.ok) {
+          if (statusRes.status === 404) {
+            setStatus('failed');
+            return;
+          }
+          throw new Error(`Status failed: ${statusRes.status}`);
+        }
+
+        const data = await statusRes.json();
+        if (data.report_ready || data.analysis_status === 'completed') {
           setStatus('success');
           setNextRoute(`/report/${orderId}`);
           setShowOrderPrompt(true);
           return;
         }
 
-        // Check payment status via dedicated endpoint
-        const payRes = await fetch(`/api/payment/status/${orderId}`);
-        if (payRes.ok) {
-          const data = await payRes.json();
-          if (data.status === 'paid' || data.status === 'captured') {
-            setStatus('success');
-            setNextRoute(`/review/${orderId}`);
-            setShowOrderPrompt(true);
-            return;
-          }
-          if (data.status === 'failed' || data.status === 'cancelled') {
-            setStatus('failed');
-            return;
-          }
+        if (data.payment_status === 'paid' || data.payment_status === 'captured') {
+          setStatus('success');
+          setNextRoute(`/review/${orderId}`);
+          setShowOrderPrompt(true);
+          return;
+        }
+        if (data.payment_status === 'failed' || data.payment_status === 'cancelled') {
+          setStatus('failed');
+          return;
         }
 
         // Still waiting for payment confirmation.

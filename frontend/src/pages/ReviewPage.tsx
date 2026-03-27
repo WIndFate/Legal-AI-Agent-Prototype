@@ -5,7 +5,6 @@ import { useTranslation } from 'react-i18next';
 import OrderReminderDialog from '../components/common/OrderReminderDialog';
 import ShareSheet from '../components/common/ShareSheet';
 
-// Shared report types
 interface ClauseAnalysis {
   clause_number: string;
   risk_level: string;
@@ -25,27 +24,33 @@ interface ReviewReport {
   total_clauses: number;
 }
 
-interface StreamEvent {
-  type: 'node_start' | 'token' | 'tool_call' | 'tool_result' | 'complete' | 'error';
-  node?: string;
-  label?: string;
-  text?: string;
-  tool?: string;
-  clause?: string;
-  report?: ReviewReport;
-  message?: string;
+interface AnalysisEventItem {
+  seq: number;
+  event_type: 'node_start' | 'tool_call' | 'tool_result' | 'complete' | 'error';
+  step: 'parsing' | 'analyzing' | 'generating' | null;
+  message: string | null;
+  payload_json: Record<string, unknown> | null;
+  created_at: string;
+}
+
+interface OrderStatusResponse {
+  order_id: string;
+  payment_status: string;
+  analysis_status: 'waiting' | 'queued' | 'processing' | 'completed' | 'failed';
+  current_step: 'parsing' | 'analyzing' | 'generating' | null;
+  progress_message: string | null;
+  progress_seq: number;
+  report_ready: boolean;
+  error_message: string | null;
+  started_at: string | null;
+  finished_at: string | null;
 }
 
 type AnalysisStep = 'parsing' | 'analyzing' | 'generating';
 
-// Maximum number of automatic reconnection attempts
 const MAX_RECONNECT_ATTEMPTS = 3;
-// Base delay for exponential backoff (ms)
 const BASE_RECONNECT_DELAY_MS = 1000;
-// Inactivity timeout: treat stream as dead if no data for this long (ms)
-const STREAM_TIMEOUT_MS = 60_000;
 
-// Risk level color helpers
 function riskColor(level: string): string {
   if (level === '高' || level === 'High' || level === '高リスク') return '#dc2626';
   if (level === '中' || level === 'Medium' || level === '中リスク') return '#f59e0b';
@@ -60,11 +65,10 @@ function riskBg(level: string): string {
   return '#f9fafb';
 }
 
-// Step definitions for progress indicator
-const STEP_DEFS: { key: AnalysisStep; nodeMatch: string }[] = [
-  { key: 'parsing', nodeMatch: 'parse_contract' },
-  { key: 'analyzing', nodeMatch: 'analyze_risks' },
-  { key: 'generating', nodeMatch: 'generate_report' },
+const STEP_DEFS: { key: AnalysisStep }[] = [
+  { key: 'parsing' },
+  { key: 'analyzing' },
+  { key: 'generating' },
 ];
 
 export default function ReviewPage() {
@@ -75,6 +79,7 @@ export default function ReviewPage() {
   const [report, setReport] = useState<ReviewReport | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [analysisStatus, setAnalysisStatus] = useState<OrderStatusResponse['analysis_status']>('queued');
   const [currentStep, setCurrentStep] = useState<AnalysisStep>('parsing');
   const [logLines, setLogLines] = useState<string[]>([]);
   const [expandedClauses, setExpandedClauses] = useState<Record<string, boolean>>({});
@@ -83,24 +88,18 @@ export default function ReviewPage() {
   const [showCompletionPrompt, setShowCompletionPrompt] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
 
-  // Refs to track reconnection state without causing re-renders
   const started = useRef(false);
   const reconnectAttempt = useRef(0);
-  const timeoutTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const abortRef = useRef<AbortController | null>(null);
-  // Track the total number of SSE events processed so far for deduplication on reconnect
-  const eventIndex = useRef(0);
-  // Whether the stream completed or received a server-side error (no reconnect needed)
-  const terminalReached = useRef(false);
+  const streamAbortRef = useRef<AbortController | null>(null);
+  const lastSeqRef = useRef(0);
 
-  const toolLabel = useCallback((toolName?: string) => {
-    if (toolName === 'analyze_clause_risk') return t('review.tool_analyze_clause_risk');
-    if (toolName === 'generate_suggestion') return t('review.tool_generate_suggestion');
-    return t('review.tool_processing_clause');
-  }, [t]);
-
-  const pushLog = useCallback((line: string) =>
-    setLogLines((prev) => [...prev, line].slice(-5)), []);
+  const pushLog = useCallback((line: string) => {
+    if (!line.trim()) return;
+    setLogLines((prev) => {
+      if (prev[prev.length - 1] === line) return prev;
+      return [...prev, line].slice(-6);
+    });
+  }, []);
 
   const toggleClause = (clauseNumber: string) => {
     setExpandedClauses((prev) => ({
@@ -119,261 +118,251 @@ export default function ReviewPage() {
     return { title: t('review.phase_generating_title'), desc: t('review.phase_generating_desc') };
   }, [t]);
 
-  /** Clear the inactivity timeout timer */
-  const clearStreamTimeout = useCallback(() => {
-    if (timeoutTimer.current) {
-      clearTimeout(timeoutTimer.current);
-      timeoutTimer.current = null;
+  const fetchOrderStatus = useCallback(async (): Promise<OrderStatusResponse> => {
+    const res = await fetch(`/api/orders/${orderId}/status`);
+    if (!res.ok) throw new Error(t('errors.review_failed'));
+    return res.json();
+  }, [orderId, t]);
+
+  const requestAnalysisStart = useCallback(async () => {
+    const res = await fetch('/api/analysis/start', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ order_id: orderId }),
+    });
+    if (!res.ok && res.status !== 409) {
+      if (res.status === 402) {
+        navigate(`/payment/${orderId}`);
+        return false;
+      }
+      throw new Error(t('errors.review_failed'));
     }
-  }, []);
+    return true;
+  }, [navigate, orderId, t]);
 
-  /**
-   * Reset (or start) the inactivity timeout. If no data arrives within
-   * STREAM_TIMEOUT_MS, the callback fires to trigger a reconnect attempt.
-   */
-  const resetStreamTimeout = useCallback((onTimeout: () => void) => {
-    clearStreamTimeout();
-    timeoutTimer.current = setTimeout(onTimeout, STREAM_TIMEOUT_MS);
-  }, [clearStreamTimeout]);
+  const loadReport = useCallback(async (openPrompt = false) => {
+    const res = await fetch(`/api/report/${orderId}`);
+    if (!res.ok) throw new Error(t('report.network_error'));
+    const raw = await res.json();
+    const persistedReport = raw.report || raw;
+    const savedOriginals = sessionStorage.getItem(`report-originals:${orderId}`);
+    const originalByClause = savedOriginals ? JSON.parse(savedOriginals) as Record<string, string> : {};
+    setReport({
+      ...persistedReport,
+      clause_analyses: (persistedReport.clause_analyses || []).map((clause: ClauseAnalysis) => ({
+        ...clause,
+        original_text: clause.original_text || originalByClause[clause.clause_number] || '',
+      })),
+    });
+    setLoading(false);
+    if (openPrompt) setShowCompletionPrompt(true);
+  }, [orderId, t]);
 
-  /**
-   * Core SSE connection logic. Returns a promise that resolves when the
-   * stream ends (either normally or due to disconnection).
-   *
-   * - On `complete` or `error` events the promise resolves with `'terminal'`
-   *   meaning no reconnect is needed.
-   * - On unexpected end-of-stream or timeout it resolves with `'disconnected'`.
-   * - On 409 (already completed) it fetches the stored report and resolves `'terminal'`.
-   */
-  const connectSSE = useCallback(async (): Promise<'terminal' | 'disconnected'> => {
+  const applyStatusSnapshot = useCallback((status: OrderStatusResponse) => {
+    setAnalysisStatus(status.analysis_status);
+    if (status.current_step) {
+      setCurrentStep(status.current_step);
+      setPhaseText(status.progress_message || phaseMeta(status.current_step).desc);
+    } else if (status.progress_message) {
+      setPhaseText(status.progress_message);
+    }
+  }, [phaseMeta]);
+
+  const processEvent = useCallback((evt: AnalysisEventItem, options?: { replay?: boolean }) => {
+    lastSeqRef.current = Math.max(lastSeqRef.current, evt.seq);
+
+    if (evt.step) {
+      setCurrentStep(evt.step);
+      setPhaseText(evt.message || phaseMeta(evt.step).desc);
+    } else if (evt.message) {
+      setPhaseText(evt.message);
+    }
+
+    switch (evt.event_type) {
+      case 'node_start':
+      case 'tool_call':
+      case 'tool_result':
+        if (evt.message) pushLog(evt.message);
+        break;
+      case 'complete':
+        setAnalysisStatus('completed');
+        if (!options?.replay) {
+          void loadReport(true);
+        }
+        break;
+      case 'error':
+        setAnalysisStatus('failed');
+        setError(evt.message || t('errors.review_failed'));
+        setLoading(false);
+        break;
+    }
+  }, [loadReport, phaseMeta, pushLog, t]);
+
+  const loadHistory = useCallback(async () => {
+    const res = await fetch(`/api/orders/${orderId}/events?after_seq=0`);
+    if (!res.ok) throw new Error(t('errors.review_failed'));
+    const data = await res.json();
+    setLogLines([]);
+    lastSeqRef.current = 0;
+    for (const evt of data.events as AnalysisEventItem[]) {
+      processEvent(evt, { replay: true });
+    }
+  }, [orderId, processEvent, t]);
+
+  const connectStream = useCallback(async (): Promise<'terminal' | 'disconnected'> => {
     const abortController = new AbortController();
-    abortRef.current = abortController;
-
-    // The number of events already processed before this connection attempt.
-    // On reconnect the backend replays from the beginning, so we skip this many events.
-    const skipCount = eventIndex.current;
+    streamAbortRef.current = abortController;
 
     try {
-      const res = await fetch('/api/review/stream', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ order_id: orderId }),
+      const res = await fetch(`/api/orders/${orderId}/stream?after_seq=${lastSeqRef.current}`, {
         signal: abortController.signal,
       });
-
-      // If analysis already completed, fetch the stored report
-      if (res.status === 409) {
-        const reportRes = await fetch(`/api/report/${orderId}`);
-        if (reportRes.ok) {
-          const data = await reportRes.json();
-          const savedOriginals = sessionStorage.getItem(`report-originals:${orderId}`);
-          const originalByClause = savedOriginals ? JSON.parse(savedOriginals) as Record<string, string> : {};
-          const persistedReport = data.report || data;
-          setReport({
-            ...persistedReport,
-            clause_analyses: (persistedReport.clause_analyses || []).map((clause: ClauseAnalysis) => ({
-              ...clause,
-              original_text: originalByClause[clause.clause_number] || '',
-            })),
-          });
-        }
-        setLoading(false);
-        return 'terminal';
-      }
-
       if (!res.ok) {
-        throw new Error(`Review failed: ${res.status}`);
+        throw new Error(`Stream failed: ${res.status}`);
       }
 
-      // Parse SSE stream
-      const reader = res.body!.getReader();
+      const reader = res.body?.getReader();
+      if (!reader) return 'disconnected';
+
       const decoder = new TextDecoder();
       let buffer = '';
-      let localEventIdx = 0;
-
-      // Set up inactivity timeout that will abort this connection
-      const handleTimeout = () => {
-        abortController.abort();
-      };
-      resetStreamTimeout(handleTimeout);
 
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-
-        // Reset inactivity timer on every data chunk
-        resetStreamTimeout(handleTimeout);
-
         buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split('\n');
-        buffer = lines.pop() ?? '';
+        const chunks = buffer.split('\n\n');
+        buffer = chunks.pop() ?? '';
 
-        for (const line of lines) {
-          if (!line.startsWith('data: ')) continue;
-
-          // Deduplicate: skip events already processed in a previous connection
-          if (localEventIdx < skipCount) {
-            localEventIdx++;
-            eventIndex.current = Math.max(eventIndex.current, localEventIdx);
-            continue;
-          }
-          localEventIdx++;
-          eventIndex.current = Math.max(eventIndex.current, localEventIdx);
-
+        for (const chunk of chunks) {
+          const trimmed = chunk.trim();
+          if (!trimmed || trimmed.startsWith(':')) continue;
+          const dataLine = trimmed
+            .split('\n')
+            .find((line) => line.startsWith('data: '));
+          if (!dataLine) continue;
           try {
-            const evt: StreamEvent = JSON.parse(line.slice(6));
-
-            switch (evt.type) {
-              case 'node_start': {
-                if (evt.label) pushLog(evt.label);
-                // Update step indicator based on node name
-                const matchedStep = STEP_DEFS.find(
-                  (s) => evt.node && evt.node.includes(s.nodeMatch)
-                );
-                if (matchedStep) {
-                  setCurrentStep(matchedStep.key);
-                  setPhaseText(phaseMeta(matchedStep.key).desc);
-                }
-                break;
-              }
-              case 'tool_call':
-                {
-                  const label = toolLabel(evt.tool);
-                  pushLog(label);
-                  setPhaseText(label);
-                }
-                break;
-              case 'tool_result':
-                if (evt.text) {
-                  pushLog(evt.text);
-                  setPhaseText(evt.text);
-                }
-                break;
-              case 'complete':
-                clearStreamTimeout();
-                if (evt.report) {
-                  const originalByClause = Object.fromEntries(
-                    evt.report.clause_analyses
-                      .filter((clause) => clause.original_text)
-                      .map((clause) => [clause.clause_number, clause.original_text as string])
-                  );
-                  sessionStorage.setItem(`report-originals:${orderId}`, JSON.stringify(originalByClause));
-                  setReport(evt.report);
-                  setLoading(false);
-                  setShowCompletionPrompt(true);
-                }
-                terminalReached.current = true;
-                return 'terminal';
-              case 'error':
-                clearStreamTimeout();
-                setError(evt.message || t('errors.review_failed'));
-                setLoading(false);
-                terminalReached.current = true;
-                return 'terminal';
+            const evt = JSON.parse(dataLine.slice(6)) as AnalysisEventItem;
+            processEvent(evt);
+            if (evt.event_type === 'complete' || evt.event_type === 'error') {
+              return 'terminal';
             }
           } catch {
-            // Skip malformed SSE JSON
+            // ignore malformed event payload
           }
         }
       }
 
-      clearStreamTimeout();
-      // Stream ended without a terminal event — treat as unexpected disconnection
       return 'disconnected';
-    } catch (e) {
-      clearStreamTimeout();
-      // AbortError from timeout or manual abort — treat as disconnection
-      if (e instanceof DOMException && e.name === 'AbortError') {
+    } catch (errorValue) {
+      if (errorValue instanceof DOMException && errorValue.name === 'AbortError') {
         return 'disconnected';
       }
-      // Network error — also treat as disconnection for retry
-      if (e instanceof TypeError) {
+      if (errorValue instanceof TypeError) {
         return 'disconnected';
       }
-      // Other unexpected errors — surface to user
-      throw e;
+      throw errorValue;
     }
-  }, [orderId, t, pushLog, toolLabel, phaseMeta, clearStreamTimeout, resetStreamTimeout]);
+  }, [orderId, processEvent]);
 
-  /**
-   * Initiate the SSE review stream with automatic reconnection.
-   * On unexpected disconnection, retries with exponential backoff
-   * up to MAX_RECONNECT_ATTEMPTS times.
-   */
-  const startReviewWithReconnect = useCallback(async () => {
+  const startStreamLoop = useCallback(async () => {
     reconnectAttempt.current = 0;
-    terminalReached.current = false;
 
     while (true) {
-      try {
-        setReconnecting(reconnectAttempt.current > 0);
-        const result = await connectSSE();
-        setReconnecting(false);
+      setReconnecting(reconnectAttempt.current > 0);
+      const result = await connectStream();
+      setReconnecting(false);
 
-        if (result === 'terminal') {
-          // Stream completed normally or server returned an error — done
-          return;
-        }
+      if (result === 'terminal') {
+        return;
+      }
 
-        // Disconnected unexpectedly — check if we can retry
-        if (terminalReached.current) return;
-
-        reconnectAttempt.current++;
-        if (reconnectAttempt.current > MAX_RECONNECT_ATTEMPTS) {
-          // Exhausted all retries — show error with manual retry option
-          setError(t('review.reconnect_failed'));
-          setLoading(false);
-          return;
-        }
-
-        // Exponential backoff: 1s, 2s, 4s
-        const delay = BASE_RECONNECT_DELAY_MS * Math.pow(2, reconnectAttempt.current - 1);
-        await new Promise((resolve) => setTimeout(resolve, delay));
-      } catch (e) {
-        // Non-retryable error
-        setError(e instanceof Error ? e.message : t('errors.review_failed'));
+      reconnectAttempt.current += 1;
+      if (reconnectAttempt.current > MAX_RECONNECT_ATTEMPTS) {
+        setError(t('review.reconnect_failed'));
         setLoading(false);
         return;
       }
+
+      const delay = BASE_RECONNECT_DELAY_MS * Math.pow(2, reconnectAttempt.current - 1);
+      await new Promise((resolve) => setTimeout(resolve, delay));
     }
-  }, [connectSSE, t]);
+  }, [connectStream, t]);
 
-  /** Manual retry handler — resets all state and starts fresh */
-  const handleManualRetry = useCallback(() => {
-    // Reset all relevant state
-    setError('');
+  const bootstrap = useCallback(async (forceRestart = false, retryFailed = false) => {
+    if (!orderId) return;
+
+    streamAbortRef.current?.abort();
     setLoading(true);
+    setError('');
     setReport(null);
-    setCurrentStep('parsing');
-    setLogLines([]);
-    setPhaseText('');
-    setReconnecting(false);
-    reconnectAttempt.current = 0;
-    eventIndex.current = 0;
-    terminalReached.current = false;
+    setShowCompletionPrompt(false);
+    if (forceRestart) {
+      setLogLines([]);
+      lastSeqRef.current = 0;
+    }
 
-    startReviewWithReconnect();
-  }, [startReviewWithReconnect]);
+    let status = await fetchOrderStatus();
+
+    if (status.payment_status !== 'paid' && status.payment_status !== 'captured') {
+      navigate(`/payment/${orderId}`);
+      return;
+    }
+    applyStatusSnapshot(status);
+
+    if (status.report_ready && status.analysis_status === 'completed') {
+      await loadReport(forceRestart);
+      return;
+    }
+
+    if (status.analysis_status === 'failed' && !retryFailed) {
+      setLoading(false);
+      setError(status.error_message || t('errors.review_failed'));
+      return;
+    }
+
+    if (
+      retryFailed ||
+      status.analysis_status === 'waiting' ||
+      status.analysis_status === 'queued' ||
+      status.analysis_status === 'processing'
+    ) {
+      const startedOk = await requestAnalysisStart();
+      if (!startedOk) return;
+      status = await fetchOrderStatus();
+      applyStatusSnapshot(status);
+      if (status.analysis_status === 'failed') {
+        setLoading(false);
+        setError(status.error_message || t('errors.review_failed'));
+        return;
+      }
+      if (status.report_ready && status.analysis_status === 'completed') {
+        await loadReport(forceRestart);
+        return;
+      }
+    }
+
+    await loadHistory();
+    setLoading(true);
+    await startStreamLoop();
+  }, [applyStatusSnapshot, fetchOrderStatus, loadHistory, loadReport, navigate, orderId, requestAnalysisStart, startStreamLoop, t]);
+
+  const handleManualRetry = useCallback(() => {
+    void bootstrap(true, true);
+  }, [bootstrap]);
 
   useEffect(() => {
-    if (started.current) return;
+    if (started.current || !orderId) return;
     started.current = true;
+    void bootstrap();
 
-    startReviewWithReconnect();
-
-    // Cleanup: abort any in-flight connection and clear timers on unmount
     return () => {
-      clearStreamTimeout();
-      if (abortRef.current) {
-        abortRef.current.abort();
-      }
+      streamAbortRef.current?.abort();
     };
-  }, [startReviewWithReconnect, clearStreamTimeout]);
+  }, [bootstrap, orderId]);
 
-  // Determine step status for progress indicator
-  const stepOrder: AnalysisStep[] = ['parsing', 'analyzing', 'generating'];
-  const currentStepIdx = stepOrder.indexOf(currentStep);
   const currentPhase = phaseMeta(currentStep);
+  const currentStepIdx = STEP_DEFS.findIndex((item) => item.key === currentStep);
 
   return (
     <div className="page review-page">
@@ -397,8 +386,8 @@ export default function ReviewPage() {
           onSecondary={() => setShowCompletionPrompt(false)}
         />
       )}
-      {/* Streaming progress section */}
-      {loading && (
+
+      {loading && !report && (
         <div className="analyzing-section">
           <div className="review-live-card">
             <div className="review-live-header">
@@ -408,11 +397,13 @@ export default function ReviewPage() {
                 <p className="review-phase-text">{phaseText || currentPhase.desc}</p>
               </div>
               <div className="review-phase-panel">
-                <span className="review-phase-chip">{t('review.analyzing')}</span>
+                <span className="review-phase-chip">
+                  {analysisStatus === 'queued' ? t('payment.processing') : t('review.analyzing')}
+                </span>
                 <div className="review-phase-stats">
                   <div className="review-phase-stat">
                     <span>{t('review.live_label')}</span>
-                    <strong>{currentStepIdx + 1}/3</strong>
+                    <strong>{Math.max(currentStepIdx + 1, 1)}/3</strong>
                   </div>
                   <div className="review-phase-stat">
                     <span>{t('report.title')}</span>
@@ -422,7 +413,6 @@ export default function ReviewPage() {
               </div>
             </div>
 
-            {/* Step progress indicator */}
             <div className="step-progress">
               {STEP_DEFS.map((step, idx) => {
                 let stepStatus: 'done' | 'active' | 'pending' = 'pending';
@@ -441,7 +431,6 @@ export default function ReviewPage() {
               })}
             </div>
 
-            {/* Reconnecting indicator */}
             {reconnecting && (
               <div className="reconnecting-banner">
                 <div className="spinner spinner-small" />
@@ -449,14 +438,17 @@ export default function ReviewPage() {
               </div>
             )}
 
-            {/* Spinner and live log */}
             <div className="stream-log polished-stream-log">
               <div className="spinner" />
               <p className="analyzing-text">{t('review.analyzing')}</p>
               <div className="recent-log">
-                {logLines.map((line, i) => (
-                  <p key={i} className="recent-log-line">{line}</p>
-                ))}
+                {logLines.length > 0 ? (
+                  logLines.map((line, i) => (
+                    <p key={`${line}-${i}`} className="recent-log-line">{line}</p>
+                  ))
+                ) : (
+                  <p className="recent-log-line">{phaseText || currentPhase.desc}</p>
+                )}
               </div>
             </div>
 
@@ -478,8 +470,7 @@ export default function ReviewPage() {
         </div>
       )}
 
-      {/* Error display with optional manual retry button */}
-      {error && (
+      {error && !report && (
         <div className="error-message">
           <p>{error}</p>
           <button
@@ -491,7 +482,6 @@ export default function ReviewPage() {
         </div>
       )}
 
-      {/* Report display */}
       {report && (
         <div className="report-section">
           <div className="report-summary-shell">
@@ -507,7 +497,6 @@ export default function ReviewPage() {
             )}
           </div>
 
-          {/* Overall risk card */}
           <div
             className="overall-risk-card"
             style={{
@@ -542,7 +531,6 @@ export default function ReviewPage() {
             </div>
           </div>
 
-          {/* Clause cards */}
           <div className="clause-list">
             {report.clause_analyses.map((clause, idx) => (
               <div
@@ -607,7 +595,6 @@ export default function ReviewPage() {
             ))}
           </div>
 
-          {/* Navigate to shareable report page */}
           <div className="report-actions">
             <button
               className="btn-primary btn-share"

@@ -14,7 +14,7 @@ logging.basicConfig(
 from backend.config import get_settings
 from backend.db.session import init_db
 from backend.rag.loader import load_legal_knowledge
-from backend.routers import analysis, health, upload, payment, review, report, referral, eval
+from backend.routers import analysis, health, upload, payment, report, referral, eval
 
 logger = logging.getLogger(__name__)
 
@@ -107,7 +107,6 @@ app.include_router(health.router)
 app.include_router(upload.router)
 app.include_router(payment.router)
 app.include_router(analysis.router)
-app.include_router(review.router)
 app.include_router(report.router)
 app.include_router(referral.router)
 app.include_router(eval.router)
