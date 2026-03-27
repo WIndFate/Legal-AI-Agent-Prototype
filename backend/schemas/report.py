@@ -7,6 +7,7 @@ class ClauseAnalysis(BaseModel):
     risk_reason: str
     suggestion: str
     referenced_law: str
+    original_text: str = ""
 
 
 class ReportResponse(BaseModel):

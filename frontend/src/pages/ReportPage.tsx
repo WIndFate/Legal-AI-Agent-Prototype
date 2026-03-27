@@ -3,8 +3,6 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 
 import ShareSheet from '../components/common/ShareSheet';
-import { SUPPORTED_LANGUAGES } from '../i18n';
-
 interface ClauseAnalysis {
   clause_number: string;
   risk_level: string;
@@ -51,10 +49,6 @@ function normalizeRiskLevel(level: string): RiskFilter | null {
   if (level === '中' || level === 'Medium' || level === '中リスク') return 'medium';
   if (level === '低' || level === 'Low' || level === '低リスク') return 'low';
   return null;
-}
-
-function languageLabel(code: string): string {
-  return SUPPORTED_LANGUAGES.find((lang) => lang.code === code)?.name || code;
 }
 
 const REPORT_TIMEOUT_MS = 12_000;
@@ -240,11 +234,53 @@ export default function ReportPage() {
   if (!data) return null;
 
   const report = data.report;
-  const reportLanguageLabel = languageLabel(data.language);
   const filteredClauses = report.clause_analyses.filter((clause) => {
     const normalized = normalizeRiskLevel(clause.risk_level);
     return normalized ? selectedRisks.includes(normalized) : true;
   });
+
+  const allFiltersActive = selectedRisks.length === DEFAULT_FILTERS.length;
+
+  const metricCards: Array<{
+    key: 'all' | RiskFilter;
+    label: string;
+    value: number;
+    active: boolean;
+    accent?: string;
+    onClick: () => void;
+  }> = [
+    {
+      key: 'all',
+      label: t('report.clause_count'),
+      value: report.total_clauses,
+      active: allFiltersActive,
+      onClick: () => setSelectedRisks(DEFAULT_FILTERS),
+    },
+    {
+      key: 'high',
+      label: t('report.high_risk'),
+      value: report.high_risk_count,
+      active: selectedRisks.includes('high'),
+      accent: 'high',
+      onClick: () => toggleRiskFilter('high'),
+    },
+    {
+      key: 'medium',
+      label: t('report.medium_risk'),
+      value: report.medium_risk_count,
+      active: selectedRisks.includes('medium'),
+      accent: 'medium',
+      onClick: () => toggleRiskFilter('medium'),
+    },
+    {
+      key: 'low',
+      label: t('report.low_risk'),
+      value: report.low_risk_count,
+      active: selectedRisks.includes('low'),
+      accent: 'low',
+      onClick: () => toggleRiskFilter('low'),
+    },
+  ];
 
   return (
     <div className="page report-page">
@@ -261,10 +297,6 @@ export default function ReportPage() {
       )}
 
       <div className="report-summary-shell report-header-bar">
-        <div className="document-ribbon">
-          <span>{t('report.title')}</span>
-          <span>{reportLanguageLabel}</span>
-        </div>
         <div className="report-hero-grid">
           <div className="report-hero-copy">
             <p className="section-kicker">{t('report.executive_kicker')}</p>
@@ -277,33 +309,14 @@ export default function ReportPage() {
             )}
           </div>
 
-          <div className="report-hero-panel">
+          <div className="report-hero-panel report-hero-panel-compact">
             <div className="report-hero-panel-top">
-              <span className="report-status-chip">{t('report.overall_risk')}</span>
               <span
                 className="risk-badge report-hero-badge"
                 style={{ background: riskColor(report.overall_risk_level) }}
               >
-                {report.overall_risk_level}
+                {t('report.overall_risk')}: {report.overall_risk_level}
               </span>
-            </div>
-            <div className="report-hero-stats report-hero-stats-compact">
-              <div className="report-hero-stat">
-                <span>{t('report.clause_count')}</span>
-                <strong>{report.total_clauses}</strong>
-              </div>
-              <div className="report-hero-stat">
-                <span>{t('report.high_risk')}</span>
-                <strong className="stat high">{report.high_risk_count}</strong>
-              </div>
-              <div className="report-hero-stat">
-                <span>{t('report.medium_risk')}</span>
-                <strong className="stat medium">{report.medium_risk_count}</strong>
-              </div>
-              <div className="report-hero-stat">
-                <span>{t('report.low_risk')}</span>
-                <strong className="stat low">{report.low_risk_count}</strong>
-              </div>
             </div>
             <div className="order-inline-card order-inline-card-report">
               <span>{t('order.order_id')}</span>
@@ -321,67 +334,22 @@ export default function ReportPage() {
           background: riskBg(report.overall_risk_level),
         }}
       >
-        <div className="report-toolbar">
-          <span
-            className="risk-badge"
-            style={{ background: riskColor(report.overall_risk_level) }}
-          >
-            {t('report.overall_risk')}: {report.overall_risk_level}
-          </span>
-          <button className="btn-primary btn-share report-share-trigger" onClick={() => setShareOpen(true)}>
-            {t('report.share')}
-          </button>
+        <div className="report-filter-hint">
+          <span className="report-filter-hint-icon" aria-hidden="true">+</span>
+          <p>{t('report.filter_hint')}</p>
         </div>
-        <div className="summary-metrics report-summary-metrics">
-          <div className="summary-metric">
-            <span>{t('report.clause_count')}</span>
-            <strong>{report.total_clauses}</strong>
-          </div>
-          <div className="summary-metric">
-            <span>{t('report.high_risk')}</span>
-            <strong className="stat high">{report.high_risk_count}</strong>
-          </div>
-          <div className="summary-metric">
-            <span>{t('report.medium_risk')}</span>
-            <strong className="stat medium">{report.medium_risk_count}</strong>
-          </div>
-          <div className="summary-metric">
-            <span>{t('report.low_risk')}</span>
-            <strong className="stat low">{report.low_risk_count}</strong>
-          </div>
-        </div>
-        <div className="report-filter-bar">
-          <span className="report-filter-label">{t('report.filter_label')}</span>
-          <div className="report-filter-chips">
+        <div className="summary-metrics report-summary-metrics report-summary-metrics-interactive">
+          {metricCards.map((metric) => (
             <button
+              key={metric.key}
               type="button"
-              className={`report-filter-chip ${selectedRisks.length === DEFAULT_FILTERS.length ? 'report-filter-chip-active' : ''}`}
-              onClick={() => setSelectedRisks(DEFAULT_FILTERS)}
+              className={`summary-metric report-summary-metric-btn ${metric.active ? 'report-summary-metric-btn-active' : ''} ${metric.accent ? `report-summary-metric-btn-${metric.accent}` : ''}`}
+              onClick={metric.onClick}
             >
-              {t('report.filter_all')}
+              <span>{metric.label}</span>
+              <strong className={metric.accent ? `stat ${metric.accent}` : ''}>{metric.value}</strong>
             </button>
-            <button
-              type="button"
-              className={`report-filter-chip ${selectedRisks.includes('high') ? 'report-filter-chip-active report-filter-chip-high' : ''}`}
-              onClick={() => toggleRiskFilter('high')}
-            >
-              {t('report.high_risk')}
-            </button>
-            <button
-              type="button"
-              className={`report-filter-chip ${selectedRisks.includes('medium') ? 'report-filter-chip-active report-filter-chip-medium' : ''}`}
-              onClick={() => toggleRiskFilter('medium')}
-            >
-              {t('report.medium_risk')}
-            </button>
-            <button
-              type="button"
-              className={`report-filter-chip ${selectedRisks.includes('low') ? 'report-filter-chip-active report-filter-chip-low' : ''}`}
-              onClick={() => toggleRiskFilter('low')}
-            >
-              {t('report.low_risk')}
-            </button>
-          </div>
+          ))}
         </div>
       </div>
 
@@ -424,8 +392,8 @@ export default function ReportPage() {
                   <strong>{t('report.japanese_original')}</strong>
                 </div>
               </div>
-              <div className="clause-toolbar">
-                {clause.original_text ? (
+              {clause.original_text && (
+                <div className="clause-toolbar">
                   <button
                     type="button"
                     className={`inline-toggle-btn ${expandedClauses[clause.clause_number] ? 'inline-toggle-btn-active' : ''}`}
@@ -435,10 +403,8 @@ export default function ReportPage() {
                       ? t('report.hide_original_clause')
                       : t('report.show_original_clause')}
                   </button>
-                ) : (
-                  <span className="clause-toolbar-spacer" />
-                )}
-              </div>
+                </div>
+              )}
               <div className={`clause-content ${expandedClauses[clause.clause_number] && clause.original_text ? 'clause-content-split' : ''}`}>
                 {expandedClauses[clause.clause_number] && clause.original_text && (
                   <div className="inline-original-panel">
@@ -470,6 +436,12 @@ export default function ReportPage() {
           ))}
         </div>
       )}
+
+      <div className="report-actions report-actions-bottom">
+        <button className="btn-primary btn-share report-share-trigger" onClick={() => setShareOpen(true)}>
+          {t('report.share')}
+        </button>
+      </div>
     </div>
   );
 }

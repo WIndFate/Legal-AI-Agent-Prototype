@@ -14,11 +14,14 @@ logger = logging.getLogger(__name__)
 
 
 def strip_clause_originals(report_data: dict) -> dict:
-    """Remove original clause text before persistence or sharing."""
+    """Normalize persisted clause payload while keeping report-scoped clause excerpts."""
     return {
         **report_data,
         "clause_analyses": [
-            {key: value for key, value in clause.items() if key != "original_text"}
+            {
+                **clause,
+                "original_text": clause.get("original_text", ""),
+            }
             for clause in report_data.get("clause_analyses", [])
         ],
     }

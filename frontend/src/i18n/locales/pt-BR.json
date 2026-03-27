@@ -137,7 +137,7 @@
     "share": "Compartilhar",
     "share_text": "Analisei meu contrato com o ContractGuard",
     "language_locked_note": "O conteúdo deste relatório foi fixado em {{language}} no momento da geração. Alterar o idioma do site muda apenas a interface, não retraduz o relatório.",
-    "share_note": "Ao compartilhar, apenas o link do relatório é enviado. O texto original do contrato nunca é incluído, e o link também expira em até 24 horas.",
+    "share_note": "O link compartilhado abre o relatório válido por 24 horas. O texto completo do contrato não é mantido, mas os trechos relevantes das cláusulas continuam visíveis no relatório.",
     "network_error": "Não foi possível carregar o relatório porque a rede está instável ou a solicitação expirou.",
     "show_original_clause": "Mostrar cláusula original",
     "hide_original_clause": "Ocultar cláusula original",
@@ -148,12 +148,13 @@
     "reference_label": "Referência legal",
     "original_clause_label": "Cláusula original",
     "original_contract_title": "Referência do contrato original",
-    "original_contract_session_note": "Visível apenas na sessão atual deste dispositivo para comparação com a análise. O servidor já excluiu o texto original do contrato.",
-    "original_contract_shared_note": "Visível apenas na sessão atual do mesmo dispositivo que enviou o contrato. Por privacidade, links compartilhados e links por e-mail nunca incluem o texto original do contrato.",
+    "original_contract_session_note": "Aqui aparece apenas o trecho da cláusula original ligado ao ponto analisado, para facilitar a comparação. O texto completo do contrato já foi removido do servidor.",
+    "original_contract_shared_note": "O relatório de 24 horas mantém apenas trechos das cláusulas ligados aos achados para facilitar leitura e compartilhamento. O texto completo do contrato não é armazenado.",
     "executive_kicker": "Resumo de Riscos",
     "comparison_hint": "Compare com a cláusula original dentro de cada cartão de análise",
     "clause_count": "Cláusulas",
     "filter_label": "Filtrar cláusulas",
+    "filter_hint": "Toque nestes cartões para filtrar os pontos de risco que deseja ler",
     "filter_all": "Todas as cláusulas",
     "filter_empty": "Nenhuma cláusula corresponde ao filtro atual.",
     "expired_kicker": "Relatório expirado",
@@ -204,7 +205,7 @@
   },
   "privacy": {
     "page_title": "Política de Privacidade",
-    "summary": "O ContractGuard prioriza sua privacidade. O texto do contrato é excluído do servidor imediatamente após a análise — nunca armazenamos. Coletamos apenas seu e-mail, usado exclusivamente para enviar o link do relatório.",
+    "summary": "O ContractGuard prioriza sua privacidade. O texto completo do contrato é removido do servidor imediatamente após a análise. Apenas trechos de cláusulas ligados aos achados permanecem no relatório de 24 horas. Coletamos apenas seu e-mail, usado exclusivamente para enviar o link do relatório.",
     "last_updated": "Última atualização: {{date}}"
   },
   "terms": {

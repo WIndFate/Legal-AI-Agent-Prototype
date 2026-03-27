@@ -137,7 +137,7 @@
     "share": "Bagikan",
     "share_text": "Saya menganalisis kontrak saya dengan ContractGuard",
     "language_locked_note": "Isi laporan ini telah dikunci dalam {{language}} saat dibuat. Mengganti bahasa situs hanya mengubah antarmuka, bukan menerjemahkan ulang isi laporan.",
-    "share_note": "Saat dibagikan, hanya tautan laporan yang dikirim. Teks kontrak asli tidak pernah disertakan, dan tautan juga akan kedaluwarsa dalam 24 jam.",
+    "share_note": "Tautan yang dibagikan akan membuka laporan yang berlaku 24 jam. Teks kontrak lengkap tidak disimpan, tetapi cuplikan klausul yang relevan tetap terlihat di dalam laporan.",
     "network_error": "Laporan tidak dapat dimuat karena jaringan tidak stabil atau permintaan habis waktu.",
     "show_original_clause": "Lihat klausul asli",
     "hide_original_clause": "Sembunyikan klausul asli",
@@ -148,12 +148,13 @@
     "reference_label": "Referensi hukum",
     "original_clause_label": "Klausul asli",
     "original_contract_title": "Perbandingan kontrak asli",
-    "original_contract_session_note": "Hanya terlihat pada sesi saat ini di perangkat ini agar Anda bisa membandingkannya dengan hasil analisis. Server sudah menghapus teks kontrak asli.",
-    "original_contract_shared_note": "Hanya terlihat pada sesi saat ini di perangkat yang sama yang mengunggah kontrak. Demi privasi, tautan bagikan dan tautan email tidak pernah menyertakan teks kontrak asli.",
+    "original_contract_session_note": "Di sini hanya ditampilkan cuplikan klausul asli yang terkait dengan temuan saat ini agar mudah dibandingkan. Teks kontrak lengkap sudah dihapus dari server.",
+    "original_contract_shared_note": "Laporan 24 jam hanya menyimpan cuplikan klausul yang terkait dengan temuan agar mudah dibaca dan dibagikan. Teks kontrak lengkap tidak disimpan.",
     "executive_kicker": "Ringkasan Risiko",
     "comparison_hint": "Bandingkan dengan klausul asli di dalam setiap kartu analisis",
     "clause_count": "Jumlah pasal",
     "filter_label": "Filter klausul",
+    "filter_hint": "Ketuk kartu ini untuk menyaring klausul risiko yang ingin dibaca",
     "filter_all": "Semua klausul",
     "filter_empty": "Tidak ada klausul yang cocok dengan filter saat ini.",
     "expired_kicker": "Laporan kedaluwarsa",
@@ -204,7 +205,7 @@
   },
   "privacy": {
     "page_title": "Kebijakan Privasi",
-    "summary": "ContractGuard mengutamakan privasi Anda. Teks kontrak dihapus dari server segera setelah analisis — kami tidak pernah menyimpannya. Kami hanya mengumpulkan alamat email Anda, yang digunakan hanya untuk mengirim tautan laporan.",
+    "summary": "ContractGuard mengutamakan privasi Anda. Teks kontrak lengkap dihapus dari server segera setelah analisis selesai. Hanya cuplikan klausul yang terkait dengan hasil yang disimpan di laporan 24 jam. Kami hanya mengumpulkan alamat email Anda untuk mengirim tautan laporan.",
     "last_updated": "Terakhir diperbarui: {{date}}"
   },
   "terms": {

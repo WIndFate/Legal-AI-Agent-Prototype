@@ -1,4 +1,4 @@
-/* ── Report page: clause cards, risk analysis, actions ── */
+/* ── Report page: compact summary, clickable metrics, denser clause cards ── */
 
 .report-section {
   padding-top: 10px;
@@ -6,19 +6,34 @@
 
 .report-header-bar {
   overflow: hidden;
+  padding: 24px 26px;
 }
 
-.overall-risk-card,
-.report-actions {
-  padding: 20px 22px;
+.report-hero-grid {
+  display: grid;
+  gap: 18px;
+  align-items: stretch;
+}
+
+.report-hero-copy {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+}
+
+.report-hero-panel-compact {
+  padding: 18px 20px;
   border-radius: var(--radius-lg);
-  border: 1px solid rgba(31, 58, 95, 0.12);
-  background: rgba(255, 255, 255, 0.8);
-  box-shadow: var(--shadow-md);
+  border: 1px solid rgba(31, 58, 95, 0.14);
+  background: rgba(255, 255, 255, 0.68);
 }
 
-.overall-risk-card {
-  margin-bottom: 18px;
+.report-hero-panel-top {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 12px;
 }
 
 .summary {
@@ -39,6 +54,92 @@
 
 .stat.low {
   color: var(--success);
+}
+
+.overall-risk-card,
+.report-actions {
+  padding: 20px 22px;
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(31, 58, 95, 0.12);
+  background: rgba(255, 255, 255, 0.8);
+  box-shadow: var(--shadow-md);
+}
+
+.overall-risk-card {
+  margin-bottom: 18px;
+}
+
+.report-filter-hint {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.report-filter-hint-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: rgba(31, 58, 95, 0.1);
+  color: var(--brand);
+  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.report-filter-hint p {
+  color: var(--text-faint);
+  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
+.report-summary-metrics,
+.report-page .summary-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.report-summary-metrics-interactive {
+  align-items: stretch;
+}
+
+.report-summary-metric-btn {
+  appearance: none;
+  text-align: left;
+  cursor: pointer;
+  transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+}
+
+.report-summary-metric-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 28px rgba(35, 26, 20, 0.06);
+}
+
+.report-summary-metric-btn-active {
+  border-color: rgba(31, 58, 95, 0.28);
+  background: rgba(255, 255, 255, 0.98);
+  box-shadow: 0 16px 30px rgba(31, 58, 95, 0.12);
+  transform: translateY(-1px);
+}
+
+.report-summary-metric-btn-high.report-summary-metric-btn-active {
+  background: rgba(254, 235, 235, 0.98);
+  border-color: rgba(220, 38, 38, 0.32);
+}
+
+.report-summary-metric-btn-medium.report-summary-metric-btn-active {
+  background: rgba(255, 247, 220, 0.98);
+  border-color: rgba(245, 158, 11, 0.3);
+}
+
+.report-summary-metric-btn-low.report-summary-metric-btn-active {
+  background: rgba(232, 248, 239, 0.98);
+  border-color: rgba(22, 163, 74, 0.28);
 }
 
 .clause-list {
@@ -71,6 +172,9 @@
 }
 
 .clause-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   gap: 12px;
   margin-bottom: 10px;
 }
@@ -135,12 +239,10 @@
 }
 
 .clause-toolbar {
+  display: flex;
+  align-items: center;
   justify-content: flex-start;
-  margin-bottom: 8px;
-}
-
-.clause-toolbar-spacer {
-  height: 34px;
+  margin-bottom: 6px;
 }
 
 .clause-content {
@@ -161,7 +263,7 @@
 }
 
 .analysis-block {
-  padding: 12px 0;
+  padding: 8px 0;
 }
 
 .analysis-block + .analysis-block {
@@ -234,6 +336,15 @@
   font-size: 0.76rem;
 }
 
+.report-empty-state {
+  text-align: center;
+}
+
+.report-expired-panel {
+  max-width: 620px;
+  margin: 0 auto;
+}
+
 .report-actions {
   margin-top: 18px;
 }
@@ -242,89 +353,17 @@
   margin-top: 0;
 }
 
-.report-toolbar {
+.report-actions-bottom {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  background: transparent;
+  box-shadow: none;
 }
 
-.report-share-trigger {
-  min-width: 132px;
-  margin-top: 0;
-}
-
-.report-summary-metrics,
-.report-page .summary-metrics {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 10px;
-}
-
-.report-filter-bar {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 10px 14px;
-  margin-top: 14px;
-  padding-top: 14px;
-  border-top: 1px solid rgba(31, 58, 95, 0.08);
-}
-
-.report-filter-label {
-  color: var(--text-faint);
-  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.report-filter-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.report-filter-chip {
-  appearance: none;
-  padding: 8px 12px;
-  border-radius: 999px;
-  border: 1px solid rgba(31, 58, 95, 0.12);
-  background: rgba(255, 255, 255, 0.72);
-  color: var(--brand-ink);
-  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
-  font-size: 0.82rem;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.report-filter-chip-active {
-  background: rgba(31, 58, 95, 0.08);
-  border-color: rgba(31, 58, 95, 0.2);
-}
-
-.report-filter-chip-high.report-filter-chip-active {
-  background: rgba(220, 38, 38, 0.1);
-  color: #b42318;
-}
-
-.report-filter-chip-medium.report-filter-chip-active {
-  background: rgba(245, 158, 11, 0.12);
-  color: #b7791f;
-}
-
-.report-filter-chip-low.report-filter-chip-active {
-  background: rgba(22, 163, 74, 0.1);
-  color: #1d7a46;
-}
-
-.report-empty-state {
-  text-align: center;
-}
-
-.report-expired-panel {
-  max-width: 620px;
-  margin: 0 auto;
+.report-actions-bottom .btn-share {
+  min-width: 220px;
 }
 
 .report-page .clause-card,
@@ -340,25 +379,8 @@
   }
 
   .report-header-bar {
-    padding: 0;
+    padding: 18px 16px;
     border-radius: 20px;
-  }
-
-  .report-header-bar .document-ribbon {
-    padding: 11px 14px 9px;
-  }
-
-  .report-header-bar .report-hero-copy {
-    padding: 16px 16px 0;
-  }
-
-  .report-header-bar .report-hero-panel {
-    margin: 0 16px 16px;
-  }
-
-  .report-comparison-hint {
-    font-size: 0.84rem;
-    line-height: 1.62;
   }
 
   .overall-risk-card,
@@ -371,14 +393,22 @@
     margin-bottom: 16px;
   }
 
+  .report-filter-hint {
+    margin-bottom: 10px;
+    align-items: flex-start;
+  }
+
   .summary {
-    margin-top: 10px;
     font-size: 0.9rem;
     line-height: 1.72;
   }
 
   .order-inline-card-report {
     margin-top: 12px;
+  }
+
+  .report-page .summary-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .clause-list {
@@ -409,6 +439,7 @@
   }
 
   .clause-meta-row {
+    grid-template-columns: 1fr;
     gap: 8px;
     margin-bottom: 10px;
   }
@@ -432,7 +463,7 @@
   }
 
   .clause-toolbar {
-    margin-bottom: 10px;
+    margin-bottom: 8px;
   }
 
   .inline-toggle-btn {
@@ -457,7 +488,7 @@
   }
 
   .analysis-block {
-    padding: 12px 0;
+    padding: 8px 0;
   }
 
   .risk-reason,
@@ -474,40 +505,9 @@
     font-size: 0.82rem;
   }
 
-  .report-actions {
-    margin-top: 18px;
-  }
-
-  .report-toolbar {
-    align-items: stretch;
-    flex-direction: column;
-  }
-
-  .report-share-trigger {
+  .report-actions-bottom .btn-share {
     width: 100%;
-  }
-
-  .report-page .summary-metrics {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .report-filter-bar {
-    gap: 10px;
-  }
-
-  .report-filter-chips {
-    width: 100%;
-  }
-
-  .report-filter-chip {
-    flex: 1 1 calc(50% - 8px);
-    justify-content: center;
-    text-align: center;
-  }
-
-  .report-actions .btn-share,
-  .report-actions .dialog-secondary-btn {
-    width: 100%;
+    min-width: 0;
   }
 
   .share-note {

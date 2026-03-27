@@ -137,7 +137,7 @@
     "share": "Chia sẻ",
     "share_text": "Tôi đã phân tích rủi ro hợp đồng bằng ContractGuard",
     "language_locked_note": "Nội dung báo cáo này đã được cố định bằng {{language}} khi tạo. Việc đổi ngôn ngữ trang chỉ thay đổi giao diện, không dịch lại nội dung báo cáo.",
-    "share_note": "Khi chia sẻ, chỉ có liên kết báo cáo được gửi đi. Văn bản hợp đồng gốc không bao giờ được kèm theo, và liên kết cũng hết hạn trong vòng 24 giờ.",
+    "share_note": "Liên kết chia sẻ sẽ mở báo cáo còn hiệu lực trong 24 giờ. Toàn văn hợp đồng không được giữ lại, nhưng các đoạn trích điều khoản liên quan vẫn hiển thị trong báo cáo.",
     "network_error": "Không thể tải báo cáo vì mạng không ổn định hoặc yêu cầu đã hết thời gian chờ.",
     "show_original_clause": "Xem điều khoản gốc",
     "hide_original_clause": "Ẩn điều khoản gốc",
@@ -148,12 +148,13 @@
     "reference_label": "Căn cứ pháp lý",
     "original_clause_label": "Điều khoản gốc",
     "original_contract_title": "Đối chiếu hợp đồng gốc",
-    "original_contract_session_note": "Chỉ hiển thị trong phiên hiện tại trên thiết bị này để bạn đối chiếu với kết quả phân tích. Máy chủ đã xóa văn bản hợp đồng gốc.",
-    "original_contract_shared_note": "Chỉ hiển thị trong phiên hiện tại trên đúng thiết bị đã tải hợp đồng lên. Vì lý do riêng tư, liên kết chia sẻ và liên kết email không bao gồm toàn văn hợp đồng gốc.",
+    "original_contract_session_note": "Ở đây chỉ hiển thị phần trích điều khoản gốc gắn với nhận định hiện tại để bạn đối chiếu. Toàn bộ nội dung hợp đồng đã được xóa khỏi máy chủ.",
+    "original_contract_shared_note": "Báo cáo 24 giờ chỉ giữ lại các đoạn trích điều khoản gắn với từng nhận định để tiện đọc và chia sẻ. Toàn văn hợp đồng không được lưu lại.",
     "executive_kicker": "Tóm tắt rủi ro",
     "comparison_hint": "So sánh với điều khoản gốc trong mỗi thẻ phân tích",
     "clause_count": "Số điều khoản",
     "filter_label": "Lọc điều khoản",
+    "filter_hint": "Chạm vào các thẻ này để lọc các điều khoản rủi ro cần đọc",
     "filter_all": "Tất cả điều khoản",
     "filter_empty": "Không có điều khoản nào phù hợp với bộ lọc hiện tại.",
     "expired_kicker": "Báo cáo đã hết hạn",
@@ -204,7 +205,7 @@
   },
   "privacy": {
     "page_title": "Chính sách bảo mật",
-    "summary": "ContractGuard đặt quyền riêng tư của bạn lên hàng đầu. Văn bản hợp đồng được xóa khỏi máy chủ ngay sau khi phân tích — chúng tôi không bao giờ lưu trữ. Chúng tôi chỉ thu thập địa chỉ email, dùng duy nhất để gửi liên kết báo cáo.",
+    "summary": "ContractGuard đặt quyền riêng tư của bạn lên hàng đầu. Toàn văn hợp đồng sẽ bị xóa khỏi máy chủ ngay sau khi phân tích. Chỉ các đoạn trích điều khoản gắn với kết quả mới được giữ trong báo cáo 24 giờ. Chúng tôi chỉ thu thập địa chỉ email để gửi liên kết báo cáo.",
     "last_updated": "Cập nhật lần cuối: {{date}}"
   },
   "terms": {
