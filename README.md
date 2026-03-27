@@ -1,14 +1,14 @@
 # ContractGuard
 
-AI-powered Japanese contract risk analysis for foreign residents in Japan. Users can upload a contract as text, image, or PDF, pay per use, watch the analysis through SSE streaming, and retrieve a report for 24 hours.
+AI-powered Japanese contract risk analysis for foreign residents in Japan. Users can upload a contract as text, image, or PDF, pay per use, follow analysis progress through a recoverable event stream, and retrieve a report for 24 hours.
 
 [中文文档](./README_CN.md) | [日本語ドキュメント](./README_JA.md)
 
 ## Status
 
-As of 2026-03-27, the local MVP flow is working in Docker:
+As of 2026-03-28, the local MVP flow is working in Docker:
 
-- `upload -> payment/create -> review/stream -> report retrieval -> contract deletion`
+- `upload -> payment/create -> analysis/start -> orders/{id}/status + events/stream -> report retrieval -> contract deletion`
 - Text and text-layer PDFs are quoted before payment from extracted text; image/scanned PDF uploads now use a dual-OCR path with temporary staging plus post-payment formal OCR
 - `pgvector` RAG is running in PostgreSQL with 331+ law articles across 10 legal categories (rental, labor, part-time, business outsourcing, sales, etc.)
 - 9-language frontend with professional branding (ContractGuard), privacy/terms pages, and a dedicated examples gallery with report-style samples
@@ -24,8 +24,8 @@ As of 2026-03-27, the local MVP flow is working in Docker:
 - Route-level lazy loading and deferred analytics bootstrap now reduce the initial frontend bundle
 - Dev-mode payment works only when `APP_ENV=development` and `KOMOJU_SECRET_KEY` is absent
 - Deployment configs ready: `fly.toml` (NRT region, force HTTPS) and `vercel.json` (API proxy, security headers)
-- Integration test suite: 7 router test files with 39+ test functions covering all API endpoints
-- SSE reconnection with exponential backoff (3 attempts), event deduplication, and 60s inactivity timeout
+- Integration test suite: 7 router test files covering all API endpoints in the current runtime flow
+- Persistent analysis tasks now back the review flow, with status snapshots plus replayable event history before subscribing to incremental updates
 - Homepage split into focused section components (Hero, Flow, Upload), and examples moved into a dedicated `/examples` gallery page
 - RAG embedding batching for reduced API calls
 - Dead code cleanup completed (removed unused `analyze_risks_streaming`)
@@ -118,7 +118,7 @@ docker compose up -d backend postgres redis
 2. Review token estimate, pricing, and PII warnings. Image and scanned PDF uploads now explicitly show that the price is an estimate before payment.
 3. Create payment.
 4. In local dev, if `APP_ENV=development` and `KOMOJU_SECRET_KEY` is empty, the order is auto-marked as paid and redirected to review.
-5. Watch SSE analysis on `/review/:orderId`.
+5. `/review/:orderId` starts or resumes the persistent analysis task, restores saved progress events, and then subscribes to new updates.
 6. Retrieve the saved report on `/report/:orderId`.
 7. During the live review, the UI now shows user-facing progress text instead of raw internal tool names.
 8. The saved report keeps the language chosen at payment time; switching the site language later only changes the page chrome.
@@ -159,22 +159,22 @@ docker compose up -d backend postgres redis
 - Frontend UX now includes reusable `RevealSection`, `OrderReminderDialog`, and `ShareSheet` components for scroll reveal, order-saving prompts, and custom sharing.
 - `/api/report/{order_id}` now returns the same payload shape for both Redis cache hits and PostgreSQL fallback reads.
 - `analyze_clause_risk` performs RAG lookup internally; there is no separate retrieval node.
-- `scripts/smoke_local_flow.sh` is the repeatable local regression entrypoint for `health -> upload -> payment -> review -> report -> contract deletion`.
-- `scripts/smoke_local_flow.sh` tolerates curl exit code `18` on SSE shutdown and validates success from the actual streamed events instead.
+- `scripts/smoke_local_flow.sh` now exercises the persistent-analysis flow end to end: health -> upload -> payment -> analysis/start -> orders/{id}/stream -> report -> contract deletion.
 - Original clause text is available only in the live review payload and same-device session storage; persisted reports, Redis cache, shared links, and emailed links do not store or expose it.
 - `scripts/check_locale_keys.sh` verifies that all 9 locale files keep the same translation key set as `ja.json`.
 - The backend now loads the official e-Gov law corpus from `backend/data/egov_laws.json` on startup, covering 10 legal categories with 331+ articles. The local eval dataset has been expanded to 20 labeled samples covering damages, non-compete, termination, NDAs, lease, and more.
 - `scripts/check_rag_eval.sh` checks `/api/eval/rag` against the current local baseline thresholds (`Recall@5 >= 0.45`, `MRR >= 0.45`).
 - `scripts/run_backend_pytests.sh` runs the backend regression tests inside Docker after installing dev dependencies in the running backend container, and now executes the full `tests/` suite.
-- Integration tests cover all 7 API routers (health, upload, payment, review, report, referral, eval) with 39+ test functions.
+- Integration tests cover all 7 API routers (health, upload, payment, analysis, report, referral, eval).
 - `frontend/src/pages/HomePage.tsx` now acts as a container page and delegates the hero, flow, and upload/payment areas to focused home components (`HomeHeroSection`, `HomeFlowSection`, `HomeUploadSection`), while `/examples` renders the standalone example showcase.
-- SSE reconnection uses exponential backoff (base 1s, max 3 attempts) with event deduplication and 60s inactivity timeout.
+- The review flow now uses a single status snapshot endpoint plus replayable event history and incremental stream updates rather than starting analysis from one POST-driven SSE request.
 - RAG embedding requests are batched via `_get_embeddings_batch_sync()` and `search_batch()` to reduce API calls.
 
 ## Repo Pointers
 
 - [`backend/main.py`](./backend/main.py): app startup, routers, Sentry/PostHog, cleanup scheduler
-- [`backend/routers/review.py`](./backend/routers/review.py): SSE review, report persistence, privacy cleanup
+- [`backend/routers/analysis.py`](./backend/routers/analysis.py): analysis start, order status snapshot, historical events, incremental event stream
+- [`backend/services/analysis_executor.py`](./backend/services/analysis_executor.py): in-process persistent analysis executor and event persistence
 - [`backend/rag/store.py`](./backend/rag/store.py): pgvector storage and search
 - [`backend/eval/evaluator.py`](./backend/eval/evaluator.py): RAG evaluation metrics and dataset runner
 - [`scripts/smoke_local_flow.sh`](./scripts/smoke_local_flow.sh): end-to-end local smoke/regression flow

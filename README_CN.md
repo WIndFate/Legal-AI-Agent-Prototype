@@ -1,14 +1,14 @@
 # ContractGuard
 
-面向在日外国人的日文合同风险分析服务。用户可以上传文本、图片或 PDF 合同，按次付费，实时查看 SSE 分析过程，并在 24 小时内取回报告。
+面向在日外国人的日文合同风险分析服务。用户可以上传文本、图片或 PDF 合同，按次付费，通过可恢复的事件流查看分析进度，并在 24 小时内取回报告。
 
 [English](./README.md) | [日本語ドキュメント](./README_JA.md)
 
 ## 当前状态
 
-截至 2026-03-27，本地 Docker MVP 流程已经跑通：
+截至 2026-03-28，本地 Docker MVP 流程已经跑通：
 
-- `upload -> payment/create -> review/stream -> report -> 合同文本删除`
+- `upload -> payment/create -> analysis/start -> orders/{id}/status + events/stream -> report -> 合同文本删除`
 - 文本和可提取文本 PDF 会在付款前直接按文本估价；图片 / 扫描 PDF 现在走”双层 OCR”路径：先临时暂存并预估，付款后再做正式 OCR
 - `pgvector` RAG 已运行在 PostgreSQL 中，覆盖 10 个法律类别共 331+ 条法律条文（租赁、劳动、兼职、业务委托、买卖等）
 - 前端 9 语言界面已实现，包含品牌标识（ContractGuard）、隐私政策/服务条款页面、独立案例画廊与报告样张展示
@@ -18,8 +18,8 @@
 - 前端已加入路由级懒加载和延迟分析初始化，降低首屏 bundle 压力
 - 仅当 `APP_ENV=development` 且 `KOMOJU_SECRET_KEY` 为空时，本地开发可走自动支付
 - 部署配置已就绪：`fly.toml`（NRT 东京区域，强制 HTTPS）+ `vercel.json`（API 代理 + 安全头）
-- 集成测试套件：7 个路由测试文件，39+ 测试函数，覆盖全部 API 端点
-- SSE 断线重连：指数退避（3 次上限）+ 事件去重 + 60 秒无活动超时
+- 集成测试套件：7 个路由测试文件，覆盖当前运行态的全部 API 端点
+- 分析页现已建立在持久化分析任务之上：后端保存 `analysis_jobs` / `analysis_events`，前端会先恢复历史进度，再订阅新的事件更新
 - 首页已拆分为独立子组件（Hero、Flow、Upload），案例展示已迁移到独立 `/examples` 画廊页
 - RAG embedding 批量化，减少 API 调用次数
 - 死代码已清理（移除未使用的 `analyze_risks_streaming`）
@@ -112,7 +112,7 @@ docker compose up -d backend postgres redis
 2. 查看 token 估算、定价和 PII 提示。图片和扫描 PDF 现在会明确标注这是付款前的“预估报价”。
 3. 创建支付订单。
 4. 本地开发时如果 `APP_ENV=development` 且 `KOMOJU_SECRET_KEY` 为空，订单会自动标记为已支付并跳到审查页。
-5. 在 `/review/:orderId` 观看 SSE 流式分析。
+5. 在 `/review/:orderId` 启动或恢复持久化分析任务，先加载历史事件，再接收新的进度更新。
 6. 在 `/report/:orderId` 获取已保存报告。
 7. 流式审查阶段现在展示的是面向用户的进度文案，不再直接暴露内部工具/方法名。
 8. 报告正文会固定为支付时选择的语言；之后切换站点语言只影响页面壳层文案。
@@ -147,14 +147,13 @@ docker compose up -d backend postgres redis
 - 前端现在新增了 `RevealSection`、`OrderReminderDialog`、`ShareSheet` 三类通用 UX 组件，分别用于滚动显现、订单号提醒弹层和自定义分享面板；其中分享面板已补齐专属推荐链接生成、复制与原生分享。
 - `/api/report/{order_id}` 在 Redis 命中和 PostgreSQL fallback 两种情况下，现在都会返回一致的 payload 结构。
 - `analyze_clause_risk` 工具内部直接做 RAG 检索，没有单独的 retrieval node。
-- `scripts/smoke_local_flow.sh` 是标准本地回归入口，会验证 `health -> upload -> payment -> review -> report -> contract deletion`。
-- `scripts/smoke_local_flow.sh` 已兼容 SSE 正常收流时可能出现的 `curl` 退出码 `18`，会以实际流事件内容判断成功与否。
+- `scripts/smoke_local_flow.sh` 现已切到新的持久化分析链路，会按 `health -> upload -> payment -> analysis/start -> orders/{id}/stream -> report -> contract deletion` 做完整本地回归。
 - 原条款文本只存在于流式完成结果和同设备会话缓存中；数据库报告、Redis 缓存、分享链接和邮件链接都不会保存或暴露原文。
 - `scripts/check_locale_keys.sh` 会检查 9 个语言文件是否与 `ja.json` 保持相同键集合。
 - 后端现在会在启动时加载 `backend/data/egov_laws.json` 中的官方 e-Gov 法条语料，覆盖 10 个法律类别共 331+ 条文。当前本地评估集已扩展到 20 条人工标注样本，覆盖损害赔偿、竞业禁止、单方解约、NDA、租赁等场景。
 - `scripts/check_rag_eval.sh` 会检查 `/api/eval/rag` 是否满足当前本地基线阈值（`Recall@5 >= 0.45`、`MRR >= 0.45`）。
 - `scripts/run_backend_pytests.sh` 会在 Docker 内安装 backend dev 依赖并执行完整 `tests/` 回归单测。
-- 集成测试覆盖全部 7 个 API 路由（health、upload、payment、review、report、referral、eval），共 39+ 测试函数。
+- 集成测试覆盖全部 7 个 API 路由（health、upload、payment、analysis、report、referral、eval）。
 - `frontend/src/pages/HomePage.tsx` 现在只作为容器页，首屏、流程、上传/支付区域已拆到独立的首页组件中（`HomeHeroSection`、`HomeFlowSection`、`HomeUploadSection`）；案例展示已独立为 `/examples` 页面。
 - 首页在生成报价后会自动滚动到支付区域，并对支付卡片做短暂高亮，避免用户点击“开始分析”后误以为页面没有反应。
 - 现在新增 `/lookup` 结果查询页，用户输入订单号即可重新进入付款状态页、分析页或最终报告页。
@@ -162,13 +161,14 @@ docker compose up -d backend postgres redis
 - 报告页分享按钮现在先打开自定义分享面板，支持宣传型预览、复制报告链接、生成并分享专属推荐链接、复制订单号，以及设备支持时的原生分享入口。
 - 推荐链接现在会以 `?ref=` 的形式回到首页，并自动带入支付表单中的推荐码。
 - 查询页和报告页现在会更明确地区分订单号格式错误、弱网、离线和可重试失败状态。
-- SSE 断线重连采用指数退避（基础延迟 1 秒，最多 3 次）+ 事件去重 + 60 秒无活动超时机制。
+- 分析流程现在通过统一状态快照接口、可回放历史事件和增量事件流驱动，而不再由单个 SSE POST 请求直接启动执行。
 - RAG embedding 请求已批量化，通过 `_get_embeddings_batch_sync()` 和 `search_batch()` 减少 API 调用。
 
 ## 仓库入口
 
 - [`backend/main.py`](./backend/main.py)：应用启动、路由注册、Sentry/PostHog、清理任务
-- [`backend/routers/review.py`](./backend/routers/review.py)：SSE 审查、报告落库、隐私清理
+- [`backend/routers/analysis.py`](./backend/routers/analysis.py)：分析启动、状态快照、历史事件、增量事件流
+- [`backend/services/analysis_executor.py`](./backend/services/analysis_executor.py)：进程内持久化分析执行器与事件落库
 - [`backend/rag/store.py`](./backend/rag/store.py)：pgvector 存储与检索
 - [`backend/eval/evaluator.py`](./backend/eval/evaluator.py)：RAG 评估指标与数据集执行入口
 - [`scripts/smoke_local_flow.sh`](./scripts/smoke_local_flow.sh)：端到端本地 smoke/regression 脚本

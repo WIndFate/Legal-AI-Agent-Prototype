@@ -49,7 +49,7 @@ All five docs must stay consistent with the actual codebase. Do not commit code-
 
 ## Project Overview
 
-**契約チェッカー** — An AI-powered contract risk analysis service for foreign residents in Japan. Users upload Japanese contracts (photo/PDF/text), pay per use (¥299–¥1,599), and receive a report in their selected language via SSE streaming.
+**契約チェッカー** — An AI-powered contract risk analysis service for foreign residents in Japan. Users upload Japanese contracts (photo/PDF/text), pay per use (¥299–¥1,599), and receive a report in their selected language while progress is exposed through a persistent snapshot-plus-event stream flow.
 
 **Target Users:** Chinese people living in Japan (~800K) who need to understand Japanese legal contracts but face language barriers.
 
@@ -67,20 +67,20 @@ Built with LangGraph (agentic loop), PostgreSQL pgvector (RAG), FastAPI (REST + 
 
 **Target MVP pipeline (per DESIGN.md):** `upload_contract → recognize_text (OCR) → parse_contract → analyze_risks → generate_report → output_chinese_report`
 
-Current status as of 2026-03-27:
-- Local Docker end-to-end flow is verified through upload, payment creation, SSE review, report retrieval, and contract deletion.
+Current status as of 2026-03-28:
+- Local Docker end-to-end flow is verified through upload, payment creation, persistent analysis-task start, status/event restoration, replayable event streaming, report retrieval, and contract deletion.
 - `APP_ENV=development` enables local-only conveniences such as auto table bootstrap and dev payment bypass.
 - Dual-OCR groundwork is now in code: text/text-layer PDFs are quoted before payment, while image/scanned PDFs can be staged for local pre-estimation and formal OCR after payment.
 - Deployment configs ready: `fly.toml` (NRT, force_https) + `vercel.json` (API proxy, security headers) + Alembic 4-step migration chain.
 - RAG knowledge base expanded to 331+ law articles across 10 legal categories (rental, labor, part-time, business outsourcing, sales, etc.).
 - Eval dataset expanded to 20 labeled samples covering multiple contract types.
-- Integration test suite: 7 router test files with 39+ test functions covering all API endpoints.
-- SSE reconnection with exponential backoff, event deduplication, and inactivity timeout.
+- Integration test suite: 7 router test files covering all API endpoints in the current runtime flow.
+- Review progress now restores from persisted `analysis_events` and resumes through `/api/orders/{id}/stream?after_seq=...` rather than relying on client-side event deduplication against a single POST-driven SSE run.
 - HomePage split into focused section components (Hero, Flow, Upload), with examples moved to a dedicated `/examples` page.
 - RAG embedding batching, database query indexes, and dead code cleanup completed.
 - CSS partially migrated to CSS Modules: layout, home, examples, legal use scoped modules; report/review remain global due to cross-page sharing and responsive dependencies.
 - Frontend UX polish now includes result lookup, order reminder dialogs, a custom share sheet with referral-link generation and `?ref=` landing support, reveal-on-scroll homepage sections, a curated standalone examples gallery whose report sample layout mirrors the real report page more closely, mobile-specific compact header and example-switching refinements, and a simplified homepage upload flow (`Upload File` / `Paste Text`).
-- Persistent analysis-task refactor is now in progress: `analysis_jobs` / `analysis_events`, event bus, extracted report persistence helpers, and new analysis start/status/events/stream routes are in code; the frontend still needs to switch to the new snapshot-driven flow.
+- Persistent analysis-task architecture is now the primary runtime flow: `analysis_jobs` / `analysis_events`, event bus, extracted report persistence helpers, new analysis start/status/events/stream routes, and frontend snapshot-plus-replay event restoration are all in code.
 - Production credentials and live third-party testing still pending.
 
 ---
@@ -154,7 +154,7 @@ backend/
     report.py     # Report model (JSONB clause_analyses, 24h expires_at)
     referral.py   # Referral model (referral_code, uses_count, discount_jpy)
   schemas/
-    order.py      # ReviewStreamRequest, etc.
+    analysis.py   # Analysis start/status/events/stream schemas
     payment.py    # PaymentCreateRequest/Response
     report.py     # Report response schema
     upload.py     # UploadResponse
@@ -162,13 +162,15 @@ backend/
     health.py     # GET /api/health
     upload.py     # POST /api/upload (image/PDF/text + OCR + PII + pricing)
     payment.py    # POST /api/payment/create + /api/payment/webhook
-    review.py     # POST /api/review/stream (SSE, saves report + cache + email + cleanup)
+    analysis.py   # POST /api/analysis/start + GET status/events/stream
     report.py     # GET /api/report/{order_id} (Redis cache → DB fallback)
     referral.py   # POST /api/referral/generate + GET /api/referral/{code}
     eval.py       # GET /api/eval/rag + /api/eval/costs
   services/
+    analysis_executor.py # In-process persistent analysis runner + event persistence
     costing.py        # Model pricing table + usage extraction + structured cost logging
     cost_analysis.py  # Persisted cost-summary aggregation + pricing recommendation logic
+    event_bus.py      # In-process pub/sub for incremental analysis events
     local_ocr.py      # Optional PaddleOCR-based pre-payment quote estimation
     ocr.py            # GPT-4o Vision OCR
     pdf_extractor.py  # pypdf + OCR fallback
@@ -191,7 +193,7 @@ tests/
   test_router_health.py    # Health endpoint integration test
   test_router_upload.py    # Upload endpoint integration tests
   test_router_payment.py   # Payment endpoint integration tests
-  test_router_review.py    # SSE review stream integration tests
+  test_router_analysis.py  # Persistent analysis routes integration tests
   test_router_report.py    # Report retrieval integration tests
   test_router_referral.py  # Referral endpoint integration tests
   test_router_eval.py      # Eval endpoint integration tests
@@ -209,7 +211,7 @@ frontend/
       ExamplesPage.tsx      # Dedicated examples gallery / report sample page
       LookupPage.tsx        # Order-ID based result lookup page
       PaymentPage.tsx       # Payment polling + order reminder prompt
-      ReviewPage.tsx        # SSE review progress + live report + completion prompt
+      ReviewPage.tsx        # Snapshot + replayed events + incremental progress + completion prompt
       ReportPage.tsx        # Saved report page + custom share sheet
       PrivacyPage.tsx       # Privacy policy (i18n summary + JP legal text)
       TermsPage.tsx         # Terms of service (i18n summary + JP legal text)
@@ -248,7 +250,7 @@ Do NOT add a `retrieve_knowledge` node back. Do NOT pre-inject RAG results into 
 Do NOT add `rag_results` or `current_clause_index` back — they were removed as dead fields.
 
 ### Streaming
-`run_review_stream` uses `astream_events(version="v2")` from LangGraph. The frontend consumes SSE events of types: `node_start`, `token`, `tool_call`, `complete`, `error`.
+`run_review_stream` still uses `astream_events(version="v2")` from LangGraph, but HTTP no longer starts analysis directly from one SSE POST. The executor persists high-value events into `analysis_events`, and the frontend restores history before subscribing to `/api/orders/{id}/stream?after_seq=...` for incremental updates.
 
 ### e-Gov law corpus is the current RAG source of truth
 `load_legal_knowledge()` reads `backend/data/egov_laws.json`, a curated export generated by `scripts/fetch_egov_laws.py`.
@@ -264,8 +266,8 @@ Embeddings are generated via OpenAI API (httpx direct call, not langchain).
 ### Payment + Report flow
 1. User uploads contract → gets pricing → creates order + KOMOJU session
 2. KOMOJU webhook marks order as `paid`
-3. If the order came from staged image/scanned PDF upload, formal OCR runs only after payment and before SSE review starts
-4. User starts SSE review → report saved to DB + cached in Redis + emailed
+3. If the order came from staged image/scanned PDF upload, formal OCR runs only after payment and before persistent analysis starts
+4. `/review/:orderId` starts or resumes the persistent analysis task, restores saved event history, and subscribes to incremental updates
 5. Contract text nullified immediately after analysis (privacy)
 6. Redis cache expires in 24h; APScheduler cleans DB hourly
 
@@ -319,12 +321,12 @@ Embeddings are generated via OpenAI API (httpx direct call, not langchain).
 - Frontend routes should stay lazy-loaded where practical, and analytics/observability SDKs should bootstrap asynchronously so they do not bloat the initial application chunk
 
 ### Review/report UX behavior
-- The review page should show user-facing progress text during SSE streaming; do not expose raw internal tool names like `analyze_clause_risk` to end users.
+- The review page should show user-facing progress text during persistent event-stream playback; do not expose raw internal tool names like `analyze_clause_risk` to end users.
 - `/api/report/{order_id}` must return the same payload shape whether data comes from Redis or PostgreSQL.
 - Report content is fixed in the language chosen at payment time; later UI language switches only affect surrounding page chrome unless an explicit re-translation feature is implemented.
 - Same-session original contract comparison should be clause-level and inline with each analysis card, not as a full-document dump at the bottom of the page.
 - On larger screens, inline clause comparison can use a split layout, but mobile should preserve a single-column reading flow.
-- Original clause text may be present in the SSE completion payload and same-session frontend storage, but must be stripped before database persistence, Redis caching, shared-link rendering, and email delivery.
+- Original clause text may be present in the in-session completion payload and same-session frontend storage, but must be stripped before database persistence, Redis caching, shared-link rendering, and email delivery.
 - The saved report page should read like a concise professional review memo, and print / save-as-PDF from the browser should hide site chrome and preserve the report body cleanly.
 - After quote generation, the homepage should visibly advance the user to the payment area instead of leaving the next step off-screen.
 - After payment success and after review completion, the UI should prompt the user to save the order ID for later lookup.
@@ -339,12 +341,10 @@ Embeddings are generated via OpenAI API (httpx direct call, not langchain).
 Eval references the explicit document IDs in `egov_laws.json`.
 - `scripts/check_rag_eval.sh` wraps the endpoint with the current local baseline thresholds (`Recall@5 >= 0.45`, `MRR >= 0.45`).
 
-### SSE reconnection
-- `ReviewPage.tsx` implements exponential backoff reconnection (base 1s delay, max 3 attempts).
-- Event deduplication via `eventIndex` ref prevents replaying already-processed events on reconnect.
-- 60-second inactivity timeout triggers reconnection if no events arrive.
-- Terminal states (complete, error, fatal) prevent unnecessary reconnection attempts.
-- A `reconnecting` state provides UI feedback to the user during reconnection.
+### Recoverable Event Streaming
+- `ReviewPage.tsx` now restores `/api/orders/{id}/status`, replays `/api/orders/{id}/events?after_seq=...`, and then subscribes to `/api/orders/{id}/stream?after_seq=...`.
+- Reconnection uses `lastSeq` rather than client-side event indexes, so resumed sessions do not depend on a single in-memory SSE run.
+- Terminal states (`completed`, `failed`) are represented in persisted job state, so lookup can route directly to the correct page even after the browser closes.
 
 ### RAG embedding batching
 - `store.py` implements `_get_embeddings_batch_sync()` for batched embedding API calls.
@@ -352,8 +352,8 @@ Eval references the explicit document IDs in `egov_laws.json`.
 - Batch results preserve original ordering by index for correct clause-to-result mapping.
 
 ### Integration test coverage
-- 7 router test files covering all API endpoints: health, upload, payment, review, report, referral, eval.
-- 39+ test functions with 1877 lines of test code.
+- 7 router test files covering all API endpoints: health, upload, payment, analysis, report, referral, eval.
+- Test coverage includes persistent analysis start/status/events/stream behavior and report persistence helpers.
 - Tests use FastAPI `TestClient` with mocked dependencies (DB, Redis, external APIs).
 
 ### CSS Modules strategy
@@ -365,7 +365,7 @@ Eval references the explicit document IDs in `egov_laws.json`.
 ### Regression checks
 - `scripts/check_locale_keys.sh` ensures all 9 locale files keep the same translation key set as `frontend/src/i18n/locales/ja.json`.
 - `scripts/run_backend_pytests.sh` installs backend dev dependencies in Docker and runs the full backend regression test suite.
-- `scripts/smoke_local_flow.sh` treats curl exit code `18` as acceptable for SSE shutdown and relies on the streamed `complete` / `error` events for pass-fail.
+- `scripts/smoke_local_flow.sh` now drives `analysis/start` plus `/api/orders/{id}/stream` and relies on persisted `complete` / `error` event records for pass-fail.
 
 ---
 

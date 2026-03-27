@@ -1,14 +1,14 @@
 # ContractGuard
 
-在日外国人向けの日本語契約リスク分析サービスです。ユーザーはテキスト、画像、PDF の契約書をアップロードし、従量課金で SSE ストリーミング分析を見ながら、24 時間以内にレポートを取得できます。
+在日外国人向けの日本語契約リスク分析サービスです。ユーザーはテキスト、画像、PDF の契約書をアップロードし、従量課金で復元可能なイベントストリームから分析進捗を確認しつつ、24 時間以内にレポートを取得できます。
 
 [English](./README.md) | [中文文档](./README_CN.md)
 
 ## 現在の状況
 
-2026-03-27 時点で、ローカル Docker 上の MVP フローは動作確認済みです。
+2026-03-28 時点で、ローカル Docker 上の MVP フローは動作確認済みです。
 
-- `upload -> payment/create -> review/stream -> report -> 契約本文削除`
+- `upload -> payment/create -> analysis/start -> orders/{id}/status + events/stream -> report -> 契約本文削除`
 - テキスト入力とテキスト抽出可能な PDF は支払い前にそのまま見積もりし、画像 / スキャン PDF は一時保存 + 支払い後の正式 OCR を使う二段階 OCR フローになりました
 - `pgvector` RAG は PostgreSQL 上で稼働し、10 法令カテゴリ・331 件超の法条（賃貸借・労働・パート・業務委託・売買等）を収録
 - フロントエンドの 9 言語 UI は実装済み。ブランド（ContractGuard）、プライバシーポリシー/利用規約ページ、独立した事例ギャラリーとレポート見本表示を含みます
@@ -18,8 +18,8 @@
 - ルート単位の遅延読み込みと分析 SDK の遅延初期化により、初期フロントエンド bundle を軽量化
 - `APP_ENV=development` かつ `KOMOJU_SECRET_KEY` 未設定の場合のみ、ローカル開発では自動的に支払い済み扱いになります
 - デプロイ設定済み: `fly.toml`（NRT リージョン、HTTPS 強制）+ `vercel.json`（API プロキシ + セキュリティヘッダー）
-- 統合テストスイート: 7 つのルーターテストファイル、39 件超のテスト関数で全 API エンドポイントをカバー
-- SSE 再接続: 指数バックオフ（最大 3 回）+ イベント重複排除 + 60 秒の無活動タイムアウト
+- 統合テストスイート: 7 つのルーターテストファイルで、現行ランタイムの全 API エンドポイントをカバー
+- 分析ページは持続化された分析タスク上に再構築され、バックエンドが `analysis_jobs` / `analysis_events` を保持し、フロントエンドは履歴イベント復元後に新しい更新を購読します
 - ホームページを独立コンポーネントに分割（Hero / Flow / Upload）し、事例紹介は独立 `/examples` ギャラリーページへ移動
 - RAG embedding バッチ化により API 呼び出し回数を削減
 - 不要コードのクリーンアップ完了（未使用の `analyze_risks_streaming` を削除）
@@ -112,7 +112,7 @@ docker compose up -d backend postgres redis
 2. token 見積もり、価格、PII 警告を確認します。画像 / スキャン PDF では、この価格が支払い前の「仮見積もり」であることも明示されます。
 3. 支払い注文を作成します。
 4. ローカル開発では `APP_ENV=development` かつ `KOMOJU_SECRET_KEY` が空なら自動的に支払い済みになります。
-5. `/review/:orderId` で SSE ストリーミング分析を確認します。
+5. `/review/:orderId` では持続化された分析タスクを開始または再開し、履歴イベントを読み込んだ後に新しい進捗更新を受け取ります。
 6. `/report/:orderId` で保存済みレポートを取得します。
 7. ストリーミング審査中は内部ツール名ではなく、ユーザー向けの進捗文言を表示します。
 8. レポート本文の言語は支払い時に選択した言語で固定され、後からサイト言語を切り替えても本文自体は再翻訳されません。
@@ -147,14 +147,13 @@ docker compose up -d backend postgres redis
 - フロントエンドには `RevealSection`、`OrderReminderDialog`、`ShareSheet` の共通 UX コンポーネントが追加され、スクロール演出、注文番号保存の促し、専用共有パネルを実装しています。共有パネルでは専用の紹介リンク生成・コピー・端末共有まで扱えます。
 - `/api/report/{order_id}` は Redis キャッシュ命中時と PostgreSQL fallback 時で同じ payload 形を返すように統一されています。
 - `analyze_clause_risk` ツールが内部で直接 RAG 検索を行うため、独立した retrieval node はありません。
-- `scripts/smoke_local_flow.sh` は `health -> upload -> payment -> review -> report -> contract deletion` を検証する標準ローカル回帰入口です。
-- `scripts/smoke_local_flow.sh` は SSE 終了時に発生しうる `curl` 終了コード `18` を許容し、実際のストリーム内容で成功可否を判定します。
+- `scripts/smoke_local_flow.sh` は現在の持続化分析フローに合わせて更新済みで、`health -> upload -> payment -> analysis/start -> orders/{id}/stream -> report -> contract deletion` を通しで確認します。
 - 元条項テキストはストリーミング完了結果と同一端末セッション内にのみ保持されます。DB レポート、Redis キャッシュ、共有リンク、メールリンクには保存・露出しません。
 - `scripts/check_locale_keys.sh` は 9 言語の locale ファイルが `ja.json` と同じキー集合を保っているかを確認します。
 - バックエンドは起動時に `backend/data/egov_laws.json` の公式 e-Gov 法令コーパスを読み込みます。10 法令カテゴリ・331 件超の法条を収録。ローカル評価データセットも 20 件のラベル付きサンプルに拡張されています（損害賠償、競業禁止、解約、NDA、賃貸借等をカバー）。
 - `scripts/check_rag_eval.sh` は `/api/eval/rag` を現在のローカル基準値（`Recall@5 >= 0.45`、`MRR >= 0.45`）でチェックします。
 - `scripts/run_backend_pytests.sh` は Docker 内で backend の dev 依存を入れた上で、完全な `tests/` 回帰テストを実行します。
-- 統合テストは全 7 API ルーター（health、upload、payment、review、report、referral、eval）を 39 件超のテスト関数でカバーしています。
+- 統合テストは全 7 API ルーター（health、upload、payment、analysis、report、referral、eval）をカバーしています。
 - `frontend/src/pages/HomePage.tsx` は現在コンテナページとして振る舞い、hero / flow / upload-payment を個別コンポーネント（`HomeHeroSection`、`HomeFlowSection`、`HomeUploadSection`）に委譲します。事例紹介は `/examples` の独立ページに切り出されています。
 - 見積もり生成後、ホームページは自動で支払いパネルまでスクロールし、短時間ハイライトして次の導線を見失いにくくしています。
 - `/lookup` 結果照会ページが追加され、注文番号から支払い状態ページ・分析中ページ・完成レポートを再オープンできます。
@@ -162,13 +161,14 @@ docker compose up -d backend postgres redis
 - レポート共有は直接 Web Share API を呼ぶのではなく、宣伝用プレビュー、レポートリンクコピー、紹介リンク生成、注文番号コピー、端末共有への導線を持つ専用共有パネルを先に開きます。
 - 紹介リンクは `?ref=` 付きでホームに戻り、次のユーザーの支払いフォームへ紹介コードを自動入力します。
 - 結果照会ページとレポートページは、注文番号形式エラー、弱い回線、オフライン、再試行可能な失敗状態をより明確に表示します。
-- SSE 再接続は指数バックオフ（ベース 1 秒、最大 3 回）+ イベント重複排除 + 60 秒の無活動タイムアウトを実装しています。
+- 分析フローは、単一の SSE POST リクエストで実行を開始するのではなく、状態スナップショット、再生可能な履歴イベント、増分イベントストリームで駆動されます。
 - RAG embedding リクエストは `_get_embeddings_batch_sync()` と `search_batch()` によりバッチ化され、API 呼び出し回数を削減しています。
 
 ## 主要ファイル
 
 - [`backend/main.py`](./backend/main.py): 起動処理、ルーター登録、Sentry/PostHog、クリーンアップ
-- [`backend/routers/review.py`](./backend/routers/review.py): SSE 審査、レポート保存、プライバシー削除
+- [`backend/routers/analysis.py`](./backend/routers/analysis.py): 分析開始、状態スナップショット、履歴イベント、増分イベントストリーム
+- [`backend/services/analysis_executor.py`](./backend/services/analysis_executor.py): プロセス内の持続化分析実行器とイベント永続化
 - [`backend/rag/store.py`](./backend/rag/store.py): pgvector 保存と検索
 - [`backend/eval/evaluator.py`](./backend/eval/evaluator.py): RAG 評価指標とデータセット実行
 - [`scripts/smoke_local_flow.sh`](./scripts/smoke_local_flow.sh): ローカル end-to-end smoke/regression スクリプト
