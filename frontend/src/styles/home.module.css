@@ -204,6 +204,11 @@
   color: var(--brand-ink);
 }
 
+.flowStep p {
+  color: var(--text-soft);
+  line-height: 1.7;
+}
+
 /* Upload section internals */
 .uploadArea textarea,
 .paymentForm input {
@@ -563,6 +568,32 @@
     margin-top: 16px;
   }
 
+  .flowSteps {
+    gap: 10px;
+  }
+
+  .flowStep {
+    grid-template-columns: 34px minmax(0, 1fr);
+    gap: 12px;
+    padding: 12px 0;
+  }
+
+  .flowIndex {
+    width: 34px;
+    height: 34px;
+    font-size: 0.84rem;
+  }
+
+  .flowStep strong {
+    font-size: 0.92rem;
+    line-height: 1.35;
+  }
+
+  .flowStep p {
+    font-size: 0.82rem;
+    line-height: 1.55;
+  }
+
   .trustPill {
     padding: 9px 12px;
     font-size: 0.8rem;
@@ -620,6 +651,10 @@
   .paymentForm input {
     padding: 12px 14px;
     font-size: 0.9rem;
+  }
+
+  .uploadArea textarea {
+    min-height: 240px;
   }
 
   .fileUpload {

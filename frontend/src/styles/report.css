@@ -4,6 +4,10 @@
   padding-top: 10px;
 }
 
+.report-header-bar {
+  overflow: hidden;
+}
+
 .overall-risk-card,
 .report-actions {
   padding: 26px;
@@ -250,6 +254,28 @@
     padding-top: 4px;
   }
 
+  .report-header-bar {
+    padding: 0;
+    border-radius: 20px;
+  }
+
+  .report-header-bar .document-ribbon {
+    padding: 11px 14px 9px;
+  }
+
+  .report-header-bar .report-hero-copy {
+    padding: 16px 16px 0;
+  }
+
+  .report-header-bar .report-hero-panel {
+    margin: 0 16px 16px;
+  }
+
+  .report-comparison-hint {
+    font-size: 0.84rem;
+    line-height: 1.62;
+  }
+
   .overall-risk-card,
   .report-actions {
     padding: 18px 16px;
@@ -266,6 +292,10 @@
     line-height: 1.72;
   }
 
+  .order-inline-card-report {
+    margin-top: 12px;
+  }
+
   .clause-list {
     gap: 10px;
   }
@@ -274,6 +304,7 @@
   .example-clause-card {
     padding: 16px 16px 18px;
     border-radius: 16px;
+    border-left-width: 4px;
   }
 
   .clause-header {
@@ -360,5 +391,15 @@
 
   .report-actions {
     margin-top: 18px;
+  }
+
+  .report-actions .btn-share,
+  .report-actions .dialog-secondary-btn {
+    width: 100%;
+  }
+
+  .share-note {
+    font-size: 0.82rem;
+    line-height: 1.6;
   }
 }

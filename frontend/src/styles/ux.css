@@ -560,6 +560,26 @@
     border-radius: 22px;
   }
 
+  .next-step-banner,
+  .order-inline-card,
+  .share-url-block {
+    padding: 14px 14px;
+    border-radius: 16px;
+  }
+
+  .next-step-banner p,
+  .order-inline-card p,
+  .share-url-block span {
+    font-size: 0.82rem;
+    line-height: 1.6;
+  }
+
+  .order-inline-card strong,
+  .share-url-block strong {
+    font-size: 0.92rem;
+    line-height: 1.5;
+  }
+
   .lookup-form {
     gap: 12px;
     margin-top: 16px;
