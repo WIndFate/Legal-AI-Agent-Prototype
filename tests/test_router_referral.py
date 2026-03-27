@@ -16,7 +16,9 @@ app.include_router(router)
 @pytest.fixture
 def mock_db():
     """Provide a mock AsyncSession and override the get_db dependency."""
-    session = AsyncMock()
+    session = MagicMock()
+    session.execute = AsyncMock()
+    session.commit = AsyncMock()
     app.dependency_overrides.clear()
 
     async def _override():
@@ -35,6 +37,13 @@ def mock_db():
 async def test_generate_referral(mock_settings, mock_db):
     mock_settings.return_value.FRONTEND_URL = "https://example.com"
     oid = str(uuid.uuid4())
+    order_mock = MagicMock()
+    order_mock.payment_status = "paid"
+    existing_referral_result = MagicMock()
+    existing_referral_result.scalar_one_or_none.return_value = None
+    order_result = MagicMock()
+    order_result.scalar_one_or_none.return_value = order_mock
+    mock_db.execute.side_effect = [order_result, existing_referral_result]
 
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:

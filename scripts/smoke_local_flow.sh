@@ -107,23 +107,28 @@ log "Checking payment status"
 curl -sS "${API_BASE_URL}/api/payment/status/${ORDER_ID}" >"$STATUS_JSON"
 jq -e '.status == "paid"' "$STATUS_JSON" >/dev/null || fail "Order is not paid in local dev mode"
 
-log "Starting review stream"
+log "Starting persistent analysis task"
+curl -sS -X POST "${API_BASE_URL}/api/analysis/start" \
+  -H "Content-Type: application/json" \
+  -d "{\"order_id\":\"${ORDER_ID}\"}" \
+  >"$STATUS_JSON"
+
+jq -e '.status == "queued" or .status == "processing" or .status == "completed"' "$STATUS_JSON" >/dev/null \
+  || fail "Analysis start did not return a valid status"
+
+log "Streaming persisted analysis events"
 set +e
-jq -n --arg order_id "$ORDER_ID" '{order_id: $order_id}' \
-  | curl -N -sS -X POST "${API_BASE_URL}/api/review/stream" \
-      -H "Content-Type: application/json" \
-      -d @- \
-      >"$REVIEW_SSE"
+curl -N -sS "${API_BASE_URL}/api/orders/${ORDER_ID}/stream?after_seq=0" >"$REVIEW_SSE"
 REVIEW_STREAM_EXIT_CODE=$?
 set -e
 
-if [ "$REVIEW_STREAM_EXIT_CODE" -ne 0 ] && [ "$REVIEW_STREAM_EXIT_CODE" -ne 18 ]; then
-  fail "Review stream request failed with curl exit code ${REVIEW_STREAM_EXIT_CODE}"
+if [ "$REVIEW_STREAM_EXIT_CODE" -ne 0 ]; then
+  fail "Analysis stream request failed with curl exit code ${REVIEW_STREAM_EXIT_CODE}"
 fi
 
-grep -q '"type": "complete"' "$REVIEW_SSE" || fail "Review stream did not complete"
-if grep -q '"type": "error"' "$REVIEW_SSE"; then
-  fail "Review stream emitted an error event"
+grep -q '"event_type": "complete"' "$REVIEW_SSE" || fail "Analysis stream did not complete"
+if grep -q '"event_type": "error"' "$REVIEW_SSE"; then
+  fail "Analysis stream emitted an error event"
 fi
 
 log "Fetching saved report"

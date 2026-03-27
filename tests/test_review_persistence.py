@@ -1,6 +1,6 @@
 import pytest
 
-from backend.routers.review import _save_report
+from backend.services.report_persistence import save_report
 
 
 class _FakeDB:
@@ -33,7 +33,7 @@ async def test_save_report_persists_cost_summary():
         "steps": {"analyze_clause": {"calls": 1}},
     }
 
-    payload = await _save_report(
+    payload = await save_report(
         "00000000-0000-0000-0000-000000000001",
         report_data,
         "ja",
