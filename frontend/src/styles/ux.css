@@ -305,9 +305,111 @@
   margin-top: 18px;
 }
 
+.share-url-block-compact {
+  margin-top: 14px;
+}
+
 .share-url-block strong {
   font-size: 0.94rem;
   line-height: 1.7;
+}
+
+.referral-panel {
+  margin-top: 18px;
+  padding: 20px;
+  border-radius: 24px;
+  border: 1px solid rgba(31, 58, 95, 0.12);
+  background: linear-gradient(180deg, rgba(245, 248, 252, 0.96) 0%, rgba(255, 251, 246, 0.98) 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72);
+}
+
+.referral-panel-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.referral-panel-kicker {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--text-faint);
+  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.referral-panel-header strong {
+  display: block;
+  color: var(--brand-ink);
+  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
+  font-size: 1.05rem;
+  line-height: 1.5;
+}
+
+.referral-code-chip {
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(31, 58, 95, 0.08);
+  color: var(--brand);
+  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
+.referral-panel-desc {
+  margin-top: 12px;
+  color: var(--text-soft);
+  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
+  line-height: 1.75;
+}
+
+.referral-status {
+  margin-top: 14px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.78);
+  color: var(--text-soft);
+  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
+  line-height: 1.7;
+}
+
+.referral-status-error {
+  border: 1px solid rgba(176, 82, 74, 0.18);
+  background: rgba(255, 244, 242, 0.96);
+  color: #9a4b38;
+}
+
+.referral-meta-grid {
+  display: grid;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.referral-meta-card {
+  padding: 14px 16px;
+  border-radius: 16px;
+  border: 1px solid rgba(31, 58, 95, 0.1);
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.referral-meta-card span {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--text-faint);
+  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.referral-meta-card strong {
+  color: var(--brand-ink);
+  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
+  font-size: 0.96rem;
+  line-height: 1.6;
 }
 
 .lookup-shell {
@@ -439,6 +541,10 @@
   .lookup-help-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
+
+  .referral-meta-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 767px) {
@@ -460,6 +566,10 @@
   }
 
   .share-preview-header {
+    flex-direction: column;
+  }
+
+  .referral-panel-header {
     flex-direction: column;
   }
 }

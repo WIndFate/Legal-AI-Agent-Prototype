@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import RevealSection from '../components/common/RevealSection';
 import HomeFlowSection from '../components/home/HomeFlowSection';
@@ -19,6 +19,7 @@ function detectFileInputType(file: File): 'image' | 'pdf' {
 export default function HomePage() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const heroPreview = exampleReports.rental;
 
   const [inputMode, setInputMode] = useState<InputMode>('file');
@@ -126,6 +127,12 @@ export default function HomePage() {
       window.clearTimeout(clearCue);
     };
   }, [uploadResult]);
+
+  useEffect(() => {
+    const referralFromQuery = searchParams.get('ref')?.trim();
+    if (!referralFromQuery) return;
+    setReferralCode((current) => current || referralFromQuery);
+  }, [searchParams]);
 
   return (
     <div className="page home-page" id="top">

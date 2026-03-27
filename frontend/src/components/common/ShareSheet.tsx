@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 interface ShareSheetProps {
@@ -11,9 +11,64 @@ interface ShareSheetProps {
 export default function ShareSheet({ open, onClose, shareUrl, orderId }: ShareSheetProps) {
   const { t } = useTranslation();
   const [copiedLink, setCopiedLink] = useState(false);
+  const [copiedReferral, setCopiedReferral] = useState(false);
   const [copiedOrder, setCopiedOrder] = useState(false);
+  const [referralLoading, setReferralLoading] = useState(false);
+  const [referralError, setReferralError] = useState('');
+  const [referralData, setReferralData] = useState<{
+    referral_code: string;
+    referral_url: string;
+    discount_jpy: number;
+  } | null>(null);
 
   const supportsNativeShare = useMemo(() => typeof navigator !== 'undefined' && !!navigator.share, []);
+
+  useEffect(() => {
+    if (!open) return;
+
+    setCopiedLink(false);
+    setCopiedReferral(false);
+    setCopiedOrder(false);
+    setReferralData(null);
+
+    const storageKey = `referral-share:${orderId}`;
+    const cached = sessionStorage.getItem(storageKey);
+    if (cached) {
+      try {
+        setReferralData(JSON.parse(cached));
+        setReferralError('');
+        return;
+      } catch {
+        sessionStorage.removeItem(storageKey);
+      }
+    }
+
+    const loadReferral = async () => {
+      setReferralLoading(true);
+      setReferralError('');
+
+      try {
+        const res = await fetch('/api/referral/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ order_id: orderId }),
+        });
+        if (!res.ok) {
+          throw new Error(`Referral failed: ${res.status}`);
+        }
+        const data = await res.json();
+        setReferralData(data);
+        sessionStorage.setItem(storageKey, JSON.stringify(data));
+      } catch {
+        setReferralData(null);
+        setReferralError(t('share.referral_error'));
+      } finally {
+        setReferralLoading(false);
+      }
+    };
+
+    void loadReferral();
+  }, [open, orderId, t]);
 
   if (!open) return null;
 
@@ -27,6 +82,18 @@ export default function ShareSheet({ open, onClose, shareUrl, orderId }: ShareSh
     }
   };
 
+  const copyReferral = async () => {
+    if (!referralData) return;
+
+    try {
+      await navigator.clipboard.writeText(referralData.referral_url);
+      setCopiedReferral(true);
+      setTimeout(() => setCopiedReferral(false), 1800);
+    } catch {
+      setCopiedReferral(false);
+    }
+  };
+
   const copyOrder = async () => {
     try {
       await navigator.clipboard.writeText(orderId);
@@ -37,14 +104,17 @@ export default function ShareSheet({ open, onClose, shareUrl, orderId }: ShareSh
     }
   };
 
-  const triggerNativeShare = async () => {
+  const triggerNativeShare = async (mode: 'report' | 'referral') => {
     if (!navigator.share) return;
+
+    const targetUrl = mode === 'referral' ? referralData?.referral_url || shareUrl : shareUrl;
+    const targetText = mode === 'referral' ? t('share.referral_desc') : t('report.share_text');
 
     try {
       await navigator.share({
         title: t('report.title'),
-        text: t('report.share_text'),
-        url: shareUrl,
+        text: targetText,
+        url: targetUrl,
       });
     } catch {
       // ignore cancel
@@ -89,12 +159,72 @@ export default function ShareSheet({ open, onClose, shareUrl, orderId }: ShareSh
           <strong>{shareUrl}</strong>
         </div>
 
+        <div className="referral-panel">
+          <div className="referral-panel-header">
+            <div>
+              <span className="referral-panel-kicker">{t('share.referral_title')}</span>
+              <strong>{t('share.referral_reward', { amount: referralData?.discount_jpy ?? 100 })}</strong>
+            </div>
+            {referralData?.referral_code && (
+              <span className="referral-code-chip">{referralData.referral_code}</span>
+            )}
+          </div>
+          <p className="referral-panel-desc">{t('share.referral_desc')}</p>
+
+          {referralLoading && (
+            <div className="referral-status">{t('share.referral_loading')}</div>
+          )}
+
+          {!referralLoading && referralError && (
+            <div className="referral-status referral-status-error">
+              <span>{referralError}</span>
+            </div>
+          )}
+
+          {!referralLoading && referralData && (
+            <>
+              <div className="share-url-block share-url-block-compact">
+                <span>{t('share.referral_link_label')}</span>
+                <strong>{referralData.referral_url}</strong>
+              </div>
+              <div className="referral-meta-grid">
+                <div className="referral-meta-card">
+                  <span>{t('share.referral_code_label')}</span>
+                  <strong>{referralData.referral_code}</strong>
+                </div>
+                <div className="referral-meta-card">
+                  <span>{t('payment.referral_label')}</span>
+                  <strong>{t('share.referral_reward', { amount: referralData.discount_jpy })}</strong>
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+
         <div className="dialog-action-stack">
-          <button type="button" className="btn-primary" onClick={copyLink}>
+          {referralData ? (
+            <button type="button" className="btn-primary" onClick={() => void copyReferral()}>
+              {copiedReferral ? t('share.referral_copied') : t('share.copy_referral')}
+            </button>
+          ) : (
+            <button type="button" className="btn-primary" onClick={() => void copyLink()}>
+              {copiedLink ? t('share.link_copied') : t('share.copy_link')}
+            </button>
+          )}
+          {supportsNativeShare && referralData && (
+            <button
+              type="button"
+              className="btn-share dialog-secondary-btn"
+              onClick={() => void triggerNativeShare('referral')}
+            >
+              {t('share.native_share_referral')}
+            </button>
+          )}
+          <button type="button" className="btn-share dialog-secondary-btn" onClick={() => void copyLink()}>
             {copiedLink ? t('share.link_copied') : t('share.copy_link')}
           </button>
           {supportsNativeShare && (
-            <button type="button" className="btn-share dialog-secondary-btn" onClick={() => void triggerNativeShare()}>
+            <button type="button" className="btn-share dialog-secondary-btn" onClick={() => void triggerNativeShare('report')}>
               {t('share.native_share')}
             </button>
           )}

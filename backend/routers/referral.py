@@ -1,12 +1,13 @@
 import secrets
 import logging
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.db.session import get_db
+from backend.models.order import Order
 from backend.models.referral import Referral
 from backend.config import get_settings
 
@@ -25,8 +26,26 @@ async def generate_referral(
     db: AsyncSession = Depends(get_db),
 ):
     """Generate a referral code for a paid order."""
-    code = secrets.token_urlsafe(6).upper()[:8]
     settings = get_settings()
+    order_result = await db.execute(select(Order).where(Order.id == request.order_id))
+    order = order_result.scalar_one_or_none()
+    if order is None:
+        raise HTTPException(status_code=404, detail="Order not found")
+    if order.payment_status != "paid":
+        raise HTTPException(status_code=409, detail="Referral link is available after payment")
+
+    existing_result = await db.execute(
+        select(Referral).where(Referral.referrer_order_id == request.order_id)
+    )
+    existing_referral = existing_result.scalar_one_or_none()
+    if existing_referral is not None:
+        return {
+            "referral_code": existing_referral.referral_code,
+            "referral_url": f"{settings.FRONTEND_URL}/?ref={existing_referral.referral_code}",
+            "discount_jpy": existing_referral.discount_jpy,
+        }
+
+    code = secrets.token_urlsafe(6).upper()[:8]
 
     referral = Referral(
         referrer_order_id=request.order_id,

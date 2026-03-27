@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 
 import OrderReminderDialog from '../components/common/OrderReminderDialog';
+import ShareSheet from '../components/common/ShareSheet';
 
 // Shared report types
 interface ClauseAnalysis {
@@ -80,6 +81,7 @@ export default function ReviewPage() {
   const [phaseText, setPhaseText] = useState('');
   const [reconnecting, setReconnecting] = useState(false);
   const [showCompletionPrompt, setShowCompletionPrompt] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
 
   // Refs to track reconnection state without causing re-renders
   const started = useRef(false);
@@ -376,6 +378,14 @@ export default function ReviewPage() {
   return (
     <div className="page review-page">
       {orderId && (
+        <ShareSheet
+          open={shareOpen}
+          onClose={() => setShareOpen(false)}
+          shareUrl={`${window.location.origin}/report/${orderId}`}
+          orderId={orderId}
+        />
+      )}
+      {orderId && (
         <OrderReminderDialog
           open={showCompletionPrompt}
           orderId={orderId}
@@ -601,10 +611,18 @@ export default function ReviewPage() {
           <div className="report-actions">
             <button
               className="btn-primary btn-share"
-              onClick={() => navigate(`/report/${orderId}`)}
+              onClick={() => setShareOpen(true)}
             >
               {t('report.share')}
             </button>
+            {orderId && (
+              <button
+                className="btn-share dialog-secondary-btn"
+                onClick={() => navigate(`/report/${orderId}`)}
+              >
+                {t('order.open_report')}
+              </button>
+            )}
             <p className="share-note">{t('report.share_note')}</p>
           </div>
         </div>
