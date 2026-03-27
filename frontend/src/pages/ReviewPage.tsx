@@ -2,7 +2,6 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 
-import OrderReminderDialog from '../components/common/OrderReminderDialog';
 import ShareSheet from '../components/common/ShareSheet';
 
 interface ClauseAnalysis {
@@ -85,7 +84,6 @@ export default function ReviewPage() {
   const [expandedClauses, setExpandedClauses] = useState<Record<string, boolean>>({});
   const [phaseText, setPhaseText] = useState('');
   const [reconnecting, setReconnecting] = useState(false);
-  const [showCompletionPrompt, setShowCompletionPrompt] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
 
   const started = useRef(false);
@@ -140,7 +138,33 @@ export default function ReviewPage() {
     return true;
   }, [navigate, orderId, t]);
 
-  const loadReport = useCallback(async (openPrompt = false) => {
+  const resolveEventMessage = useCallback((evt: AnalysisEventItem): string | null => {
+    if (evt.event_type === 'node_start') {
+      const node = typeof evt.payload_json?.node === 'string' ? evt.payload_json.node : null;
+      if (node === 'parse_contract') return t('review.phase_parsing_desc');
+      if (node === 'analyze_risks') return t('review.phase_analyzing_desc');
+      if (node === 'generate_report') return t('review.phase_generating_desc');
+    }
+
+    if (evt.event_type === 'tool_call') {
+      const tool = typeof evt.payload_json?.tool === 'string' ? evt.payload_json.tool : null;
+      if (tool === 'analyze_clause_risk') return t('review.tool_analyze_clause_risk');
+      if (tool === 'generate_suggestion') return t('review.tool_generate_suggestion');
+      return t('review.tool_processing_clause');
+    }
+
+    if (evt.event_type === 'complete') {
+      return t('review.phase_generating_desc');
+    }
+
+    if (evt.event_type === 'error') {
+      return evt.message || t('errors.review_failed');
+    }
+
+    return evt.message;
+  }, [t]);
+
+  const loadReport = useCallback(async () => {
     const res = await fetch(`/api/report/${orderId}`);
     if (!res.ok) throw new Error(t('report.network_error'));
     const raw = await res.json();
@@ -155,14 +179,13 @@ export default function ReviewPage() {
       })),
     });
     setLoading(false);
-    if (openPrompt) setShowCompletionPrompt(true);
   }, [orderId, t]);
 
   const applyStatusSnapshot = useCallback((status: OrderStatusResponse) => {
     setAnalysisStatus(status.analysis_status);
     if (status.current_step) {
       setCurrentStep(status.current_step);
-      setPhaseText(status.progress_message || phaseMeta(status.current_step).desc);
+      setPhaseText(phaseMeta(status.current_step).desc);
     } else if (status.progress_message) {
       setPhaseText(status.progress_message);
     }
@@ -170,33 +193,34 @@ export default function ReviewPage() {
 
   const processEvent = useCallback((evt: AnalysisEventItem, options?: { replay?: boolean }) => {
     lastSeqRef.current = Math.max(lastSeqRef.current, evt.seq);
+    const eventMessage = resolveEventMessage(evt);
 
     if (evt.step) {
       setCurrentStep(evt.step);
-      setPhaseText(evt.message || phaseMeta(evt.step).desc);
-    } else if (evt.message) {
-      setPhaseText(evt.message);
+      setPhaseText(eventMessage || phaseMeta(evt.step).desc);
+    } else if (eventMessage) {
+      setPhaseText(eventMessage);
     }
 
     switch (evt.event_type) {
       case 'node_start':
       case 'tool_call':
       case 'tool_result':
-        if (evt.message) pushLog(evt.message);
+        if (eventMessage) pushLog(eventMessage);
         break;
       case 'complete':
         setAnalysisStatus('completed');
         if (!options?.replay) {
-          void loadReport(true);
+          void loadReport();
         }
         break;
       case 'error':
         setAnalysisStatus('failed');
-        setError(evt.message || t('errors.review_failed'));
+        setError(eventMessage || t('errors.review_failed'));
         setLoading(false);
         break;
     }
-  }, [loadReport, phaseMeta, pushLog, t]);
+  }, [navigate, orderId, phaseMeta, pushLog, resolveEventMessage, t]);
 
   const loadHistory = useCallback(async () => {
     const res = await fetch(`/api/orders/${orderId}/events?after_seq=0`);
@@ -296,7 +320,6 @@ export default function ReviewPage() {
     setLoading(true);
     setError('');
     setReport(null);
-    setShowCompletionPrompt(false);
     if (forceRestart) {
       setLogLines([]);
       lastSeqRef.current = 0;
@@ -311,7 +334,7 @@ export default function ReviewPage() {
     applyStatusSnapshot(status);
 
     if (status.report_ready && status.analysis_status === 'completed') {
-      await loadReport(forceRestart);
+      await loadReport();
       return;
     }
 
@@ -337,7 +360,7 @@ export default function ReviewPage() {
         return;
       }
       if (status.report_ready && status.analysis_status === 'completed') {
-        await loadReport(forceRestart);
+        await loadReport();
         return;
       }
     }
@@ -374,19 +397,6 @@ export default function ReviewPage() {
           orderId={orderId}
         />
       )}
-      {orderId && (
-        <OrderReminderDialog
-          open={showCompletionPrompt}
-          orderId={orderId}
-          title={t('order.save_after_review_title')}
-          description={t('order.save_after_review_desc')}
-          primaryLabel={t('order.open_report')}
-          onPrimary={() => navigate(`/report/${orderId}`)}
-          secondaryLabel={t('share.close')}
-          onSecondary={() => setShowCompletionPrompt(false)}
-        />
-      )}
-
       {loading && !report && (
         <div className="analyzing-section">
           <div className="review-live-card">

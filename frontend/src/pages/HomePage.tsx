@@ -103,8 +103,8 @@ export default function HomePage() {
         window.location.href = data.komoju_session_url;
       } else {
         sessionStorage.setItem(`report-language:${data.order_id}`, i18n.language);
-        // Dev mode: skip payment, go directly to review
-        navigate(`/review/${data.order_id}`);
+        // Dev mode: still show the payment-success handoff so users save the order ID first.
+        navigate(`/payment/${data.order_id}`);
       }
     } catch (e) {
       setError(t('errors.payment_failed'));
