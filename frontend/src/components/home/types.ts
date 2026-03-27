@@ -1,4 +1,4 @@
-export type InputMode = 'text' | 'image' | 'pdf';
+export type InputMode = 'text' | 'file';
 
 export interface UploadResult {
   contract_text: string;

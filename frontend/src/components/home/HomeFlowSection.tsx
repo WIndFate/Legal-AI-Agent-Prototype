@@ -6,7 +6,6 @@ export default function HomeFlowSection() {
 
   return (
     <section className="flow-card">
-      <p className="section-kicker">{t('upload.how_it_works')}</p>
       <h2>{t('upload.how_it_works')}</h2>
       <div className={styles.flowSteps}>
         <div className={styles.flowStep}>

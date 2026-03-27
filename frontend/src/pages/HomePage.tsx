@@ -9,12 +9,19 @@ import HomeUploadSection from '../components/home/HomeUploadSection';
 import type { InputMode, UploadResult } from '../components/home/types';
 import { exampleReports } from '../data/exampleReports';
 
+function detectFileInputType(file: File): 'image' | 'pdf' {
+  if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
+    return 'pdf';
+  }
+  return 'image';
+}
+
 export default function HomePage() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const heroPreview = exampleReports.rental;
 
-  const [inputMode, setInputMode] = useState<InputMode>('text');
+  const [inputMode, setInputMode] = useState<InputMode>('file');
   const [textInput, setTextInput] = useState('');
   const [file, setFile] = useState<File | null>(null);
   const [uploadResult, setUploadResult] = useState<UploadResult | null>(null);
@@ -34,11 +41,11 @@ export default function HomePage() {
 
     try {
       const formData = new FormData();
-      formData.append('input_type', inputMode);
-
       if (inputMode === 'text') {
+        formData.append('input_type', 'text');
         formData.append('text', textInput);
       } else if (file) {
+        formData.append('input_type', detectFileInputType(file));
         formData.append('file', file);
       }
 
@@ -67,7 +74,12 @@ export default function HomePage() {
         body: JSON.stringify({
           email,
           contract_text: uploadResult.contract_text,
-          input_type: inputMode,
+          input_type:
+            inputMode === 'text'
+              ? 'text'
+              : uploadResult.upload_mime_type === 'application/pdf'
+                ? 'pdf'
+                : 'image',
           estimated_tokens: uploadResult.estimated_tokens,
           page_estimate: uploadResult.page_estimate,
           price_tier: uploadResult.price_tier,

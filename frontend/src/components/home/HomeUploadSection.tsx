@@ -64,7 +64,6 @@ export default function HomeUploadSection({
   return (
     <section className="upload-shell" id="upload-section">
       <div className="section-heading">
-        <p className="section-kicker">{t('payment.title')}</p>
         <h2>{t('upload.title')}</h2>
         <p className="section-intro">{t('upload.hero_body')}</p>
       </div>
@@ -99,16 +98,10 @@ export default function HomeUploadSection({
 
       <div className="input-tabs">
         <button
-          className={clsx('tab', inputMode === 'image' && 'active')}
-          onClick={() => setInputMode('image')}
+          className={clsx('tab', inputMode === 'file' && 'active')}
+          onClick={() => setInputMode('file')}
         >
-          {t('upload.camera')}
-        </button>
-        <button
-          className={clsx('tab', inputMode === 'pdf' && 'active')}
-          onClick={() => setInputMode('pdf')}
-        >
-          {t('upload.pdf')}
+          {t('upload.file')}
         </button>
         <button
           className={clsx('tab', inputMode === 'text' && 'active')}
@@ -128,10 +121,11 @@ export default function HomeUploadSection({
           />
         ) : (
           <div className={styles.fileUpload}>
+            <p className={styles.fileUploadTitle}>{t('upload.file')}</p>
+            <p className={styles.fileUploadHint}>{t('upload.file_hint')}</p>
             <input
               type="file"
-              accept={inputMode === 'image' ? 'image/*' : '.pdf'}
-              capture={inputMode === 'image' ? 'environment' : undefined}
+              accept="image/*,.pdf,application/pdf"
               onChange={(e) => setFile(e.target.files?.[0] || null)}
             />
             {file && <p className={styles.fileName}>{file.name}</p>}
