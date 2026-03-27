@@ -560,6 +560,40 @@
     border-radius: 22px;
   }
 
+  .lookup-form {
+    gap: 12px;
+    margin-top: 16px;
+  }
+
+  .lookup-label {
+    gap: 8px;
+    font-size: 0.84rem;
+  }
+
+  .lookup-input {
+    padding: 14px 15px;
+    font-size: 0.9rem;
+    line-height: 1.55;
+  }
+
+  .lookup-help-grid {
+    gap: 10px;
+    margin-top: 18px;
+  }
+
+  .lookup-help-card,
+  .lookup-feedback-panel,
+  .soft-error-panel,
+  .report-loading-card {
+    padding: 18px 16px;
+    border-radius: 18px;
+  }
+
+  .offline-banner {
+    margin-top: 14px;
+    padding: 12px 14px;
+  }
+
   .lookup-actions,
   .soft-error-actions {
     flex-direction: column;

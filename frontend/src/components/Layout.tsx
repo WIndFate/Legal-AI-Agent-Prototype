@@ -39,6 +39,26 @@ export default function Layout({ children }: LayoutProps) {
   };
 
   const isActive = (path: string) => location.pathname === path;
+  const navItems = [
+    {
+      key: 'home',
+      label: t('nav.home'),
+      href: homeHref,
+      active: isActive('/'),
+    },
+    {
+      key: 'examples',
+      label: t('nav.examples'),
+      to: '/examples',
+      active: isActive('/examples'),
+    },
+    {
+      key: 'lookup',
+      label: t('nav.lookup'),
+      to: '/lookup',
+      active: isActive('/lookup'),
+    },
+  ];
 
   return (
     <div className="app">
@@ -52,19 +72,22 @@ export default function Layout({ children }: LayoutProps) {
             </span>
           </Link>
           <nav className={styles.headerNav}>
-            <a
-              href={homeHref}
-              onClick={navigateToAnchor('top')}
-              className={clsx(styles.navLink, isActive('/') && styles.navLinkActive)}
-            >
-              {t('nav.home')}
-            </a>
-            <Link to="/examples" className={clsx(styles.navLink, isActive('/examples') && styles.navLinkActive)}>
-              {t('nav.examples')}
-            </Link>
-            <Link to="/lookup" className={clsx(styles.navLink, isActive('/lookup') && styles.navLinkActive)}>
-              {t('nav.lookup')}
-            </Link>
+            {navItems.map((item) =>
+              item.to ? (
+                <Link key={item.key} to={item.to} className={clsx(styles.navLink, item.active && styles.navLinkActive)}>
+                  {item.label}
+                </Link>
+              ) : (
+                <a
+                  key={item.key}
+                  href={item.href}
+                  onClick={navigateToAnchor('top')}
+                  className={clsx(styles.navLink, item.active && styles.navLinkActive)}
+                >
+                  {item.label}
+                </a>
+              ),
+            )}
           </nav>
           <label className={styles.languageShell}>
             <span className={styles.languageLabel}>{t('nav.language')}</span>
@@ -88,6 +111,31 @@ export default function Layout({ children }: LayoutProps) {
       <div className={styles.disclaimerBanner}>
         {t('disclaimer.banner')}
       </div>
+
+      <nav className={styles.mobileQuickNav}>
+        <div className={styles.mobileQuickNavInner}>
+          {navItems.map((item) =>
+            item.to ? (
+              <Link
+                key={item.key}
+                to={item.to}
+                className={clsx(styles.mobileQuickNavLink, item.active && styles.mobileQuickNavLinkActive)}
+              >
+                {item.label}
+              </Link>
+            ) : (
+              <a
+                key={item.key}
+                href={item.href}
+                onClick={navigateToAnchor('top')}
+                className={clsx(styles.mobileQuickNavLink, item.active && styles.mobileQuickNavLinkActive)}
+              >
+                {item.label}
+              </a>
+            ),
+          )}
+        </div>
+      </nav>
 
       <main className={styles.mainContent}>
         {children}

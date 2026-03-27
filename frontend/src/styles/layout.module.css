@@ -144,6 +144,25 @@
   font-size: 0.78rem;
 }
 
+.mobileQuickNav {
+  display: none;
+}
+
+.mobileQuickNavInner {
+  max-width: 1160px;
+  margin: 0 auto;
+}
+
+.mobileQuickNavLink {
+  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
+  font-weight: 600;
+  color: var(--text-soft);
+}
+
+.mobileQuickNavLinkActive {
+  color: var(--brand);
+}
+
 .mainContent {
   flex: 1;
   width: 100%;
@@ -274,8 +293,50 @@
     font-size: 0.72rem;
   }
 
+  .mobileQuickNav {
+    display: block;
+    position: sticky;
+    top: calc(56px + env(safe-area-inset-top, 0px));
+    z-index: 95;
+    padding: 8px 12px 2px;
+    background: linear-gradient(180deg, rgba(248, 244, 237, 0.92) 0%, rgba(248, 244, 237, 0.78) 100%);
+    backdrop-filter: blur(16px);
+  }
+
+  .mobileQuickNavInner {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .mobileQuickNavLink {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 38px;
+    padding: 9px 10px;
+    border-radius: 999px;
+    border: 1px solid rgba(31, 58, 95, 0.08);
+    background: rgba(255, 255, 255, 0.68);
+    box-shadow: 0 10px 24px rgba(20, 40, 63, 0.06);
+    font-size: 0.78rem;
+    letter-spacing: 0.01em;
+    text-align: center;
+    transition: transform 160ms ease, border-color 160ms ease, color 160ms ease, background 160ms ease;
+  }
+
+  .mobileQuickNavLink:active {
+    transform: scale(0.98);
+  }
+
+  .mobileQuickNavLinkActive {
+    border-color: rgba(31, 58, 95, 0.16);
+    background: rgba(239, 244, 250, 0.92);
+    color: var(--brand);
+  }
+
   .mainContent {
-    padding: 14px 12px 40px;
+    padding: 12px 12px 40px;
   }
 }
 

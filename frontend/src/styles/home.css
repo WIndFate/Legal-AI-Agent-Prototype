@@ -150,6 +150,10 @@
 }
 
 @media (max-width: 767px) {
+  .page {
+    padding: 4px 0;
+  }
+
   .hero-card {
     padding: 22px 18px 18px;
   }
@@ -178,6 +182,11 @@
     padding: 22px 18px;
   }
 
+  .upload-shell > .btn-primary,
+  .payment-status-card .btn-primary {
+    width: 100%;
+  }
+
   .input-tabs,
   .example-tabs {
     gap: 8px;
@@ -198,6 +207,10 @@
   .pricing-card {
     margin-top: 18px;
     padding: 20px 16px;
+  }
+
+  .pricing-assurance {
+    gap: 10px;
   }
 
   .pricing-card-header {

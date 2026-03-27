@@ -1,6 +1,7 @@
 import { useId } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
 import clsx from 'clsx';
 
 import type { InputMode, UploadResult } from './types';
@@ -88,15 +89,27 @@ export default function HomeUploadSection({
         </div>
       </div>
 
-      <a href="/examples" className={styles.examplesEntryCard}>
-        <span className={styles.examplesEntryIcon} aria-hidden="true" />
-        <div className={styles.examplesEntryCopy}>
-          <span>{t('examples.section_kicker')}</span>
-          <strong>{t('examples.section_title')}</strong>
-          <p>{t('examples.section_desc')}</p>
-        </div>
-        <span className={styles.examplesEntryLink}>{t('nav.examples')}</span>
-      </a>
+      <div className={styles.mobileUtilityGrid}>
+        <Link to="/examples" className={styles.examplesEntryCard}>
+          <span className={styles.examplesEntryIcon} aria-hidden="true" />
+          <div className={styles.examplesEntryCopy}>
+            <span>{t('examples.section_kicker')}</span>
+            <strong>{t('examples.section_title')}</strong>
+            <p>{t('examples.section_desc')}</p>
+          </div>
+          <span className={styles.examplesEntryLink}>{t('nav.examples')}</span>
+        </Link>
+
+        <Link to="/lookup" className={clsx(styles.examplesEntryCard, styles.lookupEntryCard)}>
+          <span className={clsx(styles.examplesEntryIcon, styles.lookupEntryIcon)} aria-hidden="true" />
+          <div className={styles.examplesEntryCopy}>
+            <span>{t('order.lookup_kicker')}</span>
+            <strong>{t('nav.lookup')}</strong>
+            <p>{t('order.lookup_help_body')}</p>
+          </div>
+          <span className={styles.examplesEntryLink}>{t('order.lookup_action')}</span>
+        </Link>
+      </div>
 
       <div className="input-tabs">
         <button
@@ -120,6 +133,7 @@ export default function HomeUploadSection({
             onChange={(e) => setTextInput(e.target.value)}
             placeholder={t('upload.placeholder')}
             rows={12}
+            enterKeyHint="done"
           />
         ) : (
           <div className={styles.fileUpload}>
@@ -234,6 +248,8 @@ export default function HomeUploadSection({
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder={t('payment.email_placeholder')}
+                inputMode="email"
+                autoComplete="email"
               />
             </label>
             <label>
@@ -243,6 +259,9 @@ export default function HomeUploadSection({
                 value={referralCode}
                 onChange={(e) => setReferralCode(e.target.value)}
                 placeholder={t('payment.referral_placeholder')}
+                autoCapitalize="characters"
+                autoCorrect="off"
+                spellCheck={false}
               />
             </label>
             <button

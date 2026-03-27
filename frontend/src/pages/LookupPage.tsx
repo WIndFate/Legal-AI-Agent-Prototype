@@ -113,6 +113,9 @@ export default function LookupPage() {
               value={orderId}
               onChange={(event) => setOrderId(event.target.value)}
               placeholder={t('order.lookup_placeholder')}
+              inputMode="text"
+              enterKeyHint="search"
+              autoComplete="off"
               autoCapitalize="off"
               autoCorrect="off"
               spellCheck={false}
