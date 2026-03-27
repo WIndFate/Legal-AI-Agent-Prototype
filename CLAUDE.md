@@ -79,7 +79,7 @@ Current status as of 2026-03-27:
 - HomePage split into focused section components (Hero, Flow, Upload), with examples moved to a dedicated `/examples` page.
 - RAG embedding batching, database query indexes, and dead code cleanup completed.
 - CSS partially migrated to CSS Modules: layout, home, examples, legal use scoped modules; report/review remain global due to cross-page sharing and responsive dependencies.
-- Frontend UX polish now includes result lookup, order reminder dialogs, custom share sheet, reveal-on-scroll homepage sections, and a curated standalone examples gallery whose report sample layout now mirrors the real report page more closely.
+- Frontend UX polish now includes result lookup, order reminder dialogs, custom share sheet, reveal-on-scroll homepage sections, a curated standalone examples gallery whose report sample layout mirrors the real report page more closely, and a simplified homepage upload flow (`Upload File` / `Paste Text`).
 - Production credentials and live third-party testing still pending.
 
 ---

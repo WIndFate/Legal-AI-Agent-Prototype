@@ -14,6 +14,7 @@ As of 2026-03-27, the local MVP flow is working in Docker:
 - 9-language frontend with professional branding (ContractGuard), privacy/terms pages, and a dedicated examples gallery with report-style samples
 - The standalone `/examples` page now uses a curated chapter-switching layout, and its report sample styling is intentionally closer to the real report page
 - Homepage UX now includes reveal-on-scroll sections, auto-scroll into the payment panel after quote generation, and broader spacing/padding cleanup across upload, payment, review, and report surfaces
+- The homepage upload flow now uses just two entry modes: `Upload File` and `Paste Text`. Image and PDF uploads are accepted through a single file picker with format guidance.
 - A new `/lookup` page lets users reopen payment, analysis, or finished reports by order ID
 - Payment success and analysis completion now show an order reminder dialog so users can screenshot or copy their order ID before moving on
 - Report sharing now uses a custom share sheet with a promotional preview, copy-link, copy-order-ID, and native share fallback instead of relying only on direct Web Share calls
