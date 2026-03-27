@@ -80,6 +80,7 @@ Current status as of 2026-03-27:
 - RAG embedding batching, database query indexes, and dead code cleanup completed.
 - CSS partially migrated to CSS Modules: layout, home, examples, legal use scoped modules; report/review remain global due to cross-page sharing and responsive dependencies.
 - Frontend UX polish now includes result lookup, order reminder dialogs, a custom share sheet with referral-link generation and `?ref=` landing support, reveal-on-scroll homepage sections, a curated standalone examples gallery whose report sample layout mirrors the real report page more closely, mobile-specific compact header and example-switching refinements, and a simplified homepage upload flow (`Upload File` / `Paste Text`).
+- Persistent analysis-task refactor is now in progress: `analysis_jobs` / `analysis_events`, event bus, extracted report persistence helpers, and new analysis start/status/events/stream routes are in code; the frontend still needs to switch to the new snapshot-driven flow.
 - Production credentials and live third-party testing still pending.
 
 ---
