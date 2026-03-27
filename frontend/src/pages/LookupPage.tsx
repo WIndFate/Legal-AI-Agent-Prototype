@@ -12,6 +12,7 @@ export default function LookupPage() {
   const [orderId, setOrderId] = useState('');
   const [statusText, setStatusText] = useState('');
   const [error, setError] = useState('');
+  const [errorKind, setErrorKind] = useState<'validation' | 'not_found' | 'network' | null>(null);
   const [loading, setLoading] = useState(false);
   const [isOffline, setIsOffline] = useState(
     typeof navigator !== 'undefined' ? !navigator.onLine : false
@@ -45,12 +46,14 @@ export default function LookupPage() {
     const trimmed = orderId.trim();
     if (!UUID_PATTERN.test(trimmed)) {
       setError(t('order.lookup_invalid'));
+      setErrorKind('validation');
       setStatusText('');
       return;
     }
 
     setLoading(true);
     setError('');
+    setErrorKind(null);
     setStatusText(t('order.lookup_checking'));
 
     try {
@@ -78,9 +81,11 @@ export default function LookupPage() {
       }
 
       setError(t('order.lookup_not_found'));
+      setErrorKind('not_found');
       setStatusText('');
     } catch {
       setError(t('order.lookup_network'));
+      setErrorKind('network');
       setStatusText('');
     } finally {
       setLoading(false);
@@ -111,7 +116,13 @@ export default function LookupPage() {
             <input
               className="lookup-input"
               value={orderId}
-              onChange={(event) => setOrderId(event.target.value)}
+              onChange={(event) => {
+                setOrderId(event.target.value);
+                if (error) {
+                  setError('');
+                  setErrorKind(null);
+                }
+              }}
               placeholder={t('order.lookup_placeholder')}
               inputMode="text"
               enterKeyHint="search"
@@ -130,16 +141,18 @@ export default function LookupPage() {
         {error && (
           <div className="lookup-feedback-panel">
             <p className="error-message">{error}</p>
-            <div className="lookup-actions">
-              <button
-                type="button"
-                className="btn-primary"
-                onClick={() => void lookupOrder()}
-                disabled={loading || !orderId.trim()}
-              >
-                {t('review.retry')}
-              </button>
-            </div>
+            {errorKind === 'network' && (
+              <div className="lookup-actions">
+                <button
+                  type="button"
+                  className="btn-primary"
+                  onClick={() => void lookupOrder()}
+                  disabled={loading || !orderId.trim()}
+                >
+                  {t('review.retry')}
+                </button>
+              </div>
+            )}
           </div>
         )}
 
