@@ -4,4 +4,5 @@ __pycache__
 chroma_data
 frontend/node_modules
 frontend/dist
+frontend/*.tsbuildinfo
 .git

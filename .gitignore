@@ -7,6 +7,7 @@
 node_modules/
 dist/
 .vite/
+*.tsbuildinfo
 
 # Chroma DB data
 chroma_data/
