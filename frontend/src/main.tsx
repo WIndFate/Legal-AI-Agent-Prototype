@@ -1,6 +1,6 @@
 import { Component, StrictMode, Suspense, lazy, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 
 import './i18n';
 import './styles/base.css';
@@ -40,6 +40,34 @@ function AnalyticsBootstrap() {
   return null;
 }
 
+function HashScrollHandler() {
+  const location = useLocation();
+
+  useEffect(() => {
+    if (!location.hash) return;
+
+    const targetId = location.hash.slice(1);
+    let attempts = 0;
+
+    const scrollToTarget = () => {
+      const target = document.getElementById(targetId);
+      if (target) {
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        return;
+      }
+
+      attempts += 1;
+      if (attempts < 12) {
+        window.setTimeout(scrollToTarget, 80);
+      }
+    };
+
+    window.setTimeout(scrollToTarget, 0);
+  }, [location.hash, location.pathname]);
+
+  return null;
+}
+
 class AppErrorBoundary extends Component<{ children: React.ReactNode }, { hasError: boolean }> {
   constructor(props: { children: React.ReactNode }) {
     super(props);
@@ -63,6 +91,7 @@ function AppRoutes() {
   return (
     <BrowserRouter>
       <AnalyticsBootstrap />
+      <HashScrollHandler />
       <Layout>
         <Suspense fallback={<RouteFallback />}>
           <Routes>
