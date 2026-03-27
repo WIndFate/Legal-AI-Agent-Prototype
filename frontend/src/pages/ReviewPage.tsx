@@ -457,7 +457,7 @@ export default function ReviewPage() {
               </div>
               <div className="review-assurance-card">
                 <span>{t('report.referenced_law')}</span>
-                <strong>JP</strong>
+                <strong>{t('report.japanese_original')}</strong>
               </div>
               <div className="review-assurance-card">
                 <span>{t('payment.title')}</span>

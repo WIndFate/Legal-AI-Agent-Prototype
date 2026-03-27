@@ -83,7 +83,7 @@ export default function HomeUploadSection({
         </div>
         <div className="intake-trust-card">
           <span>{t('report.referenced_law')}</span>
-          <strong>JP</strong>
+          <strong>{t('report.japanese_original')}</strong>
           <p>{t('report.comparison_hint')}</p>
         </div>
       </div>

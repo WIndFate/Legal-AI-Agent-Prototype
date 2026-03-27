@@ -132,6 +132,7 @@
     "low_risk": "低风险",
     "suggestion": "修改建议",
     "referenced_law": "参考法条",
+    "japanese_original": "日文原文",
     "expires_in": "本报告将在{{hours}}小时后自动删除",
     "share": "分享",
     "share_text": "我用ContractGuard分析了合同风险",

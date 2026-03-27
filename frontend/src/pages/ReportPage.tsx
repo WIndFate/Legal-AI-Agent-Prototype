@@ -331,7 +331,7 @@ export default function ReportPage() {
               </div>
               <div className="clause-meta-item">
                 <span>{t('report.referenced_law')}</span>
-                <strong>JP</strong>
+                <strong>{t('report.japanese_original')}</strong>
               </div>
             </div>
             <div className="clause-toolbar">

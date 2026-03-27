@@ -132,6 +132,7 @@
     "low_risk": "低リスク",
     "suggestion": "改善提案",
     "referenced_law": "参照法令",
+    "japanese_original": "日本語原文",
     "expires_in": "このレポートは{{hours}}時間後に自動削除されます",
     "share": "共有",
     "share_text": "ContractGuardで契約書のリスク分析を行いました",

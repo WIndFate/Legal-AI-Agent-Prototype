@@ -132,6 +132,7 @@
     "low_risk": "Low Risk",
     "suggestion": "Suggestion",
     "referenced_law": "Referenced Law",
+    "japanese_original": "Japanese original",
     "expires_in": "This report will be automatically deleted in {{hours}} hours",
     "share": "Share",
     "share_text": "I analyzed my contract with ContractGuard",

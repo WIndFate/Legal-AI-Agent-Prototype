@@ -33,7 +33,7 @@ export default function HomeHeroSection({ preview }: HomeHeroSectionProps) {
           </div>
           <div className="hero-metric">
             <span>{t('report.referenced_law')}</span>
-            <strong>JP</strong>
+            <strong>{t('report.japanese_original')}</strong>
           </div>
         </div>
       </div>

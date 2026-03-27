@@ -86,7 +86,7 @@ export default function HomeExamplesSection({ standalone = false }: HomeExamples
                 </div>
                 <div className={styles.metaPill}>
                   <span>{t('report.referenced_law')}</span>
-                  <strong>JP</strong>
+                  <strong>{t('report.japanese_original')}</strong>
                 </div>
                 <div className={styles.metaPill}>
                   <span>{t('payment.title')}</span>
@@ -112,7 +112,7 @@ export default function HomeExamplesSection({ standalone = false }: HomeExamples
                 </div>
                 <div className={clsx('example-meta-item', styles.metaCard)}>
                   <span>{t('report.referenced_law')}</span>
-                  <strong>JP</strong>
+                  <strong>{t('report.japanese_original')}</strong>
                 </div>
               </div>
             </div>
@@ -146,7 +146,7 @@ export default function HomeExamplesSection({ standalone = false }: HomeExamples
                     </div>
                     <div className={styles.clauseMetaCard}>
                       <span>{t('report.referenced_law')}</span>
-                      <strong>JP</strong>
+                      <strong>{t('report.japanese_original')}</strong>
                     </div>
                   </div>
                   <div className={styles.originalText}>{clause.original_text}</div>
@@ -204,7 +204,7 @@ export default function HomeExamplesSection({ standalone = false }: HomeExamples
                 </div>
                 <div className="example-meta-item">
                   <span>{t('report.referenced_law')}</span>
-                  <strong>JP</strong>
+                  <strong>{t('report.japanese_original')}</strong>
                 </div>
               </div>
             </div>
