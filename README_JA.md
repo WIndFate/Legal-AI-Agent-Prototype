@@ -13,7 +13,7 @@
 - `pgvector` RAG は PostgreSQL 上で稼働し、10 法令カテゴリ・331 件超の法条（賃貸借・労働・パート・業務委託・売買等）を収録
 - フロントエンドの 9 言語 UI は実装済み。ブランド（ContractGuard）、プライバシーポリシー/利用規約ページ、独立した事例ギャラリーとレポート見本表示を含みます
 - 独立 `/examples` ページは横方向のキュレーション型シナリオ切り替えに刷新され、レポート見本の版面も実際のレポートページにより近づけています
-- モバイル UI は、よりコンパクトなヘッダー、バッジ型の言語切替、即時表示の reveal、ケース切替後にレポートへ自動スクロールする挙動に最適化されました
+- モバイル UI は、よりコンパクトなヘッダー、バッジ型の言語切替、即時表示の reveal、ケース切替後にレポートへ自動スクロールする挙動に加え、header 直下のクイック導線、左右余白の最適化、横スクロール防止、iPhone 入力ズーム抑止まで整えました
 - ホームページのアップロード導線は `ファイルをアップロード / テキストを貼り付け` の 2 モードに整理され、画像と PDF は 1 つのファイルピッカーで受け付けるようになりました
 - review ページは現在「処理中」の体験に専念し、分析完了後は保存済みの `/report/{orderId}` へ直接遷移して結果画面を二重表示しません
 - report ページは高/中/低リスクで条項を絞り込めるようになり、デスクトップでは統計サマリーも 1 行でより密に表示されます
@@ -23,6 +23,8 @@
 - デプロイ設定済み: `fly.toml`（NRT リージョン、HTTPS 強制）+ `vercel.json`（API プロキシ + セキュリティヘッダー）
 - 統合テストスイート: 7 つのルーターテストファイルで、現行ランタイムの全 API エンドポイントをカバー
 - 分析ページは持続化された分析タスク上に再構築され、バックエンドが `analysis_jobs` / `analysis_events` を保持し、フロントエンドは履歴イベント復元後に新しい更新を購読します
+- `docker compose` には postgres・redis・backend API の healthcheck が入り、ローカル起動時に frontend が準備前の backend へ先に当たりにくくなりました
+- report / payment / lookup には軽量リトライラッパーを入れ、Docker 起動直後や一時的な弱回線時の取得失敗を吸収します
 - ホームページを独立コンポーネントに分割（Hero / Flow / Upload）し、事例紹介は独立 `/examples` ギャラリーページへ移動
 - RAG embedding バッチ化により API 呼び出し回数を削減
 - 不要コードのクリーンアップ完了（未使用の `analyze_risks_streaming` を削除）
@@ -92,6 +94,7 @@ Docker メモ:
 - 起動中サービスの中でコマンドを実行する場合は、`docker compose run` ではなく `docker compose exec` を優先してください。
 - `docker compose run` は一時的な `*-run-*` コンテナを残し、`docker compose down` 時に network 解放を妨げることがあります。
 - ローカル OCR 依存は Docker build 時に `INSTALL_LOCAL_OCR=true` を明示した場合のみ入ります。デフォルトの backend イメージでは重い依存を自動では入れません。
+- Compose の起動順も healthcheck ベースに変更され、`backend` は healthy な `postgres` / `redis` を待ち、`frontend` は healthy な `backend` を待つ構成です。
 
 エンドポイント:
 
@@ -128,6 +131,8 @@ docker compose up -d backend postgres redis
 15. レポート内の参照法令 (`referenced_law`) はユーザーの選択言語にかかわらず、常に日本語原文のまま表示されます。
 16. 保存済みレポートページは、より正式な審査レポートらしい版面に寄せており、ブラウザ印刷 / PDF 保存を考慮したスタイルも入っています。
 17. ホームページの「ホーム / サンプル」導線は明示的なアンカー位置へスクロールするようになり、hero の価格文言も固定の見かけ上限を表示しない形に調整されています。
+18. プライバシーポリシーや利用規約など別ページへ移動した場合は、自動でページ先頭へ戻るようになりました。
+19. report ページ上部の4つの集計カードはそのまま主要フィルターとして機能し、PC / モバイルともに2桁件数でも崩れにくい密度に調整されています。
 
 ## 実装上の重要点
 
@@ -149,7 +154,9 @@ docker compose up -d backend postgres redis
 - 本番環境で KOMOJU / Resend の必須設定が不足している場合、または `FRONTEND_URL` が `localhost` のままの場合は起動時に失敗します。
 - 支払い、審査、メール、レポート取得の主要経路では、構造化アプリケーションログと PostHog イベントを出力し、外部連携時の切り分けをしやすくしています。
 - フロントエンドはルート単位で lazy load され、分析系 SDK も非同期初期化されるため、observability 依存が初期 main chunk を膨らませません。
-- フロントエンドには `RevealSection`、`OrderReminderDialog`、`ShareSheet` の共通 UX コンポーネントが追加され、スクロール演出、注文番号保存の促し、専用共有パネルを実装しています。共有パネルでは専用の紹介リンク生成・コピー・端末共有まで扱えます。
+- hash を伴わない画面遷移ではフロントエンドが自動で先頭へスクロールし、前ページのスクロール位置を引き継がないようにしています。
+- フロントエンドには `RevealSection`、`OrderReminderDialog`、`ShareSheet` の共通 UX コンポーネントが追加され、スクロール演出、注文番号保存の促し、専用共有パネルを実装しています。共有パネルは内部で紹介コード付き URL を組み立てつつ、表向きはリンクコピーと端末共有だけを見せる最小構成です。
+- `frontend/src/lib/fetchWithRetry.ts` で、重要ページの API 取得に対するタイムアウト付き軽量リトライを共通化しています。
 - `/api/report/{order_id}` は Redis キャッシュ命中時と PostgreSQL fallback 時で同じ payload 形を返すように統一されています。
 - `analyze_clause_risk` ツールが内部で直接 RAG 検索を行うため、独立した retrieval node はありません。
 - `scripts/smoke_local_flow.sh` は現在の持続化分析フローに合わせて更新済みで、`health -> upload -> payment -> analysis/start -> orders/{id}/stream -> report -> contract deletion` を通しで確認します。
@@ -163,7 +170,7 @@ docker compose up -d backend postgres redis
 - 見積もり生成後、ホームページは自動で支払いパネルまでスクロールし、短時間ハイライトして次の導線を見失いにくくしています。
 - `/lookup` 結果照会ページが追加され、注文番号から支払い状態ページ・分析中ページ・完成レポートを再オープンできます。
 - 支払い完了時と分析完了時には、注文番号をスクリーンショット保存またはコピーするよう促すダイアログを表示します。
-- レポート共有は直接 Web Share API を呼ぶのではなく、宣伝用プレビュー、レポートリンクコピー、紹介リンク生成、注文番号コピー、端末共有への導線を持つ専用共有パネルを先に開きます。
+- レポート共有は直接 Web Share API を呼ぶのではなく、紹介コード付きレポート URL を内部で生成したうえで、リンクコピーと端末共有だけを見せる専用共有パネルを先に開きます。
 - 紹介リンクは `?ref=` 付きでホームに戻り、次のユーザーの支払いフォームへ紹介コードを自動入力します。
 - 結果照会ページとレポートページは、注文番号形式エラー、弱い回線、オフライン、再試行可能な失敗状態をより明確に表示します。
 - 分析フローは、単一の SSE POST リクエストで実行を開始するのではなく、状態スナップショット、再生可能な履歴イベント、増分イベントストリームで駆動されます。
@@ -181,6 +188,7 @@ docker compose up -d backend postgres redis
 - [`scripts/check_rag_eval.sh`](./scripts/check_rag_eval.sh): ローカル RAG 回帰チェック
 - [`scripts/run_backend_pytests.sh`](./scripts/run_backend_pytests.sh): Docker ベースの backend pytest 実行スクリプト
 - [`frontend/src/main.tsx`](./frontend/src/main.tsx): ルーター、i18n、遅延読み込み、分析初期化
+- [`frontend/src/lib/fetchWithRetry.ts`](./frontend/src/lib/fetchWithRetry.ts): 主要 API 取得向けのタイムアウト + リトライラッパー
 - [`frontend/src/components/home/HomeHeroSection.tsx`](./frontend/src/components/home/HomeHeroSection.tsx): ホームページ hero セクション
 - [`frontend/src/components/home/HomeFlowSection.tsx`](./frontend/src/components/home/HomeFlowSection.tsx): ホームページフローステップ
 - [`frontend/src/components/home/HomeExamplesSection.tsx`](./frontend/src/components/home/HomeExamplesSection.tsx): ホームページサンプル展示

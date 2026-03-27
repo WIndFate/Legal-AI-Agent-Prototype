@@ -13,7 +13,7 @@ As of 2026-03-28, the local MVP flow is working in Docker:
 - `pgvector` RAG is running in PostgreSQL with 331+ law articles across 10 legal categories (rental, labor, part-time, business outsourcing, sales, etc.)
 - 9-language frontend with professional branding (ContractGuard), privacy/terms pages, and a dedicated examples gallery with report-style samples
 - The standalone `/examples` page now uses a curated chapter-switching layout, and its report sample styling is intentionally closer to the real report page
-- Mobile UI now uses a more compact header, a badge-style language switcher, immediate reveal rendering, and example switching that scrolls the refreshed report into view
+- Mobile UI now uses a more compact header, a badge-style language switcher, immediate reveal rendering, example switching that scrolls the refreshed report into view, and a quick-task row that sits directly under the header with corrected safe-area padding
 - Homepage UX now includes reveal-on-scroll sections, auto-scroll into the payment panel after quote generation, and broader spacing/padding cleanup across upload, payment, review, and report surfaces
 - The homepage upload flow now uses just two entry modes: `Upload File` and `Paste Text`. Image and PDF uploads are accepted through a single file picker with format guidance.
 - A new `/lookup` page lets users reopen payment, analysis, or finished reports by order ID
@@ -23,11 +23,14 @@ As of 2026-03-28, the local MVP flow is working in Docker:
 - Report sharing now uses a minimal custom share sheet that generates a referral-tagged report link behind the scenes, then offers copy-link and optional native share actions
 - Referral links now return to the homepage with `?ref=` so the referral code is carried into the payment form automatically
 - Lookup and report pages now distinguish invalid order IDs, unstable networks, offline states, and retryable loading failures more clearly
+- Mobile lookup input no longer triggers iOS auto-zoom, legal-page route changes now reset back to the top, and horizontal overflow that exposed the page background on small screens has been removed
 - Route-level lazy loading and deferred analytics bootstrap now reduce the initial frontend bundle
 - Dev-mode payment works only when `APP_ENV=development` and `KOMOJU_SECRET_KEY` is absent
 - Deployment configs ready: `fly.toml` (NRT region, force HTTPS) and `vercel.json` (API proxy, security headers)
 - Integration test suite: 7 router test files covering all API endpoints in the current runtime flow
 - Persistent analysis tasks now back the review flow, with status snapshots plus replayable event history before subscribing to incremental updates
+- `docker compose` now includes health checks for PostgreSQL, Redis, and the backend API so the frontend does not race a half-started backend during local boot
+- Report, payment, and lookup pages now use a lightweight timeout-aware retry wrapper for brief startup-time proxy failures and weak-network fetch errors
 - Homepage split into focused section components (Hero, Flow, Upload), and examples moved into a dedicated `/examples` gallery page
 - RAG embedding batching for reduced API calls
 - Dead code cleanup completed (removed unused `analyze_risks_streaming`)
@@ -97,6 +100,7 @@ Docker note:
 - Prefer `docker compose exec` over `docker compose run` for local commands inside running services.
 - `docker compose run` can leave temporary `*-run-*` containers behind and block `docker compose down`.
 - Local OCR dependencies are gated behind `INSTALL_LOCAL_OCR=true` at Docker build time; the default backend image keeps them off for a lighter, safer baseline build.
+- Compose startup now relies on service health checks: `backend` waits for healthy `postgres` and `redis`, and `frontend` waits for a healthy `backend`.
 
 Endpoints:
 
@@ -135,9 +139,10 @@ docker compose up -d backend postgres redis
 16. After a quote is generated, the homepage automatically scrolls to the payment panel and highlights the next-step area so users do not miss that the flow has advanced.
 17. Payment success and review completion now open a reminder dialog that emphasizes saving the order ID for later lookup.
 18. A dedicated `/lookup` page can reopen pending-payment, in-progress review, or finished report states from the same order ID.
-20. The report page now opens a compact custom share sheet first, silently appends the personal referral code to the report URL, and exposes only copy-link plus optional native-share actions.
-21. Referral links now return to the homepage with `?ref=` so the referral code is prefilled for the next user.
-22. Lookup and report pages now surface clearer weak-network states, retry actions, offline banners, timeout-aware loading feedback, and a dedicated expired-report fallback back to home.
+19. The report page now opens a compact custom share sheet first, silently appends the personal referral code to the report URL, and exposes only copy-link plus optional native-share actions.
+20. Referral links now return to the homepage with `?ref=` so the referral code is prefilled for the next user.
+21. Lookup and report pages now surface clearer weak-network states, retry actions, offline banners, timeout-aware loading feedback, and a dedicated expired-report fallback back to home.
+22. Report summary cards stay clickable as the primary risk filters on both desktop and mobile, with denser sizing tuned to remain stable even when counts reach two digits.
 
 ## Important Implementation Notes
 
@@ -159,7 +164,9 @@ docker compose up -d backend postgres redis
 - Production startup now fails fast if KOMOJU/Resend credentials are missing or `FRONTEND_URL` still points to `localhost`.
 - Payment, review, email, and report retrieval paths now emit structured application logs and PostHog events for easier integration debugging.
 - Frontend route pages are lazy-loaded, and analytics libraries are bootstrapped asynchronously so they do not bloat the initial application chunk.
+- Route changes without a hash anchor now reset scroll to the top so privacy/terms and other page-to-page navigation do not preserve the previous scroll position.
 - Frontend UX now includes reusable `RevealSection`, `OrderReminderDialog`, and `ShareSheet` components for scroll reveal, order-saving prompts, and custom sharing.
+- `frontend/src/lib/fetchWithRetry.ts` now centralizes timeout-aware retries for startup-time proxy failures on key frontend fetch paths.
 - `/api/report/{order_id}` now returns the same payload shape for both Redis cache hits and PostgreSQL fallback reads.
 - `analyze_clause_risk` performs RAG lookup internally; there is no separate retrieval node.
 - `scripts/smoke_local_flow.sh` now exercises the persistent-analysis flow end to end: health -> upload -> payment -> analysis/start -> orders/{id}/stream -> report -> contract deletion.
@@ -185,6 +192,7 @@ docker compose up -d backend postgres redis
 - [`scripts/check_rag_eval.sh`](./scripts/check_rag_eval.sh): local RAG metric regression check
 - [`scripts/run_backend_pytests.sh`](./scripts/run_backend_pytests.sh): Docker-based backend pytest runner
 - [`frontend/src/main.tsx`](./frontend/src/main.tsx): router entry, i18n, lazy route loading, deferred analytics bootstrap
+- [`frontend/src/lib/fetchWithRetry.ts`](./frontend/src/lib/fetchWithRetry.ts): timeout + retry wrapper for key frontend API requests
 - [`frontend/src/components/home/HomeHeroSection.tsx`](./frontend/src/components/home/HomeHeroSection.tsx): homepage hero section component
 - [`frontend/src/components/home/HomeFlowSection.tsx`](./frontend/src/components/home/HomeFlowSection.tsx): homepage flow steps component
 - [`frontend/src/components/home/HomeExamplesSection.tsx`](./frontend/src/components/home/HomeExamplesSection.tsx): homepage example showcase component

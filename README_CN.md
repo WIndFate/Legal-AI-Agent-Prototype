@@ -13,7 +13,7 @@
 - `pgvector` RAG 已运行在 PostgreSQL 中，覆盖 10 个法律类别共 331+ 条法律条文（租赁、劳动、兼职、业务委托、买卖等）
 - 前端 9 语言界面已实现，包含品牌标识（ContractGuard）、隐私政策/服务条款页面、独立案例画廊与报告样张展示
 - 独立 `/examples` 案例页已升级为横向策展式章节切换，报告样张的版式也进一步贴近真实报告页
-- 移动端 UI 现已采用更紧凑的顶部结构、徽章式语言切换、直接显示的 reveal 内容，以及点击案例后自动把新报告滚动到可视区
+- 移动端 UI 现已采用更紧凑的顶部结构、徽章式语言切换、直接显示的 reveal 内容，以及点击案例后自动把新报告滚动到可视区；最新一轮还补齐了 header 下方快捷导航、安全边距、防横向溢出和输入框不再触发 iOS 自动放大
 - 首页上传入口现已简化为“上传文件 / 粘贴文本”两种模式，图片与 PDF 统一通过一个文件选择器接入，并明确提示支持格式
 - 审查页现在只承担“处理中”体验；分析结束后会直接跳转到已保存的 `/report/{orderId}` 报告页，不再重复显示一套结果页
 - 报告页已支持按高/中/低风险筛选条款，顶部统计在桌面端压缩为更紧凑的单排结构，条款卡留白也进一步收紧
@@ -23,6 +23,8 @@
 - 部署配置已就绪：`fly.toml`（NRT 东京区域，强制 HTTPS）+ `vercel.json`（API 代理 + 安全头）
 - 集成测试套件：7 个路由测试文件，覆盖当前运行态的全部 API 端点
 - 分析页现已建立在持久化分析任务之上：后端保存 `analysis_jobs` / `analysis_events`，前端会先恢复历史进度，再订阅新的事件更新
+- `docker compose` 现已补充 postgres、redis、backend 的健康检查，本地启动时 frontend 会等待真正 healthy 的 backend，避免代理抢跑
+- report / payment / lookup 已接入轻量重试封装，用于本地 Docker 冷启动窗口和弱网下的短暂请求失败
 - 首页已拆分为独立子组件（Hero、Flow、Upload），案例展示已迁移到独立 `/examples` 画廊页
 - RAG embedding 批量化，减少 API 调用次数
 - 死代码已清理（移除未使用的 `analyze_risks_streaming`）
@@ -92,6 +94,7 @@ Docker 说明：
 - 本地进入已启动服务时优先使用 `docker compose exec`，不要默认使用 `docker compose run`。
 - `docker compose run` 容易留下 `*-run-*` 临时容器，导致 `docker compose down` 时 network 无法释放。
 - 本地 OCR 依赖通过 `INSTALL_LOCAL_OCR=true` 的 Docker build 参数显式开启；默认后端镜像不会自动安装这些较重依赖。
+- Compose 现已基于健康检查编排启动顺序：`backend` 等待健康的 `postgres` / `redis`，`frontend` 等待健康的 `backend`。
 
 访问地址：
 
@@ -128,6 +131,8 @@ docker compose up -d backend postgres redis
 15. 报告中的参考法条 (`referenced_law`) 始终保持日语原文，不随用户选择的语言翻译。
 16. 保存后的报告页已进一步做成更像正式审阅文档的版式，并补充了浏览器打印 / 另存为 PDF 友好的样式规则。
 17. 首页中的“首页 / 案例展示”现在都会滚动到明确锚点位置，首屏价格文案也不再硬编码展示可见最高价。
+18. 路由切换到隐私政策或服务条款等页面时，会自动回到页面顶部，而不是保留上一页的滚动位置。
+19. 报告页顶部四个统计卡仍然是主要筛选器，PC 和移动端都保持可点击，并针对两位数计数做了更稳定的紧凑布局。
 
 ## 关键实现说明
 
@@ -149,7 +154,9 @@ docker compose up -d backend postgres redis
 - 生产环境如果缺少 KOMOJU / Resend 关键配置，或 `FRONTEND_URL` 仍指向 `localhost`，启动会直接失败。
 - 支付、审查、邮件、报告读取路径现在会输出结构化应用日志，并补充 PostHog 埋点，便于联调定位问题。
 - 前端页面采用路由懒加载，分析相关 SDK 改为异步初始化，避免把 observability 依赖塞进首屏主 chunk。
+- 前端无 hash 的页面跳转现在会自动滚动到顶部，避免法律页等跨页阅读从旧滚动位置开始。
 - 前端现在新增了 `RevealSection`、`OrderReminderDialog`、`ShareSheet` 三类通用 UX 组件，分别用于滚动显现、订单号提醒弹层和自定义分享面板；其中分享面板已补齐专属推荐链接生成、复制与原生分享。
+- `frontend/src/lib/fetchWithRetry.ts` 统一封装了关键页面的超时与轻量重试逻辑，用于后端刚 ready 的瞬间和短时弱网抖动。
 - `/api/report/{order_id}` 在 Redis 命中和 PostgreSQL fallback 两种情况下，现在都会返回一致的 payload 结构。
 - `analyze_clause_risk` 工具内部直接做 RAG 检索，没有单独的 retrieval node。
 - `scripts/smoke_local_flow.sh` 现已切到新的持久化分析链路，会按 `health -> upload -> payment -> analysis/start -> orders/{id}/stream -> report -> contract deletion` 做完整本地回归。
@@ -163,7 +170,7 @@ docker compose up -d backend postgres redis
 - 首页在生成报价后会自动滚动到支付区域，并对支付卡片做短暂高亮，避免用户点击“开始分析”后误以为页面没有反应。
 - 现在新增 `/lookup` 结果查询页，用户输入订单号即可重新进入付款状态页、分析页或最终报告页。
 - 支付成功和分析完成后，前端会弹出订单提醒框，引导用户截图或复制订单号。
-- 报告页分享按钮现在先打开自定义分享面板，支持宣传型预览、复制报告链接、生成并分享专属推荐链接、复制订单号，以及设备支持时的原生分享入口。
+- 报告页分享按钮现在先打开极简自定义分享面板：内部自动生成带推荐码的报告链接，对外只暴露复制链接和设备原生分享。
 - 推荐链接现在会以 `?ref=` 的形式回到首页，并自动带入支付表单中的推荐码。
 - 查询页和报告页现在会更明确地区分订单号格式错误、弱网、离线和可重试失败状态。
 - 分析流程现在通过统一状态快照接口、可回放历史事件和增量事件流驱动，而不再由单个 SSE POST 请求直接启动执行。
@@ -181,6 +188,7 @@ docker compose up -d backend postgres redis
 - [`scripts/check_rag_eval.sh`](./scripts/check_rag_eval.sh)：本地 RAG 指标回归检查
 - [`scripts/run_backend_pytests.sh`](./scripts/run_backend_pytests.sh)：Docker 内 backend pytest 运行脚本
 - [`frontend/src/main.tsx`](./frontend/src/main.tsx)：前端路由、i18n、懒加载与延迟分析初始化
+- [`frontend/src/lib/fetchWithRetry.ts`](./frontend/src/lib/fetchWithRetry.ts)：关键前端 API 请求的超时与重试封装
 - [`frontend/src/components/home/HomeHeroSection.tsx`](./frontend/src/components/home/HomeHeroSection.tsx)：首页 hero 区域组件
 - [`frontend/src/components/home/HomeFlowSection.tsx`](./frontend/src/components/home/HomeFlowSection.tsx)：首页流程步骤组件
 - [`frontend/src/components/home/HomeExamplesSection.tsx`](./frontend/src/components/home/HomeExamplesSection.tsx)：首页案例展示组件
