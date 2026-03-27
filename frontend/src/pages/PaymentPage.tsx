@@ -3,6 +3,7 @@ import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 
 import OrderReminderDialog from '../components/common/OrderReminderDialog';
+import { fetchWithRetry } from '../lib/fetchWithRetry';
 
 type PaymentStatus = 'checking' | 'success' | 'failed' | 'pending';
 
@@ -21,7 +22,11 @@ export default function PaymentPage() {
 
     const checkStatus = async () => {
       try {
-        const statusRes = await fetch(`/api/orders/${orderId}/status`);
+        const statusRes = await fetchWithRetry(`/api/orders/${orderId}/status`, undefined, {
+          timeoutMs: 10_000,
+          retries: 2,
+          retryDelayMs: 700,
+        });
         if (!statusRes.ok) {
           if (statusRes.status === 404) {
             setStatus('failed');

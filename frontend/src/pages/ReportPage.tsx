@@ -3,6 +3,7 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 
 import ShareSheet from '../components/common/ShareSheet';
+import { fetchWithRetry } from '../lib/fetchWithRetry';
 interface ClauseAnalysis {
   clause_number: string;
   risk_level: string;
@@ -102,15 +103,16 @@ export default function ReportPage() {
 
   useEffect(() => {
     const fetchReport = async () => {
-      const controller = new AbortController();
-      const timer = window.setTimeout(() => controller.abort(), REPORT_TIMEOUT_MS);
-
       try {
         setLoading(true);
         setError('');
         setExpired(false);
 
-        const res = await fetch(`/api/report/${orderId}`, { signal: controller.signal });
+        const res = await fetchWithRetry(`/api/report/${orderId}`, undefined, {
+          timeoutMs: REPORT_TIMEOUT_MS,
+          retries: 2,
+          retryDelayMs: 700,
+        });
         if (res.status === 404) {
           setExpired(true);
           setError(i18n.t('errors.report_expired'));
@@ -145,7 +147,6 @@ export default function ReportPage() {
       } catch {
         setError(i18n.t('report.network_error'));
       } finally {
-        window.clearTimeout(timer);
         setLoading(false);
       }
     };
@@ -335,7 +336,11 @@ export default function ReportPage() {
         }}
       >
         <div className="report-filter-hint">
-          <span className="report-filter-hint-icon" aria-hidden="true">+</span>
+          <span className="report-filter-hint-icon" aria-hidden="true">
+            <svg viewBox="0 0 20 20" focusable="false">
+              <path d="M3 5.5h14M6.5 10h7M9 14.5h2" />
+            </svg>
+          </span>
           <p>{t('report.filter_hint')}</p>
         </div>
         <div className="summary-metrics report-summary-metrics report-summary-metrics-interactive">

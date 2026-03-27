@@ -107,12 +107,16 @@ export default function ShareSheet({ open, onClose, shareUrl, orderId }: ShareSh
         aria-labelledby="share-dialog-title"
         onClick={(event) => event.stopPropagation()}
       >
-        <button type="button" className="dialog-close-btn" onClick={onClose} aria-label={t('share.close')}>
-          ×
-        </button>
-        <h2 id="share-dialog-title" className="dialog-title share-dialog-title-compact">
-          {t('report.share')}
-        </h2>
+        <div className="share-dialog-header">
+          <h2 id="share-dialog-title" className="dialog-title share-dialog-title-compact">
+            {t('report.share')}
+          </h2>
+          <button type="button" className="dialog-close-btn" onClick={onClose} aria-label={t('share.close')}>
+            <svg viewBox="0 0 20 20" focusable="false">
+              <path d="M5 5l10 10M15 5L5 15" />
+            </svg>
+          </button>
+        </div>
 
         <div className="share-inline-row">
           <div className="share-url-block share-url-block-compact">
@@ -127,7 +131,19 @@ export default function ShareSheet({ open, onClose, shareUrl, orderId }: ShareSh
               aria-label={copiedLink ? t('share.link_copied') : t('share.copy_link')}
               title={copiedLink ? t('share.link_copied') : t('share.copy_link')}
             >
-              {copiedLink ? 'OK' : 'CP'}
+              <span className="share-icon-btn-glyph" aria-hidden="true">
+                {copiedLink ? (
+                  <svg viewBox="0 0 20 20" focusable="false">
+                    <path d="M4 10l4 4 8-8" />
+                  </svg>
+                ) : (
+                  <svg viewBox="0 0 20 20" focusable="false">
+                    <rect x="7" y="5" width="9" height="11" rx="2" />
+                    <rect x="4" y="2" width="9" height="11" rx="2" />
+                  </svg>
+                )}
+              </span>
+              <span>{copiedLink ? t('share.link_copied') : t('share.copy_link')}</span>
             </button>
             {supportsNativeShare && (
               <button
@@ -137,15 +153,17 @@ export default function ShareSheet({ open, onClose, shareUrl, orderId }: ShareSh
                 aria-label={t('share.native_share')}
                 title={t('share.native_share')}
               >
-                SH
+                <span className="share-icon-btn-glyph" aria-hidden="true">
+                  <svg viewBox="0 0 20 20" focusable="false">
+                    <path d="M10 4v8M7 7l3-3 3 3" />
+                    <path d="M5 12v2a2 2 0 002 2h6a2 2 0 002-2v-2" />
+                  </svg>
+                </span>
+                <span>{t('share.native_share')}</span>
               </button>
             )}
           </div>
         </div>
-
-        <button type="button" className="dialog-link-btn" onClick={onClose}>
-          {t('share.close')}
-        </button>
       </div>
     </div>
   );

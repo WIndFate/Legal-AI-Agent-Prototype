@@ -68,6 +68,17 @@ function HashScrollHandler() {
   return null;
 }
 
+function RouteScrollReset() {
+  const location = useLocation();
+
+  useEffect(() => {
+    if (location.hash) return;
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+  }, [location.pathname, location.search, location.hash]);
+
+  return null;
+}
+
 class AppErrorBoundary extends Component<{ children: React.ReactNode }, { hasError: boolean }> {
   constructor(props: { children: React.ReactNode }) {
     super(props);
@@ -91,6 +102,7 @@ function AppRoutes() {
   return (
     <BrowserRouter>
       <AnalyticsBootstrap />
+      <RouteScrollReset />
       <HashScrollHandler />
       <Layout>
         <Suspense fallback={<RouteFallback />}>

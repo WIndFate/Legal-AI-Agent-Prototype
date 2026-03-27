@@ -85,9 +85,16 @@
   border-radius: 50%;
   background: rgba(31, 58, 95, 0.1);
   color: var(--brand);
-  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
-  font-size: 0.82rem;
-  font-weight: 700;
+  flex: 0 0 auto;
+}
+
+.report-filter-hint-icon svg {
+  width: 12px;
+  height: 12px;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  fill: none;
 }
 
 .report-filter-hint p {
@@ -112,6 +119,12 @@
   appearance: none;
   text-align: left;
   cursor: pointer;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  min-height: 74px;
+  padding: 14px 16px;
   transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
 }
 
@@ -140,6 +153,30 @@
 .report-summary-metric-btn-low.report-summary-metric-btn-active {
   background: rgba(232, 248, 239, 0.98);
   border-color: rgba(22, 163, 74, 0.28);
+}
+
+.report-summary-metric-btn span,
+.report-summary-metric-btn strong {
+  margin: 0;
+}
+
+.report-summary-metric-btn span {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 0.94rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  text-transform: none;
+  line-height: 1.25;
+}
+
+.report-summary-metric-btn strong {
+  flex: 0 0 auto;
+  min-width: 2ch;
+  font-size: 1.48rem;
+  line-height: 1;
+  text-align: right;
+  white-space: nowrap;
 }
 
 .clause-list {
@@ -409,6 +446,29 @@
 
   .report-page .summary-metrics {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .report-summary-metrics,
+  .report-page .summary-metrics {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .report-summary-metric-btn {
+    min-height: 50px;
+    padding: 8px 10px;
+    gap: 6px;
+    border-radius: 14px;
+  }
+
+  .report-summary-metric-btn span {
+    font-size: 0.76rem;
+    letter-spacing: 0;
+  }
+
+  .report-summary-metric-btn strong {
+    min-width: 2.2ch;
+    font-size: 1rem;
   }
 
   .clause-list {

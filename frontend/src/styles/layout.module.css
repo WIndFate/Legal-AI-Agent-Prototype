@@ -230,7 +230,7 @@
 
 @media (max-width: 767px) {
   .header {
-    padding: 10px 12px;
+    padding: 10px 16px;
   }
 
   .headerNav {
@@ -241,6 +241,7 @@
     align-items: center;
     flex-wrap: nowrap;
     gap: 12px;
+    padding: 0 2px;
   }
 
   .brand {
@@ -289,8 +290,9 @@
   }
 
   .disclaimerBanner {
-    padding: 9px 12px;
+    padding: 8px 16px 10px;
     font-size: 0.72rem;
+    text-align: left;
   }
 
   .mobileQuickNav {
@@ -298,15 +300,17 @@
     position: sticky;
     top: calc(56px + env(safe-area-inset-top, 0px));
     z-index: 95;
-    padding: 8px 12px 2px;
+    padding: 8px 16px 0;
     background: linear-gradient(180deg, rgba(248, 244, 237, 0.92) 0%, rgba(248, 244, 237, 0.78) 100%);
     backdrop-filter: blur(16px);
+    border-bottom: 1px solid rgba(31, 58, 95, 0.06);
   }
 
   .mobileQuickNavInner {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 8px;
+    padding-bottom: 8px;
   }
 
   .mobileQuickNavLink {
@@ -353,7 +357,8 @@
 @media print {
   .header,
   .footer,
-  .disclaimerBanner {
+  .disclaimerBanner,
+  .mobileQuickNav {
     display: none !important;
   }
 

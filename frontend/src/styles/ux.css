@@ -171,20 +171,6 @@
   cursor: pointer;
 }
 
-.dialog-close-btn {
-  position: absolute;
-  top: 14px;
-  right: 14px;
-  width: 38px;
-  height: 38px;
-  border: none;
-  border-radius: 50%;
-  background: rgba(31, 58, 95, 0.08);
-  color: var(--brand);
-  font-size: 1.4rem;
-  cursor: pointer;
-}
-
 .order-reference-card {
   margin-top: 18px;
   padding: 18px;
@@ -230,18 +216,25 @@
 }
 
 .share-dialog-compact {
-  padding: 24px;
+  padding: 22px;
 }
 
 .share-dialog-title-compact {
-  font-size: clamp(1.3rem, 2.5vw, 1.8rem);
+  font-size: clamp(1.2rem, 2vw, 1.45rem);
+  line-height: 1.1;
+}
+
+.share-dialog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
 }
 
 .share-inline-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 12px;
-  align-items: center;
+  grid-template-columns: 1fr;
+  gap: 14px;
   margin-top: 18px;
 }
 
@@ -250,7 +243,7 @@
 }
 
 .share-url-block-compact {
-  padding: 14px 16px;
+  padding: 16px 18px;
 }
 
 .share-url-block strong {
@@ -262,25 +255,68 @@
 .share-icon-actions {
   display: flex;
   gap: 10px;
+  justify-content: flex-end;
 }
 
 .share-icon-btn {
-  width: 52px;
-  height: 52px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 48px;
+  padding: 0 16px;
   border: 1px solid rgba(31, 58, 95, 0.12);
-  border-radius: 50%;
-  background: rgba(31, 58, 95, 0.92);
-  color: #fff;
+  border-radius: 999px;
+  background: rgba(31, 58, 95, 0.08);
+  color: var(--brand);
   font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
-  font-size: 0.78rem;
+  font-size: 0.84rem;
   font-weight: 700;
-  letter-spacing: 0.04em;
   cursor: pointer;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
 }
 
 .share-icon-btn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 14px 28px rgba(31, 58, 95, 0.16);
+  background: rgba(31, 58, 95, 0.12);
+  box-shadow: 0 14px 28px rgba(31, 58, 95, 0.12);
+}
+
+.share-icon-btn-glyph {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+}
+
+.share-icon-btn-glyph svg,
+.dialog-close-btn svg {
+  width: 100%;
+  height: 100%;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  fill: none;
+}
+
+.dialog-close-btn {
+  position: static;
+  width: 40px;
+  height: 40px;
+  flex: 0 0 auto;
+  border: 1px solid rgba(31, 58, 95, 0.08);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.78);
+  color: rgba(31, 58, 95, 0.78);
+  cursor: pointer;
+  transition: background 0.18s ease, color 0.18s ease, transform 0.18s ease;
+}
+
+.dialog-close-btn:hover {
+  background: rgba(31, 58, 95, 0.08);
+  color: var(--brand);
+  transform: rotate(6deg);
 }
 
 .lookup-shell {
@@ -395,18 +431,20 @@
     border-radius: 24px;
   }
 
-  .share-inline-row {
-    grid-template-columns: 1fr;
+  .share-dialog-header {
+    align-items: center;
   }
 
   .share-icon-actions {
-    justify-content: flex-end;
+    justify-content: stretch;
   }
 
   .share-icon-btn {
-    width: 48px;
-    height: 48px;
-    font-size: 0.72rem;
+    flex: 1 1 0;
+    justify-content: center;
+    min-height: 46px;
+    padding: 0 12px;
+    font-size: 0.78rem;
   }
 }
 
@@ -484,7 +522,7 @@
 
   .lookup-input {
     padding: 14px 15px;
-    font-size: 0.9rem;
+    font-size: 16px;
     line-height: 1.55;
   }
 

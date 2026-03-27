@@ -1,6 +1,7 @@
 import { FormEvent, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { fetchWithRetry } from '../lib/fetchWithRetry';
 
 const LOOKUP_TIMEOUT_MS = 12_000;
 const UUID_PATTERN =
@@ -30,17 +31,6 @@ export default function LookupPage() {
     };
   }, []);
 
-  const fetchWithTimeout = async (input: RequestInfo | URL, init?: RequestInit) => {
-    const controller = new AbortController();
-    const timer = window.setTimeout(() => controller.abort(), LOOKUP_TIMEOUT_MS);
-
-    try {
-      return await fetch(input, { ...init, signal: controller.signal });
-    } finally {
-      window.clearTimeout(timer);
-    }
-  };
-
   const lookupOrder = async () => {
     if (!orderId.trim()) return;
     const trimmed = orderId.trim();
@@ -57,7 +47,11 @@ export default function LookupPage() {
     setStatusText(t('order.lookup_checking'));
 
     try {
-      const statusRes = await fetchWithTimeout(`/api/orders/${trimmed}/status`);
+      const statusRes = await fetchWithRetry(`/api/orders/${trimmed}/status`, undefined, {
+        timeoutMs: LOOKUP_TIMEOUT_MS,
+        retries: 2,
+        retryDelayMs: 700,
+      });
       if (!statusRes.ok) {
         if (statusRes.status === 404) {
           setError(t('order.lookup_not_found'));

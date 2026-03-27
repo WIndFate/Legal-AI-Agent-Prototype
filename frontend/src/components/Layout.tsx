@@ -108,10 +108,6 @@ export default function Layout({ children }: LayoutProps) {
         </div>
       </header>
 
-      <div className={styles.disclaimerBanner}>
-        {t('disclaimer.banner')}
-      </div>
-
       <nav className={styles.mobileQuickNav}>
         <div className={styles.mobileQuickNavInner}>
           {navItems.map((item) =>
@@ -136,6 +132,10 @@ export default function Layout({ children }: LayoutProps) {
           )}
         </div>
       </nav>
+
+      <div className={styles.disclaimerBanner}>
+        {t('disclaimer.banner')}
+      </div>
 
       <main className={styles.mainContent}>
         {children}
