@@ -329,7 +329,6 @@ export default function ReviewPage() {
               <div>
                 <p className="section-kicker">{t('review.live_label')}</p>
                 <h2>{currentPhase.title}</h2>
-                <p className="review-phase-text">{phaseText || currentPhase.desc}</p>
               </div>
               <div className="review-phase-panel">
                 <span className="review-phase-chip">
