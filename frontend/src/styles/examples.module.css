@@ -21,27 +21,12 @@
 .galleryLayout {
   display: flex;
   flex-direction: column;
-  gap: 22px;
+  gap: 18px;
 }
 
 .curatedStrip {
   display: grid;
-  gap: 18px;
-}
-
-.scenarioIntro {
-  padding: 24px 22px;
-  border-radius: 24px;
-  border: 1px solid rgba(31, 58, 95, 0.1);
-  background: rgba(255, 255, 255, 0.7);
-  box-shadow: 0 18px 46px rgba(18, 31, 52, 0.08);
-}
-
-.scenarioIntro h3 {
-  margin: 0;
-  color: var(--brand-ink);
-  font-size: 1.5rem;
-  line-height: 1.2;
+  gap: 14px;
 }
 
 .scenarioList {
@@ -53,7 +38,7 @@
 .scenarioCard {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
   padding: 18px 18px 20px;
   border-radius: 22px;
   border: 1px solid rgba(31, 58, 95, 0.1);
@@ -95,17 +80,8 @@
 .scenarioCard strong {
   margin-top: 2px;
   font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
-  font-size: 0.82rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--text-faint);
-}
-
-.scenarioCard h4 {
-  margin: 0;
-  font-family: "Iowan Old Style", "Times New Roman", serif;
-  font-size: 1.2rem;
-  line-height: 1.25;
+  font-size: 1.05rem;
+  line-height: 1.35;
   color: var(--brand-ink);
 }
 
@@ -117,11 +93,11 @@
 
 .scenarioCardActive {
   position: relative;
-  border-color: rgba(31, 58, 95, 0.28);
+  border-color: rgba(37, 99, 235, 0.46);
   background:
     radial-gradient(circle at top right, rgba(176, 138, 74, 0.12), transparent 34%),
     linear-gradient(180deg, rgba(243, 248, 253, 0.98), rgba(255, 255, 255, 0.9));
-  box-shadow: 0 22px 54px rgba(18, 31, 52, 0.12);
+  box-shadow: 0 22px 54px rgba(37, 99, 235, 0.16);
   transform: translateY(-2px);
 }
 
@@ -130,12 +106,8 @@
   position: absolute;
   inset: 0;
   border-radius: 22px;
-  box-shadow: inset 0 0 0 1px rgba(176, 138, 74, 0.28);
+  box-shadow: inset 0 0 0 1px rgba(37, 99, 235, 0.34);
   pointer-events: none;
-}
-
-.scenarioCardActive .scenarioIndex {
-  color: var(--gold);
 }
 
 .scenarioCardActive h4 {
@@ -143,8 +115,8 @@
 }
 
 .scenarioCardActive .scenarioEyebrow {
-  background: rgba(176, 138, 74, 0.14);
-  color: #8a6428;
+  background: rgba(37, 99, 235, 0.12);
+  color: #1d4ed8;
 }
 
 .scenarioEyebrow {
@@ -199,12 +171,22 @@
 }
 
 .reportHeader h3 {
-  margin-top: 10px;
+  margin-top: 0;
   margin-bottom: 0;
   color: var(--brand-ink);
   font-family: "Iowan Old Style", "Times New Roman", serif;
   font-size: 2.15rem;
   line-height: 1.08;
+}
+
+.reportLead {
+  margin-top: 10px;
+  color: var(--text-faint);
+  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .badge {
@@ -243,37 +225,6 @@
   line-height: 1.8;
 }
 
-.reportMetaRow {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-top: 18px;
-}
-
-.metaPill {
-  min-width: 132px;
-  padding: 12px 14px;
-  border-radius: 16px;
-  border: 1px solid rgba(31, 58, 95, 0.08);
-  background: rgba(255, 255, 255, 0.75);
-}
-
-.metaPill span {
-  display: block;
-  margin-bottom: 4px;
-  color: var(--text-faint);
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.metaPill strong {
-  color: var(--brand-ink);
-  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
-  font-size: 0.92rem;
-}
-
 .overallRisk {
   padding: 20px 24px 24px;
   border-bottom: 1px solid rgba(31, 58, 95, 0.08);
@@ -299,6 +250,108 @@
   display: grid;
   gap: 12px;
   margin-top: 12px;
+}
+
+.filterHintRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 14px;
+  margin-bottom: 12px;
+}
+
+.filterHintIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: rgba(31, 58, 95, 0.1);
+  color: var(--brand);
+  flex: 0 0 auto;
+}
+
+.filterHintIcon svg {
+  width: 12px;
+  height: 12px;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  fill: none;
+}
+
+.filterHintRow p {
+  margin: 0;
+  color: var(--text-faint);
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
+.reportFilterGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.reportFilterCard {
+  appearance: none;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  min-height: 74px;
+  padding: 14px 16px;
+  border-radius: 18px;
+  border: 1px solid rgba(31, 58, 95, 0.12);
+  background: rgba(255, 255, 255, 0.82);
+  text-align: left;
+  cursor: pointer;
+  transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+}
+
+.reportFilterCard:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 28px rgba(35, 26, 20, 0.06);
+}
+
+.reportFilterCard span,
+.reportFilterCard strong {
+  margin: 0;
+}
+
+.reportFilterCard span {
+  font-size: 0.94rem;
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--brand-ink);
+}
+
+.reportFilterCard strong {
+  min-width: 2ch;
+  font-size: 1.48rem;
+  line-height: 1;
+  text-align: right;
+  color: var(--brand-ink);
+  white-space: nowrap;
+}
+
+.reportFilterCardActive {
+  border-color: rgba(37, 99, 235, 0.48);
+  box-shadow: 0 16px 30px rgba(37, 99, 235, 0.14);
+  background: rgba(255, 255, 255, 0.98);
+}
+
+.reportFilterCardHigh.reportFilterCardActive {
+  background: rgba(254, 235, 235, 0.98);
+}
+
+.reportFilterCardMedium.reportFilterCardActive {
+  background: rgba(255, 247, 220, 0.98);
+}
+
+.reportFilterCardLow.reportFilterCardActive {
+  background: rgba(232, 248, 239, 0.98);
 }
 
 .metaCard {
@@ -376,6 +429,18 @@
   padding-top: 14px;
 }
 
+.emptyState {
+  margin: 8px 24px 24px;
+  padding: 18px 20px;
+  border-radius: 18px;
+  border: 1px dashed rgba(31, 58, 95, 0.18);
+  background: rgba(255, 255, 255, 0.62);
+  color: var(--text-soft);
+  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
+  font-size: 0.9rem;
+  line-height: 1.7;
+}
+
 .cta {
   max-width: 280px;
   margin: 26px auto 0;
@@ -420,15 +485,6 @@
     display: none;
   }
 
-  .scenarioIntro {
-    padding: 18px 16px;
-    border-radius: 20px;
-  }
-
-  .scenarioIntro h3 {
-    font-size: 1.18rem;
-  }
-
   .scenarioCard {
     min-width: min(74vw, 272px);
     flex: 0 0 min(74vw, 272px);
@@ -439,11 +495,8 @@
   }
 
   .scenarioCard strong {
-    font-size: 0.74rem;
-  }
-
-  .scenarioCard h4 {
-    font-size: 1.08rem;
+    font-size: 0.96rem;
+    line-height: 1.35;
   }
 
   .scenarioCard p {
@@ -472,22 +525,40 @@
     font-size: 1.45rem;
   }
 
+  .reportLead {
+    font-size: 0.74rem;
+  }
+
   .overallRisk,
   .clauseCard {
     padding: 16px;
   }
 
-  .reportMetaRow,
   .clauseMetaRow {
     grid-template-columns: 1fr;
   }
 
-  .reportMetaRow {
-    display: grid;
-  }
-
   .overviewHeader {
     align-items: flex-start;
+  }
+
+  .reportFilterGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .reportFilterCard {
+    min-height: 64px;
+    padding: 12px 13px;
+    border-radius: 16px;
+  }
+
+  .reportFilterCard span {
+    font-size: 0.84rem;
+  }
+
+  .reportFilterCard strong {
+    font-size: 1.2rem;
   }
 
   .reportCard {
@@ -498,5 +569,11 @@
     width: 100%;
     max-width: none;
     margin-top: 20px;
+  }
+
+  .emptyState {
+    margin: 8px 16px 16px;
+    padding: 14px 16px;
+    font-size: 0.84rem;
   }
 }
