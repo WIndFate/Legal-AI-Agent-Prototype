@@ -96,7 +96,7 @@ export default function ReportPage() {
 
     try {
       setDownloadingPdf(true);
-      const pdfUrl = `/api/report/${data.order_id}/pdf`;
+      const pdfUrl = `/api/report/${data.order_id}/pdf?download=1`;
       const link = document.createElement('a');
       link.href = pdfUrl;
       link.download = `contractguard-report-${data.order_id}.pdf`;

@@ -185,6 +185,8 @@ async def test_report_pdf_download(mock_renderer, mock_posthog, mock_db):
         resp = await client.get(f"/api/report/{oid}/pdf")
 
     assert resp.status_code == 200
-    assert resp.headers["content-type"].startswith("application/pdf")
+    assert resp.headers["content-type"].startswith("application/octet-stream")
     assert f'contractguard-report-{oid}.pdf' in resp.headers["content-disposition"]
+    assert "attachment;" in resp.headers["content-disposition"]
+    assert resp.headers["x-content-type-options"] == "nosniff"
     assert resp.content.startswith(b"%PDF-1.4")

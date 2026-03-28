@@ -1,7 +1,8 @@
 import logging
+from urllib.parse import quote
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import Response
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -98,6 +99,7 @@ async def get_report(
 @router.get("/api/report/{order_id}/pdf")
 async def download_report_pdf(
     order_id: str,
+    download: int = Query(default=1),
     db: AsyncSession = Depends(get_db),
 ):
     report = await _load_report_row(order_id, db)
@@ -116,10 +118,16 @@ async def download_report_pdf(
         total_clauses=report.total_clauses,
     )
     filename = f"contractguard-report-{order_id}.pdf"
+    encoded_filename = quote(filename)
     logger.info("Report PDF generated: order_id=%s language=%s", order_id, report.language)
     posthog_capture("anonymous", "report_pdf_downloaded", {"order_id": order_id, "language": report.language})
     return Response(
         content=pdf_bytes,
-        media_type="application/pdf",
-        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+        media_type="application/octet-stream" if download else "application/pdf",
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"; filename*=UTF-8\'\'{encoded_filename}',
+            "Content-Transfer-Encoding": "binary",
+            "X-Content-Type-Options": "nosniff",
+            "Cache-Control": "no-store",
+        },
     )
