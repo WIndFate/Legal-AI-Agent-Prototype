@@ -180,7 +180,7 @@ export default function HomeUploadSection({
           id="payment-panel"
           className={clsx('pricing-card', 'polished-card', spotlightResult && 'spotlight-card')}
         >
-          <div className="next-step-banner">
+          <div className={clsx('next-step-banner', styles.paymentBanner)}>
             <strong>{t('order.next_step_title')}</strong>
             <p>{t('order.next_step_body')}</p>
           </div>
@@ -195,28 +195,20 @@ export default function HomeUploadSection({
             </div>
           </div>
           <div className={styles.pricingQuoteMeta}>
-            <strong>{t('pricing.length_based_desc')}</strong>
-            <p>{t('pricing.minimum_price', { price: 200 })}</p>
+            <p>{t('pricing.length_based_desc')}</p>
+            <span>{t('pricing.minimum_price', { price: 200 })}</span>
           </div>
-          <div className="pricing-details pricing-summary-grid">
-            <div className="pricing-summary-item">
-              <span>{t('pricing.billing_basis')}</span>
-              <strong>{t('pricing.length_based')}</strong>
-            </div>
-            <div className="pricing-summary-item pricing-summary-item-wide">
-              <span>{t('payment.title')}</span>
+          <div className={styles.pricingHighlights} aria-label={t('payment.title')}>
+            <div className={styles.pricingHighlight}>
               <strong>{t('payment.secure_note')}</strong>
             </div>
-          </div>
-
-          <div className="pricing-assurance">
-            <div className="assurance-item">
+            <div className={styles.pricingHighlight}>
               <strong>{t('pricing.assurance_privacy_title')}</strong>
-              <p>{t('pricing.assurance_privacy_desc')}</p>
+              <span>{t('pricing.assurance_privacy_desc')}</span>
             </div>
-            <div className="assurance-item">
+            <div className={styles.pricingHighlight}>
               <strong>{t('pricing.assurance_delivery_title')}</strong>
-              <p>{t('pricing.assurance_delivery_desc')}</p>
+              <span>{t('pricing.assurance_delivery_desc')}</span>
             </div>
           </div>
 

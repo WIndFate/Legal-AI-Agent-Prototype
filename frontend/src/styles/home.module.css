@@ -481,25 +481,31 @@
 /* Pricing internals */
 .pricingQuoteMeta {
   margin-bottom: 16px;
-  padding: 12px 14px;
-  border-radius: var(--radius-md);
-  background: rgba(31, 58, 95, 0.05);
-  border: 1px solid rgba(31, 58, 95, 0.1);
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 0 2px 10px;
+  border-bottom: 1px solid rgba(31, 58, 95, 0.08);
 }
 
-.pricingQuoteMeta strong {
-  display: block;
-  margin-bottom: 4px;
-  color: var(--brand-ink);
+.pricingQuoteMeta p,
+.pricingQuoteMeta span {
+  margin: 0;
   font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
-  font-size: 0.88rem;
 }
 
 .pricingQuoteMeta p {
-  margin: 0;
   color: var(--text-soft);
-  font-size: 0.84rem;
-  line-height: 1.7;
+  font-size: 0.88rem;
+  line-height: 1.6;
+}
+
+.pricingQuoteMeta span {
+  color: var(--brand-ink);
+  font-size: 0.82rem;
+  font-weight: 700;
+  white-space: nowrap;
 }
 
 .priceAmount {
@@ -509,10 +515,58 @@
   font-weight: 700;
 }
 
+.paymentBanner {
+  margin-bottom: 14px;
+  padding: 12px 14px;
+}
+
+.paymentBanner strong {
+  margin-bottom: 4px;
+  font-size: 0.92rem;
+}
+
+.paymentBanner p {
+  font-size: 0.84rem;
+  line-height: 1.55;
+}
+
+.pricingHighlights {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.pricingHighlight {
+  min-width: 0;
+  padding: 12px 14px;
+  border-radius: 18px;
+  border: 1px solid rgba(31, 58, 95, 0.1);
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.pricingHighlight strong,
+.pricingHighlight span {
+  display: block;
+  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
+}
+
+.pricingHighlight strong {
+  color: var(--brand-ink);
+  font-size: 0.86rem;
+  line-height: 1.4;
+}
+
+.pricingHighlight span {
+  margin-top: 4px;
+  color: var(--text-soft);
+  font-size: 0.78rem;
+  line-height: 1.55;
+}
+
 /* Payment form internals */
 .paymentForm {
-  margin-top: 18px;
-  padding-top: 18px;
+  margin-top: 16px;
+  padding-top: 16px;
   border-top: 1px solid rgba(31, 58, 95, 0.08);
 }
 
@@ -731,11 +785,9 @@
 
   .pricingQuoteMeta {
     margin-bottom: 14px;
-    padding: 11px 12px;
-  }
-
-  .pricingQuoteMeta strong {
-    font-size: 0.84rem;
+    display: grid;
+    gap: 4px;
+    padding: 0 0 10px;
   }
 
   .pricingQuoteMeta p {
@@ -743,8 +795,45 @@
     line-height: 1.6;
   }
 
+  .pricingQuoteMeta span {
+    font-size: 0.76rem;
+  }
+
   .priceAmount {
     font-size: 1.4rem;
+  }
+
+  .paymentBanner {
+    margin-bottom: 12px;
+    padding: 11px 12px;
+  }
+
+  .paymentBanner strong {
+    font-size: 0.88rem;
+  }
+
+  .paymentBanner p {
+    font-size: 0.8rem;
+    line-height: 1.5;
+  }
+
+  .pricingHighlights {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .pricingHighlight {
+    padding: 11px 12px;
+    border-radius: 16px;
+  }
+
+  .pricingHighlight strong {
+    font-size: 0.82rem;
+  }
+
+  .pricingHighlight span {
+    font-size: 0.74rem;
+    line-height: 1.5;
   }
 
   .paymentForm {
