@@ -9,4 +9,4 @@ def test_to_sync_dsn_strips_asyncpg_driver():
 
 
 def test_revision_order_tracks_latest_cost_estimate_revision():
-    assert REVISION_ORDER["007_order_cost_estimates"] > REVISION_ORDER["005"]
+    assert REVISION_ORDER["008_orders_pricing_model"] > REVISION_ORDER["007_order_cost_estimates"]

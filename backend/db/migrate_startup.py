@@ -10,7 +10,7 @@ from backend.db.session import prepare_legacy_schema_for_stamp
 
 logger = logging.getLogger(__name__)
 
-LEGACY_BASELINE_REVISION = "007_order_cost_estimates"
+LEGACY_BASELINE_REVISION = "008_orders_pricing_model"
 REVISION_ORDER = {
     "001": 1,
     "002": 2,
@@ -19,6 +19,7 @@ REVISION_ORDER = {
     "005": 5,
     "006_analysis_job_cost_summary_and_72h_ttl": 6,
     "007_order_cost_estimates": 7,
+    "008_orders_pricing_model": 8,
 }
 
 
@@ -90,6 +91,8 @@ async def read_alembic_revision(conn: asyncpg.Connection) -> str | None:
 
 
 async def detect_schema_revision(conn: asyncpg.Connection) -> str | None:
+    if await column_exists(conn, "orders", "pricing_model"):
+        return "008_orders_pricing_model"
     if await table_exists(conn, "order_cost_estimates"):
         return "007_order_cost_estimates"
     if await column_exists(conn, "analysis_jobs", "cost_summary"):

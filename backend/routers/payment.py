@@ -68,7 +68,7 @@ async def create_payment(
         input_type=request.input_type,
         estimated_tokens=request.estimated_tokens,
         page_estimate=estimate_page_count_from_tokens(request.estimated_tokens),
-        price_tier="token_linear",
+        pricing_model="token_linear",
         price_jpy=final_price,
         quote_mode=request.quote_mode,
         estimate_source=request.estimate_source,

@@ -327,7 +327,7 @@ async def load_cost_samples(
             "quote_mode": order.quote_mode,
             "estimate_source": order.estimate_source,
             "target_language": order.target_language,
-            "pricing_model": estimate_snapshot.get("pricing_model") or order.price_tier,
+            "pricing_model": estimate_snapshot.get("pricing_model") or order.pricing_model,
             "paid_price_band": _price_band_label(float(order.price_jpy)),
             "paid_price_jpy": float(order.price_jpy),
             "total_cost_jpy": total_cost_jpy,

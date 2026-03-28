@@ -31,7 +31,7 @@ class FakeOrder:
         self.input_type = kwargs.get("input_type", "text")
         self.estimated_tokens = kwargs.get("estimated_tokens", 100)
         self.page_estimate = kwargs.get("page_estimate", 1)
-        self.price_tier = kwargs.get("price_tier", "token_linear")
+        self.pricing_model = kwargs.get("pricing_model", "token_linear")
         self.price_jpy = kwargs.get("price_jpy", 299)
         self.quote_mode = kwargs.get("quote_mode", "exact")
         self.estimate_source = kwargs.get("estimate_source", "raw_text")

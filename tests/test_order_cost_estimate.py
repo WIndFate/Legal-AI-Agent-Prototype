@@ -17,7 +17,7 @@ def _fake_order(**overrides):
         "estimated_tokens": 8000,
         "page_estimate": 6,
         "price_jpy": 799,
-        "price_tier": "token_linear",
+        "pricing_model": "token_linear",
     }
     payload.update(overrides)
     return SimpleNamespace(**payload)

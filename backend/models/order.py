@@ -17,7 +17,7 @@ class Order(Base):
     input_type: Mapped[str] = mapped_column(String(20), nullable=False)
     estimated_tokens: Mapped[int] = mapped_column(Integer, nullable=False)
     page_estimate: Mapped[int] = mapped_column(Integer, nullable=False)
-    price_tier: Mapped[str] = mapped_column(String(20), nullable=False)
+    pricing_model: Mapped[str] = mapped_column(String(32), nullable=False, default="token_linear")
     price_jpy: Mapped[int] = mapped_column(Integer, nullable=False)
     quote_mode: Mapped[str] = mapped_column(String(32), nullable=False, default="exact")
     estimate_source: Mapped[str] = mapped_column(String(32), nullable=False, default="raw_text")

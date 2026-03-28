@@ -44,6 +44,15 @@ async def prepare_legacy_schema_for_stamp() -> None:
         await conn.execute(
             text("ALTER TABLE orders ADD COLUMN IF NOT EXISTS estimate_source VARCHAR(32) NOT NULL DEFAULT 'raw_text'")
         )
+        await conn.execute(
+            text("ALTER TABLE orders ADD COLUMN IF NOT EXISTS pricing_model VARCHAR(32) NOT NULL DEFAULT 'token_linear'")
+        )
+        await conn.execute(
+            text(
+                "UPDATE orders SET pricing_model = 'token_linear' "
+                "WHERE pricing_model IS NULL OR pricing_model = ''"
+            )
+        )
         await conn.execute(text("ALTER TABLE orders ADD COLUMN IF NOT EXISTS temp_upload_token VARCHAR(255)"))
         await conn.execute(text("ALTER TABLE orders ADD COLUMN IF NOT EXISTS temp_upload_name VARCHAR(255)"))
         await conn.execute(text("ALTER TABLE orders ADD COLUMN IF NOT EXISTS temp_upload_mime_type VARCHAR(100)"))
