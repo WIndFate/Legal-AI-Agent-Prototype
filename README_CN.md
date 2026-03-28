@@ -148,13 +148,14 @@ docker compose up -d backend postgres redis
 - 每笔已支付订单现在还会单独写入一条 `order_cost_estimates`：先保存支付时的 `estimate_snapshot`，分析完成或失败后再补齐 `actual_snapshot` 和 `comparison_snapshot`。
 - 这些快照会同时记录模型计划和实际模型使用情况（`ocr / parse / analyze / suggestion / translation / embedding`），这样后续切换模型时，就能直接比较对毛利的影响，而不只是看总成本。
 - `GET /api/eval/costs` 现在还会按 `estimate_version` 和模型签名聚合 estimate-vs-actual 偏差，方便长期追踪定价模型和模型更换后的经营表现。
+- `GET /api/eval/operations` 是一个只读运营接口，只统计真实订单，不混入 seed 样本；它会输出收入、实际成本、实际毛利、估算偏差、最近订单，以及按价格档位、输入类型、报价模式、语言、估算版本、模型签名的聚合结果。
 - 运行时定价现在从 `backend/data/pricing_policy.json` 读取，不再把价格硬编码在 Python 里。当前试运行价表是 `¥299 / ¥499 / ¥799 / ¥1599`。
 - `/api/eval/costs` 现在会同时返回“成本底线建议价”和“目标毛利建议价”，默认目标毛利率 `target_margin_rate=0.75`，方便区分“不能低于多少”和“商业上该卖多少”。
 - `PARSE_MODEL` 和 `SUGGESTION_MODEL` 现在已经可配置，默认切到 `gpt-4o-mini`；正式 OCR 和逐条风险判断默认仍保持 `gpt-4o`。
 - `analyze_risks` 已改为按条款逐条分析，不再维护一段不断膨胀的整合同多轮 tool-calling 会话，因此单单成本和上下文压力都明显下降。
 - `analyze_clause_risk` 现在返回的是压缩后的 RAG 审查摘要，而不是把长篇知识片段原样塞回分类 prompt。
 - `generate_suggestion` 现在会根据风险级别控制长度：中风险建议更短，高风险建议允许更具体。
-- 为了本地 Docker 开发可直接运行，后端启动时会自动补齐关系表。生产环境仍应显式执行 Alembic migration。
+- backend 容器启动时现在会先自动执行 `alembic upgrade head`，再启动 Uvicorn。这个启动链路带有 PostgreSQL advisory lock 和 legacy schema 校正 / stamp 逻辑，因此旧 Docker volume 也能安全升级，不再要求手动迁移作为常规路径。
 - 生产环境如果缺少 KOMOJU / Resend 关键配置，或 `FRONTEND_URL` 仍指向 `localhost`，启动会直接失败。
 - 支付、审查、邮件、报告读取路径现在会输出结构化应用日志，并补充 PostHog 埋点，便于联调定位问题。
 - 前端页面采用路由懒加载，分析相关 SDK 改为异步初始化，避免把 observability 依赖塞进首屏主 chunk。

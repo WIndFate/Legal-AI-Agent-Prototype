@@ -84,6 +84,8 @@ Current status as of 2026-03-28:
 - Failed analyses now persist the partial AI cost summary already incurred up to the failure point into `analysis_jobs.cost_summary`, instead of keeping it only in memory/logs.
 - Payment-time cost estimation is now persisted separately in `order_cost_estimates`: each order stores an `estimate_snapshot`, later an `actual_snapshot`, and finally a `comparison_snapshot`, all tagged with the estimate version, pricing-policy version, and the planned/actual model mix so pricing accuracy can be audited across future model upgrades.
 - Local Docker startup now uses health checks for `postgres`, `redis`, and `backend`, and key frontend pages use a small retry wrapper so brief backend warm-up windows do not surface as user-facing proxy failures.
+- Backend containers now auto-apply Alembic migrations to `head` on startup before Uvicorn boots, guarded by a PostgreSQL advisory lock and a legacy-schema detection/stamp path so old Docker volumes can move forward safely without manual migration steps.
+- A new read-only operational endpoint, `GET /api/eval/operations`, now exposes margin, estimate-vs-actual deltas, language/input/tier splits, model-signature splits, and recent-order summaries for business monitoring.
 - Production credentials and live third-party testing still pending.
 
 ---
@@ -170,7 +172,7 @@ backend/
     analysis.py   # POST /api/analysis/start + GET status/events/stream
     report.py     # GET /api/report/{order_id} + /api/report/{order_id}/pdf
     referral.py   # POST /api/referral/generate + GET /api/referral/{code}
-    eval.py       # GET /api/eval/rag + /api/eval/costs
+    eval.py       # GET /api/eval/rag + /api/eval/costs + /api/eval/operations
   services/
     analysis_executor.py # In-process persistent analysis runner + event persistence
     costing.py        # Model pricing table + usage extraction + structured cost logging
@@ -289,6 +291,7 @@ Embeddings are generated via OpenAI API (httpx direct call, not langchain).
 - `GET /api/eval/costs` mixes persisted `reports.cost_summary` with seeded baseline samples from `backend/data/cost_samples_seed.json` until at least 10 samples are available, so early pricing analysis is not based on a single order.
 - `GET /api/eval/costs` returns both `recommended_price_jpy_cost_floor` and `recommended_price_jpy_target_margin`; the latter folds in `target_margin_rate` (currently default `0.75`) so pricing reviews can reason about profit targets, not just raw API cost.
 - `GET /api/eval/costs` now also exposes estimate-vs-actual deltas plus grouping by `estimate_version` and model signature, so future model swaps can be compared on margin impact.
+- `GET /api/eval/operations` is intentionally read-only and excludes seeded samples; it returns real-order aggregates for revenue, actual cost, actual margin, estimate deltas, recent orders, and splits by price tier, input type, quote mode, target language, estimate version, and model signature.
 
 ### Cleanup and privacy
 - `cleanup.py` runs every hour via APScheduler in lifespan
@@ -296,9 +299,10 @@ Embeddings are generated via OpenAI API (httpx direct call, not langchain).
 - Nullifies `contract_text` for completed orders (defense in depth)
 - The backend still deletes full contract text after analysis, but each 72-hour report may retain only clause-level original excerpts tied to findings so reopened links can preserve inline comparison without storing the full contract body.
 
-### Local startup bootstrap
-- `main.py` calls `init_db()` only when `APP_ENV=development`, so local Docker development can create `orders`, `reports`, and `referrals` automatically.
-- Production environments should still run Alembic migrations explicitly rather than relying on implicit table creation.
+### Local and production startup migrations
+- Backend Docker startup now runs `python -m backend.start`, which waits for PostgreSQL, acquires a PostgreSQL advisory lock, and runs `alembic upgrade head` before launching Uvicorn.
+- If a legacy Docker volume contains pre-Alembic / create_all-style tables, startup first repairs additive fields and indexes, stamps the detected schema revision, and only then upgrades forward, so old local data can be preserved.
+- This auto-migration flow is used for both local Docker and production containers; manual migration is no longer the primary path for normal container boots.
 
 ### Environment safety rails
 - `APP_ENV` must be either `development` or `production`; default is `development`.
