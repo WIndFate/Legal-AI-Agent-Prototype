@@ -19,7 +19,7 @@ As of 2026-03-28, the local MVP flow is working in Docker:
 - A new `/lookup` page lets users reopen payment, analysis, or finished reports by order ID
 - Payment success and analysis completion now show an order reminder dialog so users can screenshot or copy their order ID before moving on
 - Review now acts as a processing surface only; once analysis finishes, the user is redirected straight into the saved `/report/{orderId}` page
-- The saved report page now supports risk-level filtering, denser clause cards, a direct `Download PDF` action via browser print/save-as-PDF, and a more compact one-row summary on desktop
+- The saved report page now supports risk-level filtering, denser clause cards, a direct backend-generated `Download PDF` action, and a more compact one-row summary on desktop
 - Report sharing now uses a minimal custom share sheet that generates a referral-tagged report link behind the scenes, then offers copy-link and optional native share actions
 - Referral links now return to the homepage with `?ref=` so the referral code is carried into the payment form automatically
 - Lookup and report pages now distinguish invalid order IDs, unstable networks, offline states, and retryable loading failures more clearly
@@ -134,7 +134,7 @@ docker compose up -d backend postgres redis
 11. The standalone `/examples` page presents three contract scenarios (rental, employment, part-time) as a gallery-style report showcase with localized clause analysis in all 9 languages.
 12. Privacy policy (`/privacy`) and Terms of service (`/terms`) pages combine localized summaries with hardcoded Japanese legal text.
 13. Referenced law citations (`referenced_law`) in reports are always kept in Japanese original text, regardless of the user's selected language.
-14. The saved report page is now styled as a more document-like review report and also has print-friendly layout rules for browser print / save-as-PDF flows.
+14. The saved report page is now styled as a more document-like review report, and it can also download a true PDF generated from the saved report payload within the same 72-hour retention window.
 15. Homepage anchor navigation (`Home` / `Examples`) now scrolls to explicit page sections, and the hero pricing copy no longer hardcodes a visible maximum price.
 16. After a quote is generated, the homepage automatically scrolls to the payment panel and highlights the next-step area so users do not miss that the flow has advanced.
 17. Payment success and review completion now open a reminder dialog that emphasizes saving the order ID for later lookup.

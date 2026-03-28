@@ -79,7 +79,7 @@ Current status as of 2026-03-28:
 - HomePage split into focused section components (Hero, Flow, Upload), with examples moved to a dedicated `/examples` page.
 - RAG embedding batching, database query indexes, and dead code cleanup completed.
 - CSS partially migrated to CSS Modules: layout, home, examples, legal use scoped modules; report/review remain global due to cross-page sharing and responsive dependencies.
-- Frontend UX polish now includes result lookup, order reminder dialogs, a compact share sheet that silently appends referral codes to report links, direct review-to-report handoff on completion, report risk-level filters, an explicit PDF-download action via browser print/save-as-PDF, reveal-on-scroll homepage sections, a curated standalone examples gallery whose report sample layout mirrors the real report page more closely, mobile-specific compact header / quick-nav / safe-area refinements, iOS input zoom prevention, top-of-page route resets, and a simplified homepage upload flow (`Upload File` / `Paste Text`).
+- Frontend UX polish now includes result lookup, order reminder dialogs, a compact share sheet that silently appends referral codes to report links, direct review-to-report handoff on completion, report risk-level filters, a real backend-generated PDF download action, reveal-on-scroll homepage sections, a curated standalone examples gallery whose report sample layout mirrors the real report page more closely, mobile-specific compact header / quick-nav / safe-area refinements, iOS input zoom prevention, top-of-page route resets, and a simplified homepage upload flow (`Upload File` / `Paste Text`).
 - Persistent analysis-task architecture is now the primary runtime flow: `analysis_jobs` / `analysis_events`, event bus, extracted report persistence helpers, new analysis start/status/events/stream routes, and frontend snapshot-plus-replay event restoration are all in code.
 - Failed analyses now persist the partial AI cost summary already incurred up to the failure point into `analysis_jobs.cost_summary`, instead of keeping it only in memory/logs.
 - Local Docker startup now uses health checks for `postgres`, `redis`, and `backend`, and key frontend pages use a small retry wrapper so brief backend warm-up windows do not surface as user-facing proxy failures.
@@ -166,13 +166,14 @@ backend/
     upload.py     # POST /api/upload (image/PDF/text + OCR + PII + pricing)
     payment.py    # POST /api/payment/create + /api/payment/webhook
     analysis.py   # POST /api/analysis/start + GET status/events/stream
-    report.py     # GET /api/report/{order_id} (Redis cache → DB fallback)
+    report.py     # GET /api/report/{order_id} + /api/report/{order_id}/pdf
     referral.py   # POST /api/referral/generate + GET /api/referral/{code}
     eval.py       # GET /api/eval/rag + /api/eval/costs
   services/
     analysis_executor.py # In-process persistent analysis runner + event persistence
     costing.py        # Model pricing table + usage extraction + structured cost logging
     cost_analysis.py  # Persisted cost-summary aggregation + pricing recommendation logic
+    report_pdf.py     # Build downloadable PDF reports from saved report payloads
     event_bus.py      # In-process pub/sub for incremental analysis events
     local_ocr.py      # Optional PaddleOCR-based pre-payment quote estimation
     ocr.py            # GPT-4o Vision OCR
@@ -332,7 +333,7 @@ Embeddings are generated via OpenAI API (httpx direct call, not langchain).
 - Original contract comparison should be clause-level and inline with each analysis card, not as a full-document dump at the bottom of the page.
 - On larger screens, inline clause comparison can use a split layout, but mobile should preserve a single-column reading flow.
 - Full contract text must still be stripped after analysis, but clause-level original excerpts tied to findings may remain inside the 72-hour persisted report, Redis cache, shared-link rendering, and emailed report links.
-- The saved report page should read like a concise professional review memo, and print / save-as-PDF from the browser should hide site chrome and preserve the report body cleanly.
+- The saved report page should read like a concise professional review memo, and it should also support direct download of a backend-generated PDF built from the saved report payload.
 - After quote generation, the homepage should visibly advance the user to the payment area instead of leaving the next step off-screen.
 - After payment success and after review completion, the UI should prompt the user to save the order ID for later lookup.
 - A dedicated lookup page should allow reopening payment, in-progress review, or the completed report from the order ID.
