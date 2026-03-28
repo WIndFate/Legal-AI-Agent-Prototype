@@ -13,7 +13,7 @@ As of 2026-03-28, the local MVP flow is working in Docker:
 - `pgvector` RAG is running in PostgreSQL with 331+ law articles across 10 legal categories (rental, labor, part-time, business outsourcing, sales, etc.)
 - 9-language frontend with professional branding (ContractGuard), privacy/terms pages, and a dedicated examples gallery with report-style samples
 - The standalone `/examples` page now uses a curated chapter-switching layout, and its report sample styling is intentionally closer to the real report page
-- Mobile UI now uses a more compact header, a badge-style language switcher, immediate reveal rendering, example switching that scrolls the refreshed report into view, and a quick-task row that sits directly under the header with corrected safe-area padding
+- Mobile UI now uses a more compact header with a left-side menu, centered brand, badge-style language switcher, immediate reveal rendering, example switching that scrolls the refreshed report into view, corrected safe-area padding, and overflow fixes that prevent horizontal drag on small screens
 - Homepage UX now includes reveal-on-scroll sections, auto-scroll into the payment panel after quote generation, and broader spacing/padding cleanup across upload, payment, review, and report surfaces
 - The homepage upload flow now uses just two entry modes: `Upload File` and `Paste Text`. Image and PDF uploads are accepted through a single file picker with format guidance.
 - A new `/lookup` page lets users reopen payment, analysis, or finished reports by order ID
@@ -121,7 +121,7 @@ docker compose up -d backend postgres redis
 ## Local Flow
 
 1. Open the frontend and upload contract text, image, or PDF.
-2. Review token estimate, pricing, and PII warnings. Image and scanned PDF uploads now explicitly show that the price is an estimate before payment.
+2. Review pricing and PII warnings.
 3. Create payment.
 4. In local dev, if `APP_ENV=development` and `KOMOJU_SECRET_KEY` is empty, the order is auto-marked as paid and redirected to review.
 5. `/review/:orderId` starts or resumes the persistent analysis task, restores saved progress events, and then subscribes to new updates.

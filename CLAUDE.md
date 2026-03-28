@@ -331,7 +331,7 @@ Embeddings are generated via OpenAI API (httpx direct call, not langchain).
 - The standalone examples page should feel like a curated report sample gallery, using chapter-like scenario switching and report-card spacing that stays visually close to the real saved report page
 - Example reports use i18n keys for `risk_reason`/`suggestion` (key pattern: `examples.{scenario}_c{n}_reason/suggestion`), while `original_text`, `referenced_law`, `clause_number` stay in Japanese in `exampleReports.ts`
 - Legal pages (`/privacy`, `/terms`): localized summary at top + hardcoded Japanese legal full text (required by law)
-- Layout: sticky header with brand mark + nav links + language selector; footer with nav links to all pages + legal disclaimer + copyright
+- Layout: sticky header with brand mark + nav links + language selector on desktop, plus a mobile left-menu / centered-logo variant; footer is intentionally reduced to Home / Privacy / Terms plus legal disclaimer and copyright
 - Homepage reveal motion should stay restrained: fade/up reveal plus payment-panel spotlight is acceptable; avoid heavy parallax or novelty animations.
 - Frontend routes should stay lazy-loaded where practical, and analytics/observability SDKs should bootstrap asynchronously so they do not bloat the initial application chunk
 
