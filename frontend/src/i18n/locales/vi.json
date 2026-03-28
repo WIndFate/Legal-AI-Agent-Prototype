@@ -135,6 +135,7 @@
     "japanese_original": "Trích dẫn nguyên văn luật Nhật",
     "expires_in": "Báo cáo này sẽ tự động xóa sau {{hours}} giờ",
     "share": "Chia sẻ",
+    "download_pdf": "Tải PDF",
     "share_text": "Tôi đã phân tích rủi ro hợp đồng bằng ContractGuard",
     "language_locked_note": "Nội dung báo cáo này đã được cố định bằng {{language}} khi tạo. Việc đổi ngôn ngữ trang chỉ thay đổi giao diện, không dịch lại nội dung báo cáo.",
     "share_note": "Liên kết chia sẻ sẽ mở báo cáo còn hiệu lực trong 72 giờ. Toàn văn hợp đồng không được giữ lại, nhưng các đoạn trích điều khoản liên quan vẫn hiển thị trong báo cáo.",

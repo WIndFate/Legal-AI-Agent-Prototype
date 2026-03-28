@@ -77,6 +77,22 @@ export default function ReportPage() {
 
   const referralCode = searchParams.get('ref');
 
+  const handleDownloadPdf = () => {
+    if (!data || typeof window === 'undefined') return;
+
+    const previousTitle = document.title;
+    const nextTitle = `contractguard-report-${data.order_id}`;
+    const restoreTitle = () => {
+      document.title = previousTitle;
+      window.removeEventListener('afterprint', restoreTitle);
+    };
+
+    document.title = nextTitle;
+    window.addEventListener('afterprint', restoreTitle, { once: true });
+    window.print();
+    window.setTimeout(restoreTitle, 1500);
+  };
+
   const toggleClause = (clauseNumber: string) => {
     setExpandedClauses((prev) => ({
       ...prev,
@@ -444,8 +460,17 @@ export default function ReportPage() {
       )}
 
       <div className="report-actions report-actions-bottom">
+        <button className="btn-share report-download-trigger" onClick={handleDownloadPdf}>
+          <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false">
+            <path d="M10 3.5v8m0 0 3-3m-3 3-3-3M4.5 13.5v1.25A1.75 1.75 0 0 0 6.25 16.5h7.5a1.75 1.75 0 0 0 1.75-1.75V13.5" />
+          </svg>
+          <span>{t('report.download_pdf')}</span>
+        </button>
         <button className="btn-primary btn-share report-share-trigger" onClick={() => setShareOpen(true)}>
-          {t('report.share')}
+          <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false">
+            <path d="M10.5 4.5a2 2 0 1 0 0 4 2 2 0 0 0 0-4Zm-4.75 3a2 2 0 1 0 1.13 3.65l6.24 3.12a2 2 0 1 0 .58-1.16L7.46 10a2.03 2.03 0 0 0 0-.99l6.24-3.11a2 2 0 1 0-.58-1.17L6.88 7.85A1.99 1.99 0 0 0 5.75 7.5Z" />
+          </svg>
+          <span>{t('report.share')}</span>
         </button>
       </div>
     </div>

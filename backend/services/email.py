@@ -38,6 +38,18 @@ async def send_report_email(email: str, order_id: str, language: str) -> bool:
 
     subject = subjects.get(language, subjects["ja"])
     expires_text = f"This link expires in {settings.REPORT_TTL_HOURS} hours."
+    pdf_notes = {
+        "ja": f"レポートページから {settings.REPORT_TTL_HOURS} 時間以内にPDF保存も行えます。",
+        "en": f"You can also download a PDF from the report page within {settings.REPORT_TTL_HOURS} hours.",
+        "zh-CN": f"你也可以在 {settings.REPORT_TTL_HOURS} 小时内从报告页面下载 PDF。",
+        "zh-TW": f"你也可以在 {settings.REPORT_TTL_HOURS} 小時內從報告頁面下載 PDF。",
+        "ko": f"{settings.REPORT_TTL_HOURS}시간 내에 보고서 페이지에서 PDF도 다운로드할 수 있습니다.",
+        "vi": f"Bạn cũng có thể tải PDF từ trang báo cáo trong vòng {settings.REPORT_TTL_HOURS} giờ.",
+        "pt-BR": f"Voce também pode baixar o PDF pela página do relatório em até {settings.REPORT_TTL_HOURS} horas.",
+        "id": f"Anda juga dapat mengunduh PDF dari halaman laporan dalam {settings.REPORT_TTL_HOURS} jam.",
+        "ne": f"तपाईंले {settings.REPORT_TTL_HOURS} घण्टाभित्र रिपोर्ट पृष्ठबाट PDF पनि डाउनलोड गर्न सक्नुहुन्छ।",
+    }
+    pdf_note = pdf_notes.get(language, pdf_notes["ja"])
 
     try:
         logger.info("Sending report email: order_id=%s email=%s language=%s", order_id, email, language)
@@ -52,6 +64,7 @@ async def send_report_email(email: str, order_id: str, language: str) -> bool:
                     "html": (
                         f'<p><a href="{report_url}">{subject}</a></p>'
                         f"<p>{expires_text}</p>"
+                        f"<p>{pdf_note}</p>"
                         f'<hr><p style="font-size:12px;color:#666;">'
                         f'本サービスは法律相談ではありません。具体的な法的判断は弁護士にご相談ください。</p>'
                     ),

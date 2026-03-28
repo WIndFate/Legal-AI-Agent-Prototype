@@ -135,6 +135,7 @@
     "japanese_original": "日本法令の原文引用",
     "expires_in": "このレポートは{{hours}}時間後に自動削除されます",
     "share": "共有",
+    "download_pdf": "PDFを保存",
     "share_text": "ContractGuardで契約書のリスク分析を行いました",
     "language_locked_note": "このレポート本文は生成時に{{language}}で確定しています。サイトの表示言語を切り替えても、レポート本文自体は再翻訳されません。",
     "share_note": "共有リンクでは72時間有効のレポートを開けます。契約書全文は保持されませんが、該当条項の原文抜粋はレポート内で確認できます。",

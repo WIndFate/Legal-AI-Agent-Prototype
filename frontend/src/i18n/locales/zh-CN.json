@@ -135,6 +135,7 @@
     "japanese_original": "日本法条原文引用",
     "expires_in": "本报告将在{{hours}}小时后自动删除",
     "share": "分享",
+    "download_pdf": "下载PDF",
     "share_text": "我用ContractGuard分析了合同风险",
     "language_locked_note": "本报告正文生成时已固定为{{language}}。切换站点语言只会影响界面文案，不会重新翻译报告内容。",
     "share_note": "分享链接会打开 72 小时有效的报告页面。完整合同正文不会保留，但报告中的相关条款原文摘录会随报告一起展示。",
@@ -210,7 +211,7 @@
   },
   "terms": {
     "page_title": "服务条款",
-    "summary": "ContractGuard 是基于AI技术的合同风险分析服务，不构成法律咨询。具体法律判断请咨询专业律师。分析开始后不支持退款。报告在24小时后自动删除。",
+    "summary": "ContractGuard 是基于AI技术的合同风险分析服务，不构成法律咨询。具体法律判断请咨询专业律师。分析开始后不支持退款。报告在72小时后自动删除。",
     "last_updated": "最后更新：{{date}}"
   },
   "examples": {

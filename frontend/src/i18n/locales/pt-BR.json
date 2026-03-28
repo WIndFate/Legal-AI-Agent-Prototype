@@ -135,6 +135,7 @@
     "japanese_original": "Citação do texto legal em japonês",
     "expires_in": "Este relatório será excluído automaticamente em {{hours}} horas",
     "share": "Compartilhar",
+    "download_pdf": "Baixar PDF",
     "share_text": "Analisei meu contrato com o ContractGuard",
     "language_locked_note": "O conteúdo deste relatório foi fixado em {{language}} no momento da geração. Alterar o idioma do site muda apenas a interface, não retraduz o relatório.",
     "share_note": "O link compartilhado abre o relatório válido por 72 horas. O texto completo do contrato não é mantido, mas os trechos relevantes das cláusulas continuam visíveis no relatório.",

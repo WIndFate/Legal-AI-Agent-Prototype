@@ -393,14 +393,38 @@
 .report-actions-bottom {
   display: flex;
   justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
   padding: 0;
   border: none;
   background: transparent;
   box-shadow: none;
 }
 
+.report-actions-bottom .btn-share,
+.report-actions-bottom .report-download-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
 .report-actions-bottom .btn-share {
   min-width: 220px;
+}
+
+.report-download-trigger {
+  min-width: 220px;
+}
+
+.report-actions-bottom svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .report-page .clause-card,
@@ -566,6 +590,11 @@
   }
 
   .report-actions-bottom .btn-share {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .report-download-trigger {
     width: 100%;
     min-width: 0;
   }

@@ -135,9 +135,10 @@
     "japanese_original": "Japanese legal text cited",
     "expires_in": "This report will be automatically deleted in {{hours}} hours",
     "share": "Share",
+    "download_pdf": "Download PDF",
     "share_text": "I analyzed my contract with ContractGuard",
     "language_locked_note": "This report was generated in {{language}}. Changing the site language only updates the interface, not the report content itself.",
-    "share_note": "The shared link opens the 24-hour report. The full contract text is never retained, but relevant clause excerpts remain visible inside the report.",
+    "share_note": "The shared link opens the 72-hour report. The full contract text is never retained, but relevant clause excerpts remain visible inside the report.",
     "network_error": "The report could not be loaded because the network is unstable or the request timed out.",
     "show_original_clause": "Show original clause",
     "hide_original_clause": "Hide original clause",
@@ -149,7 +150,7 @@
     "original_clause_label": "Original clause",
     "original_contract_title": "Original Contract Reference",
     "original_contract_session_note": "This shows only the clause excerpt tied to the current finding so you can compare it with the analysis. The full contract text has already been deleted from the server.",
-    "original_contract_shared_note": "The 24-hour report keeps only clause excerpts tied to findings for easier review and sharing. The full contract text is never retained.",
+    "original_contract_shared_note": "The 72-hour report keeps only clause excerpts tied to findings for easier review and sharing. The full contract text is never retained.",
     "executive_kicker": "Risk Summary",
     "comparison_hint": "Compare with the original clause inside each analysis card",
     "clause_count": "Clauses",
@@ -205,7 +206,7 @@
   },
   "privacy": {
     "page_title": "Privacy Policy",
-    "summary": "ContractGuard puts your privacy first. The full contract text is deleted from the server immediately after analysis. Only clause excerpts tied to report findings remain inside the 24-hour report. We only collect your email address, used solely to send the report link.",
+    "summary": "ContractGuard puts your privacy first. The full contract text is deleted from the server immediately after analysis. Only clause excerpts tied to report findings remain inside the 72-hour report. We only collect your email address, used solely to send the report link.",
     "last_updated": "Last updated: {{date}}"
   },
   "terms": {

@@ -135,6 +135,7 @@
     "japanese_original": "Kutipan teks hukum asli Jepang",
     "expires_in": "Laporan ini akan dihapus otomatis dalam {{hours}} jam",
     "share": "Bagikan",
+    "download_pdf": "Unduh PDF",
     "share_text": "Saya menganalisis kontrak saya dengan ContractGuard",
     "language_locked_note": "Isi laporan ini telah dikunci dalam {{language}} saat dibuat. Mengganti bahasa situs hanya mengubah antarmuka, bukan menerjemahkan ulang isi laporan.",
     "share_note": "Tautan yang dibagikan akan membuka laporan yang berlaku 72 jam. Teks kontrak lengkap tidak disimpan, tetapi cuplikan klausul yang relevan tetap terlihat di dalam laporan.",
