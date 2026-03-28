@@ -176,6 +176,37 @@ async def test_create_payment_dev_bypass():
 
 
 @pytest.mark.asyncio
+async def test_create_payment_prefers_request_origin_for_frontend_base_url():
+    """LAN/mobile browser origins should be used for dev redirect URLs instead of localhost."""
+    session = FakeSession()
+    create_session_mock = AsyncMock(return_value="http://192.168.3.20:5173/review/test?dev_payment=true")
+
+    app.dependency_overrides[get_db] = _override_db(session)
+    try:
+        with (
+            patch("backend.routers.payment.create_payment_session", new=create_session_mock),
+            patch("backend.routers.payment.is_dev_payment_mode", return_value=True),
+        ):
+            transport = ASGITransport(app=app)
+            async with AsyncClient(transport=transport, base_url="http://test") as client:
+                resp = await client.post(
+                    "/api/payment/create",
+                    headers={"origin": "http://192.168.3.20:5173"},
+                    json={
+                        "email": "dev@example.com",
+                        "contract_text": "第1条",
+                        "input_type": "text",
+                        "estimated_tokens": 10,
+                        "price_jpy": 299,
+                    },
+                )
+        assert resp.status_code == 200
+        assert create_session_mock.await_args.kwargs["frontend_base_url"] == "http://192.168.3.20:5173"
+    finally:
+        app.dependency_overrides.pop(get_db, None)
+
+
+@pytest.mark.asyncio
 async def test_create_payment_invalid_email_returns_422():
     """Request with invalid email should return 422."""
     session = FakeSession()

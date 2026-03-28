@@ -2,6 +2,7 @@ import hashlib
 import hmac
 import json
 import logging
+from urllib.parse import urlparse
 
 import httpx
 
@@ -16,14 +17,55 @@ def is_dev_payment_mode() -> bool:
     return settings.is_development and not settings.KOMOJU_SECRET_KEY
 
 
-async def create_payment_session(order_id: str, amount_jpy: int, email: str) -> str:
+def resolve_frontend_base_url(
+    *,
+    origin_header: str | None = None,
+    forwarded_proto: str | None = None,
+    host_header: str | None = None,
+) -> str:
+    """Prefer the active browser origin in development/LAN scenarios over localhost defaults."""
+    settings = get_settings()
+
+    def normalize_origin(raw: str | None) -> str | None:
+        if not raw:
+            return None
+        value = raw.strip().rstrip("/")
+        if not value:
+            return None
+        parsed = urlparse(value)
+        if parsed.scheme and parsed.netloc:
+            return f"{parsed.scheme}://{parsed.netloc}"
+        return None
+
+    request_origin = normalize_origin(origin_header)
+    if request_origin:
+        request_host = urlparse(request_origin).hostname or ""
+        if request_host not in {"localhost", "127.0.0.1"}:
+            return request_origin
+
+    frontend_origin = normalize_origin(settings.FRONTEND_URL)
+    if frontend_origin and not settings.uses_local_frontend_url():
+        return frontend_origin
+
+    if host_header:
+        scheme = (forwarded_proto or "http").split(",")[0].strip() or "http"
+        host = host_header.split(",")[0].strip()
+        if host:
+            resolved = normalize_origin(f"{scheme}://{host}")
+            if resolved:
+                return resolved
+
+    return frontend_origin or "http://localhost:5173"
+
+
+async def create_payment_session(order_id: str, amount_jpy: int, email: str, frontend_base_url: str) -> str:
     """Create a KOMOJU payment session and return the session URL."""
     settings = get_settings()
 
     if is_dev_payment_mode():
         # Local development skips the external checkout page.
         logger.warning("KOMOJU_SECRET_KEY not set, returning placeholder payment URL")
-        return f"{settings.FRONTEND_URL}/review/{order_id}?dev_payment=true"
+        return f"{frontend_base_url}/review/{order_id}?dev_payment=true"
 
     async with httpx.AsyncClient() as client:
         response = await client.post(
@@ -33,7 +75,7 @@ async def create_payment_session(order_id: str, amount_jpy: int, email: str) -> 
                 "amount": amount_jpy,
                 "currency": "JPY",
                 "payment_types": ["credit_card", "wechat_pay", "alipay"],
-                "return_url": f"{settings.FRONTEND_URL}/review/{order_id}",
+                "return_url": f"{frontend_base_url}/review/{order_id}",
                 "default_locale": "ja",
                 "email": email,
                 "metadata": {"order_id": order_id},

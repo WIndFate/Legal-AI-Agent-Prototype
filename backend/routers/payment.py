@@ -10,7 +10,12 @@ from backend.models.order import Order
 from backend.models.referral import Referral
 from backend.schemas.payment import PaymentCreateRequest, PaymentCreateResponse
 from backend.services.order_cost_estimate import build_order_cost_estimate_snapshot, upsert_order_cost_estimate
-from backend.services.payment import create_payment_session, verify_webhook, is_dev_payment_mode
+from backend.services.payment import (
+    create_payment_session,
+    verify_webhook,
+    is_dev_payment_mode,
+    resolve_frontend_base_url,
+)
 from backend.services.analytics import capture as posthog_capture
 from backend.services.token_estimator import estimate_page_count_from_tokens
 
@@ -26,6 +31,7 @@ router = APIRouter()
 
 @router.post("/api/payment/create", response_model=PaymentCreateResponse)
 async def create_payment(
+    raw_request: Request,
     request: PaymentCreateRequest,
     db: AsyncSession = Depends(get_db),
 ):
@@ -103,11 +109,18 @@ async def create_payment(
             {"order_id": str(order.id), "price_jpy": final_price},
         )
 
+    frontend_base_url = resolve_frontend_base_url(
+        origin_header=raw_request.headers.get("origin"),
+        forwarded_proto=raw_request.headers.get("x-forwarded-proto"),
+        host_header=raw_request.headers.get("host"),
+    )
+
     # Create KOMOJU payment session
     session_url = await create_payment_session(
         order_id=str(order.id),
         amount_jpy=final_price,
         email=request.email,
+        frontend_base_url=frontend_base_url,
     )
     logger.info("Payment session prepared: order_id=%s session_url=%s", order.id, session_url)
 
