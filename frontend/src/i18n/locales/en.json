@@ -164,7 +164,7 @@
     "not_found": "Page not found."
   },
   "footer": {
-    "disclaimer": "本サービスは法律相談ではありません。具体的な法的判断は弁護士にご相談ください (This service is not legal advice. Please consult a licensed attorney for specific legal decisions.)",
+    "disclaimer": "This service is not legal advice. Please consult a licensed attorney for specific legal decisions.",
     "privacy": "Privacy Policy",
     "terms": "Terms of Service",
     "copyright": "© 2026 ContractGuard"

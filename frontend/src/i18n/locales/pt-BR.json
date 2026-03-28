@@ -164,7 +164,7 @@
     "not_found": "Página não encontrada."
   },
   "footer": {
-    "disclaimer": "本サービスは法律相談ではありません。具体的な法的判断は弁護士にご相談ください (Este serviço não constitui assessoria jurídica. Consulte um advogado para decisões legais específicas.)",
+    "disclaimer": "Este serviço não constitui assessoria jurídica. Consulte um advogado para decisões legais específicas.",
     "privacy": "Política de Privacidade",
     "terms": "Termos de Serviço",
     "copyright": "© 2026 ContractGuard"
