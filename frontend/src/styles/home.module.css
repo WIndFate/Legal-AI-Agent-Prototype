@@ -704,7 +704,8 @@
   .uploadArea textarea,
   .paymentForm input {
     padding: 12px 14px;
-    font-size: 0.9rem;
+    font-size: 16px;
+    line-height: 1.55;
   }
 
   .uploadArea textarea {
