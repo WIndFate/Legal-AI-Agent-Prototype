@@ -473,7 +473,7 @@
     display: flex;
     gap: 12px;
     overflow-x: auto;
-    padding-bottom: 6px;
+    padding: 4px 0 6px;
     scroll-snap-type: x proximity;
   }
 
@@ -492,6 +492,10 @@
     padding: 16px;
     border-radius: 20px;
     gap: 8px;
+  }
+
+  .scenarioCardActive {
+    transform: none;
   }
 
   .scenarioCard strong {

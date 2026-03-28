@@ -68,14 +68,22 @@ export default function Layout({ children }: LayoutProps) {
 
   const renderNavItem = (item: typeof navItems[number], className: string) =>
     item.to ? (
-      <Link key={item.key} to={item.to} className={className}>
+      <Link
+        key={item.key}
+        to={item.to}
+        className={className}
+        onClick={() => setMobileMenuOpen(false)}
+      >
         {item.label}
       </Link>
     ) : (
       <a
         key={item.key}
         href={item.href}
-        onClick={navigateToAnchor('top')}
+        onClick={(event) => {
+          setMobileMenuOpen(false);
+          navigateToAnchor('top')(event);
+        }}
         className={className}
       >
         {item.label}

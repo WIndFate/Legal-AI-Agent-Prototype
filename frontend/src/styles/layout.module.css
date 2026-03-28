@@ -183,7 +183,7 @@
 .mobileMenuLink {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   min-height: 42px;
   padding: 10px 14px;
   border-radius: 999px;
@@ -353,7 +353,7 @@
     position: fixed;
     top: calc(62px + env(safe-area-inset-top, 0px));
     left: 16px;
-    right: 16px;
+    width: min(248px, calc(100vw - 32px));
     z-index: 110;
     padding: 12px;
     border-radius: 22px;
