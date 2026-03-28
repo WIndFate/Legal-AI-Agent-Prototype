@@ -63,5 +63,7 @@ def test_embedding_usage_updates_order_summary():
     assert summary["step_count"] == 1
     assert summary["total_input_tokens"] == 2000
     assert summary["steps"]["embedding_query"]["calls"] == 1
+    assert summary["models"]["text-embedding-3-small"]["calls"] == 1
+    assert summary["steps"]["embedding_query"]["models"]["text-embedding-3-small"]["calls"] == 1
 
     clear_order_cost_summary("order-123")
