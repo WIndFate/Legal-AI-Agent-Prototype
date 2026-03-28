@@ -3,7 +3,6 @@ from __future__ import annotations
 import html
 import os
 from io import BytesIO
-from pathlib import Path
 
 from reportlab.lib import colors
 from reportlab.lib.enums import TA_LEFT
@@ -71,6 +70,45 @@ class ReportPdfRenderer:
             return self.korean_font
         return self.japanese_font
 
+    def _font_name_for_text(self, text: str, language: str) -> str:
+        if not text:
+            return self._font_name_for_language(language)
+
+        if all(ord(char) < 128 for char in text):
+            return self.latin_font
+
+        if any("\u0900" <= char <= "\u097f" for char in text):
+            return self.nepali_font
+
+        if any("\uac00" <= char <= "\ud7af" for char in text):
+            return self.korean_font
+
+        if any(
+            ("\u3040" <= char <= "\u30ff")
+            or ("\u3400" <= char <= "\u9fff")
+            or ("\uf900" <= char <= "\ufaff")
+            for char in text
+        ):
+            return self._cjk_font_for_language(language)
+
+        return self._font_name_for_language(language)
+
+    def _paragraph_html(
+        self,
+        label: str,
+        value: str,
+        *,
+        label_font: str,
+        value_font: str,
+        label_color: str = "#8a8178",
+    ) -> str:
+        safe_label = html.escape(label)
+        safe_value = self._escape_text(value)
+        return (
+            f'<font name="{label_font}" color="{label_color}">{safe_label}</font>'
+            f"<br/><font name=\"{value_font}\">{safe_value}</font>"
+        )
+
     def build_pdf(
         self,
         *,
@@ -101,15 +139,16 @@ class ReportPdfRenderer:
         styles = getSampleStyleSheet()
         story = []
         cjk_font = self._cjk_font_for_language(language)
+        summary_font = self._font_name_for_text(summary, language)
 
-        title_style = ParagraphStyle(
-            "ReportTitle",
+        brand_style = ParagraphStyle(
+            "ReportBrand",
             parent=styles["Heading1"],
-            fontName=cjk_font,
-            fontSize=18,
+            fontName=self.latin_font,
+            fontSize=19,
             leading=24,
             textColor=colors.HexColor("#1f3a5f"),
-            spaceAfter=8,
+            spaceAfter=6,
             alignment=TA_LEFT,
         )
         body_style = ParagraphStyle(
@@ -132,6 +171,7 @@ class ReportPdfRenderer:
         section_style = ParagraphStyle(
             "ReportSection",
             parent=body_style,
+            fontName=self.latin_font,
             fontSize=11.5,
             leading=16,
             textColor=colors.HexColor("#1f3a5f"),
@@ -148,30 +188,30 @@ class ReportPdfRenderer:
             spaceAfter=2,
         )
 
-        story.append(Paragraph("ContractGuard", title_style))
-        story.append(Paragraph(self._escape_text("Analysis Report"), meta_style))
-        story.append(Paragraph(self._escape_text(summary), body_style))
+        story.append(Paragraph("ContractGuard", brand_style))
+        story.append(Paragraph('<font name="ContractGuardLatin">Analysis Report</font>', meta_style))
+        story.append(Paragraph(f'<font name="{summary_font}">{self._escape_text(summary)}</font>', body_style))
         story.append(Spacer(1, 4))
 
         summary_table = Table(
             [
                 [
-                    self._kv_block("Order ID", order_id, body_style, label_style, font_name=font_name),
-                    self._kv_block("Overall Risk", overall_risk_level, body_style, label_style, font_name=font_name),
+                    self._kv_block("Order ID", order_id, body_style, label_style, language=language),
+                    self._kv_block("Overall Risk", overall_risk_level, body_style, label_style, language=language),
                 ],
                 [
-                    self._kv_block("Clauses", str(total_clauses), body_style, label_style, font_name=font_name),
+                    self._kv_block("Clauses", str(total_clauses), body_style, label_style, language=language),
                     self._kv_block(
                         "Risk Counts",
                         f"High {high_risk_count} / Medium {medium_risk_count} / Low {low_risk_count}",
                         body_style,
                         label_style,
-                        font_name=font_name,
+                        language=language,
                     ),
                 ],
                 [
-                    self._kv_block("Created", created_at, body_style, label_style, font_name=font_name),
-                    self._kv_block("Expires", expires_at, body_style, label_style, font_name=font_name),
+                    self._kv_block("Created", created_at, body_style, label_style, language=language),
+                    self._kv_block("Expires", expires_at, body_style, label_style, language=language),
                 ],
             ],
             colWidths=[89 * mm, 89 * mm],
@@ -195,29 +235,34 @@ class ReportPdfRenderer:
         story.append(Spacer(1, 10))
 
         for index, clause in enumerate(clause_analyses, start=1):
+            clause_number = clause.get("clause_number", "")
+            clause_number_font = self._font_name_for_text(clause_number, language)
             story.append(
                 Paragraph(
-                    self._escape_text(f"Finding #{index:02d} · {clause.get('clause_number', '')}"),
+                    (
+                        f'<font name="{self.latin_font}">Finding #{index:02d}</font>'
+                        f'<font name="{clause_number_font}"> · {self._escape_text(clause_number)}</font>'
+                    ),
                     section_style,
                 )
             )
 
             clause_rows = [
-                [self._kv_block("Risk", clause.get("risk_level", ""), body_style, label_style, font_name=font_name)],
-                [self._kv_block("Assessment", clause.get("risk_reason", ""), body_style, label_style, font_name=font_name)],
+                [self._kv_block("Risk", clause.get("risk_level", ""), body_style, label_style, language=language)],
+                [self._kv_block("Assessment", clause.get("risk_reason", ""), body_style, label_style, language=language)],
             ]
 
             suggestion = clause.get("suggestion")
             if suggestion:
-                clause_rows.append([self._kv_block("Suggestion", suggestion, body_style, label_style, font_name=font_name)])
+                clause_rows.append([self._kv_block("Suggestion", suggestion, body_style, label_style, language=language)])
 
             referenced_law = clause.get("referenced_law")
             if referenced_law:
-                clause_rows.append([self._kv_block("Referenced Law", referenced_law, body_style, label_style, font_name=cjk_font)])
+                clause_rows.append([self._kv_block("Referenced Law", referenced_law, body_style, label_style, language=language)])
 
             original_text = clause.get("original_text")
             if original_text:
-                clause_rows.append([self._kv_block("Original Clause", original_text, body_style, label_style, font_name=cjk_font)])
+                clause_rows.append([self._kv_block("Original Clause", original_text, body_style, label_style, language=language)])
 
             clause_table = Table(clause_rows, colWidths=[178 * mm], hAlign="LEFT")
             clause_table.setStyle(
@@ -251,11 +296,12 @@ class ReportPdfRenderer:
         body_style: ParagraphStyle,
         label_style: ParagraphStyle,
         *,
-        font_name: str,
+        language: str,
     ) -> Paragraph:
-        label_html = f'<font color="#8a8178">{html.escape(label)}</font>'
-        value_html = self._escape_text(value)
-        return Paragraph(f"{label_html}<br/>{value_html}", self._clone_style(body_style, font_name))
+        label_font = self.latin_font
+        value_font = self._font_name_for_text(value, language)
+        html_text = self._paragraph_html(label, value, label_font=label_font, value_font=value_font)
+        return Paragraph(html_text, self._clone_style(body_style, value_font))
 
     @staticmethod
     def _clone_style(base_style: ParagraphStyle, font_name: str) -> ParagraphStyle:
