@@ -4,6 +4,7 @@ from datetime import datetime, timedelta, timezone
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from backend.config import get_settings
 from backend.models.order import Order
 from backend.models.report import Report
 from backend.services.ocr import extract_text_from_image
@@ -11,6 +12,7 @@ from backend.services.pdf_extractor import extract_text_from_pdf
 from backend.services.temp_uploads import delete_temp_upload, read_temp_upload
 
 logger = logging.getLogger(__name__)
+settings = get_settings()
 
 
 def strip_clause_originals(report_data: dict) -> dict:
@@ -47,7 +49,7 @@ async def save_report(
         total_clauses=report_data.get("total_clauses", 0),
         language=language,
         created_at=now,
-        expires_at=now + timedelta(hours=24),
+        expires_at=now + timedelta(hours=settings.REPORT_TTL_HOURS),
     )
     db.add(report)
     await db.commit()

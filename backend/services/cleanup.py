@@ -9,9 +9,12 @@ from backend.models.analysis_event import AnalysisEvent
 from backend.models.analysis_job import AnalysisJob
 from backend.models.order import Order
 from backend.models.report import Report
+from backend.config import get_settings
+from backend.services.costing import clear_order_cost_summary, get_order_cost_summary
 from backend.services.temp_uploads import delete_temp_upload
 
 logger = logging.getLogger(__name__)
+settings = get_settings()
 
 
 async def cleanup_expired_reports() -> int:
@@ -52,7 +55,7 @@ async def nullify_completed_contracts() -> int:
 async def cleanup_staged_uploads() -> int:
     """Delete staged uploads once they are no longer needed."""
     factory = get_session_factory()
-    cutoff = datetime.now(timezone.utc) - timedelta(hours=24)
+    cutoff = datetime.now(timezone.utc) - timedelta(hours=settings.REPORT_TTL_HOURS)
     async with factory() as session:
         result = await session.execute(
             select(Order).where(
@@ -97,11 +100,16 @@ async def fail_stale_analysis_jobs() -> int:
         rows = list(result.all())
         now = datetime.now(timezone.utc)
         for job, order in rows:
+            cost_summary = get_order_cost_summary(str(order.id))
+            if cost_summary:
+                job.cost_summary = cost_summary
             job.status = "failed"
             job.error_message = "Analysis timed out"
             job.failed_at = now
             order.analysis_status = "failed"
         await session.commit()
+        for _, order in rows:
+            clear_order_cost_summary(str(order.id))
         if rows:
             logger.info("Marked %d stale analysis jobs as failed", len(rows))
         return len(rows)
@@ -110,7 +118,7 @@ async def fail_stale_analysis_jobs() -> int:
 async def cleanup_expired_analysis_events() -> int:
     """Delete old analysis events after report/event retention window."""
     factory = get_session_factory()
-    cutoff = datetime.now(timezone.utc) - timedelta(hours=24)
+    cutoff = datetime.now(timezone.utc) - timedelta(hours=settings.REPORT_TTL_HOURS)
     async with factory() as session:
         result = await session.execute(
             delete(AnalysisEvent).where(AnalysisEvent.created_at < cutoff)

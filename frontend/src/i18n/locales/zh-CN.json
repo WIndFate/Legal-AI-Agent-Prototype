@@ -137,7 +137,7 @@
     "share": "分享",
     "share_text": "我用ContractGuard分析了合同风险",
     "language_locked_note": "本报告正文生成时已固定为{{language}}。切换站点语言只会影响界面文案，不会重新翻译报告内容。",
-    "share_note": "分享链接会打开 24 小时有效的报告页面。完整合同正文不会保留，但报告中的相关条款原文摘录会随报告一起展示。",
+    "share_note": "分享链接会打开 72 小时有效的报告页面。完整合同正文不会保留，但报告中的相关条款原文摘录会随报告一起展示。",
     "network_error": "报告暂时无法加载，可能是网络不稳定或请求超时，请稍后重试。",
     "show_original_clause": "查看对应原条款",
     "hide_original_clause": "收起原条款",
@@ -149,7 +149,7 @@
     "original_clause_label": "对应原条款",
     "original_contract_title": "原合同对照",
     "original_contract_session_note": "这里展示的是与当前风险点对应的条款原文摘录，方便和分析结果对照阅读；完整合同正文已从服务端删除。",
-    "original_contract_shared_note": "报告会在 24 小时内保留与风险点对应的条款原文摘录，方便阅读和分享；完整合同正文不会被保存。",
+    "original_contract_shared_note": "报告会在 72 小时内保留与风险点对应的条款原文摘录，方便阅读和分享；完整合同正文不会被保存。",
     "executive_kicker": "风险概要",
     "comparison_hint": "可在各条款分析卡内查看对应原文对比",
     "clause_count": "条款数",
@@ -158,7 +158,7 @@
     "filter_all": "全部条款",
     "filter_empty": "当前筛选下没有可显示的条款。",
     "expired_kicker": "报告已过期",
-    "expired_title": "该报告已超过 24 小时",
+    "expired_title": "该报告已超过 72 小时",
     "expired_body": "为了保护隐私，报告已自动删除。建议重新上传合同并开始新的分析。",
     "expired_action": "返回首页"
   },
@@ -205,7 +205,7 @@
   },
   "privacy": {
     "page_title": "隐私政策",
-    "summary": "ContractGuard 将您的隐私放在首位。完整合同正文在分析完成后立即从服务器删除；仅与风险点对应的条款原文摘录会保留在 24 小时报告中。我们仅收集邮箱地址，且仅用于发送报告链接。",
+    "summary": "ContractGuard 将您的隐私放在首位。完整合同正文在分析完成后立即从服务器删除；仅与风险点对应的条款原文摘录会保留在 72 小时报告中。我们仅收集邮箱地址，且仅用于发送报告链接。",
     "last_updated": "最后更新：{{date}}"
   },
   "terms": {

@@ -54,6 +54,7 @@ function normalizeRiskLevel(level: string): RiskFilter | null {
 
 const REPORT_TIMEOUT_MS = 12_000;
 const DEFAULT_FILTERS: RiskFilter[] = ['high', 'medium', 'low'];
+const REPORT_TTL_HOURS = 72;
 
 export default function ReportPage() {
   const { orderId } = useParams<{ orderId: string }>();
@@ -126,7 +127,7 @@ export default function ReportPage() {
           report: raw,
           language: sessionStorage.getItem(`report-language:${orderId}`) || i18n.language,
           created_at: new Date().toISOString(),
-          expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+          expires_at: new Date(Date.now() + REPORT_TTL_HOURS * 60 * 60 * 1000).toISOString(),
         };
         const savedOriginals = sessionStorage.getItem(`report-originals:${orderId}`);
         const originalByClause = savedOriginals ? JSON.parse(savedOriginals) as Record<string, string> : {};

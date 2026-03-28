@@ -158,7 +158,7 @@
     "filter_all": "All clauses",
     "filter_empty": "No clauses match the current filter.",
     "expired_kicker": "Report expired",
-    "expired_title": "This report is older than 24 hours",
+    "expired_title": "This report is older than 72 hours",
     "expired_body": "For privacy, the report has already been deleted. Upload a new contract to start a fresh analysis.",
     "expired_action": "Back to home"
   },
@@ -210,7 +210,7 @@
   },
   "terms": {
     "page_title": "Terms of Service",
-    "summary": "ContractGuard is an AI-powered contract risk analysis service. It is not legal advice — please consult a licensed attorney for binding legal decisions. No refunds after analysis begins. Reports are automatically deleted after 24 hours.",
+    "summary": "ContractGuard is an AI-powered contract risk analysis service. It is not legal advice — please consult a licensed attorney for binding legal decisions. No refunds after analysis begins. Reports are automatically deleted after 72 hours.",
     "last_updated": "Last updated: {{date}}"
   },
   "examples": {

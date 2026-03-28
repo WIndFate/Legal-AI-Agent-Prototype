@@ -38,6 +38,7 @@ class FakeJob:
         self.current_step = kwargs.get("current_step")
         self.progress_message = kwargs.get("progress_message")
         self.progress_seq = kwargs.get("progress_seq", 0)
+        self.cost_summary = kwargs.get("cost_summary")
         self.target_language = kwargs.get("target_language", "zh-CN")
         self.error_message = kwargs.get("error_message")
         self.started_at = kwargs.get("started_at")

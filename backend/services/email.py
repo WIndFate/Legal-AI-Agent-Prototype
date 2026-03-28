@@ -37,6 +37,7 @@ async def send_report_email(email: str, order_id: str, language: str) -> bool:
     }
 
     subject = subjects.get(language, subjects["ja"])
+    expires_text = f"This link expires in {settings.REPORT_TTL_HOURS} hours."
 
     try:
         logger.info("Sending report email: order_id=%s email=%s language=%s", order_id, email, language)
@@ -50,7 +51,7 @@ async def send_report_email(email: str, order_id: str, language: str) -> bool:
                     "subject": subject,
                     "html": (
                         f'<p><a href="{report_url}">{subject}</a></p>'
-                        f'<p>This link expires in 24 hours.</p>'
+                        f"<p>{expires_text}</p>"
                         f'<hr><p style="font-size:12px;color:#666;">'
                         f'本サービスは法律相談ではありません。具体的な法的判断は弁護士にご相談ください。</p>'
                     ),

@@ -106,7 +106,7 @@ export default function PaymentPage() {
           </div>
           <div className="payment-summary-item">
             <span>{t('report.title')}</span>
-            <strong>24h</strong>
+            <strong>72h</strong>
           </div>
           <div className="payment-summary-item payment-summary-item-wide">
             <span>{t('upload.trust_privacy')}</span>

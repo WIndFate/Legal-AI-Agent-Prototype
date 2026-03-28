@@ -32,7 +32,7 @@ def _make_report_row(
     row.total_clauses = 2
     row.language = language
     row.created_at = now - timedelta(hours=1)
-    row.expires_at = now - timedelta(hours=1) if expired else now + timedelta(hours=23)
+    row.expires_at = now - timedelta(hours=1) if expired else now + timedelta(hours=71)
     return row
 
 

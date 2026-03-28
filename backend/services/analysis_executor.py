@@ -39,6 +39,36 @@ def _normalize_step(event: dict, fallback: str | None = None) -> str | None:
     return fallback
 
 
+def _build_cost_summary_snapshot(order_id: str, order: Order | None = None, report_data: dict | None = None) -> dict | None:
+    cost_summary = get_order_cost_summary(order_id)
+    if not cost_summary:
+        return None
+
+    if order is not None:
+        cost_summary.update(
+            {
+                "input_type": order.input_type,
+                "quote_mode": order.quote_mode,
+                "estimate_source": order.estimate_source,
+                "page_estimate": order.page_estimate,
+                "estimated_tokens": order.estimated_tokens,
+                "target_language": order.target_language,
+            }
+        )
+
+    if report_data is not None:
+        cost_summary.update(
+            {
+                "total_clauses": report_data.get("total_clauses", 0),
+                "high_risk_count": report_data.get("high_risk_count", 0),
+                "medium_risk_count": report_data.get("medium_risk_count", 0),
+                "low_risk_count": report_data.get("low_risk_count", 0),
+            }
+        )
+
+    return cost_summary
+
+
 async def _append_event(
     session,
     job: AnalysisJob,
@@ -110,6 +140,7 @@ async def _run_analysis(job_id: str, order_id: str) -> None:
 
             await ensure_contract_text(order, session)
             if not order.contract_text:
+                job.cost_summary = _build_cost_summary_snapshot(order_id, order)
                 await _append_event(
                     session,
                     job,
@@ -119,6 +150,7 @@ async def _run_analysis(job_id: str, order_id: str) -> None:
                 )
                 order.analysis_status = "failed"
                 await session.commit()
+                clear_order_cost_summary(order_id)
                 return
 
             now = datetime.now(timezone.utc)
@@ -146,6 +178,7 @@ async def _run_analysis(job_id: str, order_id: str) -> None:
                 job = await session.get(AnalysisJob, job_id)
                 order = await session.get(Order, order_id)
                 if job is not None:
+                    job.cost_summary = _build_cost_summary_snapshot(order_id, order)
                     await _append_event(
                         session,
                         job,
@@ -156,6 +189,7 @@ async def _run_analysis(job_id: str, order_id: str) -> None:
                 if order is not None:
                     order.analysis_status = "failed"
                     await session.commit()
+                clear_order_cost_summary(order_id)
             logger.exception("Analysis executor failed: job_id=%s order_id=%s", job_id, order_id)
             posthog_capture(email or order_id, "analysis_failed", {"order_id": order_id, "job_id": job_id, "error": str(exc)})
             return
@@ -167,6 +201,7 @@ async def _run_analysis(job_id: str, order_id: str) -> None:
                 job = await session.get(AnalysisJob, job_id)
                 order = await session.get(Order, order_id)
                 if job is not None:
+                    job.cost_summary = _build_cost_summary_snapshot(order_id, order)
                     await _append_event(
                         session,
                         job,
@@ -177,6 +212,7 @@ async def _run_analysis(job_id: str, order_id: str) -> None:
                 if order is not None:
                     order.analysis_status = "failed"
                     await session.commit()
+                clear_order_cost_summary(order_id)
             return
 
         async with factory() as session:
@@ -186,22 +222,9 @@ async def _run_analysis(job_id: str, order_id: str) -> None:
                 return
 
             persisted_report = strip_clause_originals(final_report)
-            cost_summary = get_order_cost_summary(order_id)
+            cost_summary = _build_cost_summary_snapshot(order_id, order, persisted_report)
             if cost_summary:
-                cost_summary.update(
-                    {
-                        "input_type": order.input_type,
-                        "quote_mode": order.quote_mode,
-                        "estimate_source": order.estimate_source,
-                        "page_estimate": order.page_estimate,
-                        "estimated_tokens": order.estimated_tokens,
-                        "target_language": target_language,
-                        "total_clauses": persisted_report.get("total_clauses", 0),
-                        "high_risk_count": persisted_report.get("high_risk_count", 0),
-                        "medium_risk_count": persisted_report.get("medium_risk_count", 0),
-                        "low_risk_count": persisted_report.get("low_risk_count", 0),
-                    }
-                )
+                job.cost_summary = cost_summary
             report_payload = await save_report(order_id, persisted_report, target_language, session, cost_summary=cost_summary)
             await cache_report(order_id, report_payload)
             email_sent = await send_report_email(email, order_id, target_language)
@@ -256,8 +279,10 @@ async def reset_failed_job(job_id: str) -> None:
         job.current_step = None
         job.progress_message = None
         job.progress_seq = 0
+        job.cost_summary = None
         job.error_message = None
         job.failed_at = None
+        clear_order_cost_summary(str(job.order_id))
         job.finished_at = None
         job.last_event_at = None
         order = await session.get(Order, job.order_id)

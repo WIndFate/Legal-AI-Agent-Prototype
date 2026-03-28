@@ -137,7 +137,7 @@
     "share": "Chia sẻ",
     "share_text": "Tôi đã phân tích rủi ro hợp đồng bằng ContractGuard",
     "language_locked_note": "Nội dung báo cáo này đã được cố định bằng {{language}} khi tạo. Việc đổi ngôn ngữ trang chỉ thay đổi giao diện, không dịch lại nội dung báo cáo.",
-    "share_note": "Liên kết chia sẻ sẽ mở báo cáo còn hiệu lực trong 24 giờ. Toàn văn hợp đồng không được giữ lại, nhưng các đoạn trích điều khoản liên quan vẫn hiển thị trong báo cáo.",
+    "share_note": "Liên kết chia sẻ sẽ mở báo cáo còn hiệu lực trong 72 giờ. Toàn văn hợp đồng không được giữ lại, nhưng các đoạn trích điều khoản liên quan vẫn hiển thị trong báo cáo.",
     "network_error": "Không thể tải báo cáo vì mạng không ổn định hoặc yêu cầu đã hết thời gian chờ.",
     "show_original_clause": "Xem điều khoản gốc",
     "hide_original_clause": "Ẩn điều khoản gốc",
@@ -149,7 +149,7 @@
     "original_clause_label": "Điều khoản gốc",
     "original_contract_title": "Đối chiếu hợp đồng gốc",
     "original_contract_session_note": "Ở đây chỉ hiển thị phần trích điều khoản gốc gắn với nhận định hiện tại để bạn đối chiếu. Toàn bộ nội dung hợp đồng đã được xóa khỏi máy chủ.",
-    "original_contract_shared_note": "Báo cáo 24 giờ chỉ giữ lại các đoạn trích điều khoản gắn với từng nhận định để tiện đọc và chia sẻ. Toàn văn hợp đồng không được lưu lại.",
+    "original_contract_shared_note": "Báo cáo 72 giờ chỉ giữ lại các đoạn trích điều khoản gắn với từng nhận định để tiện đọc và chia sẻ. Toàn văn hợp đồng không được lưu lại.",
     "executive_kicker": "Tóm tắt rủi ro",
     "comparison_hint": "So sánh với điều khoản gốc trong mỗi thẻ phân tích",
     "clause_count": "Số điều khoản",
@@ -158,7 +158,7 @@
     "filter_all": "Tất cả điều khoản",
     "filter_empty": "Không có điều khoản nào phù hợp với bộ lọc hiện tại.",
     "expired_kicker": "Báo cáo đã hết hạn",
-    "expired_title": "Báo cáo này đã quá 24 giờ",
+    "expired_title": "Báo cáo này đã quá 72 giờ",
     "expired_body": "Vì quyền riêng tư, báo cáo đã được xóa tự động. Hãy tải lên hợp đồng mới để phân tích lại.",
     "expired_action": "Về trang chủ"
   },
@@ -205,12 +205,12 @@
   },
   "privacy": {
     "page_title": "Chính sách bảo mật",
-    "summary": "ContractGuard đặt quyền riêng tư của bạn lên hàng đầu. Toàn văn hợp đồng sẽ bị xóa khỏi máy chủ ngay sau khi phân tích. Chỉ các đoạn trích điều khoản gắn với kết quả mới được giữ trong báo cáo 24 giờ. Chúng tôi chỉ thu thập địa chỉ email để gửi liên kết báo cáo.",
+    "summary": "ContractGuard đặt quyền riêng tư của bạn lên hàng đầu. Toàn văn hợp đồng sẽ bị xóa khỏi máy chủ ngay sau khi phân tích. Chỉ các đoạn trích điều khoản gắn với kết quả mới được giữ trong báo cáo 72 giờ. Chúng tôi chỉ thu thập địa chỉ email để gửi liên kết báo cáo.",
     "last_updated": "Cập nhật lần cuối: {{date}}"
   },
   "terms": {
     "page_title": "Điều khoản dịch vụ",
-    "summary": "ContractGuard là dịch vụ phân tích rủi ro hợp đồng bằng AI. Đây không phải tư vấn pháp lý — vui lòng tham khảo luật sư cho các quyết định pháp lý. Không hoàn tiền sau khi phân tích bắt đầu. Báo cáo tự động xóa sau 24 giờ.",
+    "summary": "ContractGuard là dịch vụ phân tích rủi ro hợp đồng bằng AI. Đây không phải tư vấn pháp lý — vui lòng tham khảo luật sư cho các quyết định pháp lý. Không hoàn tiền sau khi phân tích bắt đầu. Báo cáo tự động xóa sau 72 giờ.",
     "last_updated": "Cập nhật lần cuối: {{date}}"
   },
   "examples": {

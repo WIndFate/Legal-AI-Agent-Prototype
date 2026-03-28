@@ -137,7 +137,7 @@
     "share": "Bagikan",
     "share_text": "Saya menganalisis kontrak saya dengan ContractGuard",
     "language_locked_note": "Isi laporan ini telah dikunci dalam {{language}} saat dibuat. Mengganti bahasa situs hanya mengubah antarmuka, bukan menerjemahkan ulang isi laporan.",
-    "share_note": "Tautan yang dibagikan akan membuka laporan yang berlaku 24 jam. Teks kontrak lengkap tidak disimpan, tetapi cuplikan klausul yang relevan tetap terlihat di dalam laporan.",
+    "share_note": "Tautan yang dibagikan akan membuka laporan yang berlaku 72 jam. Teks kontrak lengkap tidak disimpan, tetapi cuplikan klausul yang relevan tetap terlihat di dalam laporan.",
     "network_error": "Laporan tidak dapat dimuat karena jaringan tidak stabil atau permintaan habis waktu.",
     "show_original_clause": "Lihat klausul asli",
     "hide_original_clause": "Sembunyikan klausul asli",
@@ -149,7 +149,7 @@
     "original_clause_label": "Klausul asli",
     "original_contract_title": "Perbandingan kontrak asli",
     "original_contract_session_note": "Di sini hanya ditampilkan cuplikan klausul asli yang terkait dengan temuan saat ini agar mudah dibandingkan. Teks kontrak lengkap sudah dihapus dari server.",
-    "original_contract_shared_note": "Laporan 24 jam hanya menyimpan cuplikan klausul yang terkait dengan temuan agar mudah dibaca dan dibagikan. Teks kontrak lengkap tidak disimpan.",
+    "original_contract_shared_note": "Laporan 72 jam hanya menyimpan cuplikan klausul yang terkait dengan temuan agar mudah dibaca dan dibagikan. Teks kontrak lengkap tidak disimpan.",
     "executive_kicker": "Ringkasan Risiko",
     "comparison_hint": "Bandingkan dengan klausul asli di dalam setiap kartu analisis",
     "clause_count": "Jumlah pasal",
@@ -158,7 +158,7 @@
     "filter_all": "Semua klausul",
     "filter_empty": "Tidak ada klausul yang cocok dengan filter saat ini.",
     "expired_kicker": "Laporan kedaluwarsa",
-    "expired_title": "Laporan ini sudah lebih dari 24 jam",
+    "expired_title": "Laporan ini sudah lebih dari 72 jam",
     "expired_body": "Untuk privasi, laporan ini sudah dihapus otomatis. Unggah kontrak baru untuk memulai analisis lagi.",
     "expired_action": "Kembali ke beranda"
   },
@@ -205,12 +205,12 @@
   },
   "privacy": {
     "page_title": "Kebijakan Privasi",
-    "summary": "ContractGuard mengutamakan privasi Anda. Teks kontrak lengkap dihapus dari server segera setelah analisis selesai. Hanya cuplikan klausul yang terkait dengan hasil yang disimpan di laporan 24 jam. Kami hanya mengumpulkan alamat email Anda untuk mengirim tautan laporan.",
+    "summary": "ContractGuard mengutamakan privasi Anda. Teks kontrak lengkap dihapus dari server segera setelah analisis selesai. Hanya cuplikan klausul yang terkait dengan hasil yang disimpan di laporan 72 jam. Kami hanya mengumpulkan alamat email Anda untuk mengirim tautan laporan.",
     "last_updated": "Terakhir diperbarui: {{date}}"
   },
   "terms": {
     "page_title": "Ketentuan Layanan",
-    "summary": "ContractGuard adalah layanan analisis risiko kontrak berbasis AI. Ini bukan konsultasi hukum — silakan berkonsultasi dengan pengacara untuk keputusan hukum. Tidak ada pengembalian dana setelah analisis dimulai. Laporan dihapus otomatis setelah 24 jam.",
+    "summary": "ContractGuard adalah layanan analisis risiko kontrak berbasis AI. Ini bukan konsultasi hukum — silakan berkonsultasi dengan pengacara untuk keputusan hukum. Tidak ada pengembalian dana setelah analisis dimulai. Laporan dihapus otomatis setelah 72 jam.",
     "last_updated": "Terakhir diperbarui: {{date}}"
   },
   "examples": {

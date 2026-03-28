@@ -137,7 +137,7 @@
     "share": "Compartilhar",
     "share_text": "Analisei meu contrato com o ContractGuard",
     "language_locked_note": "O conteúdo deste relatório foi fixado em {{language}} no momento da geração. Alterar o idioma do site muda apenas a interface, não retraduz o relatório.",
-    "share_note": "O link compartilhado abre o relatório válido por 24 horas. O texto completo do contrato não é mantido, mas os trechos relevantes das cláusulas continuam visíveis no relatório.",
+    "share_note": "O link compartilhado abre o relatório válido por 72 horas. O texto completo do contrato não é mantido, mas os trechos relevantes das cláusulas continuam visíveis no relatório.",
     "network_error": "Não foi possível carregar o relatório porque a rede está instável ou a solicitação expirou.",
     "show_original_clause": "Mostrar cláusula original",
     "hide_original_clause": "Ocultar cláusula original",
@@ -149,7 +149,7 @@
     "original_clause_label": "Cláusula original",
     "original_contract_title": "Referência do contrato original",
     "original_contract_session_note": "Aqui aparece apenas o trecho da cláusula original ligado ao ponto analisado, para facilitar a comparação. O texto completo do contrato já foi removido do servidor.",
-    "original_contract_shared_note": "O relatório de 24 horas mantém apenas trechos das cláusulas ligados aos achados para facilitar leitura e compartilhamento. O texto completo do contrato não é armazenado.",
+    "original_contract_shared_note": "O relatório de 72 horas mantém apenas trechos das cláusulas ligados aos achados para facilitar leitura e compartilhamento. O texto completo do contrato não é armazenado.",
     "executive_kicker": "Resumo de Riscos",
     "comparison_hint": "Compare com a cláusula original dentro de cada cartão de análise",
     "clause_count": "Cláusulas",
@@ -158,7 +158,7 @@
     "filter_all": "Todas as cláusulas",
     "filter_empty": "Nenhuma cláusula corresponde ao filtro atual.",
     "expired_kicker": "Relatório expirado",
-    "expired_title": "Este relatório já passou de 24 horas",
+    "expired_title": "Este relatório já passou de 72 horas",
     "expired_body": "Por privacidade, o relatório já foi excluído automaticamente. Envie um novo contrato para iniciar outra análise.",
     "expired_action": "Voltar para a página inicial"
   },
@@ -205,12 +205,12 @@
   },
   "privacy": {
     "page_title": "Política de Privacidade",
-    "summary": "O ContractGuard prioriza sua privacidade. O texto completo do contrato é removido do servidor imediatamente após a análise. Apenas trechos de cláusulas ligados aos achados permanecem no relatório de 24 horas. Coletamos apenas seu e-mail, usado exclusivamente para enviar o link do relatório.",
+    "summary": "O ContractGuard prioriza sua privacidade. O texto completo do contrato é removido do servidor imediatamente após a análise. Apenas trechos de cláusulas ligados aos achados permanecem no relatório de 72 horas. Coletamos apenas seu e-mail, usado exclusivamente para enviar o link do relatório.",
     "last_updated": "Última atualização: {{date}}"
   },
   "terms": {
     "page_title": "Termos de Serviço",
-    "summary": "O ContractGuard é um serviço de análise de riscos contratuais com IA. Não constitui assessoria jurídica — consulte um advogado para decisões legais. Sem reembolso após o início da análise. Relatórios são excluídos automaticamente após 24 horas.",
+    "summary": "O ContractGuard é um serviço de análise de riscos contratuais com IA. Não constitui assessoria jurídica — consulte um advogado para decisões legais. Sem reembolso após o início da análise. Relatórios são excluídos automaticamente após 72 horas.",
     "last_updated": "Última atualização: {{date}}"
   },
   "examples": {

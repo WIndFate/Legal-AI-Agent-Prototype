@@ -74,7 +74,7 @@ export default function HomeUploadSection({
       <div className="intake-trust-grid">
         <div className="intake-trust-card">
           <span>{t('upload.trust_privacy')}</span>
-          <strong>24h</strong>
+          <strong>72h</strong>
           <p>{t('pricing.assurance_privacy_desc')}</p>
         </div>
         <div className="intake-trust-card">

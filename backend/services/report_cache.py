@@ -1,12 +1,12 @@
 import json
 import logging
 
+from backend.config import get_settings
 from backend.dependencies import get_redis
 
 logger = logging.getLogger(__name__)
 
-# Reports expire after 24 hours
-REPORT_TTL_SECONDS = 24 * 60 * 60
+REPORT_TTL_SECONDS = get_settings().REPORT_TTL_HOURS * 60 * 60
 
 
 def _cache_key(order_id: str) -> str:
@@ -14,7 +14,7 @@ def _cache_key(order_id: str) -> str:
 
 
 async def cache_report(order_id: str, report_data: dict) -> None:
-    """Store serialized report payload in Redis with 24h TTL."""
+    """Store serialized report payload in Redis with configured TTL."""
     redis = await get_redis()
     key = _cache_key(order_id)
     await redis.set(key, json.dumps(report_data, ensure_ascii=False), ex=REPORT_TTL_SECONDS)

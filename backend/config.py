@@ -42,7 +42,7 @@ class Settings(BaseSettings):
 
     # App
     FRONTEND_URL: str = "http://localhost:5173"
-    REPORT_TTL_HOURS: int = 24
+    REPORT_TTL_HOURS: int = 72
     UPLOAD_STAGING_DIR: str = "/tmp/contract_checker_uploads"
     MAX_UPLOAD_PAGES: int = 30
     MAX_CONTRACT_TOKENS: int = 60000

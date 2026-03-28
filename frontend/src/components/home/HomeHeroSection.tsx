@@ -37,7 +37,7 @@ export default function HomeHeroSection({ preview }: HomeHeroSectionProps) {
           </div>
           <div className="hero-metric">
             <span>{t('report.title')}</span>
-            <strong>24h</strong>
+            <strong>72h</strong>
           </div>
           <div className="hero-metric">
             <span>{t('report.referenced_law')}</span>

@@ -390,7 +390,7 @@ export default function ReviewPage() {
             <div className="review-assurance-grid">
               <div className="review-assurance-card">
                 <span>{t('upload.trust_privacy')}</span>
-                <strong>24h</strong>
+                <strong>72h</strong>
               </div>
               <div className="review-assurance-card">
                 <span>{t('report.referenced_law')}</span>
