@@ -9,7 +9,7 @@ from backend.config import get_settings
 from backend.models.base import Base
 
 # Import all models so they register with Base.metadata
-from backend.models import analysis_event, analysis_job, order, referral, report  # noqa: F401
+from backend.models import analysis_event, analysis_job, order, order_cost_estimate, referral, report  # noqa: F401
 
 config = context.config
 
