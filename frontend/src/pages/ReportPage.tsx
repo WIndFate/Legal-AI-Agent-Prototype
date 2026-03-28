@@ -96,24 +96,14 @@ export default function ReportPage() {
 
     try {
       setDownloadingPdf(true);
-      const response = await fetchWithRetry(`/api/report/${data.order_id}/pdf`, undefined, {
-        timeoutMs: REPORT_TIMEOUT_MS,
-        retries: 2,
-        retryDelayMs: 700,
-      });
-      if (!response.ok) {
-        throw new Error(`Failed: ${response.status}`);
-      }
-
-      const blob = await response.blob();
-      const blobUrl = window.URL.createObjectURL(blob);
+      const pdfUrl = `/api/report/${data.order_id}/pdf`;
       const link = document.createElement('a');
-      link.href = blobUrl;
+      link.href = pdfUrl;
       link.download = `contractguard-report-${data.order_id}.pdf`;
+      link.rel = 'noopener';
       document.body.appendChild(link);
       link.click();
       link.remove();
-      window.URL.revokeObjectURL(blobUrl);
     } catch {
       setError(i18n.t('report.network_error'));
     } finally {
