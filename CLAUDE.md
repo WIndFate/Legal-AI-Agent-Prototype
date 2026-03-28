@@ -49,7 +49,7 @@ All five docs must stay consistent with the actual codebase. Do not commit code-
 
 ## Project Overview
 
-**契約チェッカー** — An AI-powered contract risk analysis service for foreign residents in Japan. Users upload Japanese contracts (photo/PDF/text), pay per use (¥299–¥1,599), and receive a report in their selected language while progress is exposed through a persistent snapshot-plus-event stream flow.
+**契約チェッカー** — An AI-powered contract risk analysis service for foreign residents in Japan. Users upload Japanese contracts (photo/PDF/text), pay per use with length-based pricing (`¥75 / 1000 tokens`, minimum `¥200`), and receive a report in their selected language while progress is exposed through a persistent snapshot-plus-event stream flow.
 
 **Target Users:** Chinese people living in Japan (~800K) who need to understand Japanese legal contracts but face language barriers.
 
@@ -85,7 +85,7 @@ Current status as of 2026-03-28:
 - Payment-time cost estimation is now persisted separately in `order_cost_estimates`: each order stores an `estimate_snapshot`, later an `actual_snapshot`, and finally a `comparison_snapshot`, all tagged with the estimate version, pricing-policy version, and the planned/actual model mix so pricing accuracy can be audited across future model upgrades.
 - Local Docker startup now uses health checks for `postgres`, `redis`, and `backend`, and key frontend pages use a small retry wrapper so brief backend warm-up windows do not surface as user-facing proxy failures.
 - Backend containers now auto-apply Alembic migrations to `head` on startup before Uvicorn boots, guarded by a PostgreSQL advisory lock and a legacy-schema detection/stamp path so old Docker volumes can move forward safely without manual migration steps.
-- A new read-only operational endpoint, `GET /api/eval/operations`, now exposes margin, estimate-vs-actual deltas, language/input/tier splits, model-signature splits, and recent-order summaries for business monitoring.
+- A new read-only operational endpoint, `GET /api/eval/operations`, now exposes margin, estimate-vs-actual deltas, language/input/pricing-model splits, paid-price-band splits, model-signature splits, and recent-order summaries for business monitoring.
 - Production credentials and live third-party testing still pending.
 
 ---
@@ -184,7 +184,7 @@ backend/
     ocr.py            # GPT-4o Vision OCR
     pdf_extractor.py  # pypdf + OCR fallback
     temp_uploads.py   # Temporary upload staging for pre-payment OCR flows
-    token_estimator.py # tiktoken + 4 price tiers + page-count fallback
+    token_estimator.py # tiktoken + linear token pricing (`¥75 / 1k`, minimum `¥200`) + internal page-count fallback
     pii_detector.py   # Regex PII detection (phone, email, mynumber, address, postal)
     payment.py        # KOMOJU API client + HMAC webhook verification
     email.py          # Resend API client (9-language subjects)
@@ -284,14 +284,14 @@ Embeddings are generated via OpenAI API (httpx direct call, not langchain).
 
 ### Runtime pricing policy
 - Upload pricing is no longer hardcoded directly in Python constants.
-- `token_estimator.py` loads the active tier table from `backend/data/pricing_policy.json`.
-- The current provisional table is `basic=299`, `standard=499`, `detailed=799`, `complex=1599`, with `complex` covering the supported upper bound (`MAX_UPLOAD_PAGES=30`) instead of a fake infinite ceiling.
+- `token_estimator.py` loads the active linear pricing policy from `backend/data/pricing_policy.json`.
+- The current runtime policy is `¥75 / 1000 tokens` with a `¥200` minimum charge. Internally, page estimates remain only as a guardrail for upload limits and OCR planning.
 - Each paid order now also stores a payment-time estimate snapshot keyed by `COST_ESTIMATE_VERSION` and `pricing_policy_version`, including predicted clause counts, step-level estimated costs, quoted margin, and the planned model mix (`ocr/parse/analyze/suggestion/translation/embedding`).
 - Analysis completion or failure now updates that same record with an `actual_snapshot` and `comparison_snapshot`, so pricing accuracy can be analyzed as “predicted vs actual” instead of only looking at final realized cost.
 - `GET /api/eval/costs` mixes persisted `reports.cost_summary` with seeded baseline samples from `backend/data/cost_samples_seed.json` until at least 10 samples are available, so early pricing analysis is not based on a single order.
 - `GET /api/eval/costs` returns both `recommended_price_jpy_cost_floor` and `recommended_price_jpy_target_margin`; the latter folds in `target_margin_rate` (currently default `0.75`) so pricing reviews can reason about profit targets, not just raw API cost.
 - `GET /api/eval/costs` now also exposes estimate-vs-actual deltas plus grouping by `estimate_version` and model signature, so future model swaps can be compared on margin impact.
-- `GET /api/eval/operations` is intentionally read-only and excludes seeded samples; it returns real-order aggregates for revenue, actual cost, actual margin, estimate deltas, recent orders, and splits by price tier, input type, quote mode, target language, estimate version, and model signature.
+- `GET /api/eval/operations` is intentionally read-only and excludes seeded samples; it returns real-order aggregates for revenue, actual cost, actual margin, estimate deltas, recent orders, and splits by pricing model, paid-price band, input type, quote mode, target language, estimate version, and model signature.
 
 ### Cleanup and privacy
 - `cleanup.py` runs every hour via APScheduler in lifespan

@@ -158,8 +158,8 @@ docker compose up -d backend postgres redis
 - Each paid order now also writes a persisted `order_cost_estimates` row: payment-time `estimate_snapshot`, later `actual_snapshot`, and finally `comparison_snapshot`.
 - Those snapshots record both the planned model mix and the actual model usage (`ocr / parse / analyze / suggestion / translation / embedding`) so future model upgrades can be compared by margin impact, not just total spend.
 - `GET /api/eval/costs` now also groups estimate-vs-actual deltas by `estimate_version` and by model signature, making pricing-model revisions and model swaps auditable over time.
-- `GET /api/eval/operations` is a read-only operations endpoint built on real orders only; it surfaces revenue, actual cost, actual margin, estimate-vs-actual deltas, recent orders, and groupings by tier, input type, quote mode, language, estimate version, and model signature.
-- Runtime pricing is now loaded from `backend/data/pricing_policy.json` instead of being hardcoded in Python. The current provisional table remains `¥299 / ¥499 / ¥799 / ¥1599`.
+- `GET /api/eval/operations` is a read-only operations endpoint built on real orders only; it surfaces revenue, actual cost, actual margin, estimate-vs-actual deltas, recent orders, and groupings by pricing model, paid-price band, input type, quote mode, language, estimate version, and model signature.
+- Runtime pricing is now loaded from `backend/data/pricing_policy.json` instead of being hardcoded in Python. The current policy is linear: `¥75 / 1000 tokens` with a `¥200` minimum charge.
 - `/api/eval/costs` now reports both a cost-floor recommendation and a target-margin recommendation (`target_margin_rate`, default `0.75`) so pricing reviews can distinguish “minimum safe price” from “commercial target price”.
 - `PARSE_MODEL` and `SUGGESTION_MODEL` are now configurable and default to `gpt-4o-mini`, while formal OCR and per-clause risk classification remain on `gpt-4o` by default.
 - `analyze_risks` now runs clause by clause instead of maintaining one growing multi-round tool-calling conversation, which materially reduces prompt growth and per-order cost.
