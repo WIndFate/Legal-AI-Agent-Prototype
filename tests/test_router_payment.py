@@ -31,7 +31,7 @@ class FakeOrder:
         self.input_type = kwargs.get("input_type", "text")
         self.estimated_tokens = kwargs.get("estimated_tokens", 100)
         self.page_estimate = kwargs.get("page_estimate", 1)
-        self.price_tier = kwargs.get("price_tier", "basic")
+        self.price_tier = kwargs.get("price_tier", "token_linear")
         self.price_jpy = kwargs.get("price_jpy", 299)
         self.quote_mode = kwargs.get("quote_mode", "exact")
         self.estimate_source = kwargs.get("estimate_source", "raw_text")
@@ -124,8 +124,6 @@ async def test_create_payment_happy_path():
                         "contract_text": "第1条 テスト契約",
                         "input_type": "text",
                         "estimated_tokens": 50,
-                        "page_estimate": 1,
-                        "price_tier": "basic",
                         "price_jpy": 299,
                         "target_language": "zh-CN",
                     },
@@ -165,8 +163,6 @@ async def test_create_payment_dev_bypass():
                         "contract_text": "第1条",
                         "input_type": "text",
                         "estimated_tokens": 10,
-                        "page_estimate": 1,
-                        "price_tier": "basic",
                         "price_jpy": 299,
                     },
                 )
@@ -194,8 +190,6 @@ async def test_create_payment_invalid_email_returns_422():
                     "contract_text": "第1条",
                     "input_type": "text",
                     "estimated_tokens": 10,
-                    "page_estimate": 1,
-                    "price_tier": "basic",
                     "price_jpy": 299,
                 },
             )

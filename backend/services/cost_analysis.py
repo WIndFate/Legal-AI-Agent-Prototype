@@ -10,7 +10,6 @@ from backend.config import get_settings
 from backend.models.order import Order
 from backend.models.order_cost_estimate import OrderCostEstimate
 from backend.models.report import Report
-from backend.services.token_estimator import get_price_tiers
 
 
 DEFAULT_PAYMENT_FEE_RATE = 0.0325
@@ -83,7 +82,8 @@ def build_cost_pricing_report(
 
     by_input_type: dict[str, list[float]] = {}
     by_quote_mode: dict[str, list[float]] = {}
-    by_price_tier: dict[str, list[dict[str, Any]]] = {}
+    by_pricing_model: dict[str, list[dict[str, Any]]] = {}
+    by_paid_price_band: dict[str, list[dict[str, Any]]] = {}
     by_estimate_version: dict[str, list[dict[str, Any]]] = {}
     by_model_signature: dict[str, list[dict[str, Any]]] = {}
     estimate_cost_deltas: list[float] = []
@@ -92,7 +92,8 @@ def build_cost_pricing_report(
     for sample in samples:
         by_input_type.setdefault(sample["input_type"], []).append(float(sample["total_cost_jpy"]))
         by_quote_mode.setdefault(sample["quote_mode"], []).append(float(sample["total_cost_jpy"]))
-        by_price_tier.setdefault(sample["price_tier"], []).append(sample)
+        by_pricing_model.setdefault(str(sample.get("pricing_model") or "unknown"), []).append(sample)
+        by_paid_price_band.setdefault(_price_band_label(float(sample["paid_price_jpy"])), []).append(sample)
         if sample.get("estimate_version"):
             by_estimate_version.setdefault(str(sample["estimate_version"]), []).append(sample)
         if sample.get("model_signature"):
@@ -102,51 +103,50 @@ def build_cost_pricing_report(
         if sample.get("estimate_vs_actual_margin_delta_jpy") is not None:
             estimate_margin_deltas.append(float(sample["estimate_vs_actual_margin_delta_jpy"]))
 
-    tier_price_lookup = {tier["name"]: tier["price_jpy"] for tier in get_price_tiers()}
-    tier_rows = []
-    for price_tier, tier_samples in by_price_tier.items():
-        tier_costs = [float(sample["total_cost_jpy"]) for sample in tier_samples]
-        tier_summary = summarize_numeric(tier_costs)
-        current_list_price = tier_price_lookup.get(price_tier, 0)
+    pricing_rows = []
+    for pricing_model, pricing_samples in by_pricing_model.items():
+        model_costs = [float(sample["total_cost_jpy"]) for sample in pricing_samples]
+        model_summary = summarize_numeric(model_costs)
+        current_avg_price = round(
+            sum(float(sample["paid_price_jpy"]) for sample in pricing_samples) / len(pricing_samples),
+            3,
+        )
         cost_floor_price = recommend_price_jpy(
-            tier_summary["p95"],
+            model_summary["p95"],
             payment_fee_rate=payment_fee_rate,
             fixed_buffer_jpy=fixed_buffer_jpy,
             safety_multiplier=safety_multiplier,
         )
         target_margin_price = recommend_price_jpy(
-            tier_summary["p95"],
+            model_summary["p95"],
             payment_fee_rate=payment_fee_rate,
             fixed_buffer_jpy=fixed_buffer_jpy,
             safety_multiplier=safety_multiplier,
             target_margin_rate=target_margin_rate,
         )
         adjusted_p95_cost = round(
-            (tier_summary["p95"] + fixed_buffer_jpy) * safety_multiplier,
+            (model_summary["p95"] + fixed_buffer_jpy) * safety_multiplier,
             3,
         )
         effective_margin_rate = 0.0
-        if current_list_price:
+        if current_avg_price:
             effective_margin_rate = round(
                 (
-                    current_list_price * (1 - payment_fee_rate) - adjusted_p95_cost
-                ) / current_list_price,
+                    current_avg_price * (1 - payment_fee_rate) - adjusted_p95_cost
+                ) / current_avg_price,
                 4,
             )
-        tier_rows.append({
-            "price_tier": price_tier,
-            "sample_count": len(tier_samples),
-            "current_list_price_jpy": current_list_price,
-            "current_avg_paid_price_jpy": round(
-                sum(float(sample["paid_price_jpy"]) for sample in tier_samples) / len(tier_samples), 3
-            ),
-            "cost_jpy": tier_summary,
+        pricing_rows.append({
+            "pricing_model": pricing_model,
+            "sample_count": len(pricing_samples),
+            "current_avg_paid_price_jpy": current_avg_price,
+            "cost_jpy": model_summary,
             "adjusted_p95_cost_jpy": adjusted_p95_cost,
             "recommended_price_jpy_cost_floor": cost_floor_price,
             "recommended_price_jpy_target_margin": target_margin_price,
-            "p95_margin_jpy_at_current_price": round(current_list_price - tier_summary["p95"], 3),
+            "p95_margin_jpy_at_current_price": round(current_avg_price - model_summary["p95"], 3),
             "p95_margin_rate_at_current_price": round(
-                ((current_list_price - tier_summary["p95"]) / current_list_price) if current_list_price else 0.0,
+                ((current_avg_price - model_summary["p95"]) / current_avg_price) if current_avg_price else 0.0,
                 4,
             ),
             "effective_margin_rate_after_fee_and_buffers": effective_margin_rate,
@@ -168,6 +168,28 @@ def build_cost_pricing_report(
         "by_quote_mode": {
             key: summarize_numeric(values)
             for key, values in sorted(by_quote_mode.items())
+        },
+        "by_pricing_model": {
+            key: {
+                "sample_count": len(value),
+                "cost_jpy": summarize_numeric([float(sample["total_cost_jpy"]) for sample in value]),
+                "avg_paid_price_jpy": round(
+                    sum(float(sample["paid_price_jpy"]) for sample in value) / len(value),
+                    3,
+                ),
+            }
+            for key, value in sorted(by_pricing_model.items())
+        },
+        "by_paid_price_band": {
+            key: {
+                "sample_count": len(value),
+                "cost_jpy": summarize_numeric([float(sample["total_cost_jpy"]) for sample in value]),
+                "avg_paid_price_jpy": round(
+                    sum(float(sample["paid_price_jpy"]) for sample in value) / len(value),
+                    3,
+                ),
+            }
+            for key, value in sorted(by_paid_price_band.items())
         },
         "by_estimate_version": {
             key: {
@@ -197,7 +219,7 @@ def build_cost_pricing_report(
             }
             for key, value in sorted(by_model_signature.items())
         },
-        "by_price_tier": sorted(tier_rows, key=lambda row: row["current_list_price_jpy"]),
+        "by_pricing_recommendation": sorted(pricing_rows, key=lambda row: row["current_avg_paid_price_jpy"]),
     }
 
 
@@ -246,7 +268,8 @@ def build_ops_dashboard(
             "estimate_vs_actual_cost_delta_jpy": summarize_numeric(estimate_cost_deltas),
             "estimate_vs_actual_margin_delta_jpy": summarize_numeric(estimate_margin_deltas),
         },
-        "by_price_tier": _group("price_tier"),
+        "by_pricing_model": _group("pricing_model"),
+        "by_paid_price_band": _group("paid_price_band"),
         "by_input_type": _group("input_type"),
         "by_quote_mode": _group("quote_mode"),
         "by_target_language": _group("target_language"),
@@ -259,7 +282,8 @@ def build_ops_dashboard(
                 "input_type": sample["input_type"],
                 "quote_mode": sample["quote_mode"],
                 "target_language": sample["target_language"],
-                "price_tier": sample["price_tier"],
+                "pricing_model": sample["pricing_model"],
+                "paid_price_band": sample["paid_price_band"],
                 "paid_price_jpy": sample["paid_price_jpy"],
                 "predicted_total_cost_jpy": sample["predicted_total_cost_jpy"],
                 "actual_total_cost_jpy": sample["total_cost_jpy"],
@@ -303,7 +327,8 @@ async def load_cost_samples(
             "quote_mode": order.quote_mode,
             "estimate_source": order.estimate_source,
             "target_language": order.target_language,
-            "price_tier": order.price_tier,
+            "pricing_model": estimate_snapshot.get("pricing_model") or order.price_tier,
+            "paid_price_band": _price_band_label(float(order.price_jpy)),
             "paid_price_jpy": float(order.price_jpy),
             "total_cost_jpy": total_cost_jpy,
             "actual_margin_jpy": round(float(order.price_jpy) - total_cost_jpy, 3),
@@ -351,6 +376,13 @@ def _summarize_ops_group(rows: list[dict[str, Any]]) -> dict[str, Any]:
             ]
         ),
     }
+
+
+def _price_band_label(price_jpy: float) -> str:
+    band_size = 200
+    lower = int(price_jpy // band_size) * band_size
+    upper = lower + band_size - 1
+    return f"{lower}-{upper}"
 
 
 def _build_model_signature(model_plan: dict[str, Any]) -> str:

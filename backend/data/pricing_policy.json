@@ -1,10 +1,8 @@
 {
-  "version": "2026-03-26",
-  "source": "seeded_cost_baseline",
-  "tiers": [
-    { "name": "basic", "max_pages": 2, "price_jpy": 299 },
-    { "name": "standard", "max_pages": 5, "price_jpy": 499 },
-    { "name": "detailed", "max_pages": 10, "price_jpy": 799 },
-    { "name": "complex", "max_pages": 30, "price_jpy": 1599 }
-  ]
+  "version": "2026-03-28-token-linear",
+  "source": "token_length_linear_pricing",
+  "pricing_model": "token_linear",
+  "unit_price_jpy_per_1k_tokens": 75,
+  "minimum_price_jpy": 200,
+  "tokens_per_page": 1500
 }

@@ -21,12 +21,12 @@ def _mock_analytics():
 
 
 @pytest.fixture(autouse=True)
-def _clear_price_tiers_cache():
-    """Clear the lru_cache on get_price_tiers so tests don't leak state."""
-    from backend.services.token_estimator import get_price_tiers
-    get_price_tiers.cache_clear()
+def _clear_pricing_policy_cache():
+    """Clear the lru_cache on get_pricing_policy so tests don't leak state."""
+    from backend.services.token_estimator import get_pricing_policy
+    get_pricing_policy.cache_clear()
     yield
-    get_price_tiers.cache_clear()
+    get_pricing_policy.cache_clear()
 
 
 # -- Text upload happy path --------------------------------------------------
@@ -51,7 +51,6 @@ async def test_upload_text_returns_pricing():
     assert body["ocr_required"] is False
     assert body["estimated_tokens"] > 0
     assert body["price_jpy"] > 0
-    assert body["price_tier"] in {"basic", "standard", "detailed", "complex"}
     # Contract text should be echoed back for exact-mode quotes
     assert body["contract_text"] != ""
 

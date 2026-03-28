@@ -3,8 +3,6 @@ export type InputMode = 'text' | 'file';
 export interface UploadResult {
   contract_text: string;
   estimated_tokens: number;
-  page_estimate: number;
-  price_tier: string;
   price_jpy: number;
   quote_mode: string;
   estimate_source: string;

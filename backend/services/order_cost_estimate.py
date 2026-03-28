@@ -15,13 +15,6 @@ from backend.services.token_estimator import get_pricing_policy_metadata
 
 TOKENS_PER_CLAUSE = 470
 
-RISK_RATE_BY_TIER = {
-    "basic": {"high": 0.06, "medium": 0.26},
-    "standard": {"high": 0.08, "medium": 0.30},
-    "detailed": {"high": 0.10, "medium": 0.34},
-    "complex": {"high": 0.12, "medium": 0.38},
-}
-
 
 def get_model_plan() -> dict[str, str]:
     settings = get_settings()
@@ -39,10 +32,7 @@ def build_order_cost_estimate_snapshot(order: Order) -> dict[str, Any]:
     model_plan = get_model_plan()
     pricing_policy = get_pricing_policy_metadata()
     predicted_clause_count = max(1, round(order.estimated_tokens / TOKENS_PER_CLAUSE))
-    risk_rates = dict(RISK_RATE_BY_TIER.get(order.price_tier, RISK_RATE_BY_TIER["complex"]))
-    if order.input_type in {"image", "pdf"} and order.quote_mode == "estimated_pre_ocr":
-        risk_rates["high"] += 0.01
-        risk_rates["medium"] += 0.03
+    risk_rates = _risk_rates_for_order(order)
 
     predicted_high = min(predicted_clause_count, round(predicted_clause_count * risk_rates["high"]))
     predicted_medium = min(
@@ -87,6 +77,9 @@ def build_order_cost_estimate_snapshot(order: Order) -> dict[str, Any]:
         "quote_mode": order.quote_mode,
         "estimate_source": order.estimate_source,
         "target_language": order.target_language,
+        "pricing_model": pricing_policy.get("pricing_model"),
+        "unit_price_jpy_per_1k_tokens": int(pricing_policy.get("unit_price_jpy_per_1k_tokens") or 0),
+        "minimum_price_jpy": int(pricing_policy.get("minimum_price_jpy") or 0),
         "estimated_tokens": order.estimated_tokens,
         "page_estimate": order.page_estimate,
         "predicted_clause_count": predicted_clause_count,
@@ -99,7 +92,7 @@ def build_order_cost_estimate_snapshot(order: Order) -> dict[str, Any]:
         "predicted_total_cost_jpy": round(total_cost_jpy, 3),
         "predicted_cost_breakdown": predicted_cost_breakdown,
         "quoted_price_jpy": order.price_jpy,
-        "quoted_price_tier": order.price_tier,
+        "quoted_pricing_model": pricing_policy.get("pricing_model") or order.price_tier,
         "predicted_gross_margin_jpy": predicted_margin_jpy,
         "predicted_gross_margin_rate": predicted_margin_rate,
         "model_plan": model_plan,
@@ -138,6 +131,7 @@ def build_order_cost_actual_snapshot(
         "quote_mode": order.quote_mode,
         "estimate_source": order.estimate_source,
         "target_language": order.target_language,
+        "pricing_model": "token_linear" if order.price_tier == "token_linear" else order.price_tier,
         "actual_total_cost_usd": round(actual_total_cost_usd, 6),
         "actual_total_cost_jpy": round(actual_total_cost_jpy, 3),
         "actual_total_input_tokens": int(cost_summary.get("total_input_tokens", 0) or 0),
@@ -301,6 +295,30 @@ def _build_predicted_step_usage(order: Order, clause_count: int, suggestion_call
         }
 
     return usage
+
+
+def _risk_rates_for_order(order: Order) -> dict[str, float]:
+    high_rate = 0.06
+    medium_rate = 0.27
+
+    if order.page_estimate >= 3:
+        high_rate += 0.01
+        medium_rate += 0.02
+    if order.page_estimate >= 6:
+        high_rate += 0.02
+        medium_rate += 0.03
+    if order.page_estimate >= 10:
+        high_rate += 0.02
+        medium_rate += 0.03
+
+    if order.input_type in {"image", "pdf"} and order.quote_mode == "estimated_pre_ocr":
+        high_rate += 0.01
+        medium_rate += 0.03
+
+    return {
+        "high": min(high_rate, 0.18),
+        "medium": min(medium_rate, 0.45),
+    }
 
 
 def _derive_actual_model_plan(cost_summary: dict[str, Any]) -> dict[str, str]:

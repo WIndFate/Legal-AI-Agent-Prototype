@@ -6,8 +6,6 @@ class PaymentCreateRequest(BaseModel):
     contract_text: str
     input_type: str
     estimated_tokens: int
-    page_estimate: int
-    price_tier: str
     price_jpy: int
     quote_mode: str = "exact"
     estimate_source: str = "raw_text"

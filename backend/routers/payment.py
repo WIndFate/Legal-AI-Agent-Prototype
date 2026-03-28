@@ -12,6 +12,7 @@ from backend.schemas.payment import PaymentCreateRequest, PaymentCreateResponse
 from backend.services.order_cost_estimate import build_order_cost_estimate_snapshot, upsert_order_cost_estimate
 from backend.services.payment import create_payment_session, verify_webhook, is_dev_payment_mode
 from backend.services.analytics import capture as posthog_capture
+from backend.services.token_estimator import estimate_page_count_from_tokens
 
 try:
     import sentry_sdk
@@ -30,10 +31,10 @@ async def create_payment(
 ):
     """Create an order and KOMOJU payment session. Apply referral discount if valid."""
     logger.info(
-        "Creating payment order: email=%s input_type=%s price_tier=%s target_language=%s has_referral=%s",
+        "Creating payment order: email=%s input_type=%s pricing_model=%s target_language=%s has_referral=%s",
         request.email,
         request.input_type,
-        request.price_tier,
+        "token_linear",
         request.target_language,
         request.referral_code is not None,
     )
@@ -66,8 +67,8 @@ async def create_payment(
         contract_text=request.contract_text,
         input_type=request.input_type,
         estimated_tokens=request.estimated_tokens,
-        page_estimate=request.page_estimate,
-        price_tier=request.price_tier,
+        page_estimate=estimate_page_count_from_tokens(request.estimated_tokens),
+        price_tier="token_linear",
         price_jpy=final_price,
         quote_mode=request.quote_mode,
         estimate_source=request.estimate_source,
@@ -116,7 +117,7 @@ async def create_payment(
         {
             "order_id": str(order.id),
             "price_jpy": final_price,
-            "price_tier": request.price_tier,
+            "pricing_model": "token_linear",
             "discount_jpy": discount_jpy,
             "has_referral": request.referral_code is not None,
         },

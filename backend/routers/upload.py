@@ -71,7 +71,7 @@ async def upload_contract(
     estimation = {
         "estimated_tokens": 0,
         "page_estimate": 0,
-        "price_tier": "basic",
+        "pricing_model": "token_linear",
         "price_jpy": 0,
     }
 
@@ -127,8 +127,6 @@ async def upload_contract(
         return UploadResponse(
             contract_text="",
             estimated_tokens=0,
-            page_estimate=0,
-            price_tier="basic",
             price_jpy=0,
             quote_mode=quote_mode,
             estimate_source=estimate_source,
@@ -153,7 +151,7 @@ async def upload_contract(
             "estimated_tokens": estimation["estimated_tokens"],
             "quote_mode": quote_mode,
             "estimate_source": estimate_source,
-            "price_tier": estimation["price_tier"],
+            "pricing_model": estimation["pricing_model"],
             "price_jpy": estimation["price_jpy"],
             "has_pii": len(pii_warnings) > 0,
         },
@@ -162,8 +160,6 @@ async def upload_contract(
     return UploadResponse(
         contract_text=contract_text,
         estimated_tokens=estimation["estimated_tokens"],
-        page_estimate=estimation["page_estimate"],
-        price_tier=estimation["price_tier"],
         price_jpy=estimation["price_jpy"],
         quote_mode=quote_mode,
         estimate_source=estimate_source,

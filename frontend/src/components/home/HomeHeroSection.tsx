@@ -33,7 +33,7 @@ export default function HomeHeroSection({ preview }: HomeHeroSectionProps) {
         <div className="hero-metrics">
           <div className="hero-metric">
             <span>{t('pricing.title')}</span>
-            <strong>{t('pricing.dynamic_quote')}</strong>
+            <strong>{t('pricing.length_based')}</strong>
           </div>
           <div className="hero-metric">
             <span>{t('report.title')}</span>

@@ -49,21 +49,6 @@ export default function HomeUploadSection({
   const { t } = useTranslation();
   const fileInputId = useId();
 
-  const tierLabel = (tier: string) => {
-    const key = `pricing.tier_${tier}` as const;
-    return t(key);
-  };
-
-  const quoteLabel =
-    uploadResult?.quote_mode === 'estimated_pre_ocr'
-      ? t('pricing.quote_estimated_label')
-      : t('pricing.quote_exact_label');
-
-  const quoteDescription =
-    uploadResult?.quote_mode === 'estimated_pre_ocr'
-      ? t('pricing.quote_estimated_desc')
-      : t('pricing.quote_exact_desc');
-
   return (
     <section className="upload-shell" id="upload-section">
       <div className="section-heading">
@@ -202,7 +187,7 @@ export default function HomeUploadSection({
           <div className="pricing-card-header">
             <div>
               <p className="section-kicker">{t('pricing.title')}</p>
-              <h3>{tierLabel(uploadResult.price_tier)}</h3>
+              <h3>{t('pricing.length_based')}</h3>
             </div>
             <div className="pricing-price-lockup">
               <span>{t('pricing.price')}</span>
@@ -210,17 +195,13 @@ export default function HomeUploadSection({
             </div>
           </div>
           <div className={styles.pricingQuoteMeta}>
-            <strong>{quoteLabel}</strong>
-            <p>{quoteDescription}</p>
+            <strong>{t('pricing.length_based_desc')}</strong>
+            <p>{t('pricing.minimum_price', { price: 200 })}</p>
           </div>
           <div className="pricing-details pricing-summary-grid">
             <div className="pricing-summary-item">
-              <span>{t('pricing.estimated_pages')}</span>
-              <strong>{uploadResult.page_estimate}</strong>
-            </div>
-            <div className="pricing-summary-item">
-              <span>{t('pricing.estimated_tokens')}</span>
-              <strong>{uploadResult.estimated_tokens.toLocaleString()}</strong>
+              <span>{t('pricing.billing_basis')}</span>
+              <strong>{t('pricing.length_based')}</strong>
             </div>
             <div className="pricing-summary-item pricing-summary-item-wide">
               <span>{t('payment.title')}</span>

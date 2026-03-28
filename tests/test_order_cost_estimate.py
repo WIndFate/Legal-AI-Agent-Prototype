@@ -17,7 +17,7 @@ def _fake_order(**overrides):
         "estimated_tokens": 8000,
         "page_estimate": 6,
         "price_jpy": 799,
-        "price_tier": "detailed",
+        "price_tier": "token_linear",
     }
     payload.update(overrides)
     return SimpleNamespace(**payload)
@@ -31,6 +31,7 @@ def test_build_order_cost_estimate_snapshot_includes_model_plan_and_breakdown():
     assert snapshot["estimate_version"]
     assert snapshot["pricing_policy_version"]
     assert snapshot["quoted_price_jpy"] == 799
+    assert snapshot["pricing_model"] == "token_linear"
     assert snapshot["predicted_total_cost_jpy"] > 0
     assert snapshot["predicted_clause_count"] > 0
     assert snapshot["model_plan"]["analysis_model"]

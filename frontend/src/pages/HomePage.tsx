@@ -82,8 +82,6 @@ export default function HomePage() {
                 ? 'pdf'
                 : 'image',
           estimated_tokens: uploadResult.estimated_tokens,
-          page_estimate: uploadResult.page_estimate,
-          price_tier: uploadResult.price_tier,
           price_jpy: uploadResult.price_jpy,
           quote_mode: uploadResult.quote_mode,
           estimate_source: uploadResult.estimate_source,
