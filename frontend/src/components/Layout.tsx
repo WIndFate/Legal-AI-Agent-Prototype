@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import clsx from 'clsx';
@@ -12,8 +13,13 @@ export default function Layout({ children }: LayoutProps) {
   const { t, i18n } = useTranslation();
   const location = useLocation();
   const navigate = useNavigate();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const homeHref = location.pathname === '/' ? '#top' : '/#top';
   const languageBadge = getLanguageBadge(i18n.language);
+
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [location.pathname]);
 
   const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     i18n.changeLanguage(e.target.value);
@@ -60,10 +66,37 @@ export default function Layout({ children }: LayoutProps) {
     },
   ];
 
+  const renderNavItem = (item: typeof navItems[number], className: string) =>
+    item.to ? (
+      <Link key={item.key} to={item.to} className={className}>
+        {item.label}
+      </Link>
+    ) : (
+      <a
+        key={item.key}
+        href={item.href}
+        onClick={navigateToAnchor('top')}
+        className={className}
+      >
+        {item.label}
+      </a>
+    );
+
   return (
     <div className="app">
       <header className={styles.header}>
         <div className={styles.headerInner}>
+          <button
+            type="button"
+            className={styles.mobileMenuButton}
+            aria-label={t('nav.home')}
+            aria-expanded={mobileMenuOpen}
+            onClick={() => setMobileMenuOpen((prev) => !prev)}
+          >
+            <span />
+            <span />
+            <span />
+          </button>
           <Link to="/" className={styles.brand}>
             <span className={styles.brandMark} aria-hidden="true" />
             <span className={styles.brandCopy}>
@@ -72,22 +105,7 @@ export default function Layout({ children }: LayoutProps) {
             </span>
           </Link>
           <nav className={styles.headerNav}>
-            {navItems.map((item) =>
-              item.to ? (
-                <Link key={item.key} to={item.to} className={clsx(styles.navLink, item.active && styles.navLinkActive)}>
-                  {item.label}
-                </Link>
-              ) : (
-                <a
-                  key={item.key}
-                  href={item.href}
-                  onClick={navigateToAnchor('top')}
-                  className={clsx(styles.navLink, item.active && styles.navLinkActive)}
-                >
-                  {item.label}
-                </a>
-              ),
-            )}
+            {navItems.map((item) => renderNavItem(item, clsx(styles.navLink, item.active && styles.navLinkActive)))}
           </nav>
           <label className={styles.languageShell}>
             <span className={styles.languageLabel}>{t('nav.language')}</span>
@@ -108,30 +126,26 @@ export default function Layout({ children }: LayoutProps) {
         </div>
       </header>
 
-      <nav className={styles.mobileQuickNav}>
-        <div className={styles.mobileQuickNavInner}>
-          {navItems.map((item) =>
-            item.to ? (
-              <Link
-                key={item.key}
-                to={item.to}
-                className={clsx(styles.mobileQuickNavLink, item.active && styles.mobileQuickNavLinkActive)}
-              >
-                {item.label}
-              </Link>
-            ) : (
-              <a
-                key={item.key}
-                href={item.href}
-                onClick={navigateToAnchor('top')}
-                className={clsx(styles.mobileQuickNavLink, item.active && styles.mobileQuickNavLinkActive)}
-              >
-                {item.label}
-              </a>
-            ),
-          )}
-        </div>
-      </nav>
+      {mobileMenuOpen && (
+        <>
+          <button
+            type="button"
+            className={styles.mobileMenuBackdrop}
+            aria-label={t('share.close')}
+            onClick={() => setMobileMenuOpen(false)}
+          />
+          <nav className={styles.mobileMenuPanel}>
+            <div className={styles.mobileMenuInner}>
+              {navItems.map((item) =>
+                renderNavItem(
+                  item,
+                  clsx(styles.mobileMenuLink, item.active && styles.mobileMenuLinkActive),
+                ),
+              )}
+            </div>
+          </nav>
+        </>
+      )}
 
       <div className={styles.disclaimerBanner}>
         {t('disclaimer.banner')}
@@ -151,8 +165,6 @@ export default function Layout({ children }: LayoutProps) {
         </div>
         <nav className={styles.footerNav}>
           <a href={homeHref} onClick={navigateToAnchor('top')}>{t('nav.home')}</a>
-          <Link to="/examples">{t('nav.examples')}</Link>
-          <Link to="/lookup">{t('nav.lookup')}</Link>
           <Link to="/privacy">{t('footer.privacy')}</Link>
           <Link to="/terms">{t('footer.terms')}</Link>
         </nav>
