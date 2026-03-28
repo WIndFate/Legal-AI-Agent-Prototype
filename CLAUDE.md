@@ -82,6 +82,7 @@ Current status as of 2026-03-28:
 - Frontend UX polish now includes result lookup, order reminder dialogs, a compact share sheet that silently appends referral codes to report links, direct review-to-report handoff on completion, report risk-level filters, a real backend-generated PDF download action, reveal-on-scroll homepage sections, a curated standalone examples gallery whose report sample layout mirrors the real report page more closely, mobile-specific compact header / quick-nav / safe-area refinements, iOS input zoom prevention, top-of-page route resets, and a simplified homepage upload flow (`Upload File` / `Paste Text`).
 - Persistent analysis-task architecture is now the primary runtime flow: `analysis_jobs` / `analysis_events`, event bus, extracted report persistence helpers, new analysis start/status/events/stream routes, and frontend snapshot-plus-replay event restoration are all in code.
 - Failed analyses now persist the partial AI cost summary already incurred up to the failure point into `analysis_jobs.cost_summary`, instead of keeping it only in memory/logs.
+- Payment-time cost estimation is now persisted separately in `order_cost_estimates`: each order stores an `estimate_snapshot`, later an `actual_snapshot`, and finally a `comparison_snapshot`, all tagged with the estimate version, pricing-policy version, and the planned/actual model mix so pricing accuracy can be audited across future model upgrades.
 - Local Docker startup now uses health checks for `postgres`, `redis`, and `backend`, and key frontend pages use a small retry wrapper so brief backend warm-up windows do not surface as user-facing proxy failures.
 - Production credentials and live third-party testing still pending.
 
@@ -154,6 +155,7 @@ backend/
     migrations/   # Alembic async migrations (env.py + versions/)
   models/
     order.py      # Order model (UUID pk, payment_status, analysis_status, contract_deleted_at)
+    order_cost_estimate.py # Persisted estimate/actual/comparison cost snapshots per order
     report.py     # Report model (JSONB clause_analyses, 72h expires_at)
     referral.py   # Referral model (referral_code, uses_count, discount_jpy)
   schemas/
@@ -173,6 +175,7 @@ backend/
     analysis_executor.py # In-process persistent analysis runner + event persistence
     costing.py        # Model pricing table + usage extraction + structured cost logging
     cost_analysis.py  # Persisted cost-summary aggregation + pricing recommendation logic
+    order_cost_estimate.py # Payment-time estimate snapshots + actual/comparison snapshot builders
     report_pdf.py     # Build downloadable PDF reports from saved report payloads
     event_bus.py      # In-process pub/sub for incremental analysis events
     local_ocr.py      # Optional PaddleOCR-based pre-payment quote estimation
@@ -281,9 +284,11 @@ Embeddings are generated via OpenAI API (httpx direct call, not langchain).
 - Upload pricing is no longer hardcoded directly in Python constants.
 - `token_estimator.py` loads the active tier table from `backend/data/pricing_policy.json`.
 - The current provisional table is `basic=299`, `standard=499`, `detailed=799`, `complex=1599`, with `complex` covering the supported upper bound (`MAX_UPLOAD_PAGES=30`) instead of a fake infinite ceiling.
+- Each paid order now also stores a payment-time estimate snapshot keyed by `COST_ESTIMATE_VERSION` and `pricing_policy_version`, including predicted clause counts, step-level estimated costs, quoted margin, and the planned model mix (`ocr/parse/analyze/suggestion/translation/embedding`).
+- Analysis completion or failure now updates that same record with an `actual_snapshot` and `comparison_snapshot`, so pricing accuracy can be analyzed as “predicted vs actual” instead of only looking at final realized cost.
 - `GET /api/eval/costs` mixes persisted `reports.cost_summary` with seeded baseline samples from `backend/data/cost_samples_seed.json` until at least 10 samples are available, so early pricing analysis is not based on a single order.
 - `GET /api/eval/costs` returns both `recommended_price_jpy_cost_floor` and `recommended_price_jpy_target_margin`; the latter folds in `target_margin_rate` (currently default `0.75`) so pricing reviews can reason about profit targets, not just raw API cost.
-- `GET /api/eval/costs` returns both `recommended_price_jpy_cost_floor` and `recommended_price_jpy_target_margin`; the latter folds in `target_margin_rate` (currently default `0.75`) so pricing reviews can reason about profit targets, not just raw API cost.
+- `GET /api/eval/costs` now also exposes estimate-vs-actual deltas plus grouping by `estimate_version` and model signature, so future model swaps can be compared on margin impact.
 
 ### Cleanup and privacy
 - `cleanup.py` runs every hour via APScheduler in lifespan

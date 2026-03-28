@@ -145,6 +145,9 @@ docker compose up -d backend postgres redis
 - 这份订单级成本摘要现在也会持久化到 `reports.cost_summary`，后续排查成本时不再只依赖日志。
 - 如果分析中途失败，失败前已经发生的 AI 成本也会落到 `analysis_jobs.cost_summary`，后续排查失败单时不再只能看日志。
 - `GET /api/eval/costs` 现在会基于 `reports.cost_summary` 聚合真实样本成本；当真实样本还不够时，会自动从 `backend/data/cost_samples_seed.json` 补足到 10 条基线样本。
+- 每笔已支付订单现在还会单独写入一条 `order_cost_estimates`：先保存支付时的 `estimate_snapshot`，分析完成或失败后再补齐 `actual_snapshot` 和 `comparison_snapshot`。
+- 这些快照会同时记录模型计划和实际模型使用情况（`ocr / parse / analyze / suggestion / translation / embedding`），这样后续切换模型时，就能直接比较对毛利的影响，而不只是看总成本。
+- `GET /api/eval/costs` 现在还会按 `estimate_version` 和模型签名聚合 estimate-vs-actual 偏差，方便长期追踪定价模型和模型更换后的经营表现。
 - 运行时定价现在从 `backend/data/pricing_policy.json` 读取，不再把价格硬编码在 Python 里。当前试运行价表是 `¥299 / ¥499 / ¥799 / ¥1599`。
 - `/api/eval/costs` 现在会同时返回“成本底线建议价”和“目标毛利建议价”，默认目标毛利率 `target_margin_rate=0.75`，方便区分“不能低于多少”和“商业上该卖多少”。
 - `PARSE_MODEL` 和 `SUGGESTION_MODEL` 现在已经可配置，默认切到 `gpt-4o-mini`；正式 OCR 和逐条风险判断默认仍保持 `gpt-4o`。

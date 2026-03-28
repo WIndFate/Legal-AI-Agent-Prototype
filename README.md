@@ -155,6 +155,9 @@ docker compose up -d backend postgres redis
 - That order-level cost summary is now also persisted to `reports.cost_summary` for later inspection without relying only on logs.
 - If analysis fails midway, the partial cost summary accumulated up to that point is now persisted to `analysis_jobs.cost_summary` so failed orders can still be audited later.
 - `GET /api/eval/costs` now aggregates persisted `reports.cost_summary` samples and, when live data is still sparse, backfills to a 10-sample baseline from `backend/data/cost_samples_seed.json`.
+- Each paid order now also writes a persisted `order_cost_estimates` row: payment-time `estimate_snapshot`, later `actual_snapshot`, and finally `comparison_snapshot`.
+- Those snapshots record both the planned model mix and the actual model usage (`ocr / parse / analyze / suggestion / translation / embedding`) so future model upgrades can be compared by margin impact, not just total spend.
+- `GET /api/eval/costs` now also groups estimate-vs-actual deltas by `estimate_version` and by model signature, making pricing-model revisions and model swaps auditable over time.
 - Runtime pricing is now loaded from `backend/data/pricing_policy.json` instead of being hardcoded in Python. The current provisional table remains `¥299 / ¥499 / ¥799 / ¥1599`.
 - `/api/eval/costs` now reports both a cost-floor recommendation and a target-margin recommendation (`target_margin_rate`, default `0.75`) so pricing reviews can distinguish “minimum safe price” from “commercial target price”.
 - `PARSE_MODEL` and `SUGGESTION_MODEL` are now configurable and default to `gpt-4o-mini`, while formal OCR and per-clause risk classification remain on `gpt-4o` by default.

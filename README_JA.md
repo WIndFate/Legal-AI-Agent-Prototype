@@ -139,12 +139,15 @@ docker compose up -d backend postgres redis
 - ユーザー契約本文はベクトル DB に保存しません。
 - 分析完了後、`orders.contract_text` は `NULL` に更新されます。
 - 画像 / スキャン PDF は支払い前に短期間だけ元ファイルを保持し、解析完了後または未払い期限切れ後のクリーンアップで削除されます。
-- レポートは Redis に 24 時間キャッシュされ、PostgreSQL に期限付きで保存されます。
+- レポートは Redis に 72 時間キャッシュされ、PostgreSQL に期限付きで保存されます。
 - `backend/services/costing.py` により、正式 OCR・parse・analyze・suggestion・translation の構造化コストログが出力されます。
 - embedding リクエストもコストログを出力し、review 完了時には見積もりモード・入力種別・条項数を含む注文単位のコスト要約ログも出力されます。
 - この注文単位のコスト要約は、ログだけでなく `reports.cost_summary` にも保存されるようになりました。
 - 分析が途中で失敗した場合でも、その時点までに発生した AI コスト要約は `analysis_jobs.cost_summary` に保存され、失敗注文も後から監査できます。
 - `GET /api/eval/costs` は `reports.cost_summary` を集計し、実データが不足している間は `backend/data/cost_samples_seed.json` で 10 サンプル基準まで補完します。
+- 各支払い済み注文では、これとは別に `order_cost_estimates` レコードも保存され、支払い時点の `estimate_snapshot`、分析完了または失敗後の `actual_snapshot`、そして差分用の `comparison_snapshot` が残ります。
+- これらのスナップショットには、計画上のモデル構成と実際に使われたモデル構成（`ocr / parse / analyze / suggestion / translation / embedding`）の両方が含まれるため、将来モデルを入れ替えた際の粗利影響を追跡できます。
+- `GET /api/eval/costs` は estimate-vs-actual の差分を `estimate_version` とモデルシグネチャ別にも集計するようになり、価格ロジック更新やモデル変更の効果を後から比較できます。
 - 実行時の価格表は Python の固定値ではなく `backend/data/pricing_policy.json` から読み込むようになりました。現時点の暫定価格は `¥299 / ¥499 / ¥799 / ¥1599` です。
 - `/api/eval/costs` は「コスト下限の推奨価格」と「目標粗利込みの推奨価格」を両方返します。既定の `target_margin_rate` は `0.75` です。
 - `PARSE_MODEL` と `SUGGESTION_MODEL` は設定可能になり、デフォルトでは `gpt-4o-mini` を使います。正式 OCR と条項ごとのリスク判定は引き続きデフォルトで `gpt-4o` のままです。
