@@ -150,6 +150,7 @@ docker compose up -d backend postgres redis
 - `GET /api/eval/costs` は estimate-vs-actual の差分を `estimate_version` とモデルシグネチャ別にも集計するようになり、価格ロジック更新やモデル変更の効果を後から比較できます。
 - `GET /api/eval/operations` は seed サンプルを混ぜない読み取り専用の運用 API で、売上・実コスト・実粗利・見積もり偏差・最近の注文一覧に加えて、価格モデル / 支払価格帯 / 入力種別 / 見積もり方式 / 言語 / estimate version / モデルシグネチャ別の集計を返します。
 - 実行時の価格設定は Python の固定値ではなく `backend/data/pricing_policy.json` から読み込まれます。現在の運用ポリシーは線形課金で、`1000 tokens あたり ¥75`、最低料金は `¥200` です。
+- 注文テーブルでは現在の課金方式を `orders.pricing_model` に保持し、旧 `price_tier` カラムは廃止されました。コンテナ起動時の自動 migration は古い Docker volume もこの形へ安全に前進させます。
 - `/api/eval/costs` は「コスト下限の推奨価格」と「目標粗利込みの推奨価格」を両方返します。既定の `target_margin_rate` は `0.75` です。
 - `PARSE_MODEL` と `SUGGESTION_MODEL` は設定可能になり、デフォルトでは `gpt-4o-mini` を使います。正式 OCR と条項ごとのリスク判定は引き続きデフォルトで `gpt-4o` のままです。
 - `analyze_risks` は、膨張し続ける全契約の多段 tool-calling 会話ではなく、条項ごとの分析に変更されました。これによりコストとコンテキスト圧迫が大きく下がります。

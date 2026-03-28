@@ -71,7 +71,7 @@ Current status as of 2026-03-28:
 - Local Docker end-to-end flow is verified through upload, payment creation, persistent analysis-task start, status/event restoration, replayable event streaming, report retrieval, and contract deletion.
 - `APP_ENV=development` enables local-only conveniences such as auto table bootstrap and dev payment bypass.
 - Dual-OCR groundwork is now in code: text/text-layer PDFs are quoted before payment, while image/scanned PDFs can be staged for local pre-estimation and formal OCR after payment.
-- Deployment configs ready: `fly.toml` (NRT, force_https) + `vercel.json` (API proxy, security headers) + Alembic migration chain through `006`.
+- Deployment configs ready: `fly.toml` (NRT, force_https) + `vercel.json` (API proxy, security headers) + Alembic migration chain through `008`.
 - RAG knowledge base expanded to 331+ law articles across 10 legal categories (rental, labor, part-time, business outsourcing, sales, etc.).
 - Eval dataset expanded to 20 labeled samples covering multiple contract types.
 - Integration test suite: 7 router test files covering all API endpoints in the current runtime flow.
@@ -156,7 +156,7 @@ backend/
     session.py    # Async SQLAlchemy engine + session factory + get_db() dep
     migrations/   # Alembic async migrations (env.py + versions/)
   models/
-    order.py      # Order model (UUID pk, payment_status, analysis_status, contract_deleted_at)
+    order.py      # Order model (UUID pk, pricing_model, payment_status, analysis_status, contract_deleted_at)
     order_cost_estimate.py # Persisted estimate/actual/comparison cost snapshots per order
     report.py     # Report model (JSONB clause_analyses, 72h expires_at)
     referral.py   # Referral model (referral_code, uses_count, discount_jpy)
@@ -301,7 +301,7 @@ Embeddings are generated via OpenAI API (httpx direct call, not langchain).
 
 ### Local and production startup migrations
 - Backend Docker startup now runs `python -m backend.start`, which waits for PostgreSQL, acquires a PostgreSQL advisory lock, and runs `alembic upgrade head` before launching Uvicorn.
-- If a legacy Docker volume contains pre-Alembic / create_all-style tables, startup first repairs additive fields and indexes, stamps the detected schema revision, and only then upgrades forward, so old local data can be preserved.
+- If a legacy Docker volume contains pre-Alembic / create_all-style tables, startup first repairs additive fields and indexes (including current `orders.pricing_model` expectations), stamps the detected schema revision, and only then upgrades forward, so old local data can be preserved.
 - This auto-migration flow is used for both local Docker and production containers; manual migration is no longer the primary path for normal container boots.
 
 ### Environment safety rails

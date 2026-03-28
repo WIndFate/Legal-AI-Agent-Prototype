@@ -160,6 +160,7 @@ docker compose up -d backend postgres redis
 - `GET /api/eval/costs` now also groups estimate-vs-actual deltas by `estimate_version` and by model signature, making pricing-model revisions and model swaps auditable over time.
 - `GET /api/eval/operations` is a read-only operations endpoint built on real orders only; it surfaces revenue, actual cost, actual margin, estimate-vs-actual deltas, recent orders, and groupings by pricing model, paid-price band, input type, quote mode, language, estimate version, and model signature.
 - Runtime pricing is now loaded from `backend/data/pricing_policy.json` instead of being hardcoded in Python. The current policy is linear: `¥75 / 1000 tokens` with a `¥200` minimum charge.
+- The orders schema now stores the active billing strategy in `orders.pricing_model`; the old `price_tier` column has been retired and startup migrations reconcile older Docker volumes automatically.
 - `/api/eval/costs` now reports both a cost-floor recommendation and a target-margin recommendation (`target_margin_rate`, default `0.75`) so pricing reviews can distinguish “minimum safe price” from “commercial target price”.
 - `PARSE_MODEL` and `SUGGESTION_MODEL` are now configurable and default to `gpt-4o-mini`, while formal OCR and per-clause risk classification remain on `gpt-4o` by default.
 - `analyze_risks` now runs clause by clause instead of maintaining one growing multi-round tool-calling conversation, which materially reduces prompt growth and per-order cost.
