@@ -1,6 +1,6 @@
 # ContractGuard
 
-面向在日外国人的日文合同风险分析服务。用户可以上传文本、图片或 PDF 合同，按次付费，通过可恢复的事件流查看分析进度，并在 24 小时内取回报告。
+面向在日外国人的日文合同风险分析服务。用户可以上传文本、图片或 PDF 合同，按次付费，通过可恢复的事件流查看分析进度，并在 72 小时内取回报告。
 
 [English](./README.md) | [日本語ドキュメント](./README_JA.md)
 
@@ -54,7 +54,7 @@ RAG：
 
 持久化：
   PostgreSQL 保存 orders/reports/referrals
-  Redis 缓存 24 小时报告
+  Redis 缓存 72 小时报告
 
 第三方：
   GPT-4o / GPT-4o-mini
@@ -124,7 +124,7 @@ docker compose up -d backend postgres redis
 8. 分析完成后，页面会直接跳转到 `/report/:orderId`，不再在审查页重复展示报告。
 9. 报告页支持按风险级别筛选条款，便于在长报告中只阅读高风险、中风险或组合结果。
 10. 报告正文会固定为支付时选择的语言；之后切换站点语言只影响页面壳层文案。
-11. 在 24 小时报告有效期内，每条分析都可以就地展开对应原条款摘录进行对照；重新打开报告链接或分享链接时也能继续查看。
+11. 在 72 小时报告有效期内，每条分析都可以就地展开对应原条款摘录进行对照；重新打开报告链接或分享链接时也能继续查看。
 12. 展开后的条款对照已针对阅读体验优化：移动端保持纵向阅读，大屏下会并排展示原条款与分析内容。
 13. 首页包含交互式示例展示，提供三种合同场景（租房、劳动、兼职），每种场景的条款分析均支持全部 9 种语言。
 14. 隐私政策 (`/privacy`) 和服务条款 (`/terms`) 页面将本地化摘要与日语法律全文结合。
@@ -139,10 +139,11 @@ docker compose up -d backend postgres redis
 - 用户合同文本不会写入向量数据库。
 - 分析完成后，`orders.contract_text` 会被置为 `NULL`。
 - 图片和扫描 PDF 现在会在付款前短期暂存原文件；分析完成后或未支付超时后，定时清理会删除这些临时文件。
-- 报告会缓存到 Redis 24 小时，并在 PostgreSQL 中保存带过期时间的记录。
+- 报告会缓存到 Redis 72 小时，并在 PostgreSQL 中保存带过期时间的记录。
 - `backend/services/costing.py` 现在会为正式 OCR、parse、analyze、suggestion、translation 输出结构化成本日志。
 - embedding 请求现在也会输出成本日志，review 完成时还会记录一份包含报价模式、输入类型和条款统计的订单级成本摘要。
 - 这份订单级成本摘要现在也会持久化到 `reports.cost_summary`，后续排查成本时不再只依赖日志。
+- 如果分析中途失败，失败前已经发生的 AI 成本也会落到 `analysis_jobs.cost_summary`，后续排查失败单时不再只能看日志。
 - `GET /api/eval/costs` 现在会基于 `reports.cost_summary` 聚合真实样本成本；当真实样本还不够时，会自动从 `backend/data/cost_samples_seed.json` 补足到 10 条基线样本。
 - 运行时定价现在从 `backend/data/pricing_policy.json` 读取，不再把价格硬编码在 Python 里。当前试运行价表是 `¥299 / ¥499 / ¥799 / ¥1599`。
 - `/api/eval/costs` 现在会同时返回“成本底线建议价”和“目标毛利建议价”，默认目标毛利率 `target_margin_rate=0.75`，方便区分“不能低于多少”和“商业上该卖多少”。
@@ -160,7 +161,7 @@ docker compose up -d backend postgres redis
 - `/api/report/{order_id}` 在 Redis 命中和 PostgreSQL fallback 两种情况下，现在都会返回一致的 payload 结构。
 - `analyze_clause_risk` 工具内部直接做 RAG 检索，没有单独的 retrieval node。
 - `scripts/smoke_local_flow.sh` 现已切到新的持久化分析链路，会按 `health -> upload -> payment -> analysis/start -> orders/{id}/stream -> report -> contract deletion` 做完整本地回归。
-- 完整合同正文在分析后不会持久化；但 24 小时报告会保留和风险点对应的条款原文摘录，因此重新打开报告链接、分享链接和邮件链接时仍可查看逐条对照。
+- 完整合同正文在分析后不会持久化；但 72 小时报告会保留和风险点对应的条款原文摘录，因此重新打开报告链接、分享链接和邮件链接时仍可查看逐条对照。
 - `scripts/check_locale_keys.sh` 会检查 9 个语言文件是否与 `ja.json` 保持相同键集合。
 - 后端现在会在启动时加载 `backend/data/egov_laws.json` 中的官方 e-Gov 法条语料，覆盖 10 个法律类别共 331+ 条文。当前本地评估集已扩展到 20 条人工标注样本，覆盖损害赔偿、竞业禁止、单方解约、NDA、租赁等场景。
 - `scripts/check_rag_eval.sh` 会检查 `/api/eval/rag` 是否满足当前本地基线阈值（`Recall@5 >= 0.45`、`MRR >= 0.45`）。

@@ -1,6 +1,6 @@
 # ContractGuard
 
-AI-powered Japanese contract risk analysis for foreign residents in Japan. Users can upload a contract as text, image, or PDF, pay per use, follow analysis progress through a recoverable event stream, and retrieve a report for 24 hours.
+AI-powered Japanese contract risk analysis for foreign residents in Japan. Users can upload a contract as text, image, or PDF, pay per use, follow analysis progress through a recoverable event stream, and retrieve a report for 72 hours.
 
 [中文文档](./README_CN.md) | [日本語ドキュメント](./README_JA.md)
 
@@ -60,7 +60,7 @@ RAG:
 
 Persistence:
   PostgreSQL for orders/reports/referrals
-  Redis for 24h report cache
+  Redis for 72h report cache
 
 Integrations:
   GPT-4o / GPT-4o-mini
@@ -149,10 +149,11 @@ docker compose up -d backend postgres redis
 - User contract text is never stored in the vector database.
 - After analysis completes, `orders.contract_text` is set to `NULL`.
 - Image and scanned-PDF uploads can now be staged temporarily before payment; the staged file is deleted after analysis or by scheduled cleanup for stale unpaid orders.
-- Reports are cached in Redis for 24 hours and stored in PostgreSQL with expiry metadata.
+- Reports are cached in Redis for 72 hours and stored in PostgreSQL with expiry metadata.
 - `backend/services/costing.py` now emits structured per-step cost logs for formal OCR, parse, analyze, suggestion, and translation calls.
 - Embedding requests now emit cost logs too, and review completion logs include an in-memory per-order cost summary with quote mode, input type, and clause counts.
 - That order-level cost summary is now also persisted to `reports.cost_summary` for later inspection without relying only on logs.
+- If analysis fails midway, the partial cost summary accumulated up to that point is now persisted to `analysis_jobs.cost_summary` so failed orders can still be audited later.
 - `GET /api/eval/costs` now aggregates persisted `reports.cost_summary` samples and, when live data is still sparse, backfills to a 10-sample baseline from `backend/data/cost_samples_seed.json`.
 - Runtime pricing is now loaded from `backend/data/pricing_policy.json` instead of being hardcoded in Python. The current provisional table remains `¥299 / ¥499 / ¥799 / ¥1599`.
 - `/api/eval/costs` now reports both a cost-floor recommendation and a target-margin recommendation (`target_margin_rate`, default `0.75`) so pricing reviews can distinguish “minimum safe price” from “commercial target price”.

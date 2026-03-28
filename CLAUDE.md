@@ -71,7 +71,7 @@ Current status as of 2026-03-28:
 - Local Docker end-to-end flow is verified through upload, payment creation, persistent analysis-task start, status/event restoration, replayable event streaming, report retrieval, and contract deletion.
 - `APP_ENV=development` enables local-only conveniences such as auto table bootstrap and dev payment bypass.
 - Dual-OCR groundwork is now in code: text/text-layer PDFs are quoted before payment, while image/scanned PDFs can be staged for local pre-estimation and formal OCR after payment.
-- Deployment configs ready: `fly.toml` (NRT, force_https) + `vercel.json` (API proxy, security headers) + Alembic 4-step migration chain.
+- Deployment configs ready: `fly.toml` (NRT, force_https) + `vercel.json` (API proxy, security headers) + Alembic migration chain through `006`.
 - RAG knowledge base expanded to 331+ law articles across 10 legal categories (rental, labor, part-time, business outsourcing, sales, etc.).
 - Eval dataset expanded to 20 labeled samples covering multiple contract types.
 - Integration test suite: 7 router test files covering all API endpoints in the current runtime flow.
@@ -81,6 +81,7 @@ Current status as of 2026-03-28:
 - CSS partially migrated to CSS Modules: layout, home, examples, legal use scoped modules; report/review remain global due to cross-page sharing and responsive dependencies.
 - Frontend UX polish now includes result lookup, order reminder dialogs, a compact share sheet that silently appends referral codes to report links, direct review-to-report handoff on completion, report risk-level filters, reveal-on-scroll homepage sections, a curated standalone examples gallery whose report sample layout mirrors the real report page more closely, mobile-specific compact header / quick-nav / safe-area refinements, iOS input zoom prevention, top-of-page route resets, and a simplified homepage upload flow (`Upload File` / `Paste Text`).
 - Persistent analysis-task architecture is now the primary runtime flow: `analysis_jobs` / `analysis_events`, event bus, extracted report persistence helpers, new analysis start/status/events/stream routes, and frontend snapshot-plus-replay event restoration are all in code.
+- Failed analyses now persist the partial AI cost summary already incurred up to the failure point into `analysis_jobs.cost_summary`, instead of keeping it only in memory/logs.
 - Local Docker startup now uses health checks for `postgres`, `redis`, and `backend`, and key frontend pages use a small retry wrapper so brief backend warm-up windows do not surface as user-facing proxy failures.
 - Production credentials and live third-party testing still pending.
 
@@ -153,7 +154,7 @@ backend/
     migrations/   # Alembic async migrations (env.py + versions/)
   models/
     order.py      # Order model (UUID pk, payment_status, analysis_status, contract_deleted_at)
-    report.py     # Report model (JSONB clause_analyses, 24h expires_at)
+    report.py     # Report model (JSONB clause_analyses, 72h expires_at)
     referral.py   # Referral model (referral_code, uses_count, discount_jpy)
   schemas/
     analysis.py   # Analysis start/status/events/stream schemas
@@ -181,7 +182,7 @@ backend/
     pii_detector.py   # Regex PII detection (phone, email, mynumber, address, postal)
     payment.py        # KOMOJU API client + HMAC webhook verification
     email.py          # Resend API client (9-language subjects)
-    report_cache.py   # Redis report cache (24h TTL)
+    report_cache.py   # Redis report cache (72h TTL)
     cleanup.py        # APScheduler: expired reports + contract nullification
   data/
     cost_samples_seed.json # Seeded cost baseline used until enough real cost samples exist
@@ -273,7 +274,7 @@ Embeddings are generated via OpenAI API (httpx direct call, not langchain).
 3. If the order came from staged image/scanned PDF upload, formal OCR runs only after payment and before persistent analysis starts
 4. `/review/:orderId` starts or resumes the persistent analysis task, restores saved event history, and subscribes to incremental updates
 5. Contract text nullified immediately after analysis (privacy)
-6. Redis cache expires in 24h; APScheduler cleans DB hourly
+6. Redis cache expires in 72h; APScheduler cleans DB hourly
 
 ### Runtime pricing policy
 - Upload pricing is no longer hardcoded directly in Python constants.
@@ -287,7 +288,7 @@ Embeddings are generated via OpenAI API (httpx direct call, not langchain).
 - `cleanup.py` runs every hour via APScheduler in lifespan
 - Deletes expired reports (past `expires_at`)
 - Nullifies `contract_text` for completed orders (defense in depth)
-- The backend still deletes full contract text after analysis, but each 24-hour report may retain only clause-level original excerpts tied to findings so reopened links can preserve inline comparison without storing the full contract body.
+- The backend still deletes full contract text after analysis, but each 72-hour report may retain only clause-level original excerpts tied to findings so reopened links can preserve inline comparison without storing the full contract body.
 
 ### Local startup bootstrap
 - `main.py` calls `init_db()` only when `APP_ENV=development`, so local Docker development can create `orders`, `reports`, and `referrals` automatically.
@@ -383,7 +384,7 @@ Requires `.env` at project root:
 OPENAI_API_KEY=sk-...
 ```
 
-PostgreSQL data is persisted in Docker volume `pgdata`. RAG knowledge (pgvector embeddings) is loaded from `backend/data/` on startup. Redis is used for report caching (24h TTL).
+PostgreSQL data is persisted in Docker volume `pgdata`. RAG knowledge (pgvector embeddings) is loaded from `backend/data/` on startup. Redis is used for report caching (72h TTL).
 
 ---
 
@@ -405,6 +406,6 @@ PostgreSQL data is persisted in Docker volume `pgdata`. RAG knowledge (pgvector 
 - **Mobile-first web** — no native app in V1
 - **Multi-language UI (9 languages)** — ja (default/fallback), en, zh-CN, zh-TW, pt-BR, id, ko, vi, ne. Auto-detect via `navigator.language`, manual switch stored in `localStorage`. Reports also output in user's selected language.
 - **Pay-per-use only** — no subscriptions
-- **Contracts are never stored** — deleted immediately after analysis, reports cached 24h then auto-deleted
+- **Contracts are never stored** — deleted immediately after analysis, reports cached 72h then auto-deleted
 - **Legal disclaimer required** on every page: 「本サービスは法律相談ではありません。具体的な法的判断は弁護士にご相談ください」
 - **No assertive legal language** — never use "违法" "无效", only "可能存在风险" "建议确认" "建议咨询专业人士"
