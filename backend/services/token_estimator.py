@@ -72,6 +72,23 @@ def get_price_tiers() -> list[dict]:
     return DEFAULT_PRICE_TIERS
 
 
+def get_pricing_policy_metadata() -> dict[str, str | None]:
+    settings = get_settings()
+    policy_path = Path(settings.PRICING_POLICY_FILE)
+    if not policy_path.is_absolute():
+        policy_path = Path.cwd() / policy_path
+
+    try:
+        payload = json.loads(policy_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {"version": None, "source": None}
+
+    return {
+        "version": payload.get("version"),
+        "source": payload.get("source"),
+    }
+
+
 def _tiers_are_valid(tiers: list[dict]) -> bool:
     if not tiers:
         return False

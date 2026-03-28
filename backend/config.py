@@ -15,6 +15,8 @@ class Settings(BaseSettings):
     PARSE_MODEL: str = "gpt-4o-mini"
     SUGGESTION_MODEL: str = "gpt-4o-mini"
     TRANSLATION_MODEL: str = "gpt-4o-mini"
+    EMBEDDING_MODEL: str = "text-embedding-3-small"
+    COST_ESTIMATE_VERSION: str = "2026-03-28-v1"
 
     # Environment
     APP_ENV: Literal["development", "production"] = "development"

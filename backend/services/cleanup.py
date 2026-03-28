@@ -11,6 +11,11 @@ from backend.models.order import Order
 from backend.models.report import Report
 from backend.config import get_settings
 from backend.services.costing import clear_order_cost_summary, get_order_cost_summary
+from backend.services.order_cost_estimate import (
+    build_order_cost_actual_snapshot,
+    build_order_cost_comparison_snapshot,
+    upsert_order_cost_estimate,
+)
 from backend.services.temp_uploads import delete_temp_upload
 
 logger = logging.getLogger(__name__)
@@ -103,6 +108,22 @@ async def fail_stale_analysis_jobs() -> int:
             cost_summary = get_order_cost_summary(str(order.id))
             if cost_summary:
                 job.cost_summary = cost_summary
+                actual_snapshot = build_order_cost_actual_snapshot(order, cost_summary)
+                estimate_record = await upsert_order_cost_estimate(
+                    session,
+                    order=order,
+                    actual_snapshot=actual_snapshot,
+                )
+                comparison_snapshot = build_order_cost_comparison_snapshot(
+                    estimate_record.estimate_snapshot,
+                    actual_snapshot,
+                )
+                if comparison_snapshot is not None:
+                    await upsert_order_cost_estimate(
+                        session,
+                        order=order,
+                        comparison_snapshot=comparison_snapshot,
+                    )
             job.status = "failed"
             job.error_message = "Analysis timed out"
             job.failed_at = now

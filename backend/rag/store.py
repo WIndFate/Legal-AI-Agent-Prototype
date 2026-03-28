@@ -10,9 +10,6 @@ from backend.config import get_settings
 from backend.services.costing import log_embedding_usage
 
 logger = logging.getLogger(__name__)
-
-# Embedding model config
-EMBEDDING_MODEL = "text-embedding-3-small"
 EMBEDDING_DIM = 1536
 
 
@@ -24,18 +21,20 @@ def _get_engine():
 
 def _get_embedding_sync(text_input: str) -> list[float]:
     """Get embedding from OpenAI API (synchronous for tool calls)."""
-    api_key = os.getenv("OPENAI_API_KEY") or get_settings().OPENAI_API_KEY
+    settings = get_settings()
+    api_key = os.getenv("OPENAI_API_KEY") or settings.OPENAI_API_KEY
+    embedding_model = settings.EMBEDDING_MODEL
     response = httpx.post(
         "https://api.openai.com/v1/embeddings",
         headers={"Authorization": f"Bearer {api_key}"},
-        json={"input": text_input, "model": EMBEDDING_MODEL},
+        json={"input": text_input, "model": embedding_model},
         timeout=30,
     )
     response.raise_for_status()
     payload = response.json()
     log_embedding_usage(
         "embedding_query",
-        EMBEDDING_MODEL,
+        embedding_model,
         input_tokens=int(payload.get("usage", {}).get("prompt_tokens", 0)),
         item_count=1,
     )
@@ -44,18 +43,20 @@ def _get_embedding_sync(text_input: str) -> list[float]:
 
 def _get_embeddings_batch_sync(texts: list[str]) -> list[list[float]]:
     """Get embeddings for a batch of texts (synchronous)."""
-    api_key = os.getenv("OPENAI_API_KEY") or get_settings().OPENAI_API_KEY
+    settings = get_settings()
+    api_key = os.getenv("OPENAI_API_KEY") or settings.OPENAI_API_KEY
+    embedding_model = settings.EMBEDDING_MODEL
     response = httpx.post(
         "https://api.openai.com/v1/embeddings",
         headers={"Authorization": f"Bearer {api_key}"},
-        json={"input": texts, "model": EMBEDDING_MODEL},
+        json={"input": texts, "model": embedding_model},
         timeout=60,
     )
     response.raise_for_status()
     payload = response.json()
     log_embedding_usage(
         "embedding_batch",
-        EMBEDDING_MODEL,
+        embedding_model,
         input_tokens=int(payload.get("usage", {}).get("prompt_tokens", 0)),
         item_count=len(texts),
     )

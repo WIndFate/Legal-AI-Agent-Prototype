@@ -166,7 +166,14 @@ def get_order_cost_summary(order_id: str) -> dict[str, Any] | None:
             return None
         return {
             **summary,
-            "steps": dict(summary["steps"]),
+            "steps": {
+                step_name: {
+                    **step_data,
+                    "models": dict(step_data["models"]),
+                }
+                for step_name, step_data in summary["steps"].items()
+            },
+            "models": dict(summary["models"]),
         }
 
 
@@ -191,7 +198,18 @@ def _record_order_cost(payload: dict[str, Any]) -> None:
                 "total_input_tokens": 0,
                 "total_output_tokens": 0,
                 "step_count": 0,
-                "steps": defaultdict(lambda: {"cost_usd": 0.0, "cost_jpy": 0.0, "calls": 0}),
+                "steps": defaultdict(
+                    lambda: {
+                        "cost_usd": 0.0,
+                        "cost_jpy": 0.0,
+                        "calls": 0,
+                        "input_tokens": 0,
+                        "output_tokens": 0,
+                        "cached_input_tokens": 0,
+                        "models": defaultdict(lambda: {"cost_usd": 0.0, "cost_jpy": 0.0, "calls": 0}),
+                    }
+                ),
+                "models": defaultdict(lambda: {"cost_usd": 0.0, "cost_jpy": 0.0, "calls": 0}),
             },
         )
         summary["total_cost_usd"] += float(payload.get("estimated_cost_usd", 0.0))
@@ -203,3 +221,16 @@ def _record_order_cost(payload: dict[str, Any]) -> None:
         step["cost_usd"] += float(payload.get("estimated_cost_usd", 0.0))
         step["cost_jpy"] += float(payload.get("estimated_cost_jpy", 0.0))
         step["calls"] += 1
+        step["input_tokens"] += int(payload.get("input_tokens", 0))
+        step["output_tokens"] += int(payload.get("output_tokens", 0))
+        step["cached_input_tokens"] += int(payload.get("cached_input_tokens", 0))
+        model_name = str(payload.get("model") or "")
+        if model_name:
+            model = summary["models"][model_name]
+            model["cost_usd"] += float(payload.get("estimated_cost_usd", 0.0))
+            model["cost_jpy"] += float(payload.get("estimated_cost_jpy", 0.0))
+            model["calls"] += 1
+            step_model = step["models"][model_name]
+            step_model["cost_usd"] += float(payload.get("estimated_cost_usd", 0.0))
+            step_model["cost_jpy"] += float(payload.get("estimated_cost_jpy", 0.0))
+            step_model["calls"] += 1

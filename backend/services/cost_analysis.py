@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.config import get_settings
 from backend.models.order import Order
+from backend.models.order_cost_estimate import OrderCostEstimate
 from backend.models.report import Report
 from backend.services.token_estimator import get_price_tiers
 
@@ -83,11 +84,23 @@ def build_cost_pricing_report(
     by_input_type: dict[str, list[float]] = {}
     by_quote_mode: dict[str, list[float]] = {}
     by_price_tier: dict[str, list[dict[str, Any]]] = {}
+    by_estimate_version: dict[str, list[dict[str, Any]]] = {}
+    by_model_signature: dict[str, list[dict[str, Any]]] = {}
+    estimate_cost_deltas: list[float] = []
+    estimate_margin_deltas: list[float] = []
 
     for sample in samples:
         by_input_type.setdefault(sample["input_type"], []).append(float(sample["total_cost_jpy"]))
         by_quote_mode.setdefault(sample["quote_mode"], []).append(float(sample["total_cost_jpy"]))
         by_price_tier.setdefault(sample["price_tier"], []).append(sample)
+        if sample.get("estimate_version"):
+            by_estimate_version.setdefault(str(sample["estimate_version"]), []).append(sample)
+        if sample.get("model_signature"):
+            by_model_signature.setdefault(str(sample["model_signature"]), []).append(sample)
+        if sample.get("estimate_vs_actual_cost_delta_jpy") is not None:
+            estimate_cost_deltas.append(float(sample["estimate_vs_actual_cost_delta_jpy"]))
+        if sample.get("estimate_vs_actual_margin_delta_jpy") is not None:
+            estimate_margin_deltas.append(float(sample["estimate_vs_actual_margin_delta_jpy"]))
 
     tier_price_lookup = {tier["name"]: tier["price_jpy"] for tier in get_price_tiers()}
     tier_rows = []
@@ -146,6 +159,8 @@ def build_cost_pricing_report(
         "safety_multiplier": safety_multiplier,
         "target_margin_rate": target_margin_rate,
         "overall_cost_jpy": summary,
+        "estimate_vs_actual_cost_delta_jpy": summarize_numeric(estimate_cost_deltas),
+        "estimate_vs_actual_margin_delta_jpy": summarize_numeric(estimate_margin_deltas),
         "by_input_type": {
             key: summarize_numeric(values)
             for key, values in sorted(by_input_type.items())
@@ -154,23 +169,55 @@ def build_cost_pricing_report(
             key: summarize_numeric(values)
             for key, values in sorted(by_quote_mode.items())
         },
+        "by_estimate_version": {
+            key: {
+                "sample_count": len(value),
+                "cost_jpy": summarize_numeric([float(sample["total_cost_jpy"]) for sample in value]),
+                "estimate_vs_actual_cost_delta_jpy": summarize_numeric(
+                    [
+                        float(sample["estimate_vs_actual_cost_delta_jpy"])
+                        for sample in value
+                        if sample.get("estimate_vs_actual_cost_delta_jpy") is not None
+                    ]
+                ),
+            }
+            for key, value in sorted(by_estimate_version.items())
+        },
+        "by_model_signature": {
+            key: {
+                "sample_count": len(value),
+                "cost_jpy": summarize_numeric([float(sample["total_cost_jpy"]) for sample in value]),
+                "estimate_vs_actual_cost_delta_jpy": summarize_numeric(
+                    [
+                        float(sample["estimate_vs_actual_cost_delta_jpy"])
+                        for sample in value
+                        if sample.get("estimate_vs_actual_cost_delta_jpy") is not None
+                    ]
+                ),
+            }
+            for key, value in sorted(by_model_signature.items())
+        },
         "by_price_tier": sorted(tier_rows, key=lambda row: row["current_list_price_jpy"]),
     }
 
 
 async def load_cost_samples(db: AsyncSession, limit: int = 200) -> list[dict[str, Any]]:
     result = await db.execute(
-        select(Report, Order)
+        select(Report, Order, OrderCostEstimate)
         .join(Order, Report.order_id == Order.id)
+        .outerjoin(OrderCostEstimate, OrderCostEstimate.order_id == Order.id)
         .where(Report.cost_summary.is_not(None))
         .order_by(Report.created_at.desc())
         .limit(limit)
     )
 
     samples: list[dict[str, Any]] = []
-    for report, order in result.all():
+    for report, order, order_cost_estimate in result.all():
         cost_summary = report.cost_summary or {}
         total_cost_jpy = float(cost_summary.get("total_cost_jpy", 0.0) or 0.0)
+        estimate_snapshot = (order_cost_estimate.estimate_snapshot if order_cost_estimate else None) or {}
+        comparison_snapshot = (order_cost_estimate.comparison_snapshot if order_cost_estimate else None) or {}
+        model_plan = estimate_snapshot.get("model_plan") or {}
         samples.append({
             "order_id": str(order.id),
             "input_type": order.input_type,
@@ -183,10 +230,33 @@ async def load_cost_samples(db: AsyncSession, limit: int = 200) -> list[dict[str
             "medium_risk_count": report.medium_risk_count,
             "low_risk_count": report.low_risk_count,
             "total_clauses": report.total_clauses,
+            "estimate_version": estimate_snapshot.get("estimate_version"),
+            "pricing_policy_version": estimate_snapshot.get("pricing_policy_version"),
+            "predicted_total_cost_jpy": float(estimate_snapshot.get("predicted_total_cost_jpy", 0.0) or 0.0),
+            "estimate_vs_actual_cost_delta_jpy": comparison_snapshot.get("cost_delta_jpy"),
+            "estimate_vs_actual_margin_delta_jpy": comparison_snapshot.get("margin_delta_jpy"),
+            "model_signature": _build_model_signature(model_plan),
             "created_at": report.created_at.isoformat(),
         })
 
     return _append_seed_samples(samples, limit=limit)
+
+
+def _build_model_signature(model_plan: dict[str, Any]) -> str:
+    if not model_plan:
+        return ""
+    ordered_keys = [
+        "ocr_model",
+        "parse_model",
+        "analysis_model",
+        "suggestion_model",
+        "translation_model",
+        "embedding_model",
+    ]
+    return "|".join(
+        f"{key}:{model_plan.get(key, '')}"
+        for key in ordered_keys
+    )
 
 
 def load_seed_cost_samples() -> list[dict[str, Any]]:

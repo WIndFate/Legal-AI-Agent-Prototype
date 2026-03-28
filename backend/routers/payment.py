@@ -9,6 +9,7 @@ from backend.db.session import get_db
 from backend.models.order import Order
 from backend.models.referral import Referral
 from backend.schemas.payment import PaymentCreateRequest, PaymentCreateResponse
+from backend.services.order_cost_estimate import build_order_cost_estimate_snapshot, upsert_order_cost_estimate
 from backend.services.payment import create_payment_session, verify_webhook, is_dev_payment_mode
 from backend.services.analytics import capture as posthog_capture
 
@@ -79,6 +80,9 @@ async def create_payment(
     db.add(order)
     await db.commit()
     await db.refresh(order)
+    estimate_snapshot = build_order_cost_estimate_snapshot(order)
+    await upsert_order_cost_estimate(db, order=order, estimate_snapshot=estimate_snapshot)
+    await db.commit()
     logger.info(
         "Payment order created: order_id=%s final_price=%s discount_jpy=%s",
         order.id,

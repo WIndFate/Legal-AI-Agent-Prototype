@@ -18,6 +18,12 @@ from backend.services.costing import (
 )
 from backend.services.email import send_report_email
 from backend.services.event_bus import event_bus
+from backend.services.order_cost_estimate import (
+    build_order_cost_actual_snapshot,
+    build_order_cost_comparison_snapshot,
+    clear_order_cost_actuals,
+    upsert_order_cost_estimate,
+)
 from backend.services.report_cache import cache_report
 from backend.services.report_persistence import ensure_contract_text, finalize_order, save_report, strip_clause_originals
 
@@ -124,6 +130,7 @@ async def _run_analysis(job_id: str, order_id: str) -> None:
     final_report = None
     email = None
     target_language = "ja"
+    cost_context = None
 
     try:
         async with factory() as session:
@@ -138,9 +145,26 @@ async def _run_analysis(job_id: str, order_id: str) -> None:
             email = order.email
             target_language = order.target_language
 
+            cost_context = set_cost_order_context(order_id)
             await ensure_contract_text(order, session)
             if not order.contract_text:
                 job.cost_summary = _build_cost_summary_snapshot(order_id, order)
+                actual_snapshot = build_order_cost_actual_snapshot(order, job.cost_summary)
+                estimate_record = await upsert_order_cost_estimate(
+                    session,
+                    order=order,
+                    actual_snapshot=actual_snapshot,
+                )
+                comparison_snapshot = build_order_cost_comparison_snapshot(
+                    estimate_record.estimate_snapshot,
+                    actual_snapshot,
+                )
+                if comparison_snapshot is not None:
+                    await upsert_order_cost_estimate(
+                        session,
+                        order=order,
+                        comparison_snapshot=comparison_snapshot,
+                    )
                 await _append_event(
                     session,
                     job,
@@ -161,7 +185,6 @@ async def _run_analysis(job_id: str, order_id: str) -> None:
             await session.commit()
             contract_text = order.contract_text
 
-        cost_context = set_cost_order_context(order_id)
         try:
             async for evt in run_review_stream(contract_text, target_language=target_language):
                 if evt["type"] == "token":
@@ -177,8 +200,24 @@ async def _run_analysis(job_id: str, order_id: str) -> None:
             async with factory() as session:
                 job = await session.get(AnalysisJob, job_id)
                 order = await session.get(Order, order_id)
-                if job is not None:
+                if job is not None and order is not None:
                     job.cost_summary = _build_cost_summary_snapshot(order_id, order)
+                    actual_snapshot = build_order_cost_actual_snapshot(order, job.cost_summary)
+                    estimate_record = await upsert_order_cost_estimate(
+                        session,
+                        order=order,
+                        actual_snapshot=actual_snapshot,
+                    )
+                    comparison_snapshot = build_order_cost_comparison_snapshot(
+                        estimate_record.estimate_snapshot,
+                        actual_snapshot,
+                    )
+                    if comparison_snapshot is not None:
+                        await upsert_order_cost_estimate(
+                            session,
+                            order=order,
+                            comparison_snapshot=comparison_snapshot,
+                        )
                     await _append_event(
                         session,
                         job,
@@ -200,8 +239,24 @@ async def _run_analysis(job_id: str, order_id: str) -> None:
             async with factory() as session:
                 job = await session.get(AnalysisJob, job_id)
                 order = await session.get(Order, order_id)
-                if job is not None:
+                if job is not None and order is not None:
                     job.cost_summary = _build_cost_summary_snapshot(order_id, order)
+                    actual_snapshot = build_order_cost_actual_snapshot(order, job.cost_summary)
+                    estimate_record = await upsert_order_cost_estimate(
+                        session,
+                        order=order,
+                        actual_snapshot=actual_snapshot,
+                    )
+                    comparison_snapshot = build_order_cost_comparison_snapshot(
+                        estimate_record.estimate_snapshot,
+                        actual_snapshot,
+                    )
+                    if comparison_snapshot is not None:
+                        await upsert_order_cost_estimate(
+                            session,
+                            order=order,
+                            comparison_snapshot=comparison_snapshot,
+                        )
                     await _append_event(
                         session,
                         job,
@@ -225,6 +280,20 @@ async def _run_analysis(job_id: str, order_id: str) -> None:
             cost_summary = _build_cost_summary_snapshot(order_id, order, persisted_report)
             if cost_summary:
                 job.cost_summary = cost_summary
+            actual_snapshot = build_order_cost_actual_snapshot(order, cost_summary, persisted_report)
+            comparison_snapshot = None
+            if actual_snapshot is not None:
+                estimate_record = await upsert_order_cost_estimate(session, order=order, actual_snapshot=actual_snapshot)
+                comparison_snapshot = build_order_cost_comparison_snapshot(
+                    estimate_record.estimate_snapshot,
+                    actual_snapshot,
+                )
+                if comparison_snapshot is not None:
+                    await upsert_order_cost_estimate(
+                        session,
+                        order=order,
+                        comparison_snapshot=comparison_snapshot,
+                    )
             report_payload = await save_report(order_id, persisted_report, target_language, session, cost_summary=cost_summary)
             await cache_report(order_id, report_payload)
             email_sent = await send_report_email(email, order_id, target_language)
@@ -251,6 +320,8 @@ async def _run_analysis(job_id: str, order_id: str) -> None:
                 },
             )
     finally:
+        if cost_context is not None:
+            reset_cost_order_context(cost_context)
         _running_tasks.pop(order_id, None)
 
 
@@ -283,6 +354,7 @@ async def reset_failed_job(job_id: str) -> None:
         job.error_message = None
         job.failed_at = None
         clear_order_cost_summary(str(job.order_id))
+        await clear_order_cost_actuals(session, str(job.order_id))
         job.finished_at = None
         job.last_event_at = None
         order = await session.get(Order, job.order_id)
