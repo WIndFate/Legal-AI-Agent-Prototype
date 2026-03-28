@@ -375,7 +375,6 @@ export default function ReviewPage() {
 
             <div className="stream-log polished-stream-log">
               <div className="spinner" />
-              <p className="analyzing-text">{t('review.analyzing')}</p>
               <div className="recent-log">
                 {logLines.length > 0 ? (
                   logLines.map((line, i) => (
@@ -395,10 +394,6 @@ export default function ReviewPage() {
               <div className="review-assurance-card">
                 <span>{t('report.referenced_law')}</span>
                 <strong>{t('report.japanese_original')}</strong>
-              </div>
-              <div className="review-assurance-card">
-                <span>{t('payment.title')}</span>
-                <strong>{t('review.live_label')}</strong>
               </div>
             </div>
           </div>
