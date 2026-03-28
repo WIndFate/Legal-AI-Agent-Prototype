@@ -142,3 +142,24 @@ async def test_report_expired(mock_cache, mock_posthog, mock_db):
 
     assert resp.status_code == 404
     assert "expired" in resp.json()["detail"].lower()
+
+
+@pytest.mark.asyncio
+@patch("backend.routers.report.posthog_capture")
+@patch("backend.routers.report.report_pdf_renderer.build_pdf", return_value=b"%PDF-1.4 test")
+async def test_report_pdf_download(mock_renderer, mock_posthog, mock_db):
+    oid = uuid.uuid4()
+    report_row = _make_report_row(oid)
+
+    result_mock = MagicMock()
+    result_mock.scalar_one_or_none.return_value = report_row
+    mock_db.execute.return_value = result_mock
+
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        resp = await client.get(f"/api/report/{oid}/pdf")
+
+    assert resp.status_code == 200
+    assert resp.headers["content-type"].startswith("application/pdf")
+    assert f'contractguard-report-{oid}.pdf' in resp.headers["content-disposition"]
+    assert resp.content.startswith(b"%PDF-1.4")

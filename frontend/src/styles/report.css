@@ -391,10 +391,10 @@
 }
 
 .report-actions-bottom {
-  display: flex;
-  justify-content: center;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
-  flex-wrap: wrap;
+  align-items: stretch;
   padding: 0;
   border: none;
   background: transparent;
@@ -407,14 +407,15 @@
   align-items: center;
   justify-content: center;
   gap: 10px;
+  width: 100%;
 }
 
 .report-actions-bottom .btn-share {
-  min-width: 220px;
+  min-width: 0;
 }
 
 .report-download-trigger {
-  min-width: 220px;
+  min-width: 0;
 }
 
 .report-actions-bottom svg {
@@ -587,16 +588,6 @@
     margin-top: 10px;
     padding-top: 10px;
     font-size: 0.82rem;
-  }
-
-  .report-actions-bottom .btn-share {
-    width: 100%;
-    min-width: 0;
-  }
-
-  .report-download-trigger {
-    width: 100%;
-    min-width: 0;
   }
 
   .share-note {

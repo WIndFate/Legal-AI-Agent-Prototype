@@ -71,26 +71,41 @@ export default function ReportPage() {
   const [reloadKey, setReloadKey] = useState(0);
   const [expired, setExpired] = useState(false);
   const [selectedRisks, setSelectedRisks] = useState<RiskFilter[]>(DEFAULT_FILTERS);
+  const [downloadingPdf, setDownloadingPdf] = useState(false);
   const [isOffline, setIsOffline] = useState(
     typeof navigator !== 'undefined' ? !navigator.onLine : false
   );
 
   const referralCode = searchParams.get('ref');
 
-  const handleDownloadPdf = () => {
-    if (!data || typeof window === 'undefined') return;
+  const handleDownloadPdf = async () => {
+    if (!data || typeof window === 'undefined' || downloadingPdf) return;
 
-    const previousTitle = document.title;
-    const nextTitle = `contractguard-report-${data.order_id}`;
-    const restoreTitle = () => {
-      document.title = previousTitle;
-      window.removeEventListener('afterprint', restoreTitle);
-    };
+    try {
+      setDownloadingPdf(true);
+      const response = await fetchWithRetry(`/api/report/${data.order_id}/pdf`, undefined, {
+        timeoutMs: REPORT_TIMEOUT_MS,
+        retries: 2,
+        retryDelayMs: 700,
+      });
+      if (!response.ok) {
+        throw new Error(`Failed: ${response.status}`);
+      }
 
-    document.title = nextTitle;
-    window.addEventListener('afterprint', restoreTitle, { once: true });
-    window.print();
-    window.setTimeout(restoreTitle, 1500);
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = `contractguard-report-${data.order_id}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(blobUrl);
+    } catch {
+      setError(i18n.t('report.network_error'));
+    } finally {
+      setDownloadingPdf(false);
+    }
   };
 
   const toggleClause = (clauseNumber: string) => {
@@ -460,7 +475,7 @@ export default function ReportPage() {
       )}
 
       <div className="report-actions report-actions-bottom">
-        <button className="btn-share report-download-trigger" onClick={handleDownloadPdf}>
+        <button className="btn-share report-download-trigger" onClick={() => void handleDownloadPdf()} disabled={downloadingPdf}>
           <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false">
             <path d="M10 3.5v8m0 0 3-3m-3 3-3-3M4.5 13.5v1.25A1.75 1.75 0 0 0 6.25 16.5h7.5a1.75 1.75 0 0 0 1.75-1.75V13.5" />
           </svg>
