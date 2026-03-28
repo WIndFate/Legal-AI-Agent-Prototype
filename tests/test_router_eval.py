@@ -131,3 +131,29 @@ async def test_eval_costs_custom_params(mock_load, mock_sources, mock_report, mo
     mock_report.assert_called_once()
     call_kwargs = mock_report.call_args
     assert call_kwargs[1]["safety_multiplier"] == 3.0
+
+
+@pytest.mark.asyncio
+@patch("backend.routers.eval.build_ops_dashboard")
+@patch("backend.routers.eval.summarize_sample_sources")
+@patch("backend.routers.eval.load_cost_samples")
+async def test_eval_operations_dashboard(mock_load, mock_sources, mock_dashboard, mock_db):
+    mock_load.return_value = [
+        {"order_id": "a", "paid_price_jpy": 799, "total_cost_jpy": 23.1},
+    ]
+    mock_sources.return_value = {"database_samples": 1, "seed_samples": 0}
+    mock_dashboard.return_value = {"overall": {"actual_margin_jpy": {"avg": 775.9}}}
+
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        resp = await client.get("/api/eval/operations?limit=50&recent_limit=10")
+
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["sample_limit"] == 50
+    assert body["recent_limit"] == 10
+    assert body["samples"] == 1
+    assert body["sample_sources"] == {"database_samples": 1, "seed_samples": 0}
+    assert body["dashboard"]["overall"]["actual_margin_jpy"]["avg"] == 775.9
+    mock_load.assert_called_once_with(mock_db, limit=50, include_seed=False)
+    mock_dashboard.assert_called_once_with(mock_load.return_value, recent_limit=10)

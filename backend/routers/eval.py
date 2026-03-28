@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from backend.db.session import get_db
 from backend.eval.evaluator import run_rag_eval
 from backend.services.cost_analysis import (
+    build_ops_dashboard,
     build_cost_pricing_report,
     load_cost_samples,
     summarize_sample_sources,
@@ -46,4 +47,21 @@ async def eval_costs(
             safety_multiplier=safety_multiplier,
             target_margin_rate=target_margin_rate,
         ),
+    }
+
+
+@router.get("/api/eval/operations")
+async def eval_operations(
+    limit: int = 500,
+    recent_limit: int = 25,
+    db: AsyncSession = Depends(get_db),
+):
+    """Return read-only operational aggregates for pricing, margin, and model-mix monitoring."""
+    samples = await load_cost_samples(db, limit=limit, include_seed=False)
+    return {
+        "sample_limit": limit,
+        "recent_limit": recent_limit,
+        "samples": len(samples),
+        "sample_sources": summarize_sample_sources(samples),
+        "dashboard": build_ops_dashboard(samples, recent_limit=recent_limit),
     }

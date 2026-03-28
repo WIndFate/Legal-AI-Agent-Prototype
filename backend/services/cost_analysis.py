@@ -201,7 +201,86 @@ def build_cost_pricing_report(
     }
 
 
-async def load_cost_samples(db: AsyncSession, limit: int = 200) -> list[dict[str, Any]]:
+def build_ops_dashboard(
+    samples: list[dict[str, Any]],
+    *,
+    recent_limit: int = 25,
+) -> dict[str, Any]:
+    actual_costs = [float(sample["total_cost_jpy"]) for sample in samples]
+    revenues = [float(sample["paid_price_jpy"]) for sample in samples]
+    margins = [float(sample["actual_margin_jpy"]) for sample in samples]
+    margin_rates = [float(sample["actual_margin_rate"]) for sample in samples]
+    estimate_cost_deltas = [
+        float(sample["estimate_vs_actual_cost_delta_jpy"])
+        for sample in samples
+        if sample.get("estimate_vs_actual_cost_delta_jpy") is not None
+    ]
+    estimate_margin_deltas = [
+        float(sample["estimate_vs_actual_margin_delta_jpy"])
+        for sample in samples
+        if sample.get("estimate_vs_actual_margin_delta_jpy") is not None
+    ]
+
+    def _group(key: str) -> dict[str, Any]:
+        grouped: dict[str, list[dict[str, Any]]] = {}
+        for sample in samples:
+            grouped.setdefault(str(sample.get(key) or "unknown"), []).append(sample)
+        return {
+            name: _summarize_ops_group(rows)
+            for name, rows in sorted(grouped.items())
+        }
+
+    recent_orders = sorted(
+        samples,
+        key=lambda sample: str(sample.get("created_at") or ""),
+        reverse=True,
+    )[: max(recent_limit, 0)]
+
+    return {
+        "sample_count": len(samples),
+        "overall": {
+            "revenue_jpy": summarize_numeric(revenues),
+            "actual_cost_jpy": summarize_numeric(actual_costs),
+            "actual_margin_jpy": summarize_numeric(margins),
+            "actual_margin_rate": summarize_numeric(margin_rates),
+            "estimate_vs_actual_cost_delta_jpy": summarize_numeric(estimate_cost_deltas),
+            "estimate_vs_actual_margin_delta_jpy": summarize_numeric(estimate_margin_deltas),
+        },
+        "by_price_tier": _group("price_tier"),
+        "by_input_type": _group("input_type"),
+        "by_quote_mode": _group("quote_mode"),
+        "by_target_language": _group("target_language"),
+        "by_estimate_version": _group("estimate_version"),
+        "by_model_signature": _group("model_signature"),
+        "recent_orders": [
+            {
+                "order_id": sample["order_id"],
+                "created_at": sample["created_at"],
+                "input_type": sample["input_type"],
+                "quote_mode": sample["quote_mode"],
+                "target_language": sample["target_language"],
+                "price_tier": sample["price_tier"],
+                "paid_price_jpy": sample["paid_price_jpy"],
+                "predicted_total_cost_jpy": sample["predicted_total_cost_jpy"],
+                "actual_total_cost_jpy": sample["total_cost_jpy"],
+                "actual_margin_jpy": sample["actual_margin_jpy"],
+                "actual_margin_rate": sample["actual_margin_rate"],
+                "estimate_vs_actual_cost_delta_jpy": sample["estimate_vs_actual_cost_delta_jpy"],
+                "estimate_vs_actual_margin_delta_jpy": sample["estimate_vs_actual_margin_delta_jpy"],
+                "estimate_version": sample["estimate_version"],
+                "model_signature": sample["model_signature"],
+            }
+            for sample in recent_orders
+        ],
+    }
+
+
+async def load_cost_samples(
+    db: AsyncSession,
+    limit: int = 200,
+    *,
+    include_seed: bool = True,
+) -> list[dict[str, Any]]:
     result = await db.execute(
         select(Report, Order, OrderCostEstimate)
         .join(Order, Report.order_id == Order.id)
@@ -223,9 +302,17 @@ async def load_cost_samples(db: AsyncSession, limit: int = 200) -> list[dict[str
             "input_type": order.input_type,
             "quote_mode": order.quote_mode,
             "estimate_source": order.estimate_source,
+            "target_language": order.target_language,
             "price_tier": order.price_tier,
             "paid_price_jpy": float(order.price_jpy),
             "total_cost_jpy": total_cost_jpy,
+            "actual_margin_jpy": round(float(order.price_jpy) - total_cost_jpy, 3),
+            "actual_margin_rate": round(
+                ((float(order.price_jpy) - total_cost_jpy) / float(order.price_jpy))
+                if float(order.price_jpy)
+                else 0.0,
+                4,
+            ),
             "high_risk_count": report.high_risk_count,
             "medium_risk_count": report.medium_risk_count,
             "low_risk_count": report.low_risk_count,
@@ -239,7 +326,31 @@ async def load_cost_samples(db: AsyncSession, limit: int = 200) -> list[dict[str
             "created_at": report.created_at.isoformat(),
         })
 
-    return _append_seed_samples(samples, limit=limit)
+    return _append_seed_samples(samples, limit=limit) if include_seed else samples[:limit]
+
+
+def _summarize_ops_group(rows: list[dict[str, Any]]) -> dict[str, Any]:
+    return {
+        "sample_count": len(rows),
+        "revenue_jpy": summarize_numeric([float(row["paid_price_jpy"]) for row in rows]),
+        "actual_cost_jpy": summarize_numeric([float(row["total_cost_jpy"]) for row in rows]),
+        "actual_margin_jpy": summarize_numeric([float(row["actual_margin_jpy"]) for row in rows]),
+        "actual_margin_rate": summarize_numeric([float(row["actual_margin_rate"]) for row in rows]),
+        "estimate_vs_actual_cost_delta_jpy": summarize_numeric(
+            [
+                float(row["estimate_vs_actual_cost_delta_jpy"])
+                for row in rows
+                if row.get("estimate_vs_actual_cost_delta_jpy") is not None
+            ]
+        ),
+        "estimate_vs_actual_margin_delta_jpy": summarize_numeric(
+            [
+                float(row["estimate_vs_actual_margin_delta_jpy"])
+                for row in rows
+                if row.get("estimate_vs_actual_margin_delta_jpy") is not None
+            ]
+        ),
+    }
 
 
 def _build_model_signature(model_plan: dict[str, Any]) -> str:
