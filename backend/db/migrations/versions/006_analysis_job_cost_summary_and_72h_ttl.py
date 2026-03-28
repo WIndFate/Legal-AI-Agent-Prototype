@@ -1,7 +1,7 @@
 """add analysis job cost summary
 
 Revision ID: 006_analysis_job_cost_summary_and_72h_ttl
-Revises: 005_analysis_jobs_and_events
+Revises: 005
 Create Date: 2026-03-28 00:00:00.000000
 """
 
@@ -11,7 +11,7 @@ from sqlalchemy.dialects import postgresql
 
 
 revision = "006_analysis_job_cost_summary_and_72h_ttl"
-down_revision = "005_analysis_jobs_and_events"
+down_revision = "005"
 branch_labels = None
 depends_on = None
 

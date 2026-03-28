@@ -1,3 +1,4 @@
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from backend.config import get_settings
@@ -30,9 +31,11 @@ async def get_db() -> AsyncSession:
 
 
 async def init_db() -> None:
-    """Create relational tables for local/dev startup if they do not exist yet."""
+    """Create relational tables and apply local/dev migrations on startup."""
     import backend.models  # noqa: F401 - register SQLAlchemy models
 
     engine = get_engine()
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+        await conn.execute(text("ALTER TABLE reports ADD COLUMN IF NOT EXISTS cost_summary JSONB"))
+        await conn.execute(text("ALTER TABLE analysis_jobs ADD COLUMN IF NOT EXISTS cost_summary JSONB"))
