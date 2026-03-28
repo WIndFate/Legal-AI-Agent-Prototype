@@ -52,6 +52,19 @@ function normalizeRiskLevel(level: string): RiskFilter | null {
   return null;
 }
 
+function sortClausesByRisk(clauseAnalyses: ClauseAnalysis[]): ClauseAnalysis[] {
+  const rank: Record<RiskFilter, number> = { high: 0, medium: 1, low: 2 };
+  return [...clauseAnalyses].sort((left, right) => {
+    const leftRisk = normalizeRiskLevel(left.risk_level);
+    const rightRisk = normalizeRiskLevel(right.risk_level);
+    const leftRank = leftRisk ? rank[leftRisk] : 3;
+    const rightRank = rightRisk ? rank[rightRisk] : 3;
+
+    if (leftRank !== rightRank) return leftRank - rightRank;
+    return left.clause_number.localeCompare(right.clause_number, 'ja');
+  });
+}
+
 const REPORT_TIMEOUT_MS = 12_000;
 const DEFAULT_FILTERS: RiskFilter[] = ['high', 'medium', 'low'];
 const REPORT_TTL_HOURS = 72;
@@ -166,10 +179,10 @@ export default function ReportPage() {
           ...json,
           report: {
             ...json.report,
-            clause_analyses: json.report.clause_analyses.map((clause) => ({
+            clause_analyses: sortClausesByRisk(json.report.clause_analyses.map((clause) => ({
               ...clause,
               original_text: clause.original_text || originalByClause[clause.clause_number] || '',
-            })),
+            }))),
           },
         });
 

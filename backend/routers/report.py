@@ -17,6 +17,21 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
+def _risk_sort_key(clause: dict) -> tuple[int, str]:
+    level = clause.get("risk_level", "")
+    if level in {"高", "High", "高リスク"}:
+        return (0, clause.get("clause_number", ""))
+    if level in {"中", "Medium", "中リスク"}:
+        return (1, clause.get("clause_number", ""))
+    if level in {"低", "Low", "低リスク"}:
+        return (2, clause.get("clause_number", ""))
+    return (3, clause.get("clause_number", ""))
+
+
+def _sort_clause_analyses(clause_analyses: list[dict] | None) -> list[dict]:
+    return sorted(clause_analyses or [], key=_risk_sort_key)
+
+
 async def _load_report_row(order_id: str, db: AsyncSession) -> Report:
     result = await db.execute(select(Report).where(Report.order_id == order_id))
     report = result.scalar_one_or_none()
@@ -45,7 +60,13 @@ async def get_report(
     if cached and "report" in cached:
         logger.debug("Report cache hit: order_id=%s", order_id)
         posthog_capture("anonymous", "report_viewed", {"order_id": order_id, "source": "redis"})
-        return cached
+        return {
+            **cached,
+            "report": {
+                **cached["report"],
+                "clause_analyses": _sort_clause_analyses(cached["report"].get("clause_analyses")),
+            },
+        }
     if cached:
         logger.warning("Legacy report cache shape detected: order_id=%s; falling back to database", order_id)
     logger.info("Report cache miss: order_id=%s", order_id)
@@ -62,7 +83,7 @@ async def get_report(
         "report": {
             "overall_risk_level": report.overall_risk_level,
             "summary": report.summary,
-            "clause_analyses": report.clause_analyses,
+            "clause_analyses": _sort_clause_analyses(report.clause_analyses),
             "high_risk_count": report.high_risk_count,
             "medium_risk_count": report.medium_risk_count,
             "low_risk_count": report.low_risk_count,
@@ -88,7 +109,7 @@ async def download_report_pdf(
         expires_at=report.expires_at.strftime("%Y-%m-%d %H:%M %Z"),
         overall_risk_level=report.overall_risk_level,
         summary=report.summary,
-        clause_analyses=report.clause_analyses or [],
+        clause_analyses=_sort_clause_analyses(report.clause_analyses),
         high_risk_count=report.high_risk_count,
         medium_risk_count=report.medium_risk_count,
         low_risk_count=report.low_risk_count,

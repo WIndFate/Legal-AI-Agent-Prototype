@@ -105,6 +105,31 @@ async def test_report_cache_miss_db_hit(mock_cache, mock_posthog, mock_db):
     assert body["language"] == "zh-CN"
 
 
+@pytest.mark.asyncio
+@patch("backend.routers.report.posthog_capture")
+@patch("backend.routers.report.get_cached_report", return_value=None)
+async def test_report_clause_order_is_sorted_by_risk(mock_cache, mock_posthog, mock_db):
+    oid = uuid.uuid4()
+    report_row = _make_report_row(oid)
+    report_row.clause_analyses = [
+        {"clause_number": "第3条", "risk_level": "低"},
+        {"clause_number": "第1条", "risk_level": "高"},
+        {"clause_number": "第2条", "risk_level": "中"},
+    ]
+
+    result_mock = MagicMock()
+    result_mock.scalar_one_or_none.return_value = report_row
+    mock_db.execute.return_value = result_mock
+
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        resp = await client.get(f"/api/report/{oid}")
+
+    assert resp.status_code == 200
+    clause_numbers = [item["clause_number"] for item in resp.json()["report"]["clause_analyses"]]
+    assert clause_numbers == ["第1条", "第2条", "第3条"]
+
+
 # ── Report not found → 404 ──────────────────────────────────────
 
 @pytest.mark.asyncio
