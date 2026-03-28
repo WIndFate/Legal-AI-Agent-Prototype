@@ -23,6 +23,9 @@ class Settings(BaseSettings):
 
     # Database
     DATABASE_URL: str = "postgresql+asyncpg://postgres:postgres@postgres:5432/contract_checker"
+    AUTO_APPLY_MIGRATIONS: bool = True
+    DB_STARTUP_TIMEOUT_SECONDS: int = 90
+    MIGRATION_LOCK_ID: int = 20260328
 
     # Redis
     REDIS_URL: str = "redis://redis:6379"
@@ -62,9 +65,6 @@ class Settings(BaseSettings):
     @property
     def is_production(self) -> bool:
         return self.APP_ENV == "production"
-
-    def should_bootstrap_db(self) -> bool:
-        return self.is_development
 
     def uses_local_frontend_url(self) -> bool:
         host = urlparse(self.FRONTEND_URL).hostname or ""

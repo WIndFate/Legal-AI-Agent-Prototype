@@ -30,12 +30,29 @@ async def get_db() -> AsyncSession:
         yield session
 
 
-async def init_db() -> None:
-    """Create relational tables and apply local/dev migrations on startup."""
+async def prepare_legacy_schema_for_stamp() -> None:
+    """Bring legacy create_all-style databases up to the current additive schema before stamping."""
     import backend.models  # noqa: F401 - register SQLAlchemy models
 
     engine = get_engine()
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+        await conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
+        await conn.execute(
+            text("ALTER TABLE orders ADD COLUMN IF NOT EXISTS quote_mode VARCHAR(32) NOT NULL DEFAULT 'exact'")
+        )
+        await conn.execute(
+            text("ALTER TABLE orders ADD COLUMN IF NOT EXISTS estimate_source VARCHAR(32) NOT NULL DEFAULT 'raw_text'")
+        )
+        await conn.execute(text("ALTER TABLE orders ADD COLUMN IF NOT EXISTS temp_upload_token VARCHAR(255)"))
+        await conn.execute(text("ALTER TABLE orders ADD COLUMN IF NOT EXISTS temp_upload_name VARCHAR(255)"))
+        await conn.execute(text("ALTER TABLE orders ADD COLUMN IF NOT EXISTS temp_upload_mime_type VARCHAR(100)"))
         await conn.execute(text("ALTER TABLE reports ADD COLUMN IF NOT EXISTS cost_summary JSONB"))
         await conn.execute(text("ALTER TABLE analysis_jobs ADD COLUMN IF NOT EXISTS cost_summary JSONB"))
+        await conn.execute(text("CREATE INDEX IF NOT EXISTS ix_orders_email ON orders (email)"))
+        await conn.execute(text("CREATE INDEX IF NOT EXISTS ix_orders_payment_status ON orders (payment_status)"))
+        await conn.execute(text("CREATE INDEX IF NOT EXISTS ix_reports_expires_at ON reports (expires_at)"))
+        await conn.execute(text("CREATE INDEX IF NOT EXISTS ix_orders_analysis_status ON orders (analysis_status)"))
+        await conn.execute(text("CREATE INDEX IF NOT EXISTS ix_analysis_jobs_status ON analysis_jobs (status)"))
+        await conn.execute(text("CREATE INDEX IF NOT EXISTS ix_analysis_events_job_id ON analysis_events (job_id)"))
+        await conn.execute(text("CREATE INDEX IF NOT EXISTS ix_order_cost_estimates_order_id ON order_cost_estimates (order_id)"))

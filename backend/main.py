@@ -12,7 +12,6 @@ logging.basicConfig(
 )
 
 from backend.config import get_settings
-from backend.db.session import init_db
 from backend.rag.loader import load_legal_knowledge
 from backend.routers import analysis, health, upload, payment, report, referral, eval
 
@@ -28,10 +27,6 @@ async def lifespan(app: FastAPI):
         logger.warning("APP_ENV=production but SENTRY_DSN is not configured.")
     if settings.is_production and not settings.POSTHOG_API_KEY:
         logger.warning("APP_ENV=production but POSTHOG_API_KEY is not configured.")
-
-    # Bootstrap relational tables for local/dev startup.
-    if settings.should_bootstrap_db():
-        await init_db()
 
     # Initialize RAG knowledge base
     logger.info("Loading legal knowledge into RAG store...")
