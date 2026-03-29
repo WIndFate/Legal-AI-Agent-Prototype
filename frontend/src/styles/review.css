@@ -57,41 +57,84 @@
   text-transform: uppercase;
 }
 
-.review-live-header {
+.review-stage-header {
   display: grid;
-  gap: 18px;
-  align-items: start;
+  justify-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+  text-align: center;
 }
 
-.review-phase-panel {
-  padding: 18px;
-  border-radius: var(--radius-lg);
-  border: 1px solid rgba(31, 58, 95, 0.12);
-  background: rgba(255, 255, 255, 0.68);
-  text-align: left;
-}
-
-.review-phase-chip {
+.review-stage-icon {
+  width: 68px;
+  height: 68px;
   display: inline-flex;
   align-items: center;
-  padding: 8px 12px;
-  border-radius: 999px;
+  justify-content: center;
+  border-radius: 24px;
   background: rgba(31, 58, 95, 0.08);
-  color: var(--brand);
-  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
-  font-size: 0.76rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  border: 1px solid rgba(31, 58, 95, 0.12);
+  position: relative;
+  overflow: hidden;
 }
 
-.review-phase-stats {
-  margin-top: 14px;
+.review-stage-icon span {
+  width: 24px;
+  height: 24px;
+  display: block;
+  border-radius: 10px;
+  border: 2px solid var(--brand);
+  position: relative;
 }
 
-.review-assurance-grid {
-  margin-top: 20px;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+.review-stage-icon.stage-parsing span::after {
+  content: "";
+  position: absolute;
+  left: 3px;
+  right: 3px;
+  top: 9px;
+  height: 2px;
+  background: var(--brand);
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+
+.review-stage-icon.stage-analyzing span {
+  border-radius: 50% 50% 42% 42%;
+  animation: pulseSoft 1.8s ease-in-out infinite;
+}
+
+.review-stage-icon.stage-generating span::after,
+.review-stage-icon.stage-completed span::after {
+  content: "";
+  position: absolute;
+  inset: 5px;
+  border-radius: 6px;
+  background: var(--brand);
+}
+
+.review-stage-icon.stage-completed {
+  background: rgba(76, 137, 108, 0.12);
+  border-color: rgba(76, 137, 108, 0.18);
+}
+
+.review-stage-icon.stage-completed span {
+  border-color: var(--success);
+  transform: scale(1.08);
+}
+
+.review-stage-title {
+  margin: 0;
+  color: var(--brand-ink);
+  font-size: 1.5rem;
+  line-height: 1.15;
+}
+
+.review-stage-desc {
+  margin: 0;
+  max-width: 34rem;
+  color: var(--text-soft);
+  font-size: 0.94rem;
+  line-height: 1.75;
 }
 
 .report-hero-badge,
@@ -148,116 +191,136 @@
 
 .review-phase-text,
 .analyzing-text,
-.recent-log-line,
 .status-text {
   font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
 }
 
-.review-phase-text {
-  margin-top: 10px;
-  color: var(--text-soft);
-  font-size: 0.95rem;
-  line-height: 1.8;
-}
-
-.step-progress {
-  display: flex;
-  justify-content: center;
+.review-progress {
+  display: grid;
   gap: 10px;
-  margin: 24px 0;
+  margin: 0 auto 22px;
+  width: min(100%, 640px);
 }
 
-.step-item {
+.review-progress-track {
+  display: flex;
+  gap: 4px;
+  width: 100%;
+}
+
+.review-progress-segment {
   flex: 1;
-  max-width: 160px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(31, 58, 95, 0.08);
+  overflow: hidden;
 }
 
-.step-circle {
-  width: 36px;
-  height: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  border: 1px solid rgba(31, 58, 95, 0.16);
-  background: rgba(255, 255, 255, 0.72);
-  color: var(--text-faint);
-  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
-  font-size: 0.82rem;
-  font-weight: 700;
+.review-progress-fill {
+  width: 100%;
+  height: 100%;
+  opacity: 0;
 }
 
-.step-label {
-  color: var(--text-faint);
-  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
-  font-size: 0.72rem;
-  text-align: center;
-}
-
-.step-active .step-circle,
-.step-done .step-circle {
-  color: #fff;
-  border-color: transparent;
-}
-
-.step-active .step-circle {
-  background: var(--brand);
-}
-
-.step-done .step-circle {
+.seg-done .review-progress-fill {
+  opacity: 1;
   background: var(--success);
 }
 
-.step-active .step-label {
+.seg-active .review-progress-fill {
+  opacity: 1;
+  background: var(--brand);
+  animation: shimmer 1.8s ease-in-out infinite;
+}
+
+.review-progress-labels {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.review-progress-label {
+  color: var(--text-faint);
+  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
+  font-size: 0.76rem;
+  text-align: center;
+}
+
+.lbl-active {
   color: var(--brand);
+  font-weight: 700;
 }
 
-.step-done .step-label {
+.lbl-done {
   color: var(--success);
+  font-weight: 700;
 }
 
-.stream-log {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin-top: 20px;
-  gap: 12px;
-}
-
-.analyzing-text {
-  margin-top: 12px;
-}
-
-.recent-log {
-  width: min(100%, 460px);
+.review-activity {
+  position: relative;
+  width: min(100%, 520px);
   margin: 0 auto;
-  padding: 16px 18px;
-  min-height: 76px;
-  border-radius: var(--radius-md);
-  border: 1px solid rgba(31, 58, 95, 0.12);
-  background: rgba(255, 255, 255, 0.7);
+  padding: 10px 0 4px 0;
+}
+
+.review-activity-line {
+  position: absolute;
+  left: 11px;
+  top: 14px;
+  bottom: 14px;
+  width: 2px;
+  background: rgba(31, 58, 95, 0.12);
+}
+
+.review-activity-list {
+  display: grid;
+  gap: 10px;
+}
+
+.review-activity-item {
+  position: relative;
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
   text-align: left;
 }
 
-.recent-log-line {
+.review-activity-dot {
+  position: relative;
+  z-index: 1;
+  width: 10px;
+  height: 10px;
+  margin-top: 5px;
+  margin-left: 6px;
+  border-radius: 50%;
+  background: rgba(95, 127, 163, 0.45);
+}
+
+.review-activity-item.is-current .review-activity-dot {
+  background: var(--brand);
+  box-shadow: 0 0 0 8px rgba(31, 58, 95, 0.08);
+  animation: pulseSoft 1.8s ease-in-out infinite;
+}
+
+.review-activity-text {
   color: var(--text-faint);
-  font-size: 0.8rem;
-  line-height: 1.5;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
+  font-size: 0.92rem;
+  line-height: 1.65;
 }
 
-.recent-log-line + .recent-log-line {
-  margin-top: 4px;
-}
-
-.recent-log-line:last-child {
+.review-activity-item.is-current .review-activity-text {
   color: var(--brand-ink);
+  font-weight: 600;
+}
+
+.review-elapsed {
+  margin-top: 20px;
+  color: var(--text-faint);
+  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
+  font-size: 0.8rem;
+  text-align: center;
 }
 
 .payment-status-header {
@@ -297,6 +360,33 @@
   width: 18px;
   height: 18px;
   border-width: 2px;
+}
+
+.spinner {
+  width: 18px;
+  height: 18px;
+  border: 3px solid rgba(31, 58, 95, 0.1);
+  border-top-color: var(--brand);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes shimmer {
+  0% { opacity: 0.72; }
+  50% { opacity: 1; }
+  100% { opacity: 0.72; }
+}
+
+@keyframes pulseSoft {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
 }
 
 .status-text {
@@ -384,61 +474,30 @@
     text-align: left;
   }
 
-  .review-phase-panel {
-    padding: 14px;
-    border-radius: 16px;
+  .review-stage-header {
+    justify-items: start;
+    text-align: left;
+    margin-bottom: 18px;
   }
 
-  .review-phase-chip {
-    padding: 7px 10px;
-    font-size: 0.7rem;
+  .review-stage-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 18px;
   }
 
-  .review-phase-text {
-    margin-top: 8px;
+  .review-stage-title {
+    font-size: 1.2rem;
+  }
+
+  .review-stage-desc {
     font-size: 0.86rem;
     line-height: 1.65;
   }
 
-  .review-phase-stats,
-  .review-assurance-grid,
-  .payment-summary-grid {
-    gap: 10px;
-  }
-
-  .step-progress {
-    gap: 6px;
-    margin: 18px 0;
-  }
-
-  .step-item {
-    gap: 6px;
-  }
-
-  .step-circle {
-    width: 30px;
-    height: 30px;
-    font-size: 0.74rem;
-  }
-
-  .step-label {
-    font-size: 0.64rem;
-  }
-
-  .recent-log {
-    margin-top: 0;
-    padding: 12px 14px;
-    min-height: 68px;
-    border-radius: 14px;
-    max-width: none;
-  }
-
-  .recent-log-line {
-    font-size: 0.74rem;
-    white-space: normal;
-    overflow: visible;
-    text-overflow: unset;
-    line-height: 1.5;
+  .review-progress {
+    gap: 8px;
+    margin-bottom: 18px;
   }
 
   .loading-state,
@@ -460,14 +519,13 @@
     line-height: 1.6;
   }
 
-  .stream-log {
-    margin-top: 16px;
-    align-items: center;
-    text-align: center;
+  .review-progress-label {
+    font-size: 0.66rem;
   }
 
-  .review-assurance-grid {
-    grid-template-columns: 1fr;
+  .review-activity {
+    width: 100%;
+    margin: 0;
   }
 
   .reconnecting-banner {

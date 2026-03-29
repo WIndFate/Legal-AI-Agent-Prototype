@@ -129,6 +129,10 @@
     "phase_analyzing_desc": "Analisando cada cláusula com base na legislação relevante…",
     "phase_generating_title": "Gerando relatório",
     "phase_generating_desc": "Compilando os resultados em um relatório claro…",
+    "tool_analyzing_clause": "Analisando o risco jurídico da {{clause}}…",
+    "tool_suggesting_clause": "Preparando sugestões de revisão para a {{clause}}…",
+    "elapsed": "Tempo decorrido {{time}}",
+    "complete_title": "Análise concluída",
     "reconnecting": "Conexão interrompida. Reconectando...",
     "reconnect_failed": "Não foi possível reconectar. Toque no botão abaixo para tentar novamente.",
     "retry": "Tentar novamente"

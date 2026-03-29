@@ -129,6 +129,10 @@
     "phase_analyzing_desc": "Menganalisis setiap pasal berdasarkan hukum terkait…",
     "phase_generating_title": "Membuat laporan",
     "phase_generating_desc": "Menyusun hasil analisis menjadi laporan yang jelas…",
+    "tool_analyzing_clause": "Menganalisis risiko hukum pada {{clause}}…",
+    "tool_suggesting_clause": "Menyusun saran revisi untuk {{clause}}…",
+    "elapsed": "Waktu berjalan {{time}}",
+    "complete_title": "Analisis selesai",
     "reconnecting": "Koneksi terputus. Menyambung kembali...",
     "reconnect_failed": "Gagal menyambung kembali. Silakan tekan tombol di bawah untuk mencoba lagi.",
     "retry": "Coba lagi"

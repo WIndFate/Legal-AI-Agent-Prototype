@@ -129,6 +129,10 @@
     "phase_analyzing_desc": "正在對照相關法條分析各條款風險…",
     "phase_generating_title": "正在產生報告",
     "phase_generating_desc": "正在將分析結果整理為易讀報告…",
+    "tool_analyzing_clause": "正在分析 {{clause}} 的法律風險…",
+    "tool_suggesting_clause": "正在為 {{clause}} 生成修改建議…",
+    "elapsed": "已用時 {{time}}",
+    "complete_title": "分析完成",
     "reconnecting": "連線中斷，正在重新連線…",
     "reconnect_failed": "無法重新連線。請點擊下方按鈕重試。",
     "retry": "重試"

@@ -129,6 +129,10 @@
     "phase_analyzing_desc": "Đang phân tích từng điều khoản theo luật liên quan…",
     "phase_generating_title": "Đang tạo báo cáo",
     "phase_generating_desc": "Đang tổng hợp kết quả phân tích thành báo cáo rõ ràng…",
+    "tool_analyzing_clause": "Đang phân tích rủi ro pháp lý của {{clause}}…",
+    "tool_suggesting_clause": "Đang soạn đề xuất chỉnh sửa cho {{clause}}…",
+    "elapsed": "Đã dùng {{time}}",
+    "complete_title": "Phân tích hoàn tất",
     "reconnecting": "Kết nối bị gián đoạn. Đang kết nối lại...",
     "reconnect_failed": "Không thể kết nối lại. Vui lòng nhấn nút bên dưới để thử lại.",
     "retry": "Thử lại"

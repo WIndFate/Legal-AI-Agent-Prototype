@@ -129,6 +129,10 @@
     "phase_analyzing_desc": "各条項を関連法令に照らして分析しています…",
     "phase_generating_title": "レポートを作成中",
     "phase_generating_desc": "分析結果を分かりやすいレポートにまとめています…",
+    "tool_analyzing_clause": "{{clause}} の法的リスクを分析しています…",
+    "tool_suggesting_clause": "{{clause}} の修正文案を作成しています…",
+    "elapsed": "経過時間 {{time}}",
+    "complete_title": "分析完了",
     "reconnecting": "接続が中断されました。再接続しています…",
     "reconnect_failed": "接続を再確立できませんでした。下のボタンで再試行してください。",
     "retry": "再試行"

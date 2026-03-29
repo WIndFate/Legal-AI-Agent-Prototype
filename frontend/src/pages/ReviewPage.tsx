@@ -47,11 +47,13 @@ export default function ReviewPage() {
   const [logLines, setLogLines] = useState<string[]>([]);
   const [phaseText, setPhaseText] = useState('');
   const [reconnecting, setReconnecting] = useState(false);
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
 
   const started = useRef(false);
   const reconnectAttempt = useRef(0);
   const streamAbortRef = useRef<AbortController | null>(null);
   const lastSeqRef = useRef(0);
+  const completeTimeoutRef = useRef<number | null>(null);
 
   const pushLog = useCallback((line: string) => {
     if (!line.trim()) return;
@@ -67,6 +69,13 @@ export default function ReviewPage() {
     }
     return fallback || t('errors.review_failed');
   }, [t]);
+
+  const extractClauseNumber = useCallback((payload: Record<string, unknown> | null): string | null => {
+    const clauseText = typeof payload?.clause === 'string' ? payload.clause : null;
+    if (!clauseText) return null;
+    const match = clauseText.match(/第\s*\d+\s*条/);
+    return match?.[0]?.replace(/\s+/g, '') ?? null;
+  }, []);
 
   const phaseMeta = useCallback((step: AnalysisStep) => {
     if (step === 'parsing') {
@@ -110,8 +119,17 @@ export default function ReviewPage() {
 
     if (evt.event_type === 'tool_call') {
       const tool = typeof evt.payload_json?.tool === 'string' ? evt.payload_json.tool : null;
-      if (tool === 'analyze_clause_risk') return t('review.tool_analyze_clause_risk');
-      if (tool === 'generate_suggestion') return t('review.tool_generate_suggestion');
+      const clauseNumber = extractClauseNumber(evt.payload_json);
+      if (tool === 'analyze_clause_risk') {
+        return clauseNumber
+          ? t('review.tool_analyzing_clause', { clause: clauseNumber })
+          : t('review.tool_analyze_clause_risk');
+      }
+      if (tool === 'generate_suggestion') {
+        return clauseNumber
+          ? t('review.tool_suggesting_clause', { clause: clauseNumber })
+          : t('review.tool_generate_suggestion');
+      }
       return t('review.tool_processing_clause');
     }
 
@@ -124,7 +142,7 @@ export default function ReviewPage() {
     }
 
     return evt.message;
-  }, [t]);
+  }, [extractClauseNumber, t]);
 
   const applyStatusSnapshot = useCallback((status: OrderStatusResponse) => {
     setAnalysisStatus(status.analysis_status);
@@ -155,8 +173,12 @@ export default function ReviewPage() {
         break;
       case 'complete':
         setAnalysisStatus('completed');
+        setPhaseText(t('review.complete_title'));
+        pushLog(t('review.complete_title'));
         if (orderId) {
-          navigate(`/report/${orderId}`);
+          completeTimeoutRef.current = window.setTimeout(() => {
+            navigate(`/report/${orderId}`);
+          }, 1200);
         }
         break;
       case 'error':
@@ -326,55 +348,75 @@ export default function ReviewPage() {
 
     return () => {
       streamAbortRef.current?.abort();
+      if (completeTimeoutRef.current) {
+        window.clearTimeout(completeTimeoutRef.current);
+      }
     };
   }, [bootstrap, orderId]);
 
+  useEffect(() => {
+    if (!loading) return;
+
+    const timer = window.setInterval(() => {
+      setElapsedSeconds((current) => current + 1);
+    }, 1000);
+
+    return () => window.clearInterval(timer);
+  }, [loading]);
+
+  const formatElapsed = useCallback((totalSeconds: number) => {
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  }, []);
+
   const currentPhase = phaseMeta(currentStep);
   const currentStepIdx = STEP_DEFS.findIndex((item) => item.key === currentStep);
+  const activityItems = logLines.length > 0 ? logLines.slice(-5) : [phaseText || currentPhase.desc];
 
   return (
     <div className="page review-page">
       {loading && (
         <div className="analyzing-section">
           <div className="review-live-card">
-            <div className="review-live-header">
-              <div>
-                <p className="section-kicker">{t('review.live_label')}</p>
-                <h2>{currentPhase.title}</h2>
+            <div className="review-stage-header">
+              <div className={`review-stage-icon stage-${analysisStatus === 'completed' ? 'completed' : currentStep}`} aria-hidden="true">
+                <span />
               </div>
-              <div className="review-phase-panel">
-                <span className="review-phase-chip">
-                  {analysisStatus === 'queued' ? t('payment.processing') : t('review.analyzing')}
-                </span>
-                <div className="review-phase-stats">
-                  <div className="review-phase-stat">
-                    <span>{t('review.live_label')}</span>
-                    <strong>{Math.max(currentStepIdx + 1, 1)}/3</strong>
-                  </div>
-                  <div className="review-phase-stat">
-                    <span>{t('report.title')}</span>
-                    <strong>{currentPhase.title}</strong>
-                  </div>
-                </div>
-              </div>
+              <h2 className="review-stage-title">
+                {analysisStatus === 'completed' ? t('review.complete_title') : currentPhase.title}
+              </h2>
+              <p className="review-stage-desc">{currentPhase.desc}</p>
             </div>
 
-            <div className="step-progress">
-              {STEP_DEFS.map((step, idx) => {
-                let stepStatus: 'done' | 'active' | 'pending' = 'pending';
-                if (idx < currentStepIdx) stepStatus = 'done';
-                else if (idx === currentStepIdx) stepStatus = 'active';
+            <div className="review-progress">
+              <div className="review-progress-track">
+                {STEP_DEFS.map((step, idx) => {
+                  let stepStatus: 'done' | 'active' | 'pending' = 'pending';
+                  if (analysisStatus === 'completed' || idx < currentStepIdx) stepStatus = 'done';
+                  else if (idx === currentStepIdx) stepStatus = 'active';
 
-                const labelKey = `review.step_${step.key}` as const;
-                return (
-                  <div key={step.key} className={`step-item step-${stepStatus}`}>
-                    <div className="step-circle">
-                      {stepStatus === 'done' ? '\u2713' : idx + 1}
+                  return (
+                    <div key={step.key} className={`review-progress-segment seg-${stepStatus}`}>
+                      <div className="review-progress-fill" />
                     </div>
-                    <span className="step-label">{t(labelKey)}</span>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
+              <div className="review-progress-labels">
+                {STEP_DEFS.map((step, idx) => {
+                  let stepStatus: 'done' | 'active' | 'pending' = 'pending';
+                  if (analysisStatus === 'completed' || idx < currentStepIdx) stepStatus = 'done';
+                  else if (idx === currentStepIdx) stepStatus = 'active';
+
+                  const labelKey = `review.step_${step.key}` as const;
+                  return (
+                    <span key={step.key} className={`review-progress-label lbl-${stepStatus}`}>
+                      {t(labelKey)}
+                    </span>
+                  );
+                })}
+              </div>
             </div>
 
             {reconnecting && (
@@ -384,28 +426,23 @@ export default function ReviewPage() {
               </div>
             )}
 
-            <div className="stream-log polished-stream-log">
-              <div className="spinner" />
-              <div className="recent-log">
-                {logLines.length > 0 ? (
-                  logLines.map((line, i) => (
-                    <p key={`${line}-${i}`} className="recent-log-line">{line}</p>
-                  ))
-                ) : (
-                  <p className="recent-log-line">{phaseText || currentPhase.desc}</p>
-                )}
+            <div className="review-activity">
+              <div className="review-activity-line" aria-hidden="true" />
+              <div className="review-activity-list">
+                {activityItems.map((item, i) => (
+                  <div
+                    key={`${item}-${i}`}
+                    className={`review-activity-item ${i === activityItems.length - 1 ? 'is-current' : ''}`}
+                  >
+                    <div className="review-activity-dot" />
+                    <span className="review-activity-text">{item}</span>
+                  </div>
+                ))}
               </div>
             </div>
 
-            <div className="review-assurance-grid">
-              <div className="review-assurance-card">
-                <span>{t('upload.trust_privacy')}</span>
-                <strong>72h</strong>
-              </div>
-              <div className="review-assurance-card">
-                <span>{t('report.referenced_law')}</span>
-                <strong>{t('report.japanese_original')}</strong>
-              </div>
+            <div className="review-elapsed">
+              <span>{t('review.elapsed', { time: formatElapsed(elapsedSeconds) })}</span>
             </div>
           </div>
         </div>
