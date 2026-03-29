@@ -231,7 +231,7 @@
 
 /* Upload section internals */
 .uploadArea textarea,
-.paymentForm input {
+.paymentForm input:not([type='checkbox']) {
   width: 100%;
   border-radius: var(--radius-md);
   border: 1px solid rgba(31, 58, 95, 0.14);
@@ -270,12 +270,12 @@
 }
 
 .uploadArea textarea::placeholder,
-.paymentForm input::placeholder {
+.paymentForm input:not([type='checkbox'])::placeholder {
   color: #9c9186;
 }
 
 .uploadArea textarea:focus,
-.paymentForm input:focus {
+.paymentForm input:not([type='checkbox']):focus {
   outline: none;
   border-color: rgba(31, 58, 95, 0.34);
   box-shadow: 0 0 0 4px rgba(95, 127, 163, 0.12);
@@ -1026,7 +1026,7 @@
   }
 
   .uploadArea textarea,
-  .paymentForm input {
+  .paymentForm input:not([type='checkbox']) {
     padding: 12px 14px;
     font-size: 16px;
     line-height: 1.55;
