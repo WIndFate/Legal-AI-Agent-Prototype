@@ -21,7 +21,7 @@
     "file_hint": "JPG, PNG, PDF를 지원하며 파일 형식은 자동으로 인식됩니다.",
     "placeholder": "계약서 텍스트를 여기에 붙여넣으세요…",
     "submit": "분석 시작",
-    "hero_title": "일본어 계약서 분석",
+    "hero_title": "일본 계약서 분석",
     "hero_kicker": "AI 계약 리스크 분석",
     "hero_body": "일본어 계약서를 사진·PDF·텍스트로 업로드하세요. AI가 조항별 리스크를 분석하고 선택한 언어로 개선안을 제공합니다.",
     "preview_loading_button": "가격을 준비하는 중…",
