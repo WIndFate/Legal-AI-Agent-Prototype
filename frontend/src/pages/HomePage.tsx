@@ -85,6 +85,7 @@ export default function HomePage() {
           price_jpy: uploadResult.price_jpy,
           quote_mode: uploadResult.quote_mode,
           estimate_source: uploadResult.estimate_source,
+          quote_token: uploadResult.quote_token,
           upload_token: uploadResult.upload_token,
           upload_name: uploadResult.upload_name,
           upload_mime_type: uploadResult.upload_mime_type,

@@ -95,6 +95,15 @@ def _mock_analytics():
         yield
 
 
+@pytest.fixture(autouse=True)
+def _mock_quote_context():
+    with (
+        patch("backend.routers.payment.get_redis", new_callable=AsyncMock, return_value=None),
+        patch("backend.routers.payment.load_quote_context", new_callable=AsyncMock, return_value=None),
+    ):
+        yield
+
+
 # ---------------------------------------------------------------------------
 # POST /api/payment/create
 # ---------------------------------------------------------------------------
@@ -135,6 +144,48 @@ async def test_create_payment_happy_path():
         assert body["price_jpy"] == 299
         assert body["discount_applied"] == 0
         assert session.commit_count >= 1
+    finally:
+        app.dependency_overrides.pop(get_db, None)
+
+
+@pytest.mark.asyncio
+async def test_create_payment_includes_quote_context_in_estimate_snapshot():
+    """Payment creation should carry prepayment quote context into the persisted estimate snapshot."""
+    session = FakeSession()
+
+    app.dependency_overrides[get_db] = _override_db(session)
+    try:
+        with (
+            patch(
+                "backend.routers.payment.create_payment_session",
+                new_callable=AsyncMock,
+                return_value="https://komoju.com/sessions/test123",
+            ),
+            patch("backend.routers.payment.is_dev_payment_mode", return_value=False),
+            patch(
+                "backend.routers.payment.load_quote_context",
+                new_callable=AsyncMock,
+                return_value={"prepayment_snapshot": {"preview_cost_jpy": 0.043}},
+            ),
+            patch("backend.routers.payment.build_order_cost_estimate_snapshot") as build_snapshot,
+        ):
+            build_snapshot.return_value = {"estimate_version": "v1"}
+            transport = ASGITransport(app=app)
+            async with AsyncClient(transport=transport, base_url="http://test") as client:
+                resp = await client.post(
+                    "/api/payment/create",
+                    json={
+                        "email": "user@example.com",
+                        "contract_text": "第1条 テスト契約",
+                        "input_type": "text",
+                        "estimated_tokens": 50,
+                        "price_jpy": 299,
+                        "target_language": "zh-CN",
+                        "quote_token": "quote-test-token",
+                    },
+                )
+        assert resp.status_code == 200
+        assert build_snapshot.call_args.kwargs["prepayment_quote"] == {"prepayment_snapshot": {"preview_cost_jpy": 0.043}}
     finally:
         app.dependency_overrides.pop(get_db, None)
 

@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from backend.db.session import get_db
 from backend.models.order import Order
 from backend.models.referral import Referral
+from backend.dependencies import get_redis
 from backend.schemas.payment import PaymentCreateRequest, PaymentCreateResponse
 from backend.services.order_cost_estimate import build_order_cost_estimate_snapshot, upsert_order_cost_estimate
 from backend.services.payment import (
@@ -17,6 +18,7 @@ from backend.services.payment import (
     resolve_frontend_base_url,
 )
 from backend.services.analytics import capture as posthog_capture
+from backend.services.quote_guard import load_quote_context
 from backend.services.token_estimator import estimate_page_count_from_tokens
 
 try:
@@ -87,7 +89,9 @@ async def create_payment(
     db.add(order)
     await db.commit()
     await db.refresh(order)
-    estimate_snapshot = build_order_cost_estimate_snapshot(order)
+    redis = await get_redis()
+    quote_context = await load_quote_context(redis, request.quote_token)
+    estimate_snapshot = build_order_cost_estimate_snapshot(order, prepayment_quote=quote_context)
     await upsert_order_cost_estimate(db, order=order, estimate_snapshot=estimate_snapshot)
     await db.commit()
     logger.info(

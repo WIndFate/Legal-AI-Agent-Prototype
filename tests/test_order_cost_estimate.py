@@ -39,6 +39,30 @@ def test_build_order_cost_estimate_snapshot_includes_model_plan_and_breakdown():
     assert snapshot["predicted_cost_breakdown"]["analyze_clause"]["calls"] == snapshot["predicted_clause_count"]
 
 
+def test_build_order_cost_estimate_snapshot_includes_prepayment_preview_cost():
+    order = _fake_order(input_type="text", quote_mode="exact", estimate_source="raw_text")
+
+    snapshot = build_order_cost_estimate_snapshot(
+        order,
+        prepayment_quote={
+            "prepayment_snapshot": {
+                "preview_model": "gpt-4o-mini",
+                "preview_input_tokens": 1200,
+                "preview_output_tokens": 180,
+                "preview_cost_usd": 0.000288,
+                "preview_cost_jpy": 0.043,
+                "preview_succeeded": True,
+                "cache_hit": False,
+                "content_hash": "hash-123",
+            }
+        },
+    )
+
+    assert snapshot["prepayment_snapshot"]["content_hash"] == "hash-123"
+    assert snapshot["predicted_cost_breakdown"]["parse_contract_preview"]["estimated_cost_jpy"] == 0.043
+    assert snapshot["predicted_total_cost_jpy"] > snapshot["predicted_runtime_cost_jpy"]
+
+
 def test_build_actual_and_comparison_snapshots_capture_model_breakdown():
     order = _fake_order(input_type="text", quote_mode="exact", estimate_source="raw_text")
     cost_summary = {
@@ -87,12 +111,27 @@ def test_build_actual_and_comparison_snapshots_capture_model_breakdown():
         "low_risk_count": 1,
     }
 
-    estimate_snapshot = build_order_cost_estimate_snapshot(order)
-    actual_snapshot = build_order_cost_actual_snapshot(order, cost_summary, report_data)
+    estimate_snapshot = build_order_cost_estimate_snapshot(
+        order,
+        prepayment_quote={
+            "prepayment_snapshot": {
+                "preview_model": "gpt-4o-mini",
+                "preview_input_tokens": 1200,
+                "preview_output_tokens": 180,
+                "preview_cost_usd": 0.000288,
+                "preview_cost_jpy": 0.043,
+                "preview_succeeded": True,
+            }
+        },
+    )
+    actual_snapshot = build_order_cost_actual_snapshot(order, cost_summary, report_data, estimate_snapshot)
     comparison_snapshot = build_order_cost_comparison_snapshot(estimate_snapshot, actual_snapshot)
 
     assert actual_snapshot is not None
     assert actual_snapshot["actual_model_breakdown"]["gpt-4o"]["calls"] == 3
+    assert actual_snapshot["actual_model_breakdown"]["gpt-4o-mini"]["calls"] == 3
+    assert actual_snapshot["actual_cost_breakdown"]["parse_contract_preview"]["cost_jpy"] == 0.043
+    assert actual_snapshot["actual_total_cost_jpy"] > actual_snapshot["actual_runtime_cost_jpy"]
     assert actual_snapshot["model_plan"]["analysis_model"] == "gpt-4o"
     assert comparison_snapshot is not None
     assert "cost_delta_jpy" in comparison_snapshot

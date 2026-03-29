@@ -3,18 +3,33 @@ import json
 import time
 from typing import Optional
 
-from fastapi import APIRouter, File, Form, HTTPException, UploadFile
+from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_openai import ChatOpenAI
 
 from backend.agent.nodes import parse_model
 from backend.config import get_settings
+from backend.dependencies import get_redis
 from backend.schemas.upload import UploadResponse
 from backend.services.analytics import capture as posthog_capture
-from backend.services.costing import log_local_ocr_estimate
+from backend.services.costing import (
+    estimate_cost_jpy,
+    estimate_cost_usd,
+    extract_usage,
+    log_local_ocr_estimate,
+)
 from backend.services.local_ocr import assess_ocr_confidence, estimate_text_with_local_ocr
 from backend.services.pdf_extractor import extract_text_from_pdf_text_layer, pdf_text_layer_is_sufficient
 from backend.services.pii_detector import detect_pii
+from backend.services.quote_guard import (
+    allow_preview_generation,
+    build_contract_content_hash,
+    build_quote_token,
+    enforce_upload_rate_limit,
+    extract_client_ip,
+    load_cached_quote,
+    store_cached_quote,
+)
 from backend.services.temp_uploads import delete_temp_upload, get_temp_upload_path, stage_temp_upload
 from backend.services.token_estimator import estimate_price_from_page_count, estimate_tokens_and_price
 from backend.services.costing import log_model_usage
@@ -61,9 +76,9 @@ def _estimate_with_local_ocr(upload_token: str, page_estimate: int) -> tuple[str
     return local_ocr_text, estimated_tokens, confidence, warnings
 
 
-def _extract_clause_preview(contract_text: str) -> tuple[list[dict[str, str]] | None, int | None]:
+def _extract_clause_preview(contract_text: str) -> tuple[list[dict[str, str]] | None, int | None, dict | None]:
     if len(contract_text.strip()) < 100:
-        return None, None
+        return None, None, None
 
     messages = [
         SystemMessage(
@@ -87,6 +102,16 @@ def _extract_clause_preview(contract_text: str) -> tuple[list[dict[str, str]] | 
     try:
         response = preview_llm.invoke(messages)
         log_model_usage("parse_contract_preview", parse_model, response)
+        usage = extract_usage(response)
+        preview_snapshot = {
+            "preview_model": parse_model,
+            "preview_input_tokens": usage["input_tokens"],
+            "preview_output_tokens": usage["output_tokens"],
+            "preview_cached_input_tokens": usage["cached_input_tokens"],
+            "preview_cost_usd": round(estimate_cost_usd(parse_model, **usage), 6),
+            "preview_cost_jpy": round(estimate_cost_jpy(parse_model, **usage), 3),
+            "preview_succeeded": True,
+        }
         content = str(response.content).strip()
         if "```json" in content:
             content = content.split("```json")[1].split("```")[0].strip()
@@ -94,7 +119,7 @@ def _extract_clause_preview(contract_text: str) -> tuple[list[dict[str, str]] | 
             content = content.split("```")[1].split("```")[0].strip()
         payload = json.loads(content)
         if not isinstance(payload, list):
-            return None, None
+            return None, None, preview_snapshot
 
         preview: list[dict[str, str]] = []
         for item in payload:
@@ -107,23 +132,29 @@ def _extract_clause_preview(contract_text: str) -> tuple[list[dict[str, str]] | 
             preview.append({"number": number or "条項", "title": title or "内容"})
 
         if not preview:
-            return None, None
-        return preview, len(preview)
+            return None, None, preview_snapshot
+        return preview, len(preview), preview_snapshot
     except Exception as exc:
         logger.warning("Clause preview extraction failed: %s", exc)
-        return None, None
+        return None, None, None
 
 
 @router.post("/api/upload", response_model=UploadResponse)
 async def upload_contract(
+    raw_request: Request,
     file: Optional[UploadFile] = File(None),
     text: Optional[str] = Form(None),
     input_type: str = Form("text"),
 ):
     """Upload a contract via image, PDF, or text. Returns token estimate, pricing, and PII warnings."""
+    redis = await get_redis()
+    client_ip = extract_client_ip(raw_request)
+    await enforce_upload_rate_limit(redis, client_ip)
+
     contract_text = ""
     quote_mode = "exact"
     estimate_source = "raw_text"
+    quote_token: str | None = None
     ocr_required = False
     ocr_confidence: str | None = None
     ocr_warnings: list[str] = []
@@ -133,6 +164,7 @@ async def upload_contract(
     pii_warnings = []
     clause_preview: list[dict[str, str]] | None = None
     clause_count: int | None = None
+    preview_snapshot: dict | None = None
     estimation = {
         "estimated_tokens": 0,
         "page_estimate": 0,
@@ -144,7 +176,6 @@ async def upload_contract(
         contract_text = text
         estimation = estimate_tokens_and_price(contract_text)
         pii_warnings = detect_pii(contract_text)
-        clause_preview, clause_count = _extract_clause_preview(contract_text)
     elif input_type == "pdf" and file:
         pdf_bytes = await file.read()
         extracted_text, page_count = extract_text_from_pdf_text_layer(pdf_bytes)
@@ -153,7 +184,6 @@ async def upload_contract(
             estimate_source = "pdf_text_layer"
             estimation = estimate_tokens_and_price(contract_text)
             pii_warnings = detect_pii(contract_text)
-            clause_preview, clause_count = _extract_clause_preview(contract_text)
         else:
             upload_token = stage_temp_upload(pdf_bytes, file.filename)
             upload_name = file.filename
@@ -189,7 +219,45 @@ async def upload_contract(
         if contract_text.strip():
             estimation = estimate_tokens_and_price(contract_text)
             pii_warnings = detect_pii(contract_text)
-            clause_preview, clause_count = _extract_clause_preview(contract_text)
+
+    if quote_mode == "exact" and contract_text.strip():
+        content_hash = build_contract_content_hash(contract_text)
+        cached_quote = await load_cached_quote(redis, content_hash)
+        if cached_quote is not None:
+            clause_preview = cached_quote.get("clause_preview")
+            clause_count = cached_quote.get("clause_count")
+            preview_snapshot = (cached_quote.get("prepayment_snapshot") or {}) | {"cache_hit": True}
+            quote_token = cached_quote.get("quote_token")
+        else:
+            preview_allowed = await allow_preview_generation(redis, client_ip)
+            if preview_allowed:
+                clause_preview, clause_count, preview_snapshot = _extract_clause_preview(contract_text)
+            if preview_snapshot is None:
+                preview_snapshot = {
+                    "preview_model": parse_model,
+                    "preview_input_tokens": 0,
+                    "preview_output_tokens": 0,
+                    "preview_cached_input_tokens": 0,
+                    "preview_cost_usd": 0.0,
+                    "preview_cost_jpy": 0.0,
+                    "preview_succeeded": False,
+                    "blocked_by_rate_limit": not preview_allowed,
+                }
+            preview_snapshot["content_hash"] = content_hash
+            preview_snapshot["cache_hit"] = False
+            quote_token = build_quote_token()
+            await store_cached_quote(
+                redis,
+                content_hash=content_hash,
+                quote_token=quote_token,
+                payload={
+                    "quote_token": quote_token,
+                    "content_hash": content_hash,
+                    "clause_preview": clause_preview,
+                    "clause_count": clause_count,
+                    "prepayment_snapshot": preview_snapshot,
+                },
+            )
 
     if not contract_text.strip() and estimation["price_jpy"] == 0:
         return UploadResponse(
@@ -198,6 +266,7 @@ async def upload_contract(
             price_jpy=0,
             quote_mode=quote_mode,
             estimate_source=estimate_source,
+            quote_token=quote_token,
             ocr_required=ocr_required,
             ocr_confidence=ocr_confidence,
             ocr_warnings=ocr_warnings,
@@ -220,9 +289,12 @@ async def upload_contract(
         "contract_uploaded",
         {
             "input_type": input_type,
+            "client_ip": client_ip,
             "estimated_tokens": estimation["estimated_tokens"],
             "quote_mode": quote_mode,
             "estimate_source": estimate_source,
+            "has_clause_preview": clause_preview is not None,
+            "quote_token_present": quote_token is not None,
             "pricing_model": estimation["pricing_model"],
             "price_jpy": estimation["price_jpy"],
             "has_pii": len(pii_warnings) > 0,
@@ -235,6 +307,7 @@ async def upload_contract(
         price_jpy=estimation["price_jpy"],
         quote_mode=quote_mode,
         estimate_source=estimate_source,
+        quote_token=quote_token,
         ocr_required=ocr_required,
         ocr_confidence=ocr_confidence,
         ocr_warnings=ocr_warnings,

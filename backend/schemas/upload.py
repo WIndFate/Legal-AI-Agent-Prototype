@@ -19,6 +19,7 @@ class UploadResponse(BaseModel):
     price_jpy: int
     quote_mode: str = "exact"
     estimate_source: str = "raw_text"
+    quote_token: str | None = None
     ocr_required: bool = False
     ocr_confidence: str | None = None
     ocr_warnings: list[str] = []

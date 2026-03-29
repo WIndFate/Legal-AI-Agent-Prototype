@@ -1,7 +1,7 @@
 """Integration tests for POST /api/upload endpoint."""
 
 import io
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from httpx import ASGITransport, AsyncClient
@@ -24,7 +24,20 @@ def _mock_analytics():
 @pytest.fixture(autouse=True)
 def _mock_clause_preview():
     """Avoid real LLM preview extraction in upload tests unless a case overrides it."""
-    with patch("backend.routers.upload._extract_clause_preview", return_value=(None, None)):
+    with patch("backend.routers.upload._extract_clause_preview", return_value=(None, None, None)):
+        yield
+
+
+@pytest.fixture(autouse=True)
+def _mock_quote_guard():
+    with (
+        patch("backend.routers.upload.get_redis", new_callable=AsyncMock, return_value=None),
+        patch("backend.routers.upload.enforce_upload_rate_limit", new_callable=AsyncMock, return_value=None),
+        patch("backend.routers.upload.allow_preview_generation", new_callable=AsyncMock, return_value=True),
+        patch("backend.routers.upload.load_cached_quote", new_callable=AsyncMock, return_value=None),
+        patch("backend.routers.upload.store_cached_quote", new_callable=AsyncMock, return_value=None),
+        patch("backend.routers.upload.build_quote_token", return_value="quote-test-token"),
+    ):
         yield
 
 
@@ -45,7 +58,7 @@ async def test_upload_text_returns_pricing():
     """Text upload should return token estimate, pricing, and exact quote mode."""
     with patch(
         "backend.routers.upload._extract_clause_preview",
-        return_value=([{"number": "第1条", "title": "目的"}], 1),
+        return_value=([{"number": "第1条", "title": "目的"}], 1, {"preview_succeeded": True}),
     ):
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
@@ -67,6 +80,7 @@ async def test_upload_text_returns_pricing():
     assert body["contract_text"] != ""
     assert body["clause_count"] == 1
     assert body["clause_preview"][0]["number"] == "第1条"
+    assert body["quote_token"] == "quote-test-token"
 
 
 @pytest.mark.asyncio
@@ -181,6 +195,7 @@ async def test_upload_pdf_with_text_layer_uses_exact_quote():
     assert body["estimate_source"] == "pdf_text_layer"
     assert body["ocr_required"] is False
     assert body["estimated_tokens"] > 0
+    assert body["quote_token"] == "quote-test-token"
 
 
 @pytest.mark.asyncio
@@ -218,6 +233,7 @@ async def test_upload_pdf_scanned_stages_for_ocr():
     assert body["ocr_warnings"] == ["upload.ocr_post_payment_notice"]
     assert body["quote_mode"] == "estimated_pre_ocr"
     assert body["upload_token"] == "tok-pdf456"
+    assert body["quote_token"] is None
 
 
 @pytest.mark.asyncio
@@ -270,6 +286,7 @@ async def test_upload_image_keeps_clause_preview_unavailable():
     body = resp.json()
     assert body["clause_preview"] is None
     assert body["clause_count"] is None
+    assert body["quote_token"] is None
 
 
 @pytest.mark.asyncio
@@ -291,7 +308,7 @@ async def test_upload_short_text_skips_clause_preview():
 @pytest.mark.asyncio
 async def test_upload_text_preview_failure_does_not_block_pricing():
     """Preview extraction failures should gracefully degrade to null preview."""
-    with patch("backend.routers.upload._extract_clause_preview", return_value=(None, None)):
+    with patch("backend.routers.upload._extract_clause_preview", return_value=(None, None, None)):
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
             resp = await client.post(

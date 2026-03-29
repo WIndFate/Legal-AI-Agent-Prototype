@@ -6,6 +6,7 @@ export interface UploadResult {
   price_jpy: number;
   quote_mode: string;
   estimate_source: string;
+  quote_token?: string | null;
   ocr_required: boolean;
   ocr_confidence?: 'high' | 'medium' | 'low' | null;
   ocr_warnings: string[];

@@ -8,6 +8,7 @@ from backend.db.session import get_session_factory
 from backend.models.analysis_event import AnalysisEvent
 from backend.models.analysis_job import AnalysisJob
 from backend.models.order import Order
+from backend.models.order_cost_estimate import OrderCostEstimate
 from backend.models.report import Report
 from backend.config import get_settings
 from backend.services.costing import clear_order_cost_summary, get_order_cost_summary
@@ -108,7 +109,14 @@ async def fail_stale_analysis_jobs() -> int:
             cost_summary = get_order_cost_summary(str(order.id))
             if cost_summary:
                 job.cost_summary = cost_summary
-                actual_snapshot = build_order_cost_actual_snapshot(order, cost_summary)
+                estimate_record = (
+                    await session.execute(select(OrderCostEstimate).where(OrderCostEstimate.order_id == order.id))
+                ).scalar_one_or_none()
+                actual_snapshot = build_order_cost_actual_snapshot(
+                    order,
+                    cost_summary,
+                    estimate_snapshot=estimate_record.estimate_snapshot if estimate_record else None,
+                )
                 estimate_record = await upsert_order_cost_estimate(
                     session,
                     order=order,

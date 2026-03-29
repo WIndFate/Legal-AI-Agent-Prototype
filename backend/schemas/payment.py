@@ -9,6 +9,7 @@ class PaymentCreateRequest(BaseModel):
     price_jpy: int
     quote_mode: str = "exact"
     estimate_source: str = "raw_text"
+    quote_token: str | None = None
     upload_token: str | None = None
     upload_name: str | None = None
     upload_mime_type: str | None = None

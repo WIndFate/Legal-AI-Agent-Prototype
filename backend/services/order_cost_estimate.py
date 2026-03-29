@@ -28,9 +28,10 @@ def get_model_plan() -> dict[str, str]:
     }
 
 
-def build_order_cost_estimate_snapshot(order: Order) -> dict[str, Any]:
+def build_order_cost_estimate_snapshot(order: Order, prepayment_quote: dict[str, Any] | None = None) -> dict[str, Any]:
     model_plan = get_model_plan()
     pricing_policy = get_pricing_policy_metadata()
+    prepayment_quote = prepayment_quote or {}
     predicted_clause_count = max(1, round(order.estimated_tokens / TOKENS_PER_CLAUSE))
     risk_rates = _risk_rates_for_order(order)
 
@@ -67,6 +68,26 @@ def build_order_cost_estimate_snapshot(order: Order) -> dict[str, Any]:
             "estimated_cost_jpy": round(cost_jpy, 3),
         }
 
+    prepayment_snapshot = prepayment_quote.get("prepayment_snapshot") or {}
+    prepayment_cost_usd = float(prepayment_snapshot.get("preview_cost_usd", 0.0) or 0.0)
+    prepayment_cost_jpy = float(prepayment_snapshot.get("preview_cost_jpy", 0.0) or 0.0)
+    if prepayment_snapshot:
+        predicted_cost_breakdown["parse_contract_preview"] = {
+            "model": prepayment_snapshot.get("preview_model"),
+            "input_tokens": int(prepayment_snapshot.get("preview_input_tokens", 0) or 0),
+            "output_tokens": int(prepayment_snapshot.get("preview_output_tokens", 0) or 0),
+            "cached_input_tokens": 0,
+            "calls": 1 if prepayment_snapshot.get("preview_succeeded") else 0,
+            "estimated_cost_usd": round(prepayment_cost_usd, 6),
+            "estimated_cost_jpy": round(prepayment_cost_jpy, 3),
+            "cache_hit": bool(prepayment_snapshot.get("cache_hit")),
+            "content_hash": prepayment_snapshot.get("content_hash"),
+        }
+    runtime_cost_usd = total_cost_usd
+    runtime_cost_jpy = total_cost_jpy
+    total_cost_usd += prepayment_cost_usd
+    total_cost_jpy += prepayment_cost_jpy
+
     predicted_margin_jpy = round(order.price_jpy - total_cost_jpy, 3)
     predicted_margin_rate = round((predicted_margin_jpy / order.price_jpy), 4) if order.price_jpy else 0.0
 
@@ -88,9 +109,12 @@ def build_order_cost_estimate_snapshot(order: Order) -> dict[str, Any]:
         "predicted_low_risk_count": predicted_low,
         "predicted_suggestion_calls": predicted_suggestion_calls,
         "predicted_translation_input_tokens": step_usage["translate_report"]["input_tokens"],
+        "predicted_runtime_cost_usd": round(runtime_cost_usd, 6),
+        "predicted_runtime_cost_jpy": round(runtime_cost_jpy, 3),
         "predicted_total_cost_usd": round(total_cost_usd, 6),
         "predicted_total_cost_jpy": round(total_cost_jpy, 3),
         "predicted_cost_breakdown": predicted_cost_breakdown,
+        "prepayment_snapshot": prepayment_snapshot or None,
         "quoted_price_jpy": order.price_jpy,
         "quoted_pricing_model": pricing_policy.get("pricing_model") or order.pricing_model,
         "predicted_gross_margin_jpy": predicted_margin_jpy,
@@ -104,13 +128,19 @@ def build_order_cost_actual_snapshot(
     order: Order,
     cost_summary: dict | None,
     report_data: dict | None = None,
+    estimate_snapshot: dict[str, Any] | None = None,
 ) -> dict[str, Any] | None:
     if not cost_summary:
         return None
 
     report_data = report_data or {}
-    actual_total_cost_jpy = float(cost_summary.get("total_cost_jpy", 0.0) or 0.0)
-    actual_total_cost_usd = float(cost_summary.get("total_cost_usd", 0.0) or 0.0)
+    prepayment_snapshot = (estimate_snapshot or {}).get("prepayment_snapshot") or {}
+    runtime_cost_jpy = float(cost_summary.get("total_cost_jpy", 0.0) or 0.0)
+    runtime_cost_usd = float(cost_summary.get("total_cost_usd", 0.0) or 0.0)
+    prepayment_cost_jpy = float(prepayment_snapshot.get("preview_cost_jpy", 0.0) or 0.0)
+    prepayment_cost_usd = float(prepayment_snapshot.get("preview_cost_usd", 0.0) or 0.0)
+    actual_total_cost_jpy = runtime_cost_jpy + prepayment_cost_jpy
+    actual_total_cost_usd = runtime_cost_usd + prepayment_cost_usd
     actual_margin_jpy = round(order.price_jpy - actual_total_cost_jpy, 3)
     actual_margin_rate = round((actual_margin_jpy / order.price_jpy), 4) if order.price_jpy else 0.0
     step_cost_breakdown = {}
@@ -124,6 +154,28 @@ def build_order_cost_actual_snapshot(
             "cached_input_tokens": int(step_data.get("cached_input_tokens", 0) or 0),
             "models": step_data.get("models", {}),
         }
+    actual_model_breakdown = dict(cost_summary.get("models", {}) or {})
+    if prepayment_snapshot:
+        step_cost_breakdown["parse_contract_preview"] = {
+            "calls": 1 if prepayment_snapshot.get("preview_succeeded") else 0,
+            "cost_usd": round(prepayment_cost_usd, 6),
+            "cost_jpy": round(prepayment_cost_jpy, 3),
+            "input_tokens": int(prepayment_snapshot.get("preview_input_tokens", 0) or 0),
+            "output_tokens": int(prepayment_snapshot.get("preview_output_tokens", 0) or 0),
+            "cached_input_tokens": 0,
+            "models": {
+                str(prepayment_snapshot.get("preview_model") or "unknown"): {
+                    "calls": 1 if prepayment_snapshot.get("preview_succeeded") else 0,
+                    "cost_usd": round(prepayment_cost_usd, 6),
+                    "cost_jpy": round(prepayment_cost_jpy, 3),
+                }
+            },
+        }
+        preview_model = str(prepayment_snapshot.get("preview_model") or "unknown")
+        model_totals = actual_model_breakdown.setdefault(preview_model, {"calls": 0, "cost_usd": 0.0, "cost_jpy": 0.0})
+        model_totals["calls"] += 1 if prepayment_snapshot.get("preview_succeeded") else 0
+        model_totals["cost_usd"] = round(float(model_totals.get("cost_usd", 0.0) or 0.0) + prepayment_cost_usd, 6)
+        model_totals["cost_jpy"] = round(float(model_totals.get("cost_jpy", 0.0) or 0.0) + prepayment_cost_jpy, 3)
 
     return {
         "completed_at": datetime.now(timezone.utc).isoformat(),
@@ -132,6 +184,9 @@ def build_order_cost_actual_snapshot(
         "estimate_source": order.estimate_source,
         "target_language": order.target_language,
         "pricing_model": order.pricing_model,
+        "prepayment_snapshot": prepayment_snapshot or None,
+        "actual_runtime_cost_usd": round(runtime_cost_usd, 6),
+        "actual_runtime_cost_jpy": round(runtime_cost_jpy, 3),
         "actual_total_cost_usd": round(actual_total_cost_usd, 6),
         "actual_total_cost_jpy": round(actual_total_cost_jpy, 3),
         "actual_total_input_tokens": int(cost_summary.get("total_input_tokens", 0) or 0),
@@ -142,7 +197,7 @@ def build_order_cost_actual_snapshot(
         "actual_low_risk_count": int(report_data.get("low_risk_count", 0) or cost_summary.get("low_risk_count", 0) or 0),
         "actual_suggestion_calls": int((cost_summary.get("steps") or {}).get("generate_suggestion", {}).get("calls", 0) or 0),
         "actual_cost_breakdown": step_cost_breakdown,
-        "actual_model_breakdown": cost_summary.get("models", {}),
+        "actual_model_breakdown": actual_model_breakdown,
         "model_plan": _derive_actual_model_plan(cost_summary),
         "actual_gross_margin_jpy": actual_margin_jpy,
         "actual_gross_margin_rate": actual_margin_rate,

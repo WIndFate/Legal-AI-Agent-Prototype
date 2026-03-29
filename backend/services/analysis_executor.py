@@ -10,6 +10,7 @@ from backend.db.session import get_session_factory
 from backend.models.analysis_event import AnalysisEvent
 from backend.models.analysis_job import AnalysisJob
 from backend.models.order import Order
+from backend.models.order_cost_estimate import OrderCostEstimate
 from backend.services.analytics import capture as posthog_capture
 from backend.services.costing import (
     clear_order_cost_summary,
@@ -163,7 +164,14 @@ async def _run_analysis(job_id: str, order_id: str) -> None:
             await ensure_contract_text(order, session)
             if not order.contract_text:
                 job.cost_summary = _build_cost_summary_snapshot(order_id, order)
-                actual_snapshot = build_order_cost_actual_snapshot(order, job.cost_summary)
+                estimate_record = (
+                    await session.execute(select(OrderCostEstimate).where(OrderCostEstimate.order_id == order.id))
+                ).scalar_one_or_none()
+                actual_snapshot = build_order_cost_actual_snapshot(
+                    order,
+                    job.cost_summary,
+                    estimate_snapshot=estimate_record.estimate_snapshot if estimate_record else None,
+                )
                 estimate_record = await upsert_order_cost_estimate(
                     session,
                     order=order,
@@ -217,7 +225,14 @@ async def _run_analysis(job_id: str, order_id: str) -> None:
                 if job is not None and order is not None:
                     error_code, error_event = _error_payload(exc)
                     job.cost_summary = _build_cost_summary_snapshot(order_id, order)
-                    actual_snapshot = build_order_cost_actual_snapshot(order, job.cost_summary)
+                    estimate_record = (
+                        await session.execute(select(OrderCostEstimate).where(OrderCostEstimate.order_id == order.id))
+                    ).scalar_one_or_none()
+                    actual_snapshot = build_order_cost_actual_snapshot(
+                        order,
+                        job.cost_summary,
+                        estimate_snapshot=estimate_record.estimate_snapshot if estimate_record else None,
+                    )
                     estimate_record = await upsert_order_cost_estimate(
                         session,
                         order=order,
@@ -256,7 +271,14 @@ async def _run_analysis(job_id: str, order_id: str) -> None:
                 order = await session.get(Order, order_id)
                 if job is not None and order is not None:
                     job.cost_summary = _build_cost_summary_snapshot(order_id, order)
-                    actual_snapshot = build_order_cost_actual_snapshot(order, job.cost_summary)
+                    estimate_record = (
+                        await session.execute(select(OrderCostEstimate).where(OrderCostEstimate.order_id == order.id))
+                    ).scalar_one_or_none()
+                    actual_snapshot = build_order_cost_actual_snapshot(
+                        order,
+                        job.cost_summary,
+                        estimate_snapshot=estimate_record.estimate_snapshot if estimate_record else None,
+                    )
                     estimate_record = await upsert_order_cost_estimate(
                         session,
                         order=order,
@@ -295,7 +317,15 @@ async def _run_analysis(job_id: str, order_id: str) -> None:
             cost_summary = _build_cost_summary_snapshot(order_id, order, persisted_report)
             if cost_summary:
                 job.cost_summary = cost_summary
-            actual_snapshot = build_order_cost_actual_snapshot(order, cost_summary, persisted_report)
+            estimate_record = (
+                await session.execute(select(OrderCostEstimate).where(OrderCostEstimate.order_id == order.id))
+            ).scalar_one_or_none()
+            actual_snapshot = build_order_cost_actual_snapshot(
+                order,
+                cost_summary,
+                persisted_report,
+                estimate_record.estimate_snapshot if estimate_record else None,
+            )
             comparison_snapshot = None
             if actual_snapshot is not None:
                 estimate_record = await upsert_order_cost_estimate(session, order=order, actual_snapshot=actual_snapshot)
