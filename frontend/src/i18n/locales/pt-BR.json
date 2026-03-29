@@ -80,7 +80,10 @@
     "processing": "Processando…",
     "secure_note": "Pagamento seguro via criptografia SSL",
     "waiting_note": "Processando pagamento. Não feche esta página.",
-    "success_note": "Pagamento realizado. A análise começará em breve."
+    "success_note": "Pagamento realizado. A análise começará em breve.",
+    "language_lock_title": "Confirme o idioma do relatório antes do pagamento",
+    "language_lock_body": "O conteúdo final do relatório será gerado em {{language}}. Depois do pagamento, mudar o idioma do site altera apenas a interface, não retraduz o relatório.",
+    "language_lock_confirm": "Entendo que o relatório final será gerado no idioma atual"
   },
   "order": {
     "order_id": "ID do pedido",

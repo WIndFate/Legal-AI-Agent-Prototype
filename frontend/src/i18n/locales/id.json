@@ -80,7 +80,10 @@
     "processing": "Memproses…",
     "secure_note": "Pembayaran aman melalui enkripsi SSL",
     "waiting_note": "Memproses pembayaran. Jangan tutup halaman ini.",
-    "success_note": "Pembayaran berhasil. Analisis akan segera dimulai."
+    "success_note": "Pembayaran berhasil. Analisis akan segera dimulai.",
+    "language_lock_title": "Konfirmasi bahasa laporan sebelum membayar",
+    "language_lock_body": "Isi laporan akhir akan dibuat dalam {{language}}. Setelah pembayaran, mengganti bahasa situs hanya mengubah antarmuka, bukan menerjemahkan ulang isi laporan.",
+    "language_lock_confirm": "Saya memahami bahwa laporan akhir akan dibuat dalam bahasa saat ini"
   },
   "order": {
     "order_id": "ID pesanan",

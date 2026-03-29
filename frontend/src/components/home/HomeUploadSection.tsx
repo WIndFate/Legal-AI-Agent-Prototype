@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom';
 import clsx from 'clsx';
 
 import type { InputMode, UploadResult } from './types';
+import { SUPPORTED_LANGUAGES } from '../../i18n';
 import styles from '../../styles/home.module.css';
 
 interface HomeUploadSectionProps {
@@ -46,19 +47,27 @@ export default function HomeUploadSection({
   onPayment,
   spotlightResult,
 }: HomeUploadSectionProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const fileInputId = useId();
   const [previewExpanded, setPreviewExpanded] = useState(false);
+  const [languageConfirmed, setLanguageConfirmed] = useState(false);
   const hasOcrNotice = Boolean(uploadResult?.ocr_warnings?.length);
   const isLowOcrConfidence = uploadResult?.ocr_confidence === 'low';
   const isMediumOcrConfidence =
     uploadResult?.ocr_confidence === 'medium' || (uploadResult?.ocr_confidence == null && hasOcrNotice);
   const previewItems = uploadResult?.clause_preview ?? [];
   const visiblePreviewItems = previewExpanded ? previewItems : previewItems.slice(0, 5);
+  const resolvedLanguage = i18n.resolvedLanguage ?? i18n.language;
+  const currentLanguageLabel =
+    SUPPORTED_LANGUAGES.find(({ code }) => code === resolvedLanguage)?.name ?? resolvedLanguage;
 
   useEffect(() => {
     setPreviewExpanded(false);
   }, [uploadResult]);
+
+  useEffect(() => {
+    setLanguageConfirmed(false);
+  }, [uploadResult, resolvedLanguage]);
 
   return (
     <section className="upload-shell" id="upload-section">
@@ -170,11 +179,17 @@ export default function HomeUploadSection({
       </div>
 
       <button
-        className="btn-primary"
+        className={clsx('btn-primary', loading && styles.loadingActionButton)}
         onClick={() => void onUpload()}
         disabled={loading || (inputMode === 'text' ? !textInput.trim() : !file)}
       >
-        {loading ? t('upload.preview_loading_button') : t('upload.submit')}
+        <span className={styles.actionButtonContent}>
+          <span
+            className={clsx(styles.actionButtonIcon, loading && styles.actionButtonIconLoading)}
+            aria-hidden="true"
+          />
+          <span>{loading ? t('upload.preview_loading_button') : t('upload.submit')}</span>
+        </span>
       </button>
 
       {loading && (
@@ -292,6 +307,21 @@ export default function HomeUploadSection({
 
           <div className={styles.paymentForm}>
             <h3>{t('payment.title')}</h3>
+            <div className={styles.languageLockCard}>
+              <div className={styles.languageLockHeader}>
+                <strong>{t('payment.language_lock_title')}</strong>
+                <span className={styles.languageLockBadge}>{currentLanguageLabel}</span>
+              </div>
+              <p>{t('payment.language_lock_body', { language: currentLanguageLabel })}</p>
+              <label className={styles.languageLockConfirm}>
+                <input
+                  type="checkbox"
+                  checked={languageConfirmed}
+                  onChange={(e) => setLanguageConfirmed(e.target.checked)}
+                />
+                <span>{t('payment.language_lock_confirm')}</span>
+              </label>
+            </div>
             <label>
               {t('payment.email_label')}
               <input
@@ -318,7 +348,7 @@ export default function HomeUploadSection({
             <button
               className="btn-primary btn-pay"
               onClick={() => void onPayment()}
-              disabled={paying || !email}
+              disabled={paying || !email || !languageConfirmed}
             >
               {paying
                 ? t('payment.processing')

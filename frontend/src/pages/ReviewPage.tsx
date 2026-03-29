@@ -44,8 +44,7 @@ export default function ReviewPage() {
   const [error, setError] = useState('');
   const [analysisStatus, setAnalysisStatus] = useState<OrderStatusResponse['analysis_status']>('queued');
   const [currentStep, setCurrentStep] = useState<AnalysisStep>('parsing');
-  const [logLines, setLogLines] = useState<string[]>([]);
-  const [phaseText, setPhaseText] = useState('');
+  const [activityEvents, setActivityEvents] = useState<AnalysisEventItem[]>([]);
   const [reconnecting, setReconnecting] = useState(false);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
 
@@ -55,11 +54,10 @@ export default function ReviewPage() {
   const lastSeqRef = useRef(0);
   const completeTimeoutRef = useRef<number | null>(null);
 
-  const pushLog = useCallback((line: string) => {
-    if (!line.trim()) return;
-    setLogLines((prev) => {
-      if (prev[prev.length - 1] === line) return prev;
-      return [...prev, line].slice(-6);
+  const pushActivityEvent = useCallback((evt: AnalysisEventItem) => {
+    setActivityEvents((prev) => {
+      if (prev.some((item) => item.seq === evt.seq)) return prev;
+      return [...prev, evt].slice(-6);
     });
   }, []);
 
@@ -134,7 +132,7 @@ export default function ReviewPage() {
     }
 
     if (evt.event_type === 'complete') {
-      return t('review.phase_generating_desc');
+      return t('review.complete_title');
     }
 
     if (evt.event_type === 'error') {
@@ -148,11 +146,8 @@ export default function ReviewPage() {
     setAnalysisStatus(status.analysis_status);
     if (status.current_step) {
       setCurrentStep(status.current_step);
-      setPhaseText(phaseMeta(status.current_step).desc);
-    } else if (status.progress_message) {
-      setPhaseText(status.progress_message);
     }
-  }, [phaseMeta]);
+  }, []);
 
   const processEvent = useCallback((evt: AnalysisEventItem) => {
     lastSeqRef.current = Math.max(lastSeqRef.current, evt.seq);
@@ -160,21 +155,17 @@ export default function ReviewPage() {
 
     if (evt.step) {
       setCurrentStep(evt.step);
-      setPhaseText(eventMessage || phaseMeta(evt.step).desc);
-    } else if (eventMessage) {
-      setPhaseText(eventMessage);
     }
 
     switch (evt.event_type) {
       case 'node_start':
       case 'tool_call':
       case 'tool_result':
-        if (eventMessage) pushLog(eventMessage);
+        if (eventMessage) pushActivityEvent(evt);
         break;
       case 'complete':
         setAnalysisStatus('completed');
-        setPhaseText(t('review.complete_title'));
-        pushLog(t('review.complete_title'));
+        pushActivityEvent(evt);
         if (orderId) {
           completeTimeoutRef.current = window.setTimeout(() => {
             navigate(`/report/${orderId}`);
@@ -190,13 +181,13 @@ export default function ReviewPage() {
         setLoading(false);
         break;
     }
-  }, [navigate, orderId, phaseMeta, pushLog, resolveEventMessage, resolveReviewError, t]);
+  }, [navigate, orderId, pushActivityEvent, resolveEventMessage, resolveReviewError, t]);
 
   const loadHistory = useCallback(async () => {
     const res = await fetch(`/api/orders/${orderId}/events?after_seq=0`);
     if (!res.ok) throw new Error(t('errors.review_failed'));
     const data = await res.json();
-    setLogLines([]);
+    setActivityEvents([]);
     lastSeqRef.current = 0;
     for (const evt of data.events as AnalysisEventItem[]) {
       processEvent(evt);
@@ -289,6 +280,7 @@ export default function ReviewPage() {
     streamAbortRef.current?.abort();
     setLoading(true);
     setError('');
+    setActivityEvents([]);
 
     let status = await fetchOrderStatus();
 
@@ -372,7 +364,10 @@ export default function ReviewPage() {
 
   const currentPhase = phaseMeta(currentStep);
   const currentStepIdx = STEP_DEFS.findIndex((item) => item.key === currentStep);
-  const activityItems = logLines.length > 0 ? logLines.slice(-5) : [phaseText || currentPhase.desc];
+  const activityItems = activityEvents
+    .map((evt) => ({ seq: evt.seq, text: resolveEventMessage(evt) }))
+    .filter((item): item is { seq: number; text: string } => Boolean(item.text))
+    .slice(-5);
 
   return (
     <div className="page review-page">
@@ -429,13 +424,13 @@ export default function ReviewPage() {
             <div className="review-activity">
               <div className="review-activity-line" aria-hidden="true" />
               <div className="review-activity-list">
-                {activityItems.map((item, i) => (
+                {(activityItems.length > 0 ? activityItems : [{ seq: -1, text: currentPhase.desc }]).map((item, i, items) => (
                   <div
-                    key={`${item}-${i}`}
-                    className={`review-activity-item ${i === activityItems.length - 1 ? 'is-current' : ''}`}
+                    key={`${item.seq}-${i}`}
+                    className={`review-activity-item ${i === items.length - 1 ? 'is-current' : ''}`}
                   >
                     <div className="review-activity-dot" />
-                    <span className="review-activity-text">{item}</span>
+                    <span className="review-activity-text">{item.text}</span>
                   </div>
                 ))}
               </div>

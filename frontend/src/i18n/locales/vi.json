@@ -80,7 +80,10 @@
     "processing": "Đang xử lý…",
     "secure_note": "Thanh toán an toàn qua mã hóa SSL",
     "waiting_note": "Đang xử lý thanh toán. Vui lòng không đóng trang này.",
-    "success_note": "Thanh toán thành công. Phân tích sẽ bắt đầu ngay."
+    "success_note": "Thanh toán thành công. Phân tích sẽ bắt đầu ngay.",
+    "language_lock_title": "Xác nhận ngôn ngữ báo cáo trước khi thanh toán",
+    "language_lock_body": "Nội dung chính của báo cáo cuối cùng sẽ được tạo bằng {{language}}. Sau khi thanh toán, việc đổi ngôn ngữ trang chỉ thay đổi giao diện, không dịch lại nội dung báo cáo.",
+    "language_lock_confirm": "Tôi hiểu rằng báo cáo cuối cùng sẽ được tạo bằng ngôn ngữ hiện tại"
   },
   "order": {
     "order_id": "Mã đơn hàng",

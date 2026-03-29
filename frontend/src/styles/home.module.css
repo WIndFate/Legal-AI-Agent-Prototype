@@ -234,6 +234,32 @@
   line-height: 1.75;
 }
 
+.actionButtonContent {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.actionButtonIcon {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.32);
+  border-top-color: rgba(255, 255, 255, 0.96);
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.actionButtonIconLoading {
+  animation: spin 0.85s linear infinite;
+}
+
+.loadingActionButton {
+  cursor: progress;
+}
+
 .uploadArea textarea::placeholder,
 .paymentForm input::placeholder {
   color: #9c9186;
@@ -783,6 +809,76 @@
   border-top: 1px solid rgba(31, 58, 95, 0.08);
 }
 
+.languageLockCard {
+  margin-bottom: 14px;
+  padding: 14px 16px;
+  border-radius: 20px;
+  border: 1px solid rgba(31, 58, 95, 0.14);
+  background: linear-gradient(180deg, rgba(245, 249, 255, 0.96) 0%, rgba(255, 255, 255, 0.84) 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.78);
+}
+
+.languageLockHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.languageLockHeader strong,
+.languageLockCard p,
+.languageLockConfirm span {
+  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
+}
+
+.languageLockHeader strong {
+  color: var(--brand-ink);
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.languageLockBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 7px 11px;
+  border-radius: 999px;
+  background: rgba(31, 58, 95, 0.08);
+  color: var(--brand);
+  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
+  font-size: 0.78rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.languageLockCard p {
+  margin: 8px 0 0;
+  color: var(--text-soft);
+  font-size: 0.82rem;
+  line-height: 1.6;
+}
+
+.languageLockConfirm {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 12px;
+  cursor: pointer;
+}
+
+.languageLockConfirm input {
+  width: 18px;
+  height: 18px;
+  margin: 2px 0 0;
+  accent-color: var(--brand);
+}
+
+.languageLockConfirm span {
+  color: var(--brand-ink);
+  font-size: 0.82rem;
+  line-height: 1.55;
+}
+
 .paymentForm label {
   display: block;
   margin-bottom: 14px;
@@ -1120,6 +1216,29 @@
   .paymentForm {
     margin-top: 16px;
     padding-top: 16px;
+  }
+
+  .languageLockCard {
+    margin-bottom: 12px;
+    padding: 12px;
+    border-radius: 18px;
+  }
+
+  .languageLockHeader {
+    align-items: flex-start;
+  }
+
+  .languageLockHeader strong {
+    font-size: 0.84rem;
+  }
+
+  .languageLockBadge {
+    font-size: 0.74rem;
+  }
+
+  .languageLockCard p,
+  .languageLockConfirm span {
+    font-size: 0.78rem;
   }
 
   .paymentForm label {

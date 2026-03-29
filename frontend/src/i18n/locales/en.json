@@ -80,7 +80,10 @@
     "processing": "Processing...",
     "secure_note": "Secure payment via SSL encryption",
     "waiting_note": "Processing payment. Please do not close this page.",
-    "success_note": "Payment successful. Analysis will begin shortly."
+    "success_note": "Payment successful. Analysis will begin shortly.",
+    "language_lock_title": "Confirm the report language before payment",
+    "language_lock_body": "The final report body will be generated in {{language}}. After payment, changing the site language will only update the interface, not retranslate the report itself.",
+    "language_lock_confirm": "I understand the final report will be generated in the current language"
   },
   "order": {
     "order_id": "Order ID",
