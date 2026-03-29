@@ -77,8 +77,7 @@
   .payment-summary-grid,
   .summary-metrics,
   .report-hero-stats,
-  .pricing-summary-grid,
-  .review-assurance-grid {
+  .pricing-summary-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }

@@ -281,6 +281,7 @@ export default function ReviewPage() {
     setLoading(true);
     setError('');
     setActivityEvents([]);
+    setElapsedSeconds(0);
 
     let status = await fetchOrderStatus();
 

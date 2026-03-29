@@ -145,7 +145,6 @@ a {
 .report-hero-stats,
 .summary-metrics,
 .pricing-summary-grid,
-.review-assurance-grid,
 .example-meta-grid,
 .review-phase-stats {
   display: grid;
@@ -210,7 +209,6 @@ a {
 /* ── Shared trust/assurance card patterns ── */
 
 .intake-trust-card,
-.review-assurance-card,
 .example-meta-item {
   padding: 14px 16px;
   border-radius: var(--radius-md);
@@ -219,7 +217,6 @@ a {
 }
 
 .intake-trust-card span,
-.review-assurance-card span,
 .example-meta-item span,
 .pricing-price-lockup span,
 .review-phase-stat span {
@@ -233,7 +230,6 @@ a {
 }
 
 .intake-trust-card strong,
-.review-assurance-card strong,
 .example-meta-item strong,
 .review-phase-stat strong {
   display: block;
@@ -242,8 +238,7 @@ a {
   font-size: 0.98rem;
 }
 
-.intake-trust-card p,
-.review-assurance-card p {
+.intake-trust-card p {
   margin-top: 6px;
   color: var(--text-soft);
   font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
@@ -259,7 +254,6 @@ a {
   .pricing-summary-item,
   .assurance-item,
   .intake-trust-card,
-  .review-assurance-card,
   .example-meta-item {
     padding: 12px 13px;
     border-radius: 14px;
@@ -271,7 +265,6 @@ a {
   .summary-metric span,
   .pricing-summary-item span,
   .intake-trust-card span,
-  .review-assurance-card span,
   .example-meta-item span {
     margin-bottom: 4px;
     font-size: 0.66rem;
@@ -283,13 +276,11 @@ a {
   .summary-metric strong,
   .pricing-summary-item strong,
   .intake-trust-card strong,
-  .review-assurance-card strong,
   .example-meta-item strong {
     font-size: 0.9rem;
   }
 
-  .intake-trust-card p,
-  .review-assurance-card p {
+  .intake-trust-card p {
     margin-top: 4px;
     font-size: 0.78rem;
     line-height: 1.55;
