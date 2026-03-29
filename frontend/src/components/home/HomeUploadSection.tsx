@@ -184,10 +184,12 @@ export default function HomeUploadSection({
         disabled={loading || (inputMode === 'text' ? !textInput.trim() : !file)}
       >
         <span className={styles.actionButtonContent}>
-          <span
-            className={clsx(styles.actionButtonIcon, loading && styles.actionButtonIconLoading)}
-            aria-hidden="true"
-          />
+          {loading && (
+            <span
+              className={clsx(styles.actionButtonIcon, styles.actionButtonIconLoading)}
+              aria-hidden="true"
+            />
+          )}
           <span>{loading ? t('upload.preview_loading_button') : t('upload.submit')}</span>
         </span>
       </button>
