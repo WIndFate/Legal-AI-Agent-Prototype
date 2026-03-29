@@ -115,7 +115,9 @@ async def create_payment(
 
     frontend_base_url = resolve_frontend_base_url(
         origin_header=raw_request.headers.get("origin"),
+        referer_header=raw_request.headers.get("referer"),
         forwarded_proto=raw_request.headers.get("x-forwarded-proto"),
+        forwarded_host=raw_request.headers.get("x-forwarded-host"),
         host_header=raw_request.headers.get("host"),
     )
 

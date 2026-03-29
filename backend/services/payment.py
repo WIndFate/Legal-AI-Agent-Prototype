@@ -9,6 +9,7 @@ import httpx
 from backend.config import get_settings
 
 logger = logging.getLogger(__name__)
+INTERNAL_SERVICE_HOSTS = {"backend", "frontend", "postgres", "redis"}
 
 
 def is_dev_payment_mode() -> bool:
@@ -20,7 +21,9 @@ def is_dev_payment_mode() -> bool:
 def resolve_frontend_base_url(
     *,
     origin_header: str | None = None,
+    referer_header: str | None = None,
     forwarded_proto: str | None = None,
+    forwarded_host: str | None = None,
     host_header: str | None = None,
 ) -> str:
     """Prefer the active browser origin in development/LAN scenarios over localhost defaults."""
@@ -37,20 +40,37 @@ def resolve_frontend_base_url(
             return f"{parsed.scheme}://{parsed.netloc}"
         return None
 
-    request_origin = normalize_origin(origin_header)
-    if request_origin:
-        request_host = urlparse(request_origin).hostname or ""
-        if request_host not in {"localhost", "127.0.0.1"}:
-            return request_origin
+    def is_internal_host(raw: str | None) -> bool:
+        if not raw:
+            return True
+        host = raw.strip().lower()
+        if not host:
+            return True
+        if host in {"localhost", "127.0.0.1"}:
+            return False
+        if host in INTERNAL_SERVICE_HOSTS:
+            return True
+        if "." in host or ":" in host:
+            return False
+        return True
+
+    for raw_origin in (origin_header, referer_header):
+        request_origin = normalize_origin(raw_origin)
+        if request_origin:
+            request_host = urlparse(request_origin).hostname or ""
+            if not is_internal_host(request_host):
+                return request_origin
 
     frontend_origin = normalize_origin(settings.FRONTEND_URL)
     if frontend_origin and not settings.uses_local_frontend_url():
         return frontend_origin
 
-    if host_header:
+    header_host = forwarded_host or host_header
+    if header_host:
         scheme = (forwarded_proto or "http").split(",")[0].strip() or "http"
-        host = host_header.split(",")[0].strip()
-        if host:
+        host = header_host.split(",")[0].strip()
+        hostname = host.split(":")[0].strip()
+        if host and not is_internal_host(hostname):
             resolved = normalize_origin(f"{scheme}://{host}")
             if resolved:
                 return resolved
