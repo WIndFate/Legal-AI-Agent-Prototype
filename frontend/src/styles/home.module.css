@@ -1,5 +1,14 @@
 /* ── Home page component-scoped styles ── */
 
+@keyframes spinLocal {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 /* Hero section internals */
 .heroCopy {
   position: relative;
@@ -253,7 +262,7 @@
 }
 
 .actionButtonIconLoading {
-  animation: spin 0.85s linear infinite;
+  animation: spinLocal 0.85s linear infinite;
 }
 
 .loadingActionButton {
@@ -775,7 +784,7 @@
   border-radius: 50%;
   border: 3px solid rgba(95, 127, 163, 0.2);
   border-top-color: var(--brand);
-  animation: spin 0.85s linear infinite;
+  animation: spinLocal 0.85s linear infinite;
 }
 
 .previewLoadingCopy {
