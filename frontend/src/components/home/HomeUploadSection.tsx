@@ -321,7 +321,18 @@ export default function HomeUploadSection({
                   checked={languageConfirmed}
                   onChange={(e) => setLanguageConfirmed(e.target.checked)}
                 />
-                <span>{t('payment.language_lock_confirm')}</span>
+                <span
+                  className={clsx(
+                    styles.languageLockControl,
+                    languageConfirmed && styles.languageLockControlChecked,
+                  )}
+                  aria-hidden="true"
+                >
+                  <span className={styles.languageLockCheckmark} />
+                </span>
+                <span className={styles.languageLockConfirmText}>
+                  {t('payment.language_lock_confirm')}
+                </span>
               </label>
             </div>
             <label>

@@ -869,23 +869,65 @@
 
 .languageLockConfirm {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 10px;
   margin-top: 12px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  border: 1px solid rgba(31, 58, 95, 0.1);
+  background: rgba(255, 255, 255, 0.8);
   cursor: pointer;
+  transition: border-color 0.18s ease, background 0.18s ease, box-shadow 0.18s ease;
+}
+
+.languageLockConfirm:hover {
+  border-color: rgba(31, 58, 95, 0.18);
+  box-shadow: 0 10px 22px rgba(31, 58, 95, 0.06);
 }
 
 .languageLockConfirm input {
-  width: 18px;
-  height: 18px;
-  margin: 2px 0 0;
-  accent-color: var(--brand);
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
 }
 
-.languageLockConfirm span {
+.languageLockControl {
+  width: 22px;
+  height: 22px;
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  border: 1.5px solid rgba(31, 58, 95, 0.28);
+  background: rgba(244, 248, 252, 0.94);
+  transition: background 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
+}
+
+.languageLockControlChecked {
+  border-color: rgba(31, 58, 95, 0.92);
+  background: linear-gradient(135deg, rgba(38, 70, 110, 0.98) 0%, rgba(22, 50, 79, 0.98) 100%);
+}
+
+.languageLockCheckmark {
+  width: 10px;
+  height: 6px;
+  border-left: 2px solid #fff;
+  border-bottom: 2px solid #fff;
+  transform: rotate(-45deg) translateY(-1px);
+  opacity: 0;
+  transition: opacity 0.18s ease;
+}
+
+.languageLockControlChecked .languageLockCheckmark {
+  opacity: 1;
+}
+
+.languageLockConfirmText {
   color: var(--brand-ink);
   font-size: 0.82rem;
   line-height: 1.55;
+  font-weight: 600;
 }
 
 .paymentForm label {
@@ -1246,7 +1288,7 @@
   }
 
   .languageLockCard p,
-  .languageLockConfirm span {
+  .languageLockConfirmText {
     font-size: 0.78rem;
   }
 
