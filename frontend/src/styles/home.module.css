@@ -870,19 +870,9 @@
 .languageLockConfirm {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   margin-top: 12px;
-  padding: 12px 14px;
-  border-radius: 16px;
-  border: 1px solid rgba(31, 58, 95, 0.1);
-  background: rgba(255, 255, 255, 0.8);
   cursor: pointer;
-  transition: border-color 0.18s ease, background 0.18s ease, box-shadow 0.18s ease;
-}
-
-.languageLockConfirm:hover {
-  border-color: rgba(31, 58, 95, 0.18);
-  box-shadow: 0 10px 22px rgba(31, 58, 95, 0.06);
 }
 
 .languageLockConfirm input {
@@ -901,7 +891,12 @@
   border-radius: 8px;
   border: 1.5px solid rgba(31, 58, 95, 0.28);
   background: rgba(244, 248, 252, 0.94);
-  transition: background 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
+  transition: background 0.18s ease, border-color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.languageLockConfirm:hover .languageLockControl {
+  border-color: rgba(31, 58, 95, 0.4);
+  box-shadow: 0 6px 14px rgba(31, 58, 95, 0.08);
 }
 
 .languageLockControlChecked {
