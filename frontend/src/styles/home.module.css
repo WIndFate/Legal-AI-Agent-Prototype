@@ -870,7 +870,7 @@
 .languageLockConfirm {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
   margin-top: 12px;
   cursor: pointer;
 }
@@ -885,6 +885,7 @@
   width: 22px;
   height: 22px;
   flex: 0 0 auto;
+  margin-right: 2px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -919,6 +920,7 @@
 }
 
 .languageLockConfirmText {
+  display: inline-block;
   color: var(--brand-ink);
   font-size: 0.82rem;
   line-height: 1.55;
