@@ -8,6 +8,7 @@ from httpx import ASGITransport, AsyncClient
 from fastapi import FastAPI
 
 from backend.routers.upload import router
+from backend.services.local_ocr import LocalOcrEstimate
 
 app = FastAPI()
 app.include_router(router)
@@ -113,7 +114,10 @@ async def test_upload_image_stages_file_and_requires_ocr():
 
     with (
         patch("backend.routers.upload.stage_temp_upload", return_value="tok-abc123"),
-        patch("backend.routers.upload.estimate_text_with_local_ocr", return_value=""),
+        patch(
+            "backend.routers.upload.estimate_text_with_local_ocr",
+            return_value=LocalOcrEstimate(text="", provider="disabled"),
+        ),
     ):
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
@@ -125,6 +129,8 @@ async def test_upload_image_stages_file_and_requires_ocr():
     assert resp.status_code == 200
     body = resp.json()
     assert body["ocr_required"] is True
+    assert body["ocr_confidence"] is None
+    assert body["ocr_warnings"] == ["upload.ocr_post_payment_notice"]
     assert body["quote_mode"] == "estimated_pre_ocr"
     assert body["upload_token"] == "tok-abc123"
 
@@ -180,7 +186,10 @@ async def test_upload_pdf_scanned_stages_for_ocr():
             return_value=False,
         ),
         patch("backend.routers.upload.stage_temp_upload", return_value="tok-pdf456"),
-        patch("backend.routers.upload.estimate_text_with_local_ocr", return_value=""),
+        patch(
+            "backend.routers.upload.estimate_text_with_local_ocr",
+            return_value=LocalOcrEstimate(text="", provider="disabled"),
+        ),
     ):
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
@@ -192,8 +201,36 @@ async def test_upload_pdf_scanned_stages_for_ocr():
     assert resp.status_code == 200
     body = resp.json()
     assert body["ocr_required"] is True
+    assert body["ocr_confidence"] is None
+    assert body["ocr_warnings"] == ["upload.ocr_post_payment_notice"]
     assert body["quote_mode"] == "estimated_pre_ocr"
     assert body["upload_token"] == "tok-pdf456"
+
+
+@pytest.mark.asyncio
+async def test_upload_image_with_low_quality_local_ocr_returns_warning():
+    """Low-density OCR text should surface a low-confidence warning."""
+    fake_image_bytes = b"\x89PNG\r\n\x1a\n" + b"\x00" * 100
+
+    with (
+        patch("backend.routers.upload.stage_temp_upload", return_value="tok-lowocr"),
+        patch(
+            "backend.routers.upload.estimate_text_with_local_ocr",
+            return_value=LocalOcrEstimate(text="abc 123", provider="paddleocr"),
+        ),
+    ):
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            resp = await client.post(
+                "/api/upload",
+                data={"input_type": "image"},
+                files={"file": ("contract.png", io.BytesIO(fake_image_bytes), "image/png")},
+            )
+
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["ocr_confidence"] == "low"
+    assert body["ocr_warnings"] == ["upload.ocr_low_quality"]
 
 
 # -- Upload limit enforcement ------------------------------------------------

@@ -32,7 +32,12 @@
     "flow_report_desc": "Dikirim langsung dalam bahasa Anda",
     "trust_privacy": "Kontrak dihapus setelah analisis",
     "trust_no_account": "Tanpa perlu mendaftar",
-    "trust_payg": "Bayar per penggunaan, tanpa langganan"
+    "trust_payg": "Bayar per penggunaan, tanpa langganan",
+    "ocr_notice_title": "Kualitas gambar perlu diperhatikan",
+    "ocr_notice_info_title": "Hasil pengenalan saat ini hanya perkiraan",
+    "ocr_low_quality": "Teks pada gambar terlihat kurang jelas sehingga harga saat ini bisa kurang akurat. Sebaiknya foto ulang atau unggah PDF / teks yang lebih jelas.",
+    "ocr_medium_quality": "Teks pada gambar sebagian besar terbaca, tetapi harga saat ini masih bersifat perkiraan. Setelah pembayaran kami akan menjalankan pengenalan resmi.",
+    "ocr_post_payment_notice": "OCR prabayar tidak tersedia di perangkat ini, jadi pengenalan teks resmi akan dijalankan setelah pembayaran."
   },
   "pii": {
     "warning": "Informasi pribadi terdeteksi. Harap periksa sebelum mengirim.",

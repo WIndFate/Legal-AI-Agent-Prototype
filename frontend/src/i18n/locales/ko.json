@@ -32,7 +32,12 @@
     "flow_report_desc": "선택한 언어로 즉시 전달",
     "trust_privacy": "분석 후 계약서 즉시 삭제",
     "trust_no_account": "계정 등록 불필요",
-    "trust_payg": "건별 결제, 구독 없음"
+    "trust_payg": "건별 결제, 구독 없음",
+    "ocr_notice_title": "이미지 품질을 확인해 주세요",
+    "ocr_notice_info_title": "현재 인식 결과는 참고용입니다",
+    "ocr_low_quality": "이미지 속 글자가 흐려 현재 가격이 부정확할 수 있습니다. 가능하면 다시 촬영하거나 더 선명한 PDF 또는 텍스트로 업로드해 주세요.",
+    "ocr_medium_quality": "이미지 속 글자는 대체로 읽히지만 현재 가격은 참고용입니다. 결제 후 정식 인식을 다시 진행합니다.",
+    "ocr_post_payment_notice": "이 기기에서는 사전 OCR을 사용할 수 없어 결제 후 정식 문자 인식을 진행합니다."
   },
   "pii": {
     "warning": "개인정보가 감지되었습니다. 제출 전에 확인해 주세요.",

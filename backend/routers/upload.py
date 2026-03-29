@@ -8,7 +8,7 @@ from backend.config import get_settings
 from backend.schemas.upload import UploadResponse
 from backend.services.analytics import capture as posthog_capture
 from backend.services.costing import log_local_ocr_estimate
-from backend.services.local_ocr import estimate_text_with_local_ocr
+from backend.services.local_ocr import assess_ocr_confidence, estimate_text_with_local_ocr
 from backend.services.pdf_extractor import extract_text_from_pdf_text_layer, pdf_text_layer_is_sufficient
 from backend.services.pii_detector import detect_pii
 from backend.services.temp_uploads import delete_temp_upload, get_temp_upload_path, stage_temp_upload
@@ -27,7 +27,7 @@ def _enforce_upload_limits(page_estimate: int, estimated_tokens: int) -> None:
         raise HTTPException(status_code=413, detail="Contract exceeds maximum supported length")
 
 
-def _estimate_with_local_ocr(upload_token: str, page_estimate: int) -> tuple[str, int]:
+def _estimate_with_local_ocr(upload_token: str, page_estimate: int) -> tuple[str, int, str | None, list[str]]:
     settings = get_settings()
     if not settings.ENABLE_LOCAL_OCR_ESTIMATE:
         log_local_ocr_estimate(
@@ -37,20 +37,22 @@ def _estimate_with_local_ocr(upload_token: str, page_estimate: int) -> tuple[str
             duration_ms=0,
             used_fallback=True,
         )
-        return "", 0
+        return "", 0, None, ["upload.ocr_post_payment_notice"]
 
     started = time.perf_counter()
-    local_ocr_text = estimate_text_with_local_ocr(str(get_temp_upload_path(upload_token)))
+    local_ocr_result = estimate_text_with_local_ocr(str(get_temp_upload_path(upload_token)))
     duration_ms = int((time.perf_counter() - started) * 1000)
+    local_ocr_text = local_ocr_result.text
     estimated_tokens = estimate_tokens_and_price(local_ocr_text)["estimated_tokens"] if local_ocr_text.strip() else 0
     log_local_ocr_estimate(
-        provider="paddleocr" if local_ocr_text.strip() else "fallback",
+        provider=local_ocr_result.provider if local_ocr_result.provider == "paddleocr" else "fallback",
         page_estimate=page_estimate,
         estimated_tokens=estimated_tokens,
         duration_ms=duration_ms,
         used_fallback=not local_ocr_text.strip(),
     )
-    return local_ocr_text, estimated_tokens
+    confidence, warnings = assess_ocr_confidence(local_ocr_text, page_estimate, local_ocr_result.provider)
+    return local_ocr_text, estimated_tokens, confidence, warnings
 
 
 @router.post("/api/upload", response_model=UploadResponse)
@@ -64,6 +66,8 @@ async def upload_contract(
     quote_mode = "exact"
     estimate_source = "raw_text"
     ocr_required = False
+    ocr_confidence: str | None = None
+    ocr_warnings: list[str] = []
     upload_token: str | None = None
     upload_name: str | None = None
     upload_mime_type: str | None = None
@@ -94,7 +98,7 @@ async def upload_contract(
             quote_mode = "estimated_pre_ocr"
             estimate_source = "page_count_fallback"
             ocr_required = True
-            local_ocr_text, _ = _estimate_with_local_ocr(upload_token, page_count)
+            local_ocr_text, _, ocr_confidence, ocr_warnings = _estimate_with_local_ocr(upload_token, page_count)
             if local_ocr_text.strip():
                 estimation = estimate_tokens_and_price(local_ocr_text)
                 estimation["page_estimate"] = max(estimation["page_estimate"], page_count)
@@ -110,7 +114,7 @@ async def upload_contract(
         quote_mode = "estimated_pre_ocr"
         estimate_source = "page_count_fallback"
         ocr_required = True
-        local_ocr_text, _ = _estimate_with_local_ocr(upload_token, 1)
+        local_ocr_text, _, ocr_confidence, ocr_warnings = _estimate_with_local_ocr(upload_token, 1)
         if local_ocr_text.strip():
             estimation = estimate_tokens_and_price(local_ocr_text)
             estimate_source = "local_ocr"
@@ -131,6 +135,8 @@ async def upload_contract(
             quote_mode=quote_mode,
             estimate_source=estimate_source,
             ocr_required=ocr_required,
+            ocr_confidence=ocr_confidence,
+            ocr_warnings=ocr_warnings,
             upload_token=upload_token,
             upload_name=upload_name,
             upload_mime_type=upload_mime_type,
@@ -164,6 +170,8 @@ async def upload_contract(
         quote_mode=quote_mode,
         estimate_source=estimate_source,
         ocr_required=ocr_required,
+        ocr_confidence=ocr_confidence,
+        ocr_warnings=ocr_warnings,
         upload_token=upload_token,
         upload_name=upload_name,
         upload_mime_type=upload_mime_type,

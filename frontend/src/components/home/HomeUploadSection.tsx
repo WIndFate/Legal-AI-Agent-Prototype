@@ -48,6 +48,10 @@ export default function HomeUploadSection({
 }: HomeUploadSectionProps) {
   const { t } = useTranslation();
   const fileInputId = useId();
+  const hasOcrNotice = Boolean(uploadResult?.ocr_warnings?.length);
+  const isLowOcrConfidence = uploadResult?.ocr_confidence === 'low';
+  const isMediumOcrConfidence =
+    uploadResult?.ocr_confidence === 'medium' || (uploadResult?.ocr_confidence == null && hasOcrNotice);
 
   return (
     <section className="upload-shell" id="upload-section">
@@ -194,6 +198,25 @@ export default function HomeUploadSection({
               <p className={styles.priceAmount}>¥{uploadResult.price_jpy.toLocaleString()}</p>
             </div>
           </div>
+          {hasOcrNotice && (
+            <div
+              className={clsx(
+                styles.ocrNotice,
+                isLowOcrConfidence ? styles.ocrNoticeWarning : styles.ocrNoticeInfo,
+              )}
+              role="status"
+            >
+              <strong>{t(isLowOcrConfidence ? 'upload.ocr_notice_title' : 'upload.ocr_notice_info_title')}</strong>
+              <ul>
+                {uploadResult.ocr_warnings.map((warning) => (
+                  <li key={warning}>{t(warning)}</li>
+                ))}
+              </ul>
+              {isMediumOcrConfidence && uploadResult.ocr_confidence === 'medium' && (
+                <p>{t('upload.ocr_post_payment_notice')}</p>
+              )}
+            </div>
+          )}
           <div className={styles.pricingQuoteMeta}>
             <p>{t('pricing.length_based_desc')}</p>
             <span>{t('pricing.minimum_price', { price: 200 })}</span>

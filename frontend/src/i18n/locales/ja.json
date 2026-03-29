@@ -32,7 +32,12 @@
     "flow_report_desc": "選択した言語で即時にお届け",
     "trust_privacy": "契約書は分析後すぐに削除",
     "trust_no_account": "アカウント登録不要",
-    "trust_payg": "都度払い・サブスク無し"
+    "trust_payg": "都度払い・サブスク無し",
+    "ocr_notice_title": "画像品質に注意が必要です",
+    "ocr_notice_info_title": "識別結果は参考値です",
+    "ocr_low_quality": "画像の文字が不鮮明で、見積もり精度が下がる可能性があります。できれば撮り直すか、より鮮明な PDF / テキストでアップロードしてください。",
+    "ocr_medium_quality": "画像の文字は概ね読めていますが、見積もりは参考値です。決済後に正式な文字認識を行います。",
+    "ocr_post_payment_notice": "この端末では事前 OCR が使えないため、決済後に正式な文字認識を行います。"
   },
   "pii": {
     "warning": "個人情報が検出されました。送信前にご確認ください。",

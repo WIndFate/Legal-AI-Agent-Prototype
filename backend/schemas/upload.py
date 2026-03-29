@@ -15,6 +15,8 @@ class UploadResponse(BaseModel):
     quote_mode: str = "exact"
     estimate_source: str = "raw_text"
     ocr_required: bool = False
+    ocr_confidence: str | None = None
+    ocr_warnings: list[str] = []
     upload_token: str | None = None
     upload_name: str | None = None
     upload_mime_type: str | None = None

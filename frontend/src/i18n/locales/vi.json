@@ -32,7 +32,12 @@
     "flow_report_desc": "Gửi ngay bằng ngôn ngữ bạn chọn",
     "trust_privacy": "Hợp đồng xóa ngay sau phân tích",
     "trust_no_account": "Không cần đăng ký tài khoản",
-    "trust_payg": "Trả theo lần, không đăng ký thuê bao"
+    "trust_payg": "Trả theo lần, không đăng ký thuê bao",
+    "ocr_notice_title": "Chất lượng ảnh cần được lưu ý",
+    "ocr_notice_info_title": "Kết quả nhận dạng hiện tại chỉ để tham khảo",
+    "ocr_low_quality": "Chữ trong ảnh chưa đủ rõ nên mức giá hiện tại có thể chưa chính xác. Bạn nên chụp lại hoặc tải lên PDF / văn bản rõ hơn nếu có thể.",
+    "ocr_medium_quality": "Chữ trong ảnh phần lớn vẫn đọc được, nhưng mức giá hiện tại vẫn chỉ mang tính tham khảo. Sau khi thanh toán chúng tôi sẽ nhận dạng chính thức.",
+    "ocr_post_payment_notice": "Thiết bị này chưa hỗ trợ OCR trước thanh toán, nên quá trình nhận dạng văn bản chính thức sẽ diễn ra sau khi thanh toán."
   },
   "pii": {
     "warning": "Phát hiện thông tin cá nhân. Vui lòng kiểm tra trước khi gửi.",

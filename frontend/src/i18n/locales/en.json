@@ -32,7 +32,12 @@
     "flow_report_desc": "Delivered instantly in your language",
     "trust_privacy": "Contract deleted after analysis",
     "trust_no_account": "No account required",
-    "trust_payg": "Pay per use, no subscription"
+    "trust_payg": "Pay per use, no subscription",
+    "ocr_notice_title": "Image quality needs attention",
+    "ocr_notice_info_title": "Recognition result is only a preview",
+    "ocr_low_quality": "The text in this image looks unclear, so the quote may be less accurate. Retake the photo or upload a clearer PDF or text version if possible.",
+    "ocr_medium_quality": "The text is mostly readable, but this quote is still only a preview. We will run formal recognition after payment.",
+    "ocr_post_payment_notice": "Pre-payment OCR is unavailable on this device, so formal text recognition will run after payment."
   },
   "pii": {
     "warning": "Personal information detected. Please review before submitting.",

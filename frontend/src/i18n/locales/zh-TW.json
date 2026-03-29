@@ -32,7 +32,12 @@
     "flow_report_desc": "以選定語言即時送達",
     "trust_privacy": "分析後立即刪除合約",
     "trust_no_account": "無需註冊帳號",
-    "trust_payg": "按次付費，無訂閱"
+    "trust_payg": "按次付費，無訂閱",
+    "ocr_notice_title": "圖片品質需要注意",
+    "ocr_notice_info_title": "目前辨識結果僅供參考",
+    "ocr_low_quality": "圖片中的文字不夠清晰，目前報價可能不夠準確。建議重新拍攝，或改用更清晰的 PDF / 文字上傳。",
+    "ocr_medium_quality": "圖片文字大致可讀，但目前報價仍僅供參考。付款後我們會進行正式辨識。",
+    "ocr_post_payment_notice": "目前裝置無法進行預先 OCR 辨識，付款後將進行正式文字辨識。"
   },
   "pii": {
     "warning": "偵測到個人資料，請在提交前確認。",

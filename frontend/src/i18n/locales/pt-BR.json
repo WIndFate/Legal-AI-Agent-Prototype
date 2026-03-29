@@ -32,7 +32,12 @@
     "flow_report_desc": "Entregue instantaneamente no seu idioma",
     "trust_privacy": "Contrato excluído após análise",
     "trust_no_account": "Sem necessidade de cadastro",
-    "trust_payg": "Pague por uso, sem assinatura"
+    "trust_payg": "Pague por uso, sem assinatura",
+    "ocr_notice_title": "A qualidade da imagem precisa de atenção",
+    "ocr_notice_info_title": "Este reconhecimento é apenas uma prévia",
+    "ocr_low_quality": "O texto da imagem parece pouco nítido, então o valor atual pode ficar impreciso. Se puder, tire outra foto ou envie um PDF ou texto mais claro.",
+    "ocr_medium_quality": "O texto está legível em boa parte, mas este valor ainda é só uma prévia. Faremos o reconhecimento oficial após o pagamento.",
+    "ocr_post_payment_notice": "O OCR antes do pagamento não está disponível neste dispositivo, então o reconhecimento oficial será feito após o pagamento."
   },
   "pii": {
     "warning": "Informações pessoais detectadas. Verifique antes de enviar.",

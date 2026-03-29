@@ -7,6 +7,8 @@ export interface UploadResult {
   quote_mode: string;
   estimate_source: string;
   ocr_required: boolean;
+  ocr_confidence?: 'high' | 'medium' | 'low' | null;
+  ocr_warnings: string[];
   upload_token?: string | null;
   upload_name?: string | null;
   upload_mime_type?: string | null;

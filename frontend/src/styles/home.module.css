@@ -515,6 +515,60 @@
   font-weight: 700;
 }
 
+.ocrNotice {
+  margin-bottom: 14px;
+  padding: 12px 14px;
+  border-radius: 18px;
+  border: 1px solid rgba(31, 58, 95, 0.12);
+  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
+}
+
+.ocrNotice strong,
+.ocrNotice p,
+.ocrNotice li {
+  margin: 0;
+}
+
+.ocrNotice strong {
+  display: block;
+  font-size: 0.88rem;
+  line-height: 1.4;
+}
+
+.ocrNotice ul {
+  margin: 8px 0 0;
+  padding-left: 18px;
+}
+
+.ocrNotice li,
+.ocrNotice p {
+  color: var(--text-soft);
+  font-size: 0.82rem;
+  line-height: 1.6;
+}
+
+.ocrNotice p {
+  margin-top: 8px;
+}
+
+.ocrNoticeWarning {
+  background: rgba(255, 245, 229, 0.88);
+  border-color: rgba(181, 122, 44, 0.24);
+}
+
+.ocrNoticeWarning strong {
+  color: var(--warning);
+}
+
+.ocrNoticeInfo {
+  background: rgba(241, 246, 255, 0.9);
+  border-color: rgba(95, 127, 163, 0.18);
+}
+
+.ocrNoticeInfo strong {
+  color: var(--brand-ink);
+}
+
 .paymentBanner {
   margin-bottom: 14px;
   padding: 12px 14px;
@@ -802,6 +856,21 @@
 
   .priceAmount {
     font-size: 1.4rem;
+  }
+
+  .ocrNotice {
+    margin-bottom: 12px;
+    padding: 11px 12px;
+    border-radius: 16px;
+  }
+
+  .ocrNotice strong {
+    font-size: 0.84rem;
+  }
+
+  .ocrNotice li,
+  .ocrNotice p {
+    font-size: 0.78rem;
   }
 
   .paymentBanner {
