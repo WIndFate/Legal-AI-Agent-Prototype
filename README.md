@@ -12,6 +12,8 @@ As of 2026-03-28, the local MVP flow is working in Docker:
 - Text and text-layer PDFs are quoted before payment from extracted text; image/scanned PDF uploads now use a dual-OCR path with temporary staging plus post-payment formal OCR
 - Image and scanned-PDF quotes now return OCR quality hints (`low` / `medium` / post-payment notice) before the user pays
 - Exact text / text-layer PDF quotes now also return a lightweight clause-structure preview so users can confirm we parsed the contract before paying
+- Exact quote previews now generate a `quote_token`, cache the clause preview by normalized content hash, and reuse that cached preview/cost snapshot when the same contract is uploaded again
+- Uploads and preview generation now both have Redis-backed per-IP rate limits so repeated anonymous/scripted requests cannot burn unbounded preview cost
 - `pgvector` RAG is running in PostgreSQL with 331+ law articles across 10 legal categories (rental, labor, part-time, business outsourcing, sales, etc.)
 - 9-language frontend with professional branding (ContractGuard), privacy/terms pages, and a dedicated examples gallery with report-style samples
 - The standalone `/examples` page now uses a curated chapter-switching layout, and its report sample styling is intentionally closer to the real report page
@@ -160,6 +162,7 @@ docker compose up -d backend postgres redis
 - If analysis fails midway, the partial cost summary accumulated up to that point is now persisted to `analysis_jobs.cost_summary` so failed orders can still be audited later.
 - `GET /api/eval/costs` now aggregates persisted `reports.cost_summary` samples and, when live data is still sparse, backfills to a 10-sample baseline from `backend/data/cost_samples_seed.json`.
 - Each paid order now also writes a persisted `order_cost_estimates` row: payment-time `estimate_snapshot`, later `actual_snapshot`, and finally `comparison_snapshot`.
+- Payment-time estimate snapshots now also include a `prepayment_snapshot` when an exact quote generated a clause preview, so pre-payment preview cost is audited separately and then merged into total predicted/actual cost.
 - Those snapshots record both the planned model mix and the actual model usage (`ocr / parse / analyze / suggestion / translation / embedding`) so future model upgrades can be compared by margin impact, not just total spend.
 - `GET /api/eval/costs` now also groups estimate-vs-actual deltas by `estimate_version` and by model signature, making pricing-model revisions and model swaps auditable over time.
 - `GET /api/eval/operations` is a read-only operations endpoint built on real orders only; it surfaces revenue, actual cost, actual margin, estimate-vs-actual deltas, recent orders, and groupings by pricing model, paid-price band, input type, quote mode, language, estimate version, and model signature.

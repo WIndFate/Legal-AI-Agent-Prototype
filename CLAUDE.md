@@ -73,6 +73,8 @@ Current status as of 2026-03-28:
 - Dual-OCR groundwork is now in code: text/text-layer PDFs are quoted before payment, while image/scanned PDFs can be staged for local pre-estimation and formal OCR after payment.
 - Pre-payment image and scanned-PDF quotes now return OCR quality hints so users can correct blurry captures before paying.
 - Exact text and text-layer PDF quotes now also include a lightweight clause-preview extraction so users can confirm the contract structure before they pay.
+- Exact quote previews now generate a `quote_token`, cache clause previews by normalized content hash, and reuse those cached previews/cost snapshots when the same contract is uploaded again.
+- Upload and preview generation are now both protected by Redis-backed per-IP rate limits so anonymous/scripted traffic cannot burn unbounded pre-payment preview cost.
 - Deployment configs ready: `fly.toml` (NRT, force_https) + `vercel.json` (API proxy, security headers) + Alembic migration chain through `008`.
 - RAG knowledge base expanded to 331+ law articles across 10 legal categories (rental, labor, part-time, business outsourcing, sales, etc.).
 - Eval dataset expanded to 20 labeled samples covering multiple contract types.
@@ -180,6 +182,7 @@ backend/
     costing.py        # Model pricing table + usage extraction + structured cost logging
     cost_analysis.py  # Persisted cost-summary aggregation + pricing recommendation logic
     order_cost_estimate.py # Payment-time estimate snapshots + actual/comparison snapshot builders
+    quote_guard.py    # Exact-quote cache tokens + content-hash reuse + per-IP preview/upload rate limits
     report_pdf.py     # Build downloadable PDF reports from saved report payloads
     event_bus.py      # In-process pub/sub for incremental analysis events
     local_ocr.py      # Optional PaddleOCR-based pre-payment quote estimation
@@ -288,7 +291,10 @@ Embeddings are generated via OpenAI API (httpx direct call, not langchain).
 - Upload pricing is no longer hardcoded directly in Python constants.
 - `token_estimator.py` loads the active linear pricing policy from `backend/data/pricing_policy.json`.
 - The current runtime policy is `¥75 / 1000 tokens` with a `¥200` minimum charge. Internally, page estimates remain only as a guardrail for upload limits and OCR planning.
+- Exact quote uploads now emit a `quote_token`; Redis caches the resulting clause preview and `prepayment_snapshot` by normalized `content_hash`, so repeated uploads of the same contract reuse that preview instead of re-running the preview LLM call.
+- The upload flow applies separate per-IP rate limits to raw upload requests and preview generation, preventing the exact-quote preview endpoint from being abused to generate unlimited anonymous LLM cost.
 - Each paid order now also stores a payment-time estimate snapshot keyed by `COST_ESTIMATE_VERSION` and `pricing_policy_version`, including predicted clause counts, step-level estimated costs, quoted margin, and the planned model mix (`ocr/parse/analyze/suggestion/translation/embedding`).
+- When an exact quote generated a pre-payment clause preview, that preview cost is persisted as `prepayment_snapshot` and merged into both the predicted and actual total cost snapshots.
 - Analysis completion or failure now updates that same record with an `actual_snapshot` and `comparison_snapshot`, so pricing accuracy can be analyzed as “predicted vs actual” instead of only looking at final realized cost.
 - `GET /api/eval/costs` mixes persisted `reports.cost_summary` with seeded baseline samples from `backend/data/cost_samples_seed.json` until at least 10 samples are available, so early pricing analysis is not based on a single order.
 - `GET /api/eval/costs` returns both `recommended_price_jpy_cost_floor` and `recommended_price_jpy_target_margin`; the latter folds in `target_margin_rate` (currently default `0.75`) so pricing reviews can reason about profit targets, not just raw API cost.
