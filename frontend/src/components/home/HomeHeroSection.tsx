@@ -15,7 +15,8 @@ export default function HomeHeroSection({ preview }: HomeHeroSectionProps) {
     <section className="hero-card hero-grid">
       <div className={styles.heroCopy}>
         <p className="section-kicker">{t('upload.hero_kicker')}</p>
-        <h2 className={styles.heroTitle}>{t('app.title')}</h2>
+        <h2 className={styles.heroTitle}>{t('upload.hero_title')}</h2>
+        <p className={styles.heroBrand}>{t('app.title')}</p>
         <p className={styles.heroSubtitle}>{t('upload.hero_body')}</p>
         <div className={styles.heroActions}>
           <a href="#upload-section" className={styles.heroPrimaryAction}>

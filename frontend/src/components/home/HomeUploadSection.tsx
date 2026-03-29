@@ -174,8 +174,18 @@ export default function HomeUploadSection({
         onClick={() => void onUpload()}
         disabled={loading || (inputMode === 'text' ? !textInput.trim() : !file)}
       >
-        {loading ? '...' : t('upload.submit')}
+        {loading ? t('upload.preview_loading_button') : t('upload.submit')}
       </button>
+
+      {loading && (
+        <div className={styles.previewLoadingCard} role="status" aria-live="polite">
+          <span className={styles.previewLoadingSpinner} aria-hidden="true" />
+          <div className={styles.previewLoadingCopy}>
+            <strong>{t('upload.preview_loading_title')}</strong>
+            <p>{t('upload.preview_loading_body')}</p>
+          </div>
+        </div>
+      )}
 
       {error && <div className="error-message">{error}</div>}
 

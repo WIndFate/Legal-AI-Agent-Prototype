@@ -8,11 +8,21 @@
 }
 
 .heroTitle {
-  margin-bottom: 16px;
-  max-width: 8.2ch;
-  font-size: clamp(4.2rem, 9vw, 5.8rem);
-  line-height: 0.92;
+  margin-bottom: 10px;
+  max-width: 9.4ch;
+  font-size: clamp(3.6rem, 8vw, 5.2rem);
+  line-height: 0.96;
   letter-spacing: -0.045em;
+}
+
+.heroBrand {
+  margin: 0 0 16px;
+  color: var(--brand);
+  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .heroSubtitle {
@@ -719,6 +729,52 @@
   line-height: 1.55;
 }
 
+.previewLoadingCard {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 14px;
+  padding: 14px 16px;
+  border-radius: 20px;
+  border: 1px solid rgba(31, 58, 95, 0.12);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.86) 0%, rgba(244, 248, 252, 0.92) 100%);
+  box-shadow: var(--shadow-sm);
+}
+
+.previewLoadingSpinner {
+  flex: 0 0 auto;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 3px solid rgba(95, 127, 163, 0.2);
+  border-top-color: var(--brand);
+  animation: spin 0.85s linear infinite;
+}
+
+.previewLoadingCopy {
+  min-width: 0;
+}
+
+.previewLoadingCopy strong,
+.previewLoadingCopy p {
+  display: block;
+  margin: 0;
+  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
+}
+
+.previewLoadingCopy strong {
+  color: var(--brand-ink);
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+
+.previewLoadingCopy p {
+  margin-top: 4px;
+  color: var(--text-soft);
+  font-size: 0.84rem;
+  line-height: 1.6;
+}
+
 /* Payment form internals */
 .paymentForm {
   margin-top: 16px;
@@ -749,8 +805,13 @@
 @media (max-width: 767px) {
   .heroTitle {
     max-width: none;
+    margin-bottom: 8px;
+    font-size: clamp(2.5rem, 13vw, 3.5rem);
+  }
+
+  .heroBrand {
     margin-bottom: 12px;
-    font-size: clamp(2.8rem, 15vw, 4rem);
+    font-size: 0.86rem;
   }
 
   .heroSubtitle {
