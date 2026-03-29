@@ -61,6 +61,13 @@ export default function ReviewPage() {
     });
   }, []);
 
+  const resolveReviewError = useCallback((errorCode?: string | null, fallback?: string | null) => {
+    if (errorCode === 'non_contract_document') {
+      return t('errors.non_contract_document');
+    }
+    return fallback || t('errors.review_failed');
+  }, [t]);
+
   const phaseMeta = useCallback((step: AnalysisStep) => {
     if (step === 'parsing') {
       return { title: t('review.phase_parsing_title'), desc: t('review.phase_parsing_desc') };
@@ -154,11 +161,14 @@ export default function ReviewPage() {
         break;
       case 'error':
         setAnalysisStatus('failed');
-        setError(eventMessage || t('errors.review_failed'));
+        setError(resolveReviewError(
+          typeof evt.payload_json?.error_code === 'string' ? evt.payload_json.error_code : null,
+          eventMessage || t('errors.review_failed'),
+        ));
         setLoading(false);
         break;
     }
-  }, [navigate, orderId, phaseMeta, pushLog, resolveEventMessage, t]);
+  }, [navigate, orderId, phaseMeta, pushLog, resolveEventMessage, resolveReviewError, t]);
 
   const loadHistory = useCallback(async () => {
     const res = await fetch(`/api/orders/${orderId}/events?after_seq=0`);
@@ -273,7 +283,7 @@ export default function ReviewPage() {
 
     if (status.analysis_status === 'failed' && !retryFailed) {
       setLoading(false);
-      setError(status.error_message || t('errors.review_failed'));
+      setError(resolveReviewError(status.error_message, status.error_message));
       return;
     }
 
@@ -289,7 +299,7 @@ export default function ReviewPage() {
       applyStatusSnapshot(status);
       if (status.analysis_status === 'failed') {
         setLoading(false);
-        setError(status.error_message || t('errors.review_failed'));
+        setError(resolveReviewError(status.error_message, status.error_message));
         return;
       }
       if (status.report_ready && status.analysis_status === 'completed') {
@@ -301,11 +311,13 @@ export default function ReviewPage() {
     await loadHistory();
     setLoading(true);
     await startStreamLoop();
-  }, [applyStatusSnapshot, fetchOrderStatus, loadHistory, navigate, orderId, requestAnalysisStart, startStreamLoop, t]);
+  }, [applyStatusSnapshot, fetchOrderStatus, loadHistory, navigate, orderId, requestAnalysisStart, resolveReviewError, startStreamLoop, t]);
 
   const handleManualRetry = useCallback(() => {
     void bootstrap(true);
   }, [bootstrap]);
+
+  const isNonContractError = error === t('errors.non_contract_document');
 
   useEffect(() => {
     if (started.current || !orderId) return;
@@ -402,12 +414,21 @@ export default function ReviewPage() {
       {error && (
         <div className="error-message">
           <p>{error}</p>
-          <button
-            className="btn-primary btn-retry"
-            onClick={handleManualRetry}
-          >
-            {t('review.retry')}
-          </button>
+          {isNonContractError ? (
+            <button
+              className="btn-primary btn-retry"
+              onClick={() => navigate('/')}
+            >
+              {t('nav.home')}
+            </button>
+          ) : (
+            <button
+              className="btn-primary btn-retry"
+              onClick={handleManualRetry}
+            >
+              {t('review.retry')}
+            </button>
+          )}
         </div>
       )}
     </div>

@@ -160,6 +160,7 @@
     "upload_failed": "上传失败，请重试。",
     "payment_failed": "支付失败，请重试。",
     "review_failed": "分析过程中出现错误，请重试。",
+    "non_contract_document": "上传的内容看起来不是合同，系统已停止分析。请返回首页并上传合同文本、图片或 PDF。",
     "report_expired": "该报告已过期。",
     "not_found": "页面未找到。"
   },

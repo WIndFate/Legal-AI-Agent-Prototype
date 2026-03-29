@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 from sqlalchemy import delete, select
 
 from backend.agent.graph import run_review_stream
+from backend.agent.nodes import NON_CONTRACT_ERROR_CODE, NonContractDocumentError
 from backend.db.session import get_session_factory
 from backend.models.analysis_event import AnalysisEvent
 from backend.models.analysis_job import AnalysisJob
@@ -73,6 +74,19 @@ def _build_cost_summary_snapshot(order_id: str, order: Order | None = None, repo
         )
 
     return cost_summary
+
+
+def _error_payload(exc: Exception) -> tuple[str, dict]:
+    if isinstance(exc, NonContractDocumentError):
+        return NON_CONTRACT_ERROR_CODE, {
+            "type": "error",
+            "message": str(exc),
+            "error_code": NON_CONTRACT_ERROR_CODE,
+        }
+    return "analysis_failed", {
+        "type": "error",
+        "message": str(exc),
+    }
 
 
 async def _append_event(
@@ -201,6 +215,7 @@ async def _run_analysis(job_id: str, order_id: str) -> None:
                 job = await session.get(AnalysisJob, job_id)
                 order = await session.get(Order, order_id)
                 if job is not None and order is not None:
+                    error_code, error_event = _error_payload(exc)
                     job.cost_summary = _build_cost_summary_snapshot(order_id, order)
                     actual_snapshot = build_order_cost_actual_snapshot(order, job.cost_summary)
                     estimate_record = await upsert_order_cost_estimate(
@@ -221,9 +236,9 @@ async def _run_analysis(job_id: str, order_id: str) -> None:
                     await _append_event(
                         session,
                         job,
-                        {"type": "error", "message": str(exc)},
+                        error_event,
                         terminal_status="failed",
-                        error_message=str(exc),
+                        error_message=error_code,
                     )
                 if order is not None:
                     order.analysis_status = "failed"

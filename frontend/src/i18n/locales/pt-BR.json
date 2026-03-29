@@ -160,6 +160,7 @@
     "upload_failed": "Falha no envio. Tente novamente.",
     "payment_failed": "Falha no pagamento. Tente novamente.",
     "review_failed": "Ocorreu um erro durante a análise. Tente novamente.",
+    "non_contract_document": "O conteúdo enviado não parece ser um contrato, então a análise foi interrompida. Volte para a página inicial e envie o texto do contrato, uma imagem ou um PDF.",
     "report_expired": "Este relatório expirou.",
     "not_found": "Página não encontrada."
   },
