@@ -19,6 +19,7 @@ As of 2026-03-28, the local MVP flow is working in Docker:
 - A new `/lookup` page lets users reopen payment, analysis, or finished reports by order ID
 - Payment success and analysis completion now show an order reminder dialog so users can screenshot or copy their order ID before moving on
 - Review now acts as a processing surface only; once analysis finishes, the user is redirected straight into the saved `/report/{orderId}` page
+- If the uploaded content is judged not to be a contract during the parse step, analysis now stops early with a dedicated user-facing error instead of consuming the full review flow
 - The saved report page now supports risk-level filtering, denser clause cards, a direct backend-generated `Download PDF` action, and a more compact one-row summary on desktop
 - Report sharing now uses a minimal custom share sheet that generates a referral-tagged report link behind the scenes, then offers copy-link and optional native share actions
 - Referral links now return to the homepage with `?ref=` so the referral code is carried into the payment form automatically
@@ -126,23 +127,24 @@ docker compose up -d backend postgres redis
 4. In local dev, if `APP_ENV=development` and `KOMOJU_SECRET_KEY` is empty, the order is auto-marked as paid and redirected to review.
 5. `/review/:orderId` starts or resumes the persistent analysis task, restores saved progress events, and then subscribes to new updates.
 6. When analysis completes, the UI redirects directly into `/report/:orderId`.
-7. The saved report page supports risk-level filtering so long reports can be narrowed to high / medium / low findings.
-8. During the live review, the UI now shows user-facing progress text instead of raw internal tool names.
-9. The saved report keeps the language chosen at payment time; switching the site language later only changes the page chrome.
-10. Each clause analysis can expand its matching original clause excerpt inline for direct comparison throughout the 72-hour report lifetime, including reopened report links.
-11. Expanded clause comparison is optimized for readability: mobile keeps a stacked reading flow, while larger screens place the original clause beside the analysis content.
-11. The standalone `/examples` page presents three contract scenarios (rental, employment, part-time) as a gallery-style report showcase with localized clause analysis in all 9 languages.
-12. Privacy policy (`/privacy`) and Terms of service (`/terms`) pages combine localized summaries with hardcoded Japanese legal text.
-13. Referenced law citations (`referenced_law`) in reports are always kept in Japanese original text, regardless of the user's selected language.
-14. The saved report page is now styled as a more document-like review report, and it can also download a true PDF generated from the saved report payload within the same 72-hour retention window.
-15. Homepage anchor navigation (`Home` / `Examples`) now scrolls to explicit page sections, and the hero pricing copy no longer hardcodes a visible maximum price.
-16. After a quote is generated, the homepage automatically scrolls to the payment panel and highlights the next-step area so users do not miss that the flow has advanced.
-17. Payment success and review completion now open a reminder dialog that emphasizes saving the order ID for later lookup.
-18. A dedicated `/lookup` page can reopen pending-payment, in-progress review, or finished report states from the same order ID.
-19. The report page now opens a compact custom share sheet first, silently appends the personal referral code to the report URL, and exposes only copy-link plus optional native-share actions.
-20. Referral links now return to the homepage with `?ref=` so the referral code is prefilled for the next user.
-21. Lookup and report pages now surface clearer weak-network states, retry actions, offline banners, timeout-aware loading feedback, and a dedicated expired-report fallback back to home.
-22. Report summary cards stay clickable as the primary risk filters on both desktop and mobile, with denser sizing tuned to remain stable even when counts reach two digits.
+7. If parse determines the uploaded content is not a contract, the review flow stops immediately and shows a dedicated message instead of continuing into risk analysis.
+8. The saved report page supports risk-level filtering so long reports can be narrowed to high / medium / low findings.
+9. During the live review, the UI now shows user-facing progress text instead of raw internal tool names.
+10. The saved report keeps the language chosen at payment time; switching the site language later only changes the page chrome.
+11. Each clause analysis can expand its matching original clause excerpt inline for direct comparison throughout the 72-hour report lifetime, including reopened report links.
+12. Expanded clause comparison is optimized for readability: mobile keeps a stacked reading flow, while larger screens place the original clause beside the analysis content.
+13. The standalone `/examples` page presents three contract scenarios (rental, employment, part-time) as a gallery-style report showcase with localized clause analysis in all 9 languages.
+14. Privacy policy (`/privacy`) and Terms of service (`/terms`) pages combine localized summaries with hardcoded Japanese legal text.
+15. Referenced law citations (`referenced_law`) in reports are always kept in Japanese original text, regardless of the user's selected language.
+16. The saved report page is now styled as a more document-like review report, and it can also download a true PDF generated from the saved report payload within the same 72-hour retention window.
+17. Homepage anchor navigation (`Home` / `Examples`) now scrolls to explicit page sections, and the hero pricing copy no longer hardcodes a visible maximum price.
+18. After a quote is generated, the homepage automatically scrolls to the payment panel and highlights the next-step area so users do not miss that the flow has advanced.
+19. Payment success and review completion now open a reminder dialog that emphasizes saving the order ID for later lookup.
+20. A dedicated `/lookup` page can reopen pending-payment, in-progress review, or finished report states from the same order ID.
+21. The report page now opens a compact custom share sheet first, silently appends the personal referral code to the report URL, and exposes only copy-link plus optional native-share actions.
+22. Referral links now return to the homepage with `?ref=` so the referral code is prefilled for the next user.
+23. Lookup and report pages now surface clearer weak-network states, retry actions, offline banners, timeout-aware loading feedback, and a dedicated expired-report fallback back to home.
+24. Report summary cards stay clickable as the primary risk filters on both desktop and mobile, with denser sizing tuned to remain stable even when counts reach two digits.
 
 ## Important Implementation Notes
 

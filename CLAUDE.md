@@ -337,6 +337,8 @@ Embeddings are generated via OpenAI API (httpx direct call, not langchain).
 
 ### Review/report UX behavior
 - The review page is now a processing-only surface. It should show user-facing progress text during persistent event-stream playback and redirect into `/report/:orderId` once the saved report is ready; do not expose raw internal tool names like `analyze_clause_risk` to end users.
+- If parse determines the uploaded content is not a contract, the analysis should terminate immediately with a dedicated `non_contract_document` failure state instead of continuing through full risk review.
+- If parse determines the uploaded content is not a contract, the analysis should terminate immediately with a dedicated `non_contract_document` failure state instead of continuing through full risk review.
 - `/api/report/{order_id}` must return the same payload shape whether data comes from Redis or PostgreSQL.
 - Report content is fixed in the language chosen at payment time; later UI language switches only affect surrounding page chrome unless an explicit re-translation feature is implemented.
 - Original contract comparison should be clause-level and inline with each analysis card, not as a full-document dump at the bottom of the page.
