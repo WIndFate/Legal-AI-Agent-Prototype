@@ -37,7 +37,12 @@
     "ocr_notice_info_title": "Hasil pengenalan saat ini hanya perkiraan",
     "ocr_low_quality": "Teks pada gambar terlihat kurang jelas sehingga harga saat ini bisa kurang akurat. Sebaiknya foto ulang atau unggah PDF / teks yang lebih jelas.",
     "ocr_medium_quality": "Teks pada gambar sebagian besar terbaca, tetapi harga saat ini masih bersifat perkiraan. Setelah pembayaran kami akan menjalankan pengenalan resmi.",
-    "ocr_post_payment_notice": "OCR prabayar tidak tersedia di perangkat ini, jadi pengenalan teks resmi akan dijalankan setelah pembayaran."
+    "ocr_post_payment_notice": "OCR prabayar tidak tersedia di perangkat ini, jadi pengenalan teks resmi akan dijalankan setelah pembayaran.",
+    "clause_preview_title": "{{count}} klausul terdeteksi",
+    "clause_preview_expand": "Lihat semua {{count}}",
+    "clause_preview_collapse": "Tutup",
+    "clause_preview_pending_title": "Struktur kontrak",
+    "clause_preview_unavailable": "Setelah pembayaran kami akan mengenali struktur kontrak secara resmi dan menampilkan judul klausul yang lebih rinci."
   },
   "pii": {
     "warning": "Informasi pribadi terdeteksi. Harap periksa sebelum mengirim.",

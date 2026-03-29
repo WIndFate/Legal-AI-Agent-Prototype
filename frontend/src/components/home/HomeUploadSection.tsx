@@ -1,4 +1,4 @@
-import { useId } from 'react';
+import { useEffect, useId, useState } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
@@ -48,10 +48,17 @@ export default function HomeUploadSection({
 }: HomeUploadSectionProps) {
   const { t } = useTranslation();
   const fileInputId = useId();
+  const [previewExpanded, setPreviewExpanded] = useState(false);
   const hasOcrNotice = Boolean(uploadResult?.ocr_warnings?.length);
   const isLowOcrConfidence = uploadResult?.ocr_confidence === 'low';
   const isMediumOcrConfidence =
     uploadResult?.ocr_confidence === 'medium' || (uploadResult?.ocr_confidence == null && hasOcrNotice);
+  const previewItems = uploadResult?.clause_preview ?? [];
+  const visiblePreviewItems = previewExpanded ? previewItems : previewItems.slice(0, 5);
+
+  useEffect(() => {
+    setPreviewExpanded(false);
+  }, [uploadResult]);
 
   return (
     <section className="upload-shell" id="upload-section">
@@ -221,6 +228,38 @@ export default function HomeUploadSection({
             <p>{t('pricing.length_based_desc')}</p>
             <span>{t('pricing.minimum_price', { price: 200 })}</span>
           </div>
+          {uploadResult.quote_mode === 'exact' && previewItems.length > 0 && (
+            <div className={styles.clausePreviewCard}>
+              <div className={styles.clausePreviewHeader}>
+                <strong>{t('upload.clause_preview_title', { count: uploadResult.clause_count ?? previewItems.length })}</strong>
+                {previewItems.length > 5 && (
+                  <button
+                    type="button"
+                    className={styles.clausePreviewToggle}
+                    onClick={() => setPreviewExpanded((current) => !current)}
+                  >
+                    {previewExpanded
+                      ? t('upload.clause_preview_collapse')
+                      : t('upload.clause_preview_expand', { count: previewItems.length })}
+                  </button>
+                )}
+              </div>
+              <ul className={styles.clausePreviewList}>
+                {visiblePreviewItems.map((item, index) => (
+                  <li key={`${item.number}-${item.title}-${index}`} className={styles.clausePreviewItem}>
+                    <span>{item.number}</span>
+                    <strong>{item.title}</strong>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {uploadResult.quote_mode === 'estimated_pre_ocr' && (
+            <div className={clsx(styles.clausePreviewCard, styles.clausePreviewPending)}>
+              <strong>{t('upload.clause_preview_pending_title')}</strong>
+              <p>{t('upload.clause_preview_unavailable')}</p>
+            </div>
+          )}
           <div className={styles.pricingHighlights} aria-label={t('payment.title')}>
             <div className={styles.pricingHighlight}>
               <strong>{t('payment.secure_note')}</strong>

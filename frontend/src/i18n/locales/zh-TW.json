@@ -37,7 +37,12 @@
     "ocr_notice_info_title": "目前辨識結果僅供參考",
     "ocr_low_quality": "圖片中的文字不夠清晰，目前報價可能不夠準確。建議重新拍攝，或改用更清晰的 PDF / 文字上傳。",
     "ocr_medium_quality": "圖片文字大致可讀，但目前報價仍僅供參考。付款後我們會進行正式辨識。",
-    "ocr_post_payment_notice": "目前裝置無法進行預先 OCR 辨識，付款後將進行正式文字辨識。"
+    "ocr_post_payment_notice": "目前裝置無法進行預先 OCR 辨識，付款後將進行正式文字辨識。",
+    "clause_preview_title": "已偵測到 {{count}} 個條款",
+    "clause_preview_expand": "展開全部 {{count}} 條",
+    "clause_preview_collapse": "收起",
+    "clause_preview_pending_title": "合約結構",
+    "clause_preview_unavailable": "付款後會正式辨識合約結構，並顯示詳細條款標題。"
   },
   "pii": {
     "warning": "偵測到個人資料，請在提交前確認。",

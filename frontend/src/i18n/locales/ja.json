@@ -37,7 +37,12 @@
     "ocr_notice_info_title": "識別結果は参考値です",
     "ocr_low_quality": "画像の文字が不鮮明で、見積もり精度が下がる可能性があります。できれば撮り直すか、より鮮明な PDF / テキストでアップロードしてください。",
     "ocr_medium_quality": "画像の文字は概ね読めていますが、見積もりは参考値です。決済後に正式な文字認識を行います。",
-    "ocr_post_payment_notice": "この端末では事前 OCR が使えないため、決済後に正式な文字認識を行います。"
+    "ocr_post_payment_notice": "この端末では事前 OCR が使えないため、決済後に正式な文字認識を行います。",
+    "clause_preview_title": "{{count}} 件の条項を検出しました",
+    "clause_preview_expand": "全 {{count}} 件を表示",
+    "clause_preview_collapse": "折りたたむ",
+    "clause_preview_pending_title": "契約構造",
+    "clause_preview_unavailable": "決済後に契約構造を正式に認識し、詳しい条項タイトルを表示します。"
   },
   "pii": {
     "warning": "個人情報が検出されました。送信前にご確認ください。",

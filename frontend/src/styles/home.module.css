@@ -590,6 +590,86 @@
   gap: 10px;
 }
 
+.clausePreviewCard {
+  margin-bottom: 16px;
+  padding: 14px 16px;
+  border-radius: 20px;
+  border: 1px solid rgba(31, 58, 95, 0.12);
+  background: rgba(255, 255, 255, 0.74);
+}
+
+.clausePreviewHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.clausePreviewHeader strong,
+.clausePreviewPending strong {
+  color: var(--brand-ink);
+  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.clausePreviewToggle {
+  border: 0;
+  background: none;
+  color: var(--brand);
+  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.clausePreviewList {
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 8px;
+}
+
+.clausePreviewItem {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 10px;
+  align-items: baseline;
+  padding: 8px 0;
+  border-top: 1px solid rgba(31, 58, 95, 0.08);
+}
+
+.clausePreviewItem:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.clausePreviewItem span,
+.clausePreviewItem strong,
+.clausePreviewPending p {
+  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
+}
+
+.clausePreviewItem span {
+  color: var(--text-soft);
+  font-size: 0.78rem;
+  white-space: nowrap;
+}
+
+.clausePreviewItem strong {
+  color: var(--brand-ink);
+  font-size: 0.86rem;
+  line-height: 1.5;
+}
+
+.clausePreviewPending p {
+  margin: 6px 0 0;
+  color: var(--text-soft);
+  font-size: 0.82rem;
+  line-height: 1.55;
+}
+
 .pricingHighlight {
   min-width: 0;
   padding: 12px 14px;
@@ -890,6 +970,45 @@
   .pricingHighlights {
     grid-template-columns: 1fr;
     gap: 8px;
+  }
+
+  .clausePreviewCard {
+    margin-bottom: 14px;
+    padding: 12px;
+    border-radius: 18px;
+  }
+
+  .clausePreviewHeader {
+    display: grid;
+    gap: 4px;
+  }
+
+  .clausePreviewHeader strong,
+  .clausePreviewPending strong {
+    font-size: 0.84rem;
+  }
+
+  .clausePreviewToggle {
+    justify-self: start;
+    font-size: 0.76rem;
+  }
+
+  .clausePreviewList {
+    gap: 6px;
+  }
+
+  .clausePreviewItem {
+    gap: 8px;
+    padding: 7px 0;
+  }
+
+  .clausePreviewItem span {
+    font-size: 0.74rem;
+  }
+
+  .clausePreviewItem strong,
+  .clausePreviewPending p {
+    font-size: 0.8rem;
   }
 
   .pricingHighlight {

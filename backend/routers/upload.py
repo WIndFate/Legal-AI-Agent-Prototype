@@ -1,9 +1,13 @@
 import logging
+import json
 import time
 from typing import Optional
 
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile
+from langchain_core.messages import HumanMessage, SystemMessage
+from langchain_openai import ChatOpenAI
 
+from backend.agent.nodes import parse_model
 from backend.config import get_settings
 from backend.schemas.upload import UploadResponse
 from backend.services.analytics import capture as posthog_capture
@@ -13,10 +17,12 @@ from backend.services.pdf_extractor import extract_text_from_pdf_text_layer, pdf
 from backend.services.pii_detector import detect_pii
 from backend.services.temp_uploads import delete_temp_upload, get_temp_upload_path, stage_temp_upload
 from backend.services.token_estimator import estimate_price_from_page_count, estimate_tokens_and_price
+from backend.services.costing import log_model_usage
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
+preview_llm = ChatOpenAI(model=parse_model, temperature=0, timeout=10)
 
 
 def _enforce_upload_limits(page_estimate: int, estimated_tokens: int) -> None:
@@ -55,6 +61,59 @@ def _estimate_with_local_ocr(upload_token: str, page_estimate: int) -> tuple[str
     return local_ocr_text, estimated_tokens, confidence, warnings
 
 
+def _extract_clause_preview(contract_text: str) -> tuple[list[dict[str, str]] | None, int | None]:
+    if len(contract_text.strip()) < 100:
+        return None, None
+
+    messages = [
+        SystemMessage(
+            content=(
+                "あなたは日本語契約書の構造を短く整理するアシスタントです。"
+                "リスク判断はせず、条項番号と短い見出しだけを JSON 配列で返してください。"
+            )
+        ),
+        HumanMessage(
+            content=(
+                "以下の契約文から主要な条項だけを抽出してください。\n"
+                "必ず JSON 配列のみを返してください。\n"
+                '出力形式: [{"number":"第1条","title":"目的"}]\n'
+                "条項番号が不明でも、見出しが推定できる場合は短く付けてください。\n"
+                "本文全文は返さないでください。\n\n"
+                f"契約文:\n{contract_text}"
+            )
+        ),
+    ]
+
+    try:
+        response = preview_llm.invoke(messages)
+        log_model_usage("parse_contract_preview", parse_model, response)
+        content = str(response.content).strip()
+        if "```json" in content:
+            content = content.split("```json")[1].split("```")[0].strip()
+        elif "```" in content:
+            content = content.split("```")[1].split("```")[0].strip()
+        payload = json.loads(content)
+        if not isinstance(payload, list):
+            return None, None
+
+        preview: list[dict[str, str]] = []
+        for item in payload:
+            if not isinstance(item, dict):
+                continue
+            number = str(item.get("number") or "").strip()
+            title = str(item.get("title") or "").strip()
+            if not number and not title:
+                continue
+            preview.append({"number": number or "条項", "title": title or "内容"})
+
+        if not preview:
+            return None, None
+        return preview, len(preview)
+    except Exception as exc:
+        logger.warning("Clause preview extraction failed: %s", exc)
+        return None, None
+
+
 @router.post("/api/upload", response_model=UploadResponse)
 async def upload_contract(
     file: Optional[UploadFile] = File(None),
@@ -72,6 +131,8 @@ async def upload_contract(
     upload_name: str | None = None
     upload_mime_type: str | None = None
     pii_warnings = []
+    clause_preview: list[dict[str, str]] | None = None
+    clause_count: int | None = None
     estimation = {
         "estimated_tokens": 0,
         "page_estimate": 0,
@@ -83,6 +144,7 @@ async def upload_contract(
         contract_text = text
         estimation = estimate_tokens_and_price(contract_text)
         pii_warnings = detect_pii(contract_text)
+        clause_preview, clause_count = _extract_clause_preview(contract_text)
     elif input_type == "pdf" and file:
         pdf_bytes = await file.read()
         extracted_text, page_count = extract_text_from_pdf_text_layer(pdf_bytes)
@@ -91,6 +153,7 @@ async def upload_contract(
             estimate_source = "pdf_text_layer"
             estimation = estimate_tokens_and_price(contract_text)
             pii_warnings = detect_pii(contract_text)
+            clause_preview, clause_count = _extract_clause_preview(contract_text)
         else:
             upload_token = stage_temp_upload(pdf_bytes, file.filename)
             upload_name = file.filename
@@ -126,6 +189,7 @@ async def upload_contract(
         if contract_text.strip():
             estimation = estimate_tokens_and_price(contract_text)
             pii_warnings = detect_pii(contract_text)
+            clause_preview, clause_count = _extract_clause_preview(contract_text)
 
     if not contract_text.strip() and estimation["price_jpy"] == 0:
         return UploadResponse(
@@ -137,6 +201,8 @@ async def upload_contract(
             ocr_required=ocr_required,
             ocr_confidence=ocr_confidence,
             ocr_warnings=ocr_warnings,
+            clause_preview=clause_preview,
+            clause_count=clause_count,
             upload_token=upload_token,
             upload_name=upload_name,
             upload_mime_type=upload_mime_type,
@@ -172,6 +238,8 @@ async def upload_contract(
         ocr_required=ocr_required,
         ocr_confidence=ocr_confidence,
         ocr_warnings=ocr_warnings,
+        clause_preview=clause_preview,
+        clause_count=clause_count,
         upload_token=upload_token,
         upload_name=upload_name,
         upload_mime_type=upload_mime_type,

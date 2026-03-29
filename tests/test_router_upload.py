@@ -22,6 +22,13 @@ def _mock_analytics():
 
 
 @pytest.fixture(autouse=True)
+def _mock_clause_preview():
+    """Avoid real LLM preview extraction in upload tests unless a case overrides it."""
+    with patch("backend.routers.upload._extract_clause_preview", return_value=(None, None)):
+        yield
+
+
+@pytest.fixture(autouse=True)
 def _clear_pricing_policy_cache():
     """Clear the lru_cache on get_pricing_policy so tests don't leak state."""
     from backend.services.token_estimator import get_pricing_policy
@@ -36,15 +43,19 @@ def _clear_pricing_policy_cache():
 @pytest.mark.asyncio
 async def test_upload_text_returns_pricing():
     """Text upload should return token estimate, pricing, and exact quote mode."""
-    transport = ASGITransport(app=app)
-    async with AsyncClient(transport=transport, base_url="http://test") as client:
-        resp = await client.post(
-            "/api/upload",
-            data={
-                "input_type": "text",
-                "text": "第1条（目的）本契約は業務委託について定める。第2条 委託料は月額10万円とする。",
-            },
-        )
+    with patch(
+        "backend.routers.upload._extract_clause_preview",
+        return_value=([{"number": "第1条", "title": "目的"}], 1),
+    ):
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            resp = await client.post(
+                "/api/upload",
+                data={
+                    "input_type": "text",
+                    "text": "第1条（目的）本契約は業務委託について定める。第2条 委託料は月額10万円とする。",
+                },
+            )
     assert resp.status_code == 200
     body = resp.json()
     assert body["quote_mode"] == "exact"
@@ -54,6 +65,8 @@ async def test_upload_text_returns_pricing():
     assert body["price_jpy"] > 0
     # Contract text should be echoed back for exact-mode quotes
     assert body["contract_text"] != ""
+    assert body["clause_count"] == 1
+    assert body["clause_preview"][0]["number"] == "第1条"
 
 
 @pytest.mark.asyncio
@@ -231,6 +244,69 @@ async def test_upload_image_with_low_quality_local_ocr_returns_warning():
     body = resp.json()
     assert body["ocr_confidence"] == "low"
     assert body["ocr_warnings"] == ["upload.ocr_low_quality"]
+
+
+@pytest.mark.asyncio
+async def test_upload_image_keeps_clause_preview_unavailable():
+    """Image uploads should not return a clause preview before formal OCR."""
+    fake_image_bytes = b"\x89PNG\r\n\x1a\n" + b"\x00" * 100
+
+    with (
+        patch("backend.routers.upload.stage_temp_upload", return_value="tok-imagepreview"),
+        patch(
+            "backend.routers.upload.estimate_text_with_local_ocr",
+            return_value=LocalOcrEstimate(text="", provider="disabled"),
+        ),
+    ):
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            resp = await client.post(
+                "/api/upload",
+                data={"input_type": "image"},
+                files={"file": ("contract.png", io.BytesIO(fake_image_bytes), "image/png")},
+            )
+
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["clause_preview"] is None
+    assert body["clause_count"] is None
+
+
+@pytest.mark.asyncio
+async def test_upload_short_text_skips_clause_preview():
+    """Very short exact-text uploads should not trigger preview extraction."""
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        resp = await client.post(
+            "/api/upload",
+            data={"input_type": "text", "text": "第1条 テスト契約"},
+        )
+
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["clause_preview"] is None
+    assert body["clause_count"] is None
+
+
+@pytest.mark.asyncio
+async def test_upload_text_preview_failure_does_not_block_pricing():
+    """Preview extraction failures should gracefully degrade to null preview."""
+    with patch("backend.routers.upload._extract_clause_preview", return_value=(None, None)):
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            resp = await client.post(
+                "/api/upload",
+                data={
+                    "input_type": "text",
+                    "text": "第1条（目的）本契約は業務委託について定める。第2条 委託料は月額10万円とする。第3条 契約期間は1年とする。",
+                },
+            )
+
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["price_jpy"] > 0
+    assert body["clause_preview"] is None
+    assert body["clause_count"] is None
 
 
 # -- Upload limit enforcement ------------------------------------------------

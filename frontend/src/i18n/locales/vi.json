@@ -37,7 +37,12 @@
     "ocr_notice_info_title": "Kết quả nhận dạng hiện tại chỉ để tham khảo",
     "ocr_low_quality": "Chữ trong ảnh chưa đủ rõ nên mức giá hiện tại có thể chưa chính xác. Bạn nên chụp lại hoặc tải lên PDF / văn bản rõ hơn nếu có thể.",
     "ocr_medium_quality": "Chữ trong ảnh phần lớn vẫn đọc được, nhưng mức giá hiện tại vẫn chỉ mang tính tham khảo. Sau khi thanh toán chúng tôi sẽ nhận dạng chính thức.",
-    "ocr_post_payment_notice": "Thiết bị này chưa hỗ trợ OCR trước thanh toán, nên quá trình nhận dạng văn bản chính thức sẽ diễn ra sau khi thanh toán."
+    "ocr_post_payment_notice": "Thiết bị này chưa hỗ trợ OCR trước thanh toán, nên quá trình nhận dạng văn bản chính thức sẽ diễn ra sau khi thanh toán.",
+    "clause_preview_title": "Đã phát hiện {{count}} điều khoản",
+    "clause_preview_expand": "Xem toàn bộ {{count}}",
+    "clause_preview_collapse": "Thu gọn",
+    "clause_preview_pending_title": "Cấu trúc hợp đồng",
+    "clause_preview_unavailable": "Sau khi thanh toán, chúng tôi sẽ nhận dạng chính thức cấu trúc hợp đồng và hiển thị tiêu đề điều khoản chi tiết."
   },
   "pii": {
     "warning": "Phát hiện thông tin cá nhân. Vui lòng kiểm tra trước khi gửi.",

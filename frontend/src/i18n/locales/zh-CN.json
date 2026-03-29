@@ -37,7 +37,12 @@
     "ocr_notice_info_title": "当前识别结果仅供参考",
     "ocr_low_quality": "图片中的文字不够清晰，当前报价可能不够准确。建议重新拍摄，或改用更清晰的 PDF / 文本上传。",
     "ocr_medium_quality": "图片文字大致可读，但当前报价仍仅供参考。支付后我们会进行正式识别。",
-    "ocr_post_payment_notice": "当前设备无法进行预先 OCR 识别，支付后将进行正式文字识别。"
+    "ocr_post_payment_notice": "当前设备无法进行预先 OCR 识别，支付后将进行正式文字识别。",
+    "clause_preview_title": "检测到 {{count}} 个条款",
+    "clause_preview_expand": "展开全部 {{count}} 条",
+    "clause_preview_collapse": "收起",
+    "clause_preview_pending_title": "合同结构",
+    "clause_preview_unavailable": "支付后会正式识别合同结构，并展示详细条款标题。"
   },
   "pii": {
     "warning": "检测到个人信息，请在提交前确认。",

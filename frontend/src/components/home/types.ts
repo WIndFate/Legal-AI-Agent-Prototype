@@ -9,6 +9,8 @@ export interface UploadResult {
   ocr_required: boolean;
   ocr_confidence?: 'high' | 'medium' | 'low' | null;
   ocr_warnings: string[];
+  clause_preview?: Array<{ number: string; title: string }> | null;
+  clause_count?: number | null;
   upload_token?: string | null;
   upload_name?: string | null;
   upload_mime_type?: string | null;

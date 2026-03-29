@@ -37,7 +37,12 @@
     "ocr_notice_info_title": "Recognition result is only a preview",
     "ocr_low_quality": "The text in this image looks unclear, so the quote may be less accurate. Retake the photo or upload a clearer PDF or text version if possible.",
     "ocr_medium_quality": "The text is mostly readable, but this quote is still only a preview. We will run formal recognition after payment.",
-    "ocr_post_payment_notice": "Pre-payment OCR is unavailable on this device, so formal text recognition will run after payment."
+    "ocr_post_payment_notice": "Pre-payment OCR is unavailable on this device, so formal text recognition will run after payment.",
+    "clause_preview_title": "{{count}} clauses detected",
+    "clause_preview_expand": "Show all {{count}}",
+    "clause_preview_collapse": "Collapse",
+    "clause_preview_pending_title": "Contract structure",
+    "clause_preview_unavailable": "We will recognize the contract structure after payment and then show detailed clause titles."
   },
   "pii": {
     "warning": "Personal information detected. Please review before submitting.",

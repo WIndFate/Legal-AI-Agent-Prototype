@@ -8,6 +8,11 @@ class PiiWarning(BaseModel):
     text: str
 
 
+class ClausePreviewItem(BaseModel):
+    number: str
+    title: str
+
+
 class UploadResponse(BaseModel):
     contract_text: str
     estimated_tokens: int
@@ -17,6 +22,8 @@ class UploadResponse(BaseModel):
     ocr_required: bool = False
     ocr_confidence: str | None = None
     ocr_warnings: list[str] = []
+    clause_preview: list[ClausePreviewItem] | None = None
+    clause_count: int | None = None
     upload_token: str | None = None
     upload_name: str | None = None
     upload_mime_type: str | None = None

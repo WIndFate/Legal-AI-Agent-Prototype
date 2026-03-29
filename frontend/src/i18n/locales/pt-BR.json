@@ -37,7 +37,12 @@
     "ocr_notice_info_title": "Este reconhecimento é apenas uma prévia",
     "ocr_low_quality": "O texto da imagem parece pouco nítido, então o valor atual pode ficar impreciso. Se puder, tire outra foto ou envie um PDF ou texto mais claro.",
     "ocr_medium_quality": "O texto está legível em boa parte, mas este valor ainda é só uma prévia. Faremos o reconhecimento oficial após o pagamento.",
-    "ocr_post_payment_notice": "O OCR antes do pagamento não está disponível neste dispositivo, então o reconhecimento oficial será feito após o pagamento."
+    "ocr_post_payment_notice": "O OCR antes do pagamento não está disponível neste dispositivo, então o reconhecimento oficial será feito após o pagamento.",
+    "clause_preview_title": "{{count}} cláusulas detectadas",
+    "clause_preview_expand": "Mostrar todas {{count}}",
+    "clause_preview_collapse": "Recolher",
+    "clause_preview_pending_title": "Estrutura do contrato",
+    "clause_preview_unavailable": "Após o pagamento, vamos reconhecer a estrutura do contrato e mostrar os títulos detalhados das cláusulas."
   },
   "pii": {
     "warning": "Informações pessoais detectadas. Verifique antes de enviar.",
