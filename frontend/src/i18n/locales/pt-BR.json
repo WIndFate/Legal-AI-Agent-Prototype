@@ -33,6 +33,8 @@
     "trust_privacy": "Contrato excluído após análise",
     "trust_no_account": "Sem necessidade de cadastro",
     "trust_payg": "Pague por uso, sem assinatura",
+    "trust_supported_types": "Compatível com contratos de trabalho, aluguel e prestação de serviços",
+    "privacy_inline": "O texto completo do contrato é apagado após a análise e o relatório também é removido automaticamente após 72 horas.",
     "ocr_notice_title": "A qualidade da imagem precisa de atenção",
     "ocr_notice_info_title": "Este reconhecimento é apenas uma prévia",
     "ocr_low_quality": "O texto da imagem parece pouco nítido, então o valor atual pode ficar impreciso. Se puder, tire outra foto ou envie um PDF ou texto mais claro.",
@@ -211,7 +213,24 @@
   "privacy": {
     "page_title": "Política de Privacidade",
     "summary": "O ContractGuard prioriza sua privacidade. O texto completo do contrato é removido do servidor imediatamente após a análise. Apenas trechos de cláusulas ligados aos achados permanecem no relatório de 72 horas. Coletamos apenas seu e-mail, usado exclusivamente para enviar o link do relatório.",
-    "last_updated": "Última atualização: {{date}}"
+    "last_updated": "Última atualização: {{date}}",
+    "flow_title": "Como seus dados são tratados",
+    "flow_step_1": "O contrato enviado fica apenas em memória ou em arquivo temporário enquanto o processamento começa.",
+    "flow_step_2": "A IA lê a estrutura das cláusulas e compara cada trecho com a lei japonesa aplicável.",
+    "flow_step_3": "Quando a análise termina, o texto completo do contrato é apagado imediatamente do servidor.",
+    "flow_step_4": "O relatório fica disponível por 72 horas e depois é apagado automaticamente.",
+    "supported_title": "Indicado para",
+    "supported_list": [
+      "Revisão de contrato de trabalho antes da assinatura",
+      "Verificação de condições de contrato de aluguel",
+      "Revisão de contrato de prestação de serviços"
+    ],
+    "not_supported_title": "Não indicado para",
+    "not_supported_list": [
+      "Contratos escritos principalmente em inglês ou outro idioma não japonês",
+      "Contratos manuscritos difíceis de ler",
+      "Disputas jurídicas ou avaliação de litígios após a assinatura"
+    ]
   },
   "terms": {
     "page_title": "Termos de Serviço",
@@ -226,6 +245,8 @@
     "tab_employment": "Emprego",
     "tab_parttime": "Meio período",
     "badge": "EXEMPLO",
+    "view_full_report": "Ver relatório de exemplo completo",
+    "full_report_note": "Esta página mostra uma amostra mais completa, próxima do relatório salvo, com resumo, filtros e análise cláusula por cláusula.",
     "cta": "Analise seu contrato",
     "rental_title": "Análise de contrato de aluguel",
     "rental_desc": "Contrato padrão de 1LDK em Tóquio",

@@ -24,6 +24,51 @@
   gap: 18px;
 }
 
+.examplesUtilityRow {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 14px;
+}
+
+.examplesFullLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(31, 58, 95, 0.12);
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--brand);
+  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
+  font-size: 0.84rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.examplesFullLink::after {
+  content: "→";
+}
+
+.fullReportNote {
+  margin-top: 10px;
+  color: var(--text-soft);
+  font-size: 0.88rem;
+  line-height: 1.7;
+}
+
+@media (max-width: 767px) {
+  .examplesUtilityRow {
+    justify-content: flex-start;
+    margin-bottom: 12px;
+  }
+
+  .examplesFullLink {
+    width: 100%;
+    justify-content: center;
+    font-size: 0.8rem;
+  }
+}
+
 .curatedStrip {
   display: grid;
   gap: 14px;

@@ -29,6 +29,7 @@ export default function HomeHeroSection({ preview }: HomeHeroSectionProps) {
           <span className={styles.trustPill}>{t('upload.trust_privacy')}</span>
           <span className={styles.trustPill}>{t('upload.trust_no_account')}</span>
           <span className={styles.trustPill}>{t('upload.trust_payg')}</span>
+          <span className={styles.trustPill}>{t('upload.trust_supported_types')}</span>
         </div>
         <div className="hero-metrics">
           <div className="hero-metric">

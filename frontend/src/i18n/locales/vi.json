@@ -33,6 +33,8 @@
     "trust_privacy": "Hợp đồng xóa ngay sau phân tích",
     "trust_no_account": "Không cần đăng ký tài khoản",
     "trust_payg": "Trả theo lần, không đăng ký thuê bao",
+    "trust_supported_types": "Phù hợp với hợp đồng lao động, thuê nhà và ủy thác công việc",
+    "privacy_inline": "Toàn bộ nội dung hợp đồng sẽ bị xóa sau khi phân tích, và báo cáo cũng tự xóa sau 72 giờ.",
     "ocr_notice_title": "Chất lượng ảnh cần được lưu ý",
     "ocr_notice_info_title": "Kết quả nhận dạng hiện tại chỉ để tham khảo",
     "ocr_low_quality": "Chữ trong ảnh chưa đủ rõ nên mức giá hiện tại có thể chưa chính xác. Bạn nên chụp lại hoặc tải lên PDF / văn bản rõ hơn nếu có thể.",
@@ -211,7 +213,24 @@
   "privacy": {
     "page_title": "Chính sách bảo mật",
     "summary": "ContractGuard đặt quyền riêng tư của bạn lên hàng đầu. Toàn văn hợp đồng sẽ bị xóa khỏi máy chủ ngay sau khi phân tích. Chỉ các đoạn trích điều khoản gắn với kết quả mới được giữ trong báo cáo 72 giờ. Chúng tôi chỉ thu thập địa chỉ email để gửi liên kết báo cáo.",
-    "last_updated": "Cập nhật lần cuối: {{date}}"
+    "last_updated": "Cập nhật lần cuối: {{date}}",
+    "flow_title": "Quy trình xử lý dữ liệu",
+    "flow_step_1": "Hợp đồng tải lên chỉ được giữ tạm trong bộ nhớ hoặc tệp tạm thời.",
+    "flow_step_2": "AI đọc cấu trúc điều khoản và đối chiếu từng điều khoản với luật Nhật Bản liên quan.",
+    "flow_step_3": "Khi phân tích xong, toàn bộ văn bản hợp đồng sẽ bị xóa ngay khỏi máy chủ.",
+    "flow_step_4": "Báo cáo có thể xem trong 72 giờ rồi sẽ tự động bị xóa.",
+    "supported_title": "Phù hợp với",
+    "supported_list": [
+      "Kiểm tra hợp đồng lao động trước khi ký",
+      "Xác nhận điều kiện hợp đồng thuê nhà",
+      "Kiểm tra hợp đồng ủy thác công việc"
+    ],
+    "not_supported_title": "Không phù hợp với",
+    "not_supported_list": [
+      "Hợp đồng chủ yếu viết bằng tiếng Anh hoặc ngôn ngữ không phải tiếng Nhật",
+      "Hợp đồng viết tay khó đọc",
+      "Tranh chấp pháp lý hoặc đánh giá kiện tụng sau khi đã ký"
+    ]
   },
   "terms": {
     "page_title": "Điều khoản dịch vụ",
@@ -226,6 +245,8 @@
     "tab_employment": "Lao động",
     "tab_parttime": "Bán thời gian",
     "badge": "VÍ DỤ",
+    "view_full_report": "Xem báo cáo mẫu đầy đủ",
+    "full_report_note": "Trang này hiển thị một mẫu đầy đủ hơn, gần với bố cục báo cáo đã lưu, bao gồm tóm tắt, bộ lọc và phân tích từng điều khoản.",
     "cta": "Phân tích hợp đồng của bạn",
     "rental_title": "Phân tích hợp đồng thuê nhà",
     "rental_desc": "Hợp đồng thuê 1LDK tiêu chuẩn tại Tokyo",

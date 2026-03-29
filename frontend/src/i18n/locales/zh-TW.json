@@ -33,6 +33,8 @@
     "trust_privacy": "分析後立即刪除合約",
     "trust_no_account": "無需註冊帳號",
     "trust_payg": "按次付費，無訂閱",
+    "trust_supported_types": "適用於勞動、租賃、業務委託合約",
+    "privacy_inline": "完整合約正文會在分析後刪除，報告也會在72小時後自動清除。",
     "ocr_notice_title": "圖片品質需要注意",
     "ocr_notice_info_title": "目前辨識結果僅供參考",
     "ocr_low_quality": "圖片中的文字不夠清晰，目前報價可能不夠準確。建議重新拍攝，或改用更清晰的 PDF / 文字上傳。",
@@ -211,7 +213,24 @@
   "privacy": {
     "page_title": "隱私權政策",
     "summary": "ContractGuard 將您的隱私放在首位。完整合約正文在分析完成後立即從伺服器刪除；僅與風險點對應的條款原文摘錄會保留在 72 小時報告中。我們僅收集電子信箱，且僅用於寄送報告連結。",
-    "last_updated": "最後更新：{{date}}"
+    "last_updated": "最後更新：{{date}}",
+    "flow_title": "資料處理流程",
+    "flow_step_1": "上傳後的合約只會暫時保存在記憶體或臨時檔案中。",
+    "flow_step_2": "AI 會辨識條款結構，並結合法條逐條分析風險。",
+    "flow_step_3": "分析完成後，完整合約正文會立即從伺服器永久刪除。",
+    "flow_step_4": "報告可在72小時內查看，之後會自動清除。",
+    "supported_title": "適用場景",
+    "supported_list": [
+      "簽署前的勞動合約風險參考",
+      "租賃合約條件確認",
+      "業務委託合約條款檢查"
+    ],
+    "not_supported_title": "不適用場景",
+    "not_supported_list": [
+      "以英文等非日文為主的合約",
+      "手寫且難以辨認的合約",
+      "已簽署後的法律糾紛或訴訟判斷"
+    ]
   },
   "terms": {
     "page_title": "服務條款",
@@ -226,6 +245,8 @@
     "tab_employment": "勞動合約",
     "tab_parttime": "兼職合約",
     "badge": "示例",
+    "view_full_report": "查看完整示例報告",
+    "full_report_note": "這裡展示的是接近真實報告頁的完整樣張，可先了解摘要、篩選與逐條分析的呈現方式。",
     "cta": "分析你的合約",
     "rental_title": "租屋合約分析示例",
     "rental_desc": "東京都內1LDK標準租賃合約",

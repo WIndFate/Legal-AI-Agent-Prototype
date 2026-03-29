@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
 import clsx from 'clsx';
 
 import { exampleReports } from '../../data/exampleReports';
@@ -237,6 +238,11 @@ export default function HomeExamplesSection({ standalone = false }: HomeExamples
         </div>
       ) : (
         <>
+          <div className={styles.examplesUtilityRow}>
+            <Link to="/examples" className={styles.examplesFullLink}>
+              {t('examples.view_full_report')}
+            </Link>
+          </div>
           <div className="example-tabs">
             {tabs.map((tab) => (
               <button
@@ -254,6 +260,7 @@ export default function HomeExamplesSection({ standalone = false }: HomeExamples
               <span className={styles.badge}>{t('examples.badge')}</span>
               <h3>{t(`examples.${activeTab}_title`)}</h3>
               <p className={styles.reportDesc}>{t(`examples.${activeTab}_desc`)}</p>
+              <p className={styles.fullReportNote}>{t('examples.full_report_note')}</p>
             </div>
 
             <div className={styles.overallRisk}>

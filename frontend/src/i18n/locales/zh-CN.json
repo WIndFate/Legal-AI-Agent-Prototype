@@ -33,6 +33,8 @@
     "trust_privacy": "分析后立即删除合同",
     "trust_no_account": "无需注册账号",
     "trust_payg": "按次付费，无订阅",
+    "trust_supported_types": "适用于劳动、租赁、业务委托合同",
+    "privacy_inline": "完整合同正文会在分析后删除，报告也会在72小时后自动清除。",
     "ocr_notice_title": "图片质量需要注意",
     "ocr_notice_info_title": "当前识别结果仅供参考",
     "ocr_low_quality": "图片中的文字不够清晰，当前报价可能不够准确。建议重新拍摄，或改用更清晰的 PDF / 文本上传。",
@@ -211,7 +213,24 @@
   "privacy": {
     "page_title": "隐私政策",
     "summary": "ContractGuard 将您的隐私放在首位。完整合同正文在分析完成后立即从服务器删除；仅与风险点对应的条款原文摘录会保留在 72 小时报告中。我们仅收集邮箱地址，且仅用于发送报告链接。",
-    "last_updated": "最后更新：{{date}}"
+    "last_updated": "最后更新：{{date}}",
+    "flow_title": "数据处理流程",
+    "flow_step_1": "上传后的合同仅临时保存在内存或临时文件中。",
+    "flow_step_2": "AI 会识别条款结构，并结合相关法条逐条分析风险。",
+    "flow_step_3": "分析完成后，完整合同正文会立即从服务器永久删除。",
+    "flow_step_4": "报告可在72小时内查看，随后会自动清除。",
+    "supported_title": "适用场景",
+    "supported_list": [
+      "签署前的劳动合同风险参考",
+      "租赁合同条件确认",
+      "业务委托合同条款检查"
+    ],
+    "not_supported_title": "不适用场景",
+    "not_supported_list": [
+      "以英文等非日文为主的合同",
+      "手写且难以辨认的合同",
+      "已签署后的法律纠纷或诉讼判断"
+    ]
   },
   "terms": {
     "page_title": "服务条款",
@@ -226,6 +245,8 @@
     "tab_employment": "劳动合同",
     "tab_parttime": "兼职合同",
     "badge": "示例",
+    "view_full_report": "查看完整示例报告",
+    "full_report_note": "这里展示的是接近真实报告页的完整样张，可提前了解摘要、筛选和逐条分析的呈现方式。",
     "cta": "分析你的合同",
     "rental_title": "租房合同分析示例",
     "rental_desc": "东京都内1LDK标准租赁合同",

@@ -84,6 +84,12 @@ export default function HomeUploadSection({
           <p>{t('report.comparison_hint')}</p>
         </div>
       </div>
+      <div className={styles.privacyInline}>
+        <span>{t('upload.privacy_inline')}</span>
+        <Link to="/privacy" className={styles.privacyInlineLink}>
+          {t('footer.privacy')}
+        </Link>
+      </div>
 
       <div className={styles.mobileUtilityGrid}>
         <Link to="/examples" className={styles.examplesEntryCard}>

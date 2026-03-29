@@ -1,0 +1,41 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="630" rx="32" fill="#F5F1E8"/>
+  <rect x="36" y="36" width="1128" height="558" rx="28" fill="url(#bg)"/>
+  <path d="M126 177.5L166 154L206 177.5V224.5L166 248L126 224.5V177.5Z" fill="url(#shield)"/>
+  <text x="242" y="205" fill="#1F3A5F" font-size="64" font-family="Avenir Next, Helvetica Neue, Arial, sans-serif" font-weight="700">
+    ContractGuard
+  </text>
+  <text x="126" y="312" fill="#1F3A5F" font-size="92" font-family="Iowan Old Style, Times New Roman, serif" font-weight="700">
+    AI Contract Risk Analysis
+  </text>
+  <text x="126" y="382" fill="#6E6257" font-size="32" font-family="Avenir Next, Helvetica Neue, Arial, sans-serif">
+    Understand Japanese contracts in your language.
+  </text>
+  <text x="126" y="430" fill="#6E6257" font-size="32" font-family="Avenir Next, Helvetica Neue, Arial, sans-serif">
+    Affordable, instant, and privacy-first.
+  </text>
+  <g opacity="0.95">
+    <rect x="126" y="487" width="240" height="58" rx="29" fill="#FFFFFF"/>
+    <text x="156" y="524" fill="#1F3A5F" font-size="26" font-family="Avenir Next, Helvetica Neue, Arial, sans-serif" font-weight="700">
+      72h auto deletion
+    </text>
+    <rect x="386" y="487" width="312" height="58" rx="29" fill="#FFFFFF"/>
+    <text x="416" y="524" fill="#1F3A5F" font-size="26" font-family="Avenir Next, Helvetica Neue, Arial, sans-serif" font-weight="700">
+      Pay by content length
+    </text>
+    <rect x="718" y="487" width="246" height="58" rx="29" fill="#FFFFFF"/>
+    <text x="748" y="524" fill="#1F3A5F" font-size="26" font-family="Avenir Next, Helvetica Neue, Arial, sans-serif" font-weight="700">
+      9 UI languages
+    </text>
+  </g>
+  <defs>
+    <linearGradient id="bg" x1="83" y1="52" x2="1082" y2="584" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#F3EFE6"/>
+    </linearGradient>
+    <linearGradient id="shield" x1="126" y1="154" x2="206" y2="248" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#355D8E"/>
+      <stop offset="1" stop-color="#17375C"/>
+    </linearGradient>
+  </defs>
+</svg>

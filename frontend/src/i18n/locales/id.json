@@ -33,6 +33,8 @@
     "trust_privacy": "Kontrak dihapus setelah analisis",
     "trust_no_account": "Tanpa perlu mendaftar",
     "trust_payg": "Bayar per penggunaan, tanpa langganan",
+    "trust_supported_types": "Cocok untuk kontrak kerja, sewa, dan outsourcing",
+    "privacy_inline": "Teks kontrak lengkap dihapus setelah analisis, dan laporan juga terhapus otomatis setelah 72 jam.",
     "ocr_notice_title": "Kualitas gambar perlu diperhatikan",
     "ocr_notice_info_title": "Hasil pengenalan saat ini hanya perkiraan",
     "ocr_low_quality": "Teks pada gambar terlihat kurang jelas sehingga harga saat ini bisa kurang akurat. Sebaiknya foto ulang atau unggah PDF / teks yang lebih jelas.",
@@ -211,7 +213,24 @@
   "privacy": {
     "page_title": "Kebijakan Privasi",
     "summary": "ContractGuard mengutamakan privasi Anda. Teks kontrak lengkap dihapus dari server segera setelah analisis selesai. Hanya cuplikan klausul yang terkait dengan hasil yang disimpan di laporan 72 jam. Kami hanya mengumpulkan alamat email Anda untuk mengirim tautan laporan.",
-    "last_updated": "Terakhir diperbarui: {{date}}"
+    "last_updated": "Terakhir diperbarui: {{date}}",
+    "flow_title": "Alur pemrosesan data",
+    "flow_step_1": "Kontrak yang diunggah hanya disimpan sementara di memori atau file sementara.",
+    "flow_step_2": "AI membaca struktur klausul dan membandingkannya dengan hukum Jepang yang relevan.",
+    "flow_step_3": "Setelah analisis selesai, teks kontrak lengkap langsung dihapus dari server.",
+    "flow_step_4": "Laporan dapat dibuka selama 72 jam lalu akan dihapus otomatis.",
+    "supported_title": "Cocok untuk",
+    "supported_list": [
+      "Tinjauan kontrak kerja sebelum ditandatangani",
+      "Pemeriksaan syarat kontrak sewa",
+      "Tinjauan kontrak outsourcing bisnis"
+    ],
+    "not_supported_title": "Tidak cocok untuk",
+    "not_supported_list": [
+      "Kontrak yang terutama ditulis dalam bahasa Inggris atau bahasa non-Jepang lainnya",
+      "Kontrak tulisan tangan yang sulit dibaca",
+      "Sengketa hukum atau penilaian litigasi setelah kontrak ditandatangani"
+    ]
   },
   "terms": {
     "page_title": "Ketentuan Layanan",
@@ -226,6 +245,8 @@
     "tab_employment": "Kerja",
     "tab_parttime": "Paruh waktu",
     "badge": "CONTOH",
+    "view_full_report": "Lihat laporan contoh lengkap",
+    "full_report_note": "Halaman ini menampilkan contoh yang lebih lengkap dengan susunan yang mendekati laporan tersimpan, termasuk ringkasan, filter, dan analisis per klausul.",
     "cta": "Analisis Kontrak Anda",
     "rental_title": "Analisis kontrak sewa",
     "rental_desc": "Kontrak sewa standar 1LDK di Tokyo",

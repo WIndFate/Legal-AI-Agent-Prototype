@@ -33,6 +33,8 @@
     "trust_privacy": "Contract deleted after analysis",
     "trust_no_account": "No account required",
     "trust_payg": "Pay per use, no subscription",
+    "trust_supported_types": "Supports work, rental, and contractor agreements",
+    "privacy_inline": "The full contract text is deleted after analysis, and the report auto-deletes after 72 hours.",
     "ocr_notice_title": "Image quality needs attention",
     "ocr_notice_info_title": "Recognition result is only a preview",
     "ocr_low_quality": "The text in this image looks unclear, so the quote may be less accurate. Retake the photo or upload a clearer PDF or text version if possible.",
@@ -211,7 +213,24 @@
   "privacy": {
     "page_title": "Privacy Policy",
     "summary": "ContractGuard puts your privacy first. The full contract text is deleted from the server immediately after analysis. Only clause excerpts tied to report findings remain inside the 72-hour report. We only collect your email address, used solely to send the report link.",
-    "last_updated": "Last updated: {{date}}"
+    "last_updated": "Last updated: {{date}}",
+    "flow_title": "How your data moves",
+    "flow_step_1": "Your upload is held only in memory or a temporary file while processing starts.",
+    "flow_step_2": "AI reads the clause structure and checks each clause against relevant Japanese law.",
+    "flow_step_3": "When analysis finishes, the full contract text is deleted from the server immediately.",
+    "flow_step_4": "The report stays available for 72 hours, then is deleted automatically.",
+    "supported_title": "Good fit for",
+    "supported_list": [
+      "Pre-signature employment contract review",
+      "Rental agreement condition checks",
+      "Business outsourcing agreement review"
+    ],
+    "not_supported_title": "Not a good fit for",
+    "not_supported_list": [
+      "Contracts mainly written in English or other non-Japanese languages",
+      "Handwritten contracts that are difficult to read",
+      "Post-signature legal disputes or litigation judgments"
+    ]
   },
   "terms": {
     "page_title": "Terms of Service",
@@ -226,6 +245,8 @@
     "tab_employment": "Employment",
     "tab_parttime": "Part-time",
     "badge": "EXAMPLE",
+    "view_full_report": "View the full sample report",
+    "full_report_note": "This page shows a fuller sample that mirrors the saved report layout, including summary, filtering, and clause-by-clause analysis.",
     "cta": "Analyze Your Contract",
     "rental_title": "Rental Contract Analysis",
     "rental_desc": "Standard 1LDK lease in Tokyo",
