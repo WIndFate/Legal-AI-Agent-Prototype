@@ -11,6 +11,7 @@ As of 2026-03-28, the local MVP flow is working in Docker:
 - `upload -> payment/create -> analysis/start -> orders/{id}/status + events/stream -> report retrieval -> contract deletion`
 - Text and text-layer PDFs are quoted before payment from extracted text; image/scanned PDF uploads now use a dual-OCR path with temporary staging plus post-payment formal OCR
 - Image and scanned-PDF quotes now return OCR quality hints (`low` / `medium` / post-payment notice) before the user pays
+- Exact text / text-layer PDF quotes now also return a lightweight clause-structure preview so users can confirm we parsed the contract before paying
 - `pgvector` RAG is running in PostgreSQL with 331+ law articles across 10 legal categories (rental, labor, part-time, business outsourcing, sales, etc.)
 - 9-language frontend with professional branding (ContractGuard), privacy/terms pages, and a dedicated examples gallery with report-style samples
 - The standalone `/examples` page now uses a curated chapter-switching layout, and its report sample styling is intentionally closer to the real report page
