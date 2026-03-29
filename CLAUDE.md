@@ -71,6 +71,8 @@ Current status as of 2026-03-28:
 - Local Docker end-to-end flow is verified through upload, payment creation, persistent analysis-task start, status/event restoration, replayable event streaming, report retrieval, and contract deletion.
 - `APP_ENV=development` enables local-only conveniences such as auto table bootstrap and dev payment bypass.
 - Dual-OCR groundwork is now in code: text/text-layer PDFs are quoted before payment, while image/scanned PDFs can be staged for local pre-estimation and formal OCR after payment.
+- Pre-payment image and scanned-PDF quotes now return OCR quality hints so users can correct blurry captures before paying.
+- Pre-payment image and scanned-PDF quotes now return OCR quality hints so users can correct blurry captures before paying.
 - Deployment configs ready: `fly.toml` (NRT, force_https) + `vercel.json` (API proxy, security headers) + Alembic migration chain through `008`.
 - RAG knowledge base expanded to 331+ law articles across 10 legal categories (rental, labor, part-time, business outsourcing, sales, etc.).
 - Eval dataset expanded to 20 labeled samples covering multiple contract types.

@@ -10,6 +10,7 @@
 
 - `upload -> payment/create -> analysis/start -> orders/{id}/status + events/stream -> report -> 合同文本删除`
 - 文本和可提取文本 PDF 会在付款前直接按文本估价；图片 / 扫描 PDF 现在走”双层 OCR”路径：先临时暂存并预估，付款后再做正式 OCR
+- 图片和扫描 PDF 的报价现在会在支付前返回 OCR 质量提示（`low` / `medium` / 支付后正式识别提示）
 - `pgvector` RAG 已运行在 PostgreSQL 中，覆盖 10 个法律类别共 331+ 条法律条文（租赁、劳动、兼职、业务委托、买卖等）
 - 前端 9 语言界面已实现，包含品牌标识（ContractGuard）、隐私政策/服务条款页面、独立案例画廊与报告样张展示
 - 独立 `/examples` 案例页已升级为横向策展式章节切换，报告样张的版式也进一步贴近真实报告页
