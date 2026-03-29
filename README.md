@@ -21,11 +21,13 @@ As of 2026-03-28, the local MVP flow is working in Docker:
 - The examples area now includes a direct “view full sample report” entry, and the sample report itself now reads more like a complete saved report instead of a short teaser
 - Mobile UI now uses a more compact header with a left-side menu, centered brand, badge-style language switcher, immediate reveal rendering, example switching that scrolls the refreshed report into view, corrected safe-area padding, and overflow fixes that prevent horizontal drag on small screens
 - Homepage UX now includes reveal-on-scroll sections, auto-scroll into the payment panel after quote generation, and broader spacing/padding cleanup across upload, payment, review, and report surfaces
+- The upload CTA now shows a real in-button loading spinner while quote preview generation runs, and the payment panel explicitly confirms that the final report will be generated in the currently selected language before payment continues
 - The homepage upload flow now uses just two entry modes: `Upload File` and `Paste Text`. Image and PDF uploads are accepted through a single file picker with format guidance.
 - A new `/lookup` page lets users reopen payment, analysis, or finished reports by order ID
 - Payment success and analysis completion now show an order reminder dialog so users can screenshot or copy their order ID before moving on
 - Review now acts as a processing surface only; once analysis finishes, the user is redirected straight into the saved `/report/{orderId}` page
 - The review page now uses a cleaner three-zone structure: a single stage header, a segmented progress bar, a user-friendly activity feed with clause-level messages, and an elapsed timer instead of the older duplicate panel / badge / spinner stack
+- That review activity feed is now derived from raw persisted events, so changing the surrounding site language mid-analysis immediately re-localizes the in-progress feed instead of leaving stale strings behind
 - If the uploaded content is judged not to be a contract during the parse step, analysis now stops early with a dedicated user-facing error instead of consuming the full review flow
 - The saved report page now supports risk-level filtering, denser clause cards, a direct backend-generated `Download PDF` action, and a more compact one-row summary on desktop
 - Report sharing now uses a minimal custom share sheet that generates a referral-tagged report link behind the scenes, then offers copy-link and optional native share actions
