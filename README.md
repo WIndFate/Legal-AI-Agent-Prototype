@@ -17,6 +17,8 @@ As of 2026-03-28, the local MVP flow is working in Docker:
 - `pgvector` RAG is running in PostgreSQL with 331+ law articles across 10 legal categories (rental, labor, part-time, business outsourcing, sales, etc.)
 - 9-language frontend with professional branding (ContractGuard), privacy/terms pages, and a dedicated examples gallery with report-style samples
 - The standalone `/examples` page now uses a curated chapter-switching layout, and its report sample styling is intentionally closer to the real report page
+- The homepage trust strip now explicitly calls out supported contract types, the payment panel links to a privacy explainer, and the privacy page now shows a transparent upload→analysis→deletion flow plus supported / unsupported use cases
+- The examples area now includes a direct “view full sample report” entry, and the sample report itself now reads more like a complete saved report instead of a short teaser
 - Mobile UI now uses a more compact header with a left-side menu, centered brand, badge-style language switcher, immediate reveal rendering, example switching that scrolls the refreshed report into view, corrected safe-area padding, and overflow fixes that prevent horizontal drag on small screens
 - Homepage UX now includes reveal-on-scroll sections, auto-scroll into the payment panel after quote generation, and broader spacing/padding cleanup across upload, payment, review, and report surfaces
 - The homepage upload flow now uses just two entry modes: `Upload File` and `Paste Text`. Image and PDF uploads are accepted through a single file picker with format guidance.
@@ -47,7 +49,7 @@ Still pending outside the repo:
 - KOMOJU, Resend, Sentry, and PostHog production credentials and live testing
 - Mobile camera/manual cross-device testing
 - User feedback collection on report page (P2)
-- OG tags and social media sharing optimization (P2)
+- Social sharing copy and richer growth loops (P2)
 - CSS Modules migration for report/review pages (kept global due to cross-page sharing)
 
 ## Architecture
@@ -177,6 +179,7 @@ docker compose up -d backend postgres redis
 - Production startup now fails fast if KOMOJU/Resend credentials are missing or `FRONTEND_URL` still points to `localhost`.
 - Payment, review, email, and report retrieval paths now emit structured application logs and PostHog events for easier integration debugging.
 - Frontend route pages are lazy-loaded, and analytics libraries are bootstrapped asynchronously so they do not bloat the initial application chunk.
+- `frontend/index.html` now ships static OG / Twitter metadata, and `frontend/public/og-image.svg` provides a lightweight branded share image for social previews.
 - Route changes without a hash anchor now reset scroll to the top so privacy/terms and other page-to-page navigation do not preserve the previous scroll position.
 - Frontend UX now includes reusable `RevealSection`, `OrderReminderDialog`, and `ShareSheet` components for scroll reveal, order-saving prompts, and custom sharing.
 - `frontend/src/lib/fetchWithRetry.ts` now centralizes timeout-aware retries for startup-time proxy failures on key frontend fetch paths.
