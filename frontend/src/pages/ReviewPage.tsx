@@ -47,6 +47,7 @@ export default function ReviewPage() {
   const [activityEvents, setActivityEvents] = useState<AnalysisEventItem[]>([]);
   const [reconnecting, setReconnecting] = useState(false);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const [analysisStartedAtMs, setAnalysisStartedAtMs] = useState<number | null>(null);
 
   const started = useRef(false);
   const reconnectAttempt = useRef(0);
@@ -146,6 +147,13 @@ export default function ReviewPage() {
     setAnalysisStatus(status.analysis_status);
     if (status.current_step) {
       setCurrentStep(status.current_step);
+    }
+    if (status.started_at) {
+      const parsed = Date.parse(status.started_at);
+      if (!Number.isNaN(parsed)) {
+        setAnalysisStartedAtMs(parsed);
+        setElapsedSeconds(Math.max(0, Math.floor((Date.now() - parsed) / 1000)));
+      }
     }
   }, []);
 
@@ -282,6 +290,7 @@ export default function ReviewPage() {
     setError('');
     setActivityEvents([]);
     setElapsedSeconds(0);
+    setAnalysisStartedAtMs(null);
 
     let status = await fetchOrderStatus();
 
@@ -351,11 +360,15 @@ export default function ReviewPage() {
     if (!loading) return;
 
     const timer = window.setInterval(() => {
+      if (analysisStartedAtMs != null) {
+        setElapsedSeconds(Math.max(0, Math.floor((Date.now() - analysisStartedAtMs) / 1000)));
+        return;
+      }
       setElapsedSeconds((current) => current + 1);
     }, 1000);
 
     return () => window.clearInterval(timer);
-  }, [loading]);
+  }, [analysisStartedAtMs, loading]);
 
   const formatElapsed = useCallback((totalSeconds: number) => {
     const minutes = Math.floor(totalSeconds / 60);
@@ -368,7 +381,19 @@ export default function ReviewPage() {
   const activityItems = activityEvents
     .map((evt) => ({ seq: evt.seq, text: resolveEventMessage(evt) }))
     .filter((item): item is { seq: number; text: string } => Boolean(item.text))
+    .reduce<{ seq: number; text: string }[]>((acc, item) => {
+      if (acc[acc.length - 1]?.text === item.text) return acc;
+      acc.push(item);
+      return acc;
+    }, [])
     .slice(-5);
+
+  const decorateCurrentActivity = useCallback((text: string, isCurrent: boolean) => {
+    if (!isCurrent) return text;
+    const base = text.replace(/(?:\.\.\.|…)+$/, '').trimEnd();
+    const dots = '.'.repeat((elapsedSeconds % 3) + 1);
+    return `${base}${dots}`;
+  }, [elapsedSeconds]);
 
   return (
     <div className="page review-page">
@@ -431,7 +456,9 @@ export default function ReviewPage() {
                     className={`review-activity-item ${i === items.length - 1 ? 'is-current' : ''}`}
                   >
                     <div className="review-activity-dot" />
-                    <span className="review-activity-text">{item.text}</span>
+                    <span className="review-activity-text">
+                      {decorateCurrentActivity(item.text, i === items.length - 1)}
+                    </span>
                   </div>
                 ))}
               </div>

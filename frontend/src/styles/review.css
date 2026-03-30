@@ -92,15 +92,37 @@
   position: absolute;
   left: 3px;
   right: 3px;
-  top: 9px;
+  top: 7px;
   height: 2px;
   background: var(--brand);
   animation: shimmer 1.4s ease-in-out infinite;
 }
 
+.review-stage-icon.stage-parsing span::before {
+  content: "";
+  position: absolute;
+  left: 3px;
+  right: 3px;
+  top: 13px;
+  height: 2px;
+  background: rgba(31, 58, 95, 0.72);
+}
+
 .review-stage-icon.stage-analyzing span {
-  border-radius: 50% 50% 42% 42%;
+  border-radius: 50%;
   animation: pulseSoft 1.8s ease-in-out infinite;
+}
+
+.review-stage-icon.stage-analyzing span::after {
+  content: "";
+  position: absolute;
+  width: 8px;
+  height: 2px;
+  right: -5px;
+  bottom: 1px;
+  border-radius: 999px;
+  background: var(--brand);
+  transform: rotate(42deg);
 }
 
 .review-stage-icon.stage-generating span::after,
@@ -457,12 +479,12 @@
   .review-live-card {
     padding: 22px 16px;
     border-radius: 20px;
-    text-align: left;
+    text-align: center;
   }
 
   .review-stage-header {
-    justify-items: start;
-    text-align: left;
+    justify-items: center;
+    text-align: center;
     margin-bottom: 18px;
   }
 
