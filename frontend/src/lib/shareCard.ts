@@ -32,6 +32,7 @@ const BRAND_LIGHT = '#C8D6E8';
 const TEXT_WHITE = '#FFFFFF';
 const TEXT_DARK = '#1A1714';
 const TEXT_FAINT = '#9A9189';
+const TEXT_SOFT = '#5F5852';
 const SUCCESS = '#2D7B62';
 const DANGER = '#C0392B';
 const WARNING = '#D4881C';
@@ -269,13 +270,13 @@ export async function generateShareCard(options: ShareCardOptions): Promise<Blob
     ctx.fillStyle = barColor;
     ctx.fill();
 
-    ctx.font = `400 28px ${FONT}`;
-    ctx.fillStyle = TEXT_DARK;
-    ctx.textBaseline = 'top';
-    findingLines.forEach((line, i) => {
-      ctx.fillText(line, cardX + 56, cy + i * 42);
-    });
-    cy += findingLines.length * 42 + 34;
+  ctx.font = `400 26px ${FONT}`;
+  ctx.fillStyle = TEXT_DARK;
+  ctx.textBaseline = 'top';
+  findingLines.forEach((line, i) => {
+      ctx.fillText(line, cardX + 56, cy + i * 40);
+  });
+    cy += findingLines.length * 40 + 34;
   }
 
   // ── Incentive line inside card ──
@@ -304,44 +305,56 @@ export async function generateShareCard(options: ShareCardOptions): Promise<Blob
   ctx.lineWidth = 2;
   ctx.stroke();
 
-  const rewardX = panelX + 42;
-  const rewardY = panelY + 46;
-  const rewardW = 410;
-  const qrCardW = 290;
+  const rewardX = panelX + 48;
+  const rewardY = panelY + 44;
+  const rewardW = 430;
+  const qrCardW = 286;
   const qrCardX = panelX + panelW - qrCardW - 42;
-  const qrCardY = panelY + 38;
-  const qrSize = 190;
+  const qrCardY = panelY + 34;
+  const qrCardH = panelH - 68;
+  const qrSize = 182;
 
-  ctx.font = `800 86px ${FONT}`;
+  ctx.font = `800 82px ${FONT}`;
   ctx.fillStyle = '#B07A24';
   ctx.textBaseline = 'top';
   ctx.fillText(`¥${options.discountAmount}`, rewardX, rewardY);
 
-  ctx.font = `600 36px ${FONT}`;
+  ctx.font = `600 32px ${FONT}`;
   ctx.fillStyle = GOLD_TEXT;
-  const rewardLines = wrapText(ctx, options.labels.incentiveText, rewardW, 3);
+  const rewardLines = wrapText(ctx, options.labels.incentiveText, rewardW - 12, 2);
   rewardLines.forEach((line, index) => {
-    ctx.fillText(line, rewardX + 190, rewardY + 10 + index * 46);
+    ctx.fillText(line, rewardX, rewardY + 106 + index * 42);
   });
 
-  const codeY = rewardY + 160;
-  drawRoundedRect(ctx, rewardX, codeY, 220, 76, 38);
+  ctx.font = `500 18px ${FONT}`;
+  ctx.fillStyle = TEXT_FAINT;
+  ctx.fillText(options.labels.referralLabel, rewardX, rewardY + 206);
+
+  const codeY = rewardY + 238;
+  drawRoundedRect(ctx, rewardX, codeY, 236, 78, 39);
   ctx.fillStyle = 'rgba(255,255,255,0.9)';
   ctx.fill();
-  ctx.font = `700 42px ${FONT}`;
+  ctx.font = `700 40px ${FONT}`;
   ctx.fillStyle = '#B08A4A';
   ctx.textBaseline = 'middle';
-  ctx.fillText(options.referralCode, rewardX + 24, codeY + 38);
+  ctx.fillText(options.referralCode, rewardX + 28, codeY + 39);
 
-  ctx.font = `400 26px ${FONT}`;
-  ctx.fillStyle = TEXT_DARK;
+  ctx.font = `500 22px ${FONT}`;
+  ctx.fillStyle = TEXT_SOFT;
   ctx.textBaseline = 'top';
-  const summaryLines = wrapText(ctx, options.labels.clauseStats, rewardW, 3);
+  const summaryLines = wrapText(ctx, options.labels.clauseStats, rewardW - 10, 2);
   summaryLines.forEach((line, index) => {
-    ctx.fillText(line, rewardX, codeY + 110 + index * 36);
+    ctx.fillText(line, rewardX, codeY + 114 + index * 32);
   });
 
-  drawRoundedRect(ctx, qrCardX, qrCardY, qrCardW, panelH - 76, 24);
+  ctx.strokeStyle = 'rgba(176,138,74,0.14)';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(qrCardX - 26, panelY + 42);
+  ctx.lineTo(qrCardX - 26, panelY + panelH - 42);
+  ctx.stroke();
+
+  drawRoundedRect(ctx, qrCardX, qrCardY, qrCardW, qrCardH, 24);
   ctx.fillStyle = '#FFFFFF';
   ctx.fill();
   ctx.strokeStyle = 'rgba(31,58,95,0.08)';
@@ -349,18 +362,18 @@ export async function generateShareCard(options: ShareCardOptions): Promise<Blob
   ctx.stroke();
 
   const qrX = qrCardX + (qrCardW - qrSize) / 2;
-  const qrY = qrCardY + 34;
+  const qrY = qrCardY + 28;
   drawQrCode(ctx, options.shareUrl, qrX, qrY, qrSize);
 
   ctx.textAlign = 'center';
-  ctx.font = `600 26px ${FONT}`;
+  ctx.font = `600 24px ${FONT}`;
   ctx.fillStyle = TEXT_DARK;
   ctx.textBaseline = 'top';
-  ctx.fillText(options.siteUrl.replace(/^https?:\/\//, ''), qrCardX + qrCardW / 2, qrY + qrSize + 30);
+  ctx.fillText(options.siteUrl.replace(/^https?:\/\//, ''), qrCardX + qrCardW / 2, qrY + qrSize + 24);
 
-  ctx.font = `400 20px ${FONT}`;
+  ctx.font = `400 18px ${FONT}`;
   ctx.fillStyle = TEXT_FAINT;
-  ctx.fillText(`${options.labels.referralLabel}: ${options.referralCode}`, qrCardX + qrCardW / 2, qrY + qrSize + 70);
+  ctx.fillText(`${options.labels.referralLabel}: ${options.referralCode}`, qrCardX + qrCardW / 2, qrY + qrSize + 58);
 
   ctx.textAlign = 'left';
 
