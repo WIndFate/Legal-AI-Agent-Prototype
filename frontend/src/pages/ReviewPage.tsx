@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 
 interface AnalysisEventItem {
   seq: number;
-  event_type: 'node_start' | 'tool_call' | 'tool_result' | 'complete' | 'error';
+  event_type: 'node_start' | 'node_end' | 'tool_call' | 'tool_result' | 'complete' | 'error';
   step: 'parsing' | 'analyzing' | 'generating' | null;
   message: string | null;
   payload_json: Record<string, unknown> | null;
@@ -48,12 +48,16 @@ export default function ReviewPage() {
   const [reconnecting, setReconnecting] = useState(false);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [analysisStartedAtMs, setAnalysisStartedAtMs] = useState<number | null>(null);
+  const [totalClauses, setTotalClauses] = useState<number | null>(null);
+  const [analyzedClauses, setAnalyzedClauses] = useState(0);
+  const [transitioning, setTransitioning] = useState(false);
 
   const started = useRef(false);
   const reconnectAttempt = useRef(0);
   const streamAbortRef = useRef<AbortController | null>(null);
   const lastSeqRef = useRef(0);
   const completeTimeoutRef = useRef<number | null>(null);
+  const previousStepRef = useRef<AnalysisStep>('parsing');
 
   const pushActivityEvent = useCallback((evt: AnalysisEventItem) => {
     setActivityEvents((prev) => {
@@ -132,6 +136,12 @@ export default function ReviewPage() {
       return t('review.tool_processing_clause');
     }
 
+    if (evt.event_type === 'tool_result') {
+      const tool = typeof evt.payload_json?.tool === 'string' ? evt.payload_json.tool : null;
+      if (tool === 'analyze_clause_risk') return t('review.tool_clause_analyzed');
+      if (tool === 'generate_suggestion') return t('review.tool_suggestion_generated');
+    }
+
     if (evt.event_type === 'complete') {
       return t('review.complete_title');
     }
@@ -158,6 +168,9 @@ export default function ReviewPage() {
   }, []);
 
   const processEvent = useCallback((evt: AnalysisEventItem) => {
+    if (evt.seq <= lastSeqRef.current) {
+      return;
+    }
     lastSeqRef.current = Math.max(lastSeqRef.current, evt.seq);
     const eventMessage = resolveEventMessage(evt);
 
@@ -167,7 +180,23 @@ export default function ReviewPage() {
 
     switch (evt.event_type) {
       case 'node_start':
+        if (evt.payload_json?.node === 'analyze_risks') {
+          setAnalyzedClauses(0);
+        }
+        if (eventMessage) pushActivityEvent(evt);
+        break;
+      case 'node_end':
+        if (evt.payload_json?.node === 'parse_contract') {
+          const nextTotal = evt.payload_json?.total_clauses;
+          setTotalClauses(typeof nextTotal === 'number' ? nextTotal : null);
+        }
+        break;
       case 'tool_call':
+        if (evt.payload_json?.tool === 'analyze_clause_risk') {
+          setAnalyzedClauses((current) => current + 1);
+        }
+        if (eventMessage) pushActivityEvent(evt);
+        break;
       case 'tool_result':
         if (eventMessage) pushActivityEvent(evt);
         break;
@@ -291,6 +320,9 @@ export default function ReviewPage() {
     setActivityEvents([]);
     setElapsedSeconds(0);
     setAnalysisStartedAtMs(null);
+    setTotalClauses(null);
+    setAnalyzedClauses(0);
+    previousStepRef.current = 'parsing';
 
     let status = await fetchOrderStatus();
 
@@ -370,6 +402,19 @@ export default function ReviewPage() {
     return () => window.clearInterval(timer);
   }, [analysisStartedAtMs, loading]);
 
+  useEffect(() => {
+    if (previousStepRef.current === currentStep) {
+      return;
+    }
+    previousStepRef.current = currentStep;
+    setTransitioning(true);
+    const timeout = window.setTimeout(() => {
+      setTransitioning(false);
+    }, 400);
+
+    return () => window.clearTimeout(timeout);
+  }, [currentStep]);
+
   const formatElapsed = useCallback((totalSeconds: number) => {
     const minutes = Math.floor(totalSeconds / 60);
     const seconds = totalSeconds % 60;
@@ -386,7 +431,7 @@ export default function ReviewPage() {
       acc.push(item);
       return acc;
     }, [])
-    .slice(-5);
+    .slice(-4);
 
   const decorateCurrentActivity = useCallback((text: string, isCurrent: boolean) => {
     if (!isCurrent) return text;
@@ -397,25 +442,25 @@ export default function ReviewPage() {
 
   return (
     <div className="page review-page">
-      {loading && (
+      {(loading || error) && (
         <div className="analyzing-section">
           <div className="review-live-card">
-            <div className="review-stage-header">
-              <div className={`review-stage-icon stage-${analysisStatus === 'completed' ? 'completed' : currentStep}`} aria-hidden="true">
+            <div className={`review-stage-header ${transitioning ? 'transitioning' : ''}`}>
+              <div className={`review-stage-icon stage-${error ? 'error' : analysisStatus === 'completed' ? 'completed' : currentStep}`} aria-hidden="true">
                 <span />
               </div>
               <h2 className="review-stage-title">
-                {analysisStatus === 'completed' ? t('review.complete_title') : currentPhase.title}
+                {error ? t('errors.review_failed') : analysisStatus === 'completed' ? t('review.complete_title') : currentPhase.title}
               </h2>
-              <p className="review-stage-desc">{currentPhase.desc}</p>
+              <p className="review-stage-desc">{error || currentPhase.desc}</p>
             </div>
 
             <div className="review-progress">
               <div className="review-progress-track">
                 {STEP_DEFS.map((step, idx) => {
-                  let stepStatus: 'done' | 'active' | 'pending' = 'pending';
+                  let stepStatus: 'done' | 'active' | 'pending' | 'error' = 'pending';
                   if (analysisStatus === 'completed' || idx < currentStepIdx) stepStatus = 'done';
-                  else if (idx === currentStepIdx) stepStatus = 'active';
+                  else if (idx === currentStepIdx) stepStatus = error ? 'error' : 'active';
 
                   return (
                     <div key={step.key} className={`review-progress-segment seg-${stepStatus}`}>
@@ -430,7 +475,7 @@ export default function ReviewPage() {
                   if (analysisStatus === 'completed' || idx < currentStepIdx) stepStatus = 'done';
                   else if (idx === currentStepIdx) stepStatus = 'active';
 
-                  const labelKey = `review.step_${step.key}` as const;
+                  const labelKey = `review.step_${step.key}_short` as const;
                   return (
                     <span key={step.key} className={`review-progress-label lbl-${stepStatus}`}>
                       {t(labelKey)}
@@ -438,57 +483,64 @@ export default function ReviewPage() {
                   );
                 })}
               </div>
+              {currentStep === 'analyzing' && totalClauses != null && (
+                <div className="review-clause-progress">
+                  {t('review.clause_progress', { current: Math.min(analyzedClauses, totalClauses), total: totalClauses })}
+                </div>
+              )}
             </div>
 
-            {reconnecting && (
+            {!error && reconnecting && (
               <div className="reconnecting-banner">
                 <div className="spinner spinner-small" />
                 <span>{t('review.reconnecting')}</span>
               </div>
             )}
 
-            <div className="review-activity">
-              <div className="review-activity-line" aria-hidden="true" />
-              <div className="review-activity-list">
-                {(activityItems.length > 0 ? activityItems : [{ seq: -1, text: currentPhase.desc }]).map((item, i, items) => (
-                  <div
-                    key={`${item.seq}-${i}`}
-                    className={`review-activity-item ${i === items.length - 1 ? 'is-current' : ''}`}
-                  >
-                    <div className="review-activity-dot" />
-                    <span className="review-activity-text">
-                      {decorateCurrentActivity(item.text, i === items.length - 1)}
-                    </span>
-                  </div>
-                ))}
+            {!error && (
+              <div className="review-activity">
+                <div className="review-activity-line" aria-hidden="true" />
+                <div className="review-activity-list">
+                  {(activityItems.length > 0 ? activityItems : [{ seq: -1, text: currentPhase.desc }]).map((item, i, items) => (
+                    <div
+                      key={`${item.seq}-${i}`}
+                      className={`review-activity-item ${i === items.length - 1 ? 'is-current' : ''}`}
+                    >
+                      <div className="review-activity-dot" />
+                      <span className="review-activity-text">
+                        {decorateCurrentActivity(item.text, i === items.length - 1)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
             <div className="review-elapsed">
               <span>{t('review.elapsed', { time: formatElapsed(elapsedSeconds) })}</span>
             </div>
-          </div>
-        </div>
-      )}
 
-      {error && (
-        <div className="error-message">
-          <p>{error}</p>
-          {isNonContractError ? (
-            <button
-              className="btn-primary btn-retry"
-              onClick={() => navigate('/')}
-            >
-              {t('nav.home')}
-            </button>
-          ) : (
-            <button
-              className="btn-primary btn-retry"
-              onClick={handleManualRetry}
-            >
-              {t('review.retry')}
-            </button>
-          )}
+            {error && (
+              <div className="review-error-body">
+                <p>{error}</p>
+                {isNonContractError ? (
+                  <button
+                    className="btn-primary btn-retry"
+                    onClick={() => navigate('/')}
+                  >
+                    {t('nav.home')}
+                  </button>
+                ) : (
+                  <button
+                    className="btn-primary btn-retry"
+                    onClick={handleManualRetry}
+                  >
+                    {t('review.retry')}
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>

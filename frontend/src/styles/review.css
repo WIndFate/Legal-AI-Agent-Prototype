@@ -63,6 +63,12 @@
   gap: 12px;
   margin-bottom: 24px;
   text-align: center;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.review-stage-header.transitioning {
+  opacity: 0;
+  transform: translateY(6px);
 }
 
 .review-stage-icon {
@@ -142,6 +148,15 @@
 .review-stage-icon.stage-completed span {
   border-color: var(--success);
   transform: scale(1.08);
+}
+
+.review-stage-icon.stage-error {
+  background: rgba(168, 79, 68, 0.12);
+  border-color: rgba(168, 79, 68, 0.18);
+}
+
+.review-stage-icon.stage-error span {
+  border-color: var(--danger);
 }
 
 .review-stage-title {
@@ -242,6 +257,7 @@
   width: 100%;
   height: 100%;
   opacity: 0;
+  transition: opacity 0.4s ease, background 0.4s ease;
 }
 
 .seg-done .review-progress-fill {
@@ -255,10 +271,23 @@
   animation: shimmer 1.8s ease-in-out infinite;
 }
 
+.seg-error .review-progress-fill {
+  opacity: 1;
+  background: var(--danger);
+}
+
 .review-progress-labels {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;
+}
+
+.review-clause-progress {
+  color: var(--text-faint);
+  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-align: center;
 }
 
 .review-progress-label {
@@ -343,6 +372,25 @@
   font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
   font-size: 0.8rem;
   text-align: center;
+}
+
+.review-error-body {
+  margin-top: 20px;
+  padding: 18px;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(168, 79, 68, 0.14);
+  background: rgba(168, 79, 68, 0.04);
+  text-align: center;
+}
+
+.review-error-body p {
+  margin: 0;
+  color: var(--danger);
+  line-height: 1.7;
+}
+
+.review-error-body .btn-retry {
+  margin-top: 14px;
 }
 
 .payment-status-header {
@@ -508,6 +556,14 @@
     margin-bottom: 18px;
   }
 
+  .review-activity-list {
+    gap: 6px;
+  }
+
+  .review-activity-text {
+    font-size: 0.84rem;
+  }
+
   .loading-state,
   .success-state,
   .error-state {
@@ -548,5 +604,17 @@
   .success-state .btn-primary,
   .error-state .btn-primary {
     width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .seg-active .review-progress-fill {
+    opacity: 1;
+    animation: none;
+  }
+
+  .review-activity-item.is-current .review-activity-dot {
+    animation: none;
+    box-shadow: 0 0 0 4px rgba(31, 58, 95, 0.15);
   }
 }
