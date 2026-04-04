@@ -225,7 +225,9 @@ export default function ReportPage() {
   }
 
   if (expired) {
-    const homePath = referralCode ? `/?ref=${encodeURIComponent(referralCode)}` : '/';
+    const refParam = referralCode ? `?ref=${encodeURIComponent(referralCode)}` : '';
+    const uploadPath = `/${refParam}#upload-section`;
+    const homePath = `/${refParam}`;
     return (
       <div className="page report-page">
         <div className="soft-error-panel report-expired-panel">
@@ -248,7 +250,7 @@ export default function ReportPage() {
           <h2>{t('report.expired_title')}</h2>
           <p className="dialog-body">{t('report.expired_body')}</p>
           <div className="soft-error-actions">
-            <button className="btn-primary" onClick={() => navigate(homePath)}>
+            <button className="btn-primary" onClick={() => navigate(uploadPath)}>
               {t('report.expired_action')}
             </button>
           </div>
