@@ -28,7 +28,7 @@
 - 分析页活动流现已改为基于原始事件实时本地化，因此用户在分析过程中切换站点语言时，活动流会立即跟着刷新
 - 如果 parse 阶段判断上传内容并不是合同，分析现在会立刻终止，并在审查页展示明确提示，而不会继续跑完整风险分析
 - 报告页已支持按高/中/低风险筛选条款，顶部统计在桌面端压缩为更紧凑的单排结构，条款卡留白也进一步收紧
-- 分享面板已简化为最小动作集：内部自动拼上推荐码后的报告链接，对外只提供复制链接和系统分享，不再展示冗长说明或额外推荐信息块
+- 分享面板现已重排为更紧凑的成果分享结构：先展示优惠与报告预览，再提供保存卡片、复制链接和系统分享动作；带推荐码的报告链接仍在内部自动生成
 - 前端已加入路由级懒加载和延迟分析初始化，降低首屏 bundle 压力
 - 仅当 `APP_ENV=development` 且 `KOMOJU_SECRET_KEY` 为空时，本地开发可走自动支付
 - 部署配置已就绪：`fly.toml`（NRT 东京区域，强制 HTTPS）+ `vercel.json`（API 代理 + 安全头）
@@ -190,7 +190,7 @@ docker compose up -d backend postgres redis
 - 首页在生成报价后会自动滚动到支付区域，并对支付卡片做短暂高亮，避免用户点击“开始分析”后误以为页面没有反应。
 - 现在新增 `/lookup` 结果查询页，用户输入订单号即可重新进入付款状态页、分析页或最终报告页。
 - 支付成功和分析完成后，前端会弹出订单提醒框，引导用户截图或复制订单号。
-- 报告页分享按钮现在会先打开重构后的自定义分享面板：内部自动生成带推荐码的报告链接，并以标题区、奖励区、链接区、预览区的顺序组织内容。
+- 报告页分享按钮现在会先打开重构后的自定义分享面板：内部自动生成带推荐码的报告链接，并以奖励区、风险摘要、预览卡和紧凑动作区来组织内容。
 - 推荐链接现在会以 `?ref=` 的形式回到首页，并自动带入支付表单中的推荐码。
 - 查询页和报告页现在会更明确地区分订单号格式错误、弱网、离线和可重试失败状态。
 - 分析流程现在通过统一状态快照接口、可回放历史事件和增量事件流驱动，而不再由单个 SSE POST 请求直接启动执行。
@@ -216,7 +216,7 @@ docker compose up -d backend postgres redis
 - [`frontend/src/pages/ExamplesPage.tsx`](./frontend/src/pages/ExamplesPage.tsx)：独立案例画廊 / 报告样张页
 - [`frontend/src/pages/LookupPage.tsx`](./frontend/src/pages/LookupPage.tsx)：订单号结果查询页
 - [`frontend/src/components/common/OrderReminderDialog.tsx`](./frontend/src/components/common/OrderReminderDialog.tsx)：订单号保存提醒弹层
-- [`frontend/src/components/common/ShareSheet.tsx`](./frontend/src/components/common/ShareSheet.tsx)：自定义分享面板（推荐链接、预览卡保存、分享动作）
+- [`frontend/src/components/common/ShareSheet.tsx`](./frontend/src/components/common/ShareSheet.tsx)：自定义分享面板（推荐链接、紧凑预览卡、保存/复制/系统分享动作）
 - [`tests/`](./tests/)：全部 7 个 API 路由的集成测试 + 单元测试
 - [`SPEC.md`](./SPEC.md)：详细进度、待办和风险
 - [`DESIGN.md`](./DESIGN.md)：产品设计和商业定位

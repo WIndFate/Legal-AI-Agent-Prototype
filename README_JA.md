@@ -28,7 +28,7 @@
 - review の活動フィードは生イベントから都度ローカライズされるため、分析途中でサイト言語を切り替えても、その場で表示言語が追従します
 - parse 段階でアップロード内容が契約書ではないと判断された場合、分析は即座に停止し、review ページに専用メッセージを表示してホームへ戻せるようになりました
 - report ページは高/中/低リスクで条項を絞り込めるようになり、デスクトップでは統計サマリーも 1 行でより密に表示されます
-- 共有パネルは最小構成に整理され、内部で紹介コード付きレポート URL を組み立てたうえで、外向けにはリンクコピーと端末共有だけを見せます
+- 共有パネルはより凝縮した成果共有レイアウトに再編され、報酬要約とレポートプレビューを先に見せたうえで、紹介コード付き URL を内部生成しつつ保存 / コピー / 端末共有をまとめて提示します
 - ルート単位の遅延読み込みと分析 SDK の遅延初期化により、初期フロントエンド bundle を軽量化
 - `APP_ENV=development` かつ `KOMOJU_SECRET_KEY` 未設定の場合のみ、ローカル開発では自動的に支払い済み扱いになります
 - デプロイ設定済み: `fly.toml`（NRT リージョン、HTTPS 強制）+ `vercel.json`（API プロキシ + セキュリティヘッダー）
@@ -175,7 +175,7 @@ docker compose up -d backend postgres redis
 - フロントエンドはルート単位で lazy load され、分析系 SDK も非同期初期化されるため、observability 依存が初期 main chunk を膨らませません。
 - `frontend/index.html` には静的な OG / Twitter メタデータが入り、`frontend/public/og-image.svg` が軽量なブランド共有画像として使われます。
 - hash を伴わない画面遷移ではフロントエンドが自動で先頭へスクロールし、前ページのスクロール位置を引き継がないようにしています。
-- フロントエンドには `RevealSection`、`OrderReminderDialog`、`ShareSheet` の共通 UX コンポーネントが追加され、スクロール演出、注文番号保存の促し、専用共有パネルを実装しています。共有パネルは内部で紹介コード付き URL を組み立てつつ、見た目も「成果を共有する画面」として再設計され、報酬要約・リンク面・保存可能なプレビューカードを備えています。
+- フロントエンドには `RevealSection`、`OrderReminderDialog`、`ShareSheet` の共通 UX コンポーネントが追加され、スクロール演出、注文番号保存の促し、専用共有パネルを実装しています。共有パネルは内部で紹介コード付き URL を組み立てつつ、見た目も「成果を共有する画面」として再設計され、報酬要約・リスク概要・密度を上げたプレビューカード・保存 / コピー / 共有のアクション列を備えています。
 - `frontend/src/lib/fetchWithRetry.ts` で、重要ページの API 取得に対するタイムアウト付き軽量リトライを共通化しています。
 - `/api/report/{order_id}` は Redis キャッシュ命中時と PostgreSQL fallback 時で同じ payload 形を返すように統一されています。
 - `analyze_clause_risk` ツールが内部で直接 RAG 検索を行うため、独立した retrieval node はありません。
@@ -190,7 +190,7 @@ docker compose up -d backend postgres redis
 - 見積もり生成後、ホームページは自動で支払いパネルまでスクロールし、短時間ハイライトして次の導線を見失いにくくしています。
 - `/lookup` 結果照会ページが追加され、注文番号から支払い状態ページ・分析中ページ・完成レポートを再オープンできます。
 - 支払い完了時と分析完了時には、注文番号をスクリーンショット保存またはコピーするよう促すダイアログを表示します。
-- レポート共有は直接 Web Share API を呼ぶのではなく、紹介コード付きレポート URL を内部で生成したうえで、価値説明・報酬要約・リンク面・プレビューカードを備えた専用共有パネルを先に開きます。
+- レポート共有は直接 Web Share API を呼ぶのではなく、紹介コード付きレポート URL を内部で生成したうえで、報酬要約・リスク概要・プレビューカード・コンパクトなアクション列を備えた専用共有パネルを先に開きます。
 - 紹介リンクは `?ref=` 付きでホームに戻り、次のユーザーの支払いフォームへ紹介コードを自動入力します。
 - 結果照会ページとレポートページは、注文番号形式エラー、弱い回線、オフライン、再試行可能な失敗状態をより明確に表示します。
 - 分析フローは、単一の SSE POST リクエストで実行を開始するのではなく、状態スナップショット、再生可能な履歴イベント、増分イベントストリームで駆動されます。
@@ -216,7 +216,7 @@ docker compose up -d backend postgres redis
 - [`frontend/src/pages/ExamplesPage.tsx`](./frontend/src/pages/ExamplesPage.tsx): 独立した事例ギャラリー / レポート見本ページ
 - [`frontend/src/pages/LookupPage.tsx`](./frontend/src/pages/LookupPage.tsx): 注文番号ベースの結果照会ページ
 - [`frontend/src/components/common/OrderReminderDialog.tsx`](./frontend/src/components/common/OrderReminderDialog.tsx): 注文番号保存を促すダイアログ
-- [`frontend/src/components/common/ShareSheet.tsx`](./frontend/src/components/common/ShareSheet.tsx): 専用共有パネル（紹介リンク生成、プレビューカード保存、共有導線を含む）
+- [`frontend/src/components/common/ShareSheet.tsx`](./frontend/src/components/common/ShareSheet.tsx): 専用共有パネル（紹介リンク生成、密度を上げたプレビューカード、保存 / コピー / 共有導線）
 - [`tests/`](./tests/): 全 7 API ルーターの統合テスト + ユニットテスト
 - [`SPEC.md`](./SPEC.md): 詳細な進捗、未完了項目、リスク
 - [`DESIGN.md`](./DESIGN.md): プロダクト設計とビジネス方針
