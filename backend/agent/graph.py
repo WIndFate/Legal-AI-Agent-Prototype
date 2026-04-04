@@ -81,6 +81,17 @@ async def run_review_stream(contract_text: str, target_language: str = "ja"):
             clause_hint = args.get("clause_text", "")[:30]
             yield {"type": "tool_call", "tool": name, "clause": clause_hint}
 
+        # Parse complete → emit clause count for frontend progress
+        elif kind == "on_chain_end" and name == "parse_contract":
+            output = event["data"].get("output", {})
+            clauses = output.get("clauses", [])
+            yield {"type": "node_end", "node": "parse_contract", "total_clauses": len(clauses)}
+
+        # Tool result → surface compact completion events to the frontend
+        elif kind == "on_tool_end" and name in ("analyze_clause_risk", "generate_suggestion"):
+            output = event["data"].get("output", "")
+            yield {"type": "tool_result", "tool": name, "result_preview": str(output)[:80]}
+
         # Graph end → send final report
         elif kind == "on_chain_end" and name == "LangGraph":
             output = event["data"].get("output", {})
