@@ -137,7 +137,7 @@ export default function ShareSheet({ open, onClose, shareUrl, orderId, reportSum
               medium: reportSummary.mediumCount,
               low: reportSummary.lowCount,
             }),
-            incentiveText: t('share.incentive_banner', { amount: referralData.discount_jpy }),
+            incentiveText: t('share.incentive_banner', { amount: referralData.discount_jpy ?? 100 }),
             referralLabel: t('share.referral_code_label'),
           },
         });
@@ -160,16 +160,6 @@ export default function ShareSheet({ open, onClose, shareUrl, orderId, reportSum
   }, [finalShareUrl, open, reportSummary, referralData, t]);
 
   if (!open) return null;
-
-  const discountAmount = referralData?.discount_jpy ?? 100;
-  const riskSummaryText = reportSummary
-    ? t('share.card_clause_stats', {
-        total: reportSummary.totalClauses,
-        high: reportSummary.highCount,
-        medium: reportSummary.mediumCount,
-        low: reportSummary.lowCount,
-      })
-    : null;
 
   const saveCard = async () => {
     if (!cardBlobRef.current) return;
@@ -231,14 +221,11 @@ export default function ShareSheet({ open, onClose, shareUrl, orderId, reportSum
         aria-labelledby="share-dialog-title"
         onClick={(event) => event.stopPropagation()}
       >
+        {/* ── Compact header ── */}
         <div className="share-v2-header">
-          <div className="share-v2-heading">
-            <span className="share-v2-kicker">{t('share.preview_badge')}</span>
-            <h2 id="share-dialog-title" className="share-v2-title">
-              {t('share.title')}
-            </h2>
-            <p className="share-v2-desc">{t('share.description')}</p>
-          </div>
+          <h2 id="share-dialog-title" className="share-v2-title">
+            {t('share.kicker')}
+          </h2>
           <button type="button" className="share-v2-close" onClick={onClose} aria-label={t('share.close')}>
             <svg viewBox="0 0 20 20" focusable="false">
               <path d="M5 5l10 10M15 5L5 15" />
@@ -247,36 +234,9 @@ export default function ShareSheet({ open, onClose, shareUrl, orderId, reportSum
         </div>
 
         <div className="share-v2-body">
-          <div className="share-v2-summary">
-            <div className="share-v2-incentive">
-              <div className="share-v2-incentive-amount">¥{discountAmount}</div>
-              <div className="share-v2-incentive-text">
-                <span>{t('share.incentive_banner', { amount: discountAmount })}</span>
-                {referralLoading && !referralData ? (
-                  <small>{t('share.referral_loading')}</small>
-                ) : referralData ? (
-                  <span className="share-v2-incentive-code">{referralData.referral_code}</span>
-                ) : (
-                  <small>{t('share.referral_error')}</small>
-                )}
-              </div>
-            </div>
-            {reportSummary && (
-              <div className="share-v2-report-summary">
-                <span className="share-v2-report-label">{t('share.card_risk_label')}</span>
-                <div className="share-v2-report-main">
-                  <p className="share-v2-report-risk">{reportSummary.overallRisk}</p>
-                  {riskSummaryText && <p className="share-v2-report-stats">{riskSummaryText}</p>}
-                </div>
-              </div>
-            )}
-          </div>
-
+          {/* ── Card preview ── */}
           {reportSummary && (
             <div className="share-v2-card-section">
-              <div className="share-v2-card-copy">
-                <p className="share-v2-card-copy-note">{t('share.referral_reward', { amount: discountAmount })}</p>
-              </div>
               <div className="share-v2-card-frame">
                 {cardGenerating || referralLoading ? (
                   <div className="share-v2-card-loading">
@@ -288,16 +248,12 @@ export default function ShareSheet({ open, onClose, shareUrl, orderId, reportSum
                     alt={t('share.save_card_label')}
                     className="share-v2-card-img"
                   />
-                ) : (
-                  <div className="share-v2-card-fallback">
-                    <p>{t('share.preview_title')}</p>
-                    <span>{riskSummaryText || t('share.preview_desc')}</span>
-                  </div>
-                )}
+                ) : null}
               </div>
             </div>
           )}
 
+          {/* ── Actions ── */}
           <div className="share-v2-actions">
             <button
               type="button"

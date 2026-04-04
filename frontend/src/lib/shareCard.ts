@@ -220,19 +220,16 @@ export async function generateShareCard(options: ShareCardOptions): Promise<Blob
   ctx.fillStyle = 'rgba(255,255,255,0.06)';
   ctx.fill();
 
-  ctx.font = `600 15px ${FONT}`;
-  ctx.fillStyle = 'rgba(200,214,232,0.72)';
-  ctx.textBaseline = 'top';
-  ctx.textAlign = 'left';
-  ctx.fillText(options.labels.overallRiskLabel, W - PAD - headerStatsW + 24, headerStatsY + 20);
-
   const headerStatLines = splitClauseStatsText(options.labels.clauseStats);
   ctx.font = `700 24px ${FONT}`;
   ctx.fillStyle = 'rgba(255,255,255,0.92)';
   ctx.textBaseline = 'top';
   ctx.textAlign = 'left';
+  // Center stats vertically inside the box
+  const statsBlockH = headerStatLines.length * 34;
+  const statsStartY = headerStatsY + (headerStatsH - statsBlockH) / 2;
   headerStatLines.forEach((line, index) => {
-    ctx.fillText(line, W - PAD - headerStatsW + 24, headerStatsY + 48 + index * 34);
+    ctx.fillText(line, W - PAD - headerStatsW + 24, statsStartY + index * 34);
   });
   ctx.textAlign = 'left';
 

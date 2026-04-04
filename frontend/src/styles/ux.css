@@ -229,49 +229,19 @@
 
 .share-v2-header {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 24px 24px 0;
-}
-
-.share-v2-heading {
-  display: grid;
-  gap: 8px;
-  min-width: 0;
-}
-
-.share-v2-kicker {
-  display: inline-flex;
-  align-items: center;
-  width: fit-content;
-  padding: 6px 10px;
-  border-radius: 999px;
-  background: rgba(176, 138, 74, 0.12);
-  color: #8f6b2f;
-  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
-  font-size: 0.7rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  padding: 20px 24px 0;
 }
 
 .share-v2-title {
   font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
-  font-size: 1.35rem;
+  font-size: 1.1rem;
   font-weight: 700;
   color: var(--brand-ink);
-  line-height: 1.15;
+  line-height: 1;
   margin: 0;
-}
-
-.share-v2-desc {
-  margin: 0;
-  max-width: 32rem;
-  color: var(--text-soft);
-  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
-  font-size: 0.92rem;
-  line-height: 1.65;
 }
 
 .share-v2-close {
@@ -302,127 +272,12 @@
 
 .share-v2-body {
   display: grid;
-  gap: 16px;
-  padding: 18px 24px 24px;
-}
-
-.share-v2-summary {
-  display: grid;
-  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
-  gap: 12px;
-}
-
-.share-v2-incentive {
-  display: flex;
-  align-items: flex-start;
   gap: 14px;
-  padding: 14px 18px;
-  border-radius: 18px;
-  background: linear-gradient(135deg, #FDF6E8 0%, #FEF9F0 100%);
-  border: 1px solid rgba(176, 138, 74, 0.18);
-  min-height: 100%;
-}
-
-.share-v2-incentive-amount {
-  flex: 0 0 auto;
-  font-family: "Avenir Next", "Helvetica Neue", sans-serif;
-  font-size: 1.6rem;
-  font-weight: 800;
-  color: #A67B30;
-  line-height: 1;
-  letter-spacing: -0.02em;
-}
-
-.share-v2-incentive-text {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  min-width: 0;
-}
-
-.share-v2-incentive-text > span:first-child {
-  color: #7D5D2D;
-  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
-  font-size: 0.84rem;
-  font-weight: 600;
-  line-height: 1.4;
-}
-
-.share-v2-incentive-text small {
-  color: rgba(125, 93, 45, 0.8);
-  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
-  font-size: 0.75rem;
-  line-height: 1.5;
-}
-
-.share-v2-incentive-code {
-  width: fit-content;
-  padding: 6px 9px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.75);
-  font-family: "SF Mono", "Cascadia Code", "Roboto Mono", monospace;
-  font-size: 0.72rem;
-  font-weight: 600;
-  color: #B08A4A;
-  letter-spacing: 0.06em;
-}
-
-.share-v2-report-summary {
-  display: grid;
-  gap: 10px;
-  padding: 16px 18px;
-  border-radius: 18px;
-  border: 1px solid rgba(31, 58, 95, 0.1);
-  background: rgba(255, 255, 255, 0.72);
-}
-
-.share-v2-report-label {
-  color: var(--text-faint);
-  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.share-v2-report-main {
-  display: grid;
-  gap: 6px;
-}
-
-.share-v2-report-risk {
-  margin: 0;
-  color: var(--brand-ink);
-  font-family: "Iowan Old Style", "Georgia", "Times New Roman", serif;
-  font-size: 1.08rem;
-  font-weight: 700;
-  line-height: 1.2;
-}
-
-.share-v2-report-stats {
-  margin: 0;
-  color: var(--text-soft);
-  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
-  font-size: 0.84rem;
-  line-height: 1.55;
+  padding: 14px 20px 20px;
 }
 
 .share-v2-card-section {
   display: grid;
-  gap: 12px;
-}
-
-.share-v2-card-copy {
-  display: grid;
-  gap: 4px;
-}
-
-.share-v2-card-copy-note {
-  margin: 0;
-  color: var(--text-soft);
-  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
-  font-size: 0.84rem;
-  line-height: 1.6;
 }
 
 .share-v2-card-frame {
@@ -444,31 +299,6 @@
   align-items: center;
   justify-content: center;
   min-height: 240px;
-}
-
-.share-v2-card-fallback {
-  display: grid;
-  gap: 10px;
-  min-height: 240px;
-  padding: 24px;
-  align-content: center;
-  text-align: center;
-}
-
-.share-v2-card-fallback p {
-  margin: 0;
-  color: var(--brand-ink);
-  font-family: "Iowan Old Style", "Georgia", "Times New Roman", serif;
-  font-size: 1.2rem;
-  font-weight: 700;
-  line-height: 1.2;
-}
-
-.share-v2-card-fallback span {
-  color: var(--text-soft);
-  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
-  font-size: 0.88rem;
-  line-height: 1.65;
 }
 
 .share-v2-actions {
