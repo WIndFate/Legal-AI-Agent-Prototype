@@ -346,18 +346,18 @@
 }
 
 .share-v2-action-save {
-  background: rgba(255, 255, 255, 0.94);
-}
-
-.share-v2-action-copy {
   background: linear-gradient(135deg, rgba(31, 58, 95, 0.96), rgba(53, 85, 124, 0.96));
   color: #fff;
   border-color: transparent;
 }
 
-.share-v2-action-copy:hover {
+.share-v2-action-save:hover:not(:disabled) {
   background: linear-gradient(135deg, rgba(31, 58, 95, 1), rgba(53, 85, 124, 1));
   border-color: transparent;
+}
+
+.share-v2-action-copy {
+  background: rgba(255, 255, 255, 0.85);
 }
 
 .share-v2-action-btn.is-copied {

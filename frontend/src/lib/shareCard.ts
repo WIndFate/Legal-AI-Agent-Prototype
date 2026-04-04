@@ -32,7 +32,6 @@ const BRAND_LIGHT = '#C8D6E8';
 const TEXT_WHITE = '#FFFFFF';
 const TEXT_DARK = '#1A1714';
 const TEXT_FAINT = '#9A9189';
-const TEXT_SOFT = '#5F5852';
 const SUCCESS = '#2D7B62';
 const DANGER = '#C0392B';
 const WARNING = '#D4881C';
@@ -161,10 +160,11 @@ export async function generateShareCard(options: ShareCardOptions): Promise<Blob
   const ctx = canvas.getContext('2d')!;
 
   // ── Dark header zone ──
-  const headerH = 470;
-  const gradient = ctx.createLinearGradient(0, 0, 0, headerH);
-  gradient.addColorStop(0, '#1A2D48');
-  gradient.addColorStop(1, '#243B5C');
+  const headerH = 420;
+  const gradient = ctx.createLinearGradient(0, 0, 0, headerH + 40);
+  gradient.addColorStop(0, '#172842');
+  gradient.addColorStop(0.7, '#1F3A5C');
+  gradient.addColorStop(1, '#264570');
   ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, W, headerH);
 
@@ -172,97 +172,96 @@ export async function generateShareCard(options: ShareCardOptions): Promise<Blob
   ctx.fillStyle = BG_BOTTOM;
   ctx.fillRect(0, headerH, W, H - headerH);
 
-  // Subtle pattern overlay on header
-  ctx.fillStyle = 'rgba(255,255,255,0.02)';
-  for (let i = 0; i < 6; i++) {
+  // Subtle decorative circles on header
+  ctx.fillStyle = 'rgba(255,255,255,0.015)';
+  for (let i = 0; i < 4; i++) {
     ctx.beginPath();
-    ctx.arc(W * 0.8 + i * 40, 120 + i * 30, 180 - i * 20, 0, Math.PI * 2);
+    ctx.arc(W * 0.85 - i * 20, 80 + i * 60, 200 - i * 30, 0, Math.PI * 2);
     ctx.fill();
   }
 
-  let y = PAD - 2;
+  let y = PAD;
 
   // ── Brand: shield + name ──
-  drawShieldIcon(ctx, PAD + 26, y + 26, 44);
-  ctx.font = `700 42px ${FONT}`;
+  drawShieldIcon(ctx, PAD + 24, y + 22, 40);
+  ctx.font = `700 38px ${FONT}`;
   ctx.fillStyle = TEXT_WHITE;
   ctx.textBaseline = 'middle';
-  ctx.fillText('ContractGuard', PAD + 64, y + 24);
+  ctx.fillText('ContractGuard', PAD + 60, y + 20);
 
-  ctx.font = `400 22px ${FONT}`;
+  ctx.font = `400 20px ${FONT}`;
   ctx.fillStyle = BRAND_LIGHT;
-  ctx.fillText(options.labels.brandSubtitle, PAD + 64, y + 62);
-  y += 108;
+  ctx.fillText(options.labels.brandSubtitle, PAD + 60, y + 54);
+  y += 96;
+
+  // ── Thin separator ──
+  ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(PAD, y);
+  ctx.lineTo(W - PAD, y);
+  ctx.stroke();
+  y += 32;
 
   // ── Risk level label ──
-  ctx.font = `500 26px ${FONT}`;
-  ctx.fillStyle = BRAND_LIGHT;
+  ctx.font = `500 22px ${FONT}`;
+  ctx.fillStyle = 'rgba(200,214,232,0.7)';
   ctx.textBaseline = 'top';
   ctx.fillText(options.labels.overallRiskLabel, PAD, y);
-  y += 38;
+  y += 36;
 
-  // ── Risk badge (large) ──
+  // ── Risk badge ──
   const color = riskColor(options.overallRisk);
   const badgeText = options.overallRisk;
-  ctx.font = `800 72px ${FONT}`;
-  const badgeW = ctx.measureText(badgeText).width + 72;
-  drawRoundedRect(ctx, PAD, y, badgeW, 96, 20);
+  ctx.font = `800 64px ${FONT}`;
+  const badgeW = ctx.measureText(badgeText).width + 60;
+  drawRoundedRect(ctx, PAD, y, badgeW, 86, 18);
   ctx.fillStyle = color;
   ctx.fill();
-  ctx.font = `800 72px ${FONT}`;
   ctx.fillStyle = TEXT_WHITE;
   ctx.textBaseline = 'middle';
-  ctx.fillText(badgeText, PAD + 36, y + 50);
-  const headerStatsW = 320;
-  const headerStatsH = 126;
-  const headerStatsY = y + 2;
-  drawRoundedRect(ctx, W - PAD - headerStatsW, headerStatsY, headerStatsW, headerStatsH, 22);
-  ctx.fillStyle = 'rgba(255,255,255,0.06)';
-  ctx.fill();
+  ctx.fillText(badgeText, PAD + 30, y + 45);
 
+  // ── Clause stats on the same line, right-aligned ──
   const headerStatLines = splitClauseStatsText(options.labels.clauseStats);
-  ctx.font = `700 24px ${FONT}`;
-  ctx.fillStyle = 'rgba(255,255,255,0.92)';
-  ctx.textBaseline = 'top';
-  ctx.textAlign = 'left';
-  // Center stats vertically inside the box
-  const statsBlockH = headerStatLines.length * 34;
-  const statsStartY = headerStatsY + (headerStatsH - statsBlockH) / 2;
+  ctx.font = `600 22px ${FONT}`;
+  ctx.fillStyle = 'rgba(255,255,255,0.8)';
+  ctx.textBaseline = 'middle';
+  ctx.textAlign = 'right';
   headerStatLines.forEach((line, index) => {
-    ctx.fillText(line, W - PAD - headerStatsW + 24, statsStartY + index * 34);
+    ctx.fillText(line, W - PAD, y + 28 + index * 30);
   });
   ctx.textAlign = 'left';
 
   // ── White content card overlapping header/body boundary ──
   const cardX = PAD;
-  const cardY = headerH - 48;
+  const cardY = headerH - 36;
   const cardW = CONTENT_W;
 
   // Measure finding height
-  ctx.font = `400 28px ${FONT}`;
+  ctx.font = `400 26px ${FONT}`;
   const findingLines = options.topFinding
-    ? wrapText(ctx, options.topFinding, cardW - 96, 4)
+    ? wrapText(ctx, options.topFinding, cardW - 80, 4)
     : [];
-  const findingBlockH = findingLines.length > 0 ? 72 + findingLines.length * 42 + 26 : 0;
-  const cardH = findingBlockH + 118;
+  const findingBlockH = findingLines.length > 0 ? findingLines.length * 38 + 24 : 0;
+  const cardH = findingBlockH + 56;
 
-  // Draw card
+  // Draw card shadow + fill
   ctx.save();
-  ctx.shadowColor = 'rgba(0,0,0,0.08)';
-  ctx.shadowBlur = 40;
-  ctx.shadowOffsetY = 8;
-  drawRoundedRect(ctx, cardX, cardY, cardW, cardH, 24);
+  ctx.shadowColor = 'rgba(0,0,0,0.06)';
+  ctx.shadowBlur = 30;
+  ctx.shadowOffsetY = 6;
+  drawRoundedRect(ctx, cardX, cardY, cardW, cardH, 20);
   ctx.fillStyle = '#FFFFFF';
   ctx.fill();
   ctx.restore();
 
-  let cy = cardY + 34;
-
   // ── Top finding quote ──
   if (findingLines.length > 0) {
+    const quoteY = cardY + 28;
     // Left accent bar
     const barColor = riskColor(options.overallRisk);
-    drawRoundedRect(ctx, cardX + 30, cy, 4, findingLines.length * 42 + 4, 2);
+    drawRoundedRect(ctx, cardX + 28, quoteY, 4, findingLines.length * 38, 2);
     ctx.fillStyle = barColor;
     ctx.fill();
 
@@ -270,102 +269,96 @@ export async function generateShareCard(options: ShareCardOptions): Promise<Blob
     ctx.fillStyle = TEXT_DARK;
     ctx.textBaseline = 'top';
     findingLines.forEach((line, i) => {
-      ctx.fillText(line, cardX + 56, cy + i * 40);
+      ctx.fillText(line, cardX + 48, quoteY + i * 38);
     });
-    cy += findingLines.length * 40 + 34;
   }
-
-  // ── Incentive line inside card ──
-  drawRoundedRect(ctx, cardX + 28, cy, cardW - 56, 68, 16);
-  ctx.fillStyle = 'rgba(250,241,222,0.7)';
-  ctx.fill();
-  ctx.strokeStyle = 'rgba(176,138,74,0.2)';
-  ctx.lineWidth = 1;
-  drawRoundedRect(ctx, cardX + 28, cy, cardW - 56, 68, 16);
-  ctx.stroke();
-
-  ctx.font = `600 24px ${FONT}`;
-  ctx.fillStyle = GOLD_TEXT;
-  ctx.textBaseline = 'middle';
-  ctx.fillText(options.labels.incentiveText, cardX + 56, cy + 34);
 
   // ── Lower info panel ──
   const panelX = PAD;
-  const panelY = cardY + cardH + 38;
+  const panelY = cardY + cardH + 30;
   const panelW = CONTENT_W;
   const panelH = H - panelY - PAD;
-  drawRoundedRect(ctx, panelX, panelY, panelW, panelH, 30);
-  ctx.fillStyle = 'rgba(255, 250, 243, 0.9)';
+  drawRoundedRect(ctx, panelX, panelY, panelW, panelH, 28);
+  ctx.fillStyle = 'rgba(255, 250, 243, 0.92)';
   ctx.fill();
-  ctx.strokeStyle = 'rgba(176,138,74,0.12)';
-  ctx.lineWidth = 2;
+  ctx.strokeStyle = 'rgba(176,138,74,0.1)';
+  ctx.lineWidth = 1.5;
+  drawRoundedRect(ctx, panelX, panelY, panelW, panelH, 28);
   ctx.stroke();
 
-  const rewardX = panelX + 48;
-  const rewardY = panelY + 44;
-  const rewardW = 430;
-  const qrCardW = 286;
-  const qrCardX = panelX + panelW - qrCardW - 42;
-  const qrCardY = panelY + 34;
-  const qrCardH = panelH - 68;
-  const qrSize = 182;
+  const rewardX = panelX + 44;
+  const rewardY = panelY + 40;
+  const qrCardW = 270;
+  const qrCardX = panelX + panelW - qrCardW - 38;
+  const qrCardY = panelY + 30;
+  const qrCardH = panelH - 60;
+  const qrSize = 170;
+  const rewardW = qrCardX - rewardX - 40;
 
-  ctx.font = `800 82px ${FONT}`;
+  // ¥ amount
+  ctx.font = `800 76px ${FONT}`;
   ctx.fillStyle = '#B07A24';
   ctx.textBaseline = 'top';
   ctx.fillText(`¥${options.discountAmount}`, rewardX, rewardY);
 
-  ctx.font = `600 32px ${FONT}`;
+  // Incentive text
+  ctx.font = `600 28px ${FONT}`;
   ctx.fillStyle = GOLD_TEXT;
-  const rewardLines = wrapText(ctx, options.labels.incentiveText, rewardW - 12, 2);
+  const rewardLines = wrapText(ctx, options.labels.incentiveText, rewardW, 2);
   rewardLines.forEach((line, index) => {
-    ctx.fillText(line, rewardX, rewardY + 106 + index * 42);
+    ctx.fillText(line, rewardX, rewardY + 100 + index * 38);
   });
 
-  ctx.font = `500 18px ${FONT}`;
+  // Referral code label
+  ctx.font = `500 17px ${FONT}`;
   ctx.fillStyle = TEXT_FAINT;
-  ctx.fillText(options.labels.referralLabel, rewardX, rewardY + 206);
+  ctx.fillText(options.labels.referralLabel, rewardX, rewardY + 196);
 
-  const codeY = rewardY + 238;
-  drawRoundedRect(ctx, rewardX, codeY, 236, 78, 39);
-  ctx.fillStyle = 'rgba(255,255,255,0.9)';
+  // Referral code pill
+  const codeY = rewardY + 226;
+  ctx.font = `700 36px ${FONT}`;
+  const codeW = ctx.measureText(options.referralCode).width + 48;
+  drawRoundedRect(ctx, rewardX, codeY, codeW, 66, 33);
+  ctx.fillStyle = 'rgba(255,255,255,0.88)';
   ctx.fill();
-  ctx.font = `700 40px ${FONT}`;
+  ctx.strokeStyle = 'rgba(176,138,74,0.15)';
+  ctx.lineWidth = 1;
+  drawRoundedRect(ctx, rewardX, codeY, codeW, 66, 33);
+  ctx.stroke();
   ctx.fillStyle = '#B08A4A';
   ctx.textBaseline = 'middle';
-  ctx.fillText(options.referralCode, rewardX + 28, codeY + 39);
+  ctx.fillText(options.referralCode, rewardX + 24, codeY + 34);
 
-  ctx.font = `500 22px ${FONT}`;
-  ctx.fillStyle = TEXT_SOFT;
-  ctx.textBaseline = 'top';
-
-  ctx.strokeStyle = 'rgba(176,138,74,0.14)';
-  ctx.lineWidth = 2;
+  // Vertical divider
+  ctx.strokeStyle = 'rgba(176,138,74,0.12)';
+  ctx.lineWidth = 1.5;
   ctx.beginPath();
-  ctx.moveTo(qrCardX - 26, panelY + 42);
-  ctx.lineTo(qrCardX - 26, panelY + panelH - 42);
+  ctx.moveTo(qrCardX - 22, panelY + 36);
+  ctx.lineTo(qrCardX - 22, panelY + panelH - 36);
   ctx.stroke();
 
-  drawRoundedRect(ctx, qrCardX, qrCardY, qrCardW, qrCardH, 24);
+  // QR code card
+  drawRoundedRect(ctx, qrCardX, qrCardY, qrCardW, qrCardH, 22);
   ctx.fillStyle = '#FFFFFF';
   ctx.fill();
-  ctx.strokeStyle = 'rgba(31,58,95,0.08)';
-  ctx.lineWidth = 2;
+  ctx.strokeStyle = 'rgba(31,58,95,0.06)';
+  ctx.lineWidth = 1;
+  drawRoundedRect(ctx, qrCardX, qrCardY, qrCardW, qrCardH, 22);
   ctx.stroke();
 
   const qrX = qrCardX + (qrCardW - qrSize) / 2;
-  const qrY = qrCardY + 28;
+  const qrY = qrCardY + 26;
   drawQrCode(ctx, options.shareUrl, qrX, qrY, qrSize);
 
   ctx.textAlign = 'center';
-  ctx.font = `600 24px ${FONT}`;
+  ctx.font = `600 22px ${FONT}`;
   ctx.fillStyle = TEXT_DARK;
   ctx.textBaseline = 'top';
-  ctx.fillText(options.siteUrl.replace(/^https?:\/\//, ''), qrCardX + qrCardW / 2, qrY + qrSize + 24);
+  ctx.fillText(options.siteUrl.replace(/^https?:\/\//, ''), qrCardX + qrCardW / 2, qrY + qrSize + 22);
 
-  ctx.font = `400 18px ${FONT}`;
+  ctx.font = `400 16px ${FONT}`;
   ctx.fillStyle = TEXT_FAINT;
-  ctx.fillText(`${options.labels.referralLabel}: ${options.referralCode}`, qrCardX + qrCardW / 2, qrY + qrSize + 58);
+  ctx.fillText(`${options.labels.referralLabel}: ${options.referralCode}`, qrCardX + qrCardW / 2, qrY + qrSize + 52);
 
   ctx.textAlign = 'left';
 
