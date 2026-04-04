@@ -1,20 +1,36 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
+import { generateShareCard } from '../../lib/shareCard';
+
+export interface ReportSummary {
+  overallRisk: string;
+  totalClauses: number;
+  highCount: number;
+  mediumCount: number;
+  lowCount: number;
+  topFinding: string;
+  targetLanguage: string;
+}
 
 interface ShareSheetProps {
   open: boolean;
   onClose: () => void;
   shareUrl: string;
   orderId: string;
+  reportSummary?: ReportSummary;
 }
 
-export default function ShareSheet({ open, onClose, shareUrl, orderId }: ShareSheetProps) {
+export default function ShareSheet({ open, onClose, shareUrl, orderId, reportSummary }: ShareSheetProps) {
   const { t } = useTranslation();
   const [copiedLink, setCopiedLink] = useState(false);
   const [referralLoading, setReferralLoading] = useState(false);
   const [referralData, setReferralData] = useState<{
     referral_code: string;
+    discount_jpy: number;
   } | null>(null);
+  const [cardGenerating, setCardGenerating] = useState(false);
+  const [cardPreviewUrl, setCardPreviewUrl] = useState<string | null>(null);
+  const cardBlobRef = useRef<Blob | null>(null);
 
   const supportsNativeShare = useMemo(() => typeof navigator !== 'undefined' && !!navigator.share, []);
 
@@ -47,7 +63,7 @@ export default function ShareSheet({ open, onClose, shareUrl, orderId }: ShareSh
           throw new Error(`Referral failed: ${res.status}`);
         }
         const data = await res.json();
-        const compact = { referral_code: data.referral_code };
+        const compact = { referral_code: data.referral_code, discount_jpy: data.discount_jpy ?? 100 };
         setReferralData(compact);
         sessionStorage.setItem(storageKey, JSON.stringify(compact));
       } catch {
@@ -60,7 +76,60 @@ export default function ShareSheet({ open, onClose, shareUrl, orderId }: ShareSh
     void loadReferral();
   }, [open, orderId]);
 
+  // Generate card preview when referral data + report summary are ready
+  useEffect(() => {
+    if (!open || !reportSummary || !referralData) return;
+
+    const buildCard = async () => {
+      setCardGenerating(true);
+      try {
+        const siteUrl = window.location.origin.includes('localhost')
+          ? 'https://contractguard.com'
+          : window.location.origin;
+
+        const blob = await generateShareCard({
+          overallRisk: reportSummary.overallRisk,
+          totalClauses: reportSummary.totalClauses,
+          highCount: reportSummary.highCount,
+          mediumCount: reportSummary.mediumCount,
+          lowCount: reportSummary.lowCount,
+          topFinding: reportSummary.topFinding,
+          referralCode: referralData.referral_code,
+          siteUrl,
+          labels: {
+            brandSubtitle: t('share.card_brand_subtitle'),
+            overallRiskLabel: t('share.card_risk_label'),
+            clauseStats: t('share.card_clause_stats', {
+              total: reportSummary.totalClauses,
+              high: reportSummary.highCount,
+              medium: reportSummary.mediumCount,
+              low: reportSummary.lowCount,
+            }),
+            incentiveText: t('share.incentive_banner', { amount: referralData.discount_jpy }),
+            referralLabel: t('share.referral_code_label'),
+          },
+        });
+        cardBlobRef.current = blob;
+        setCardPreviewUrl(URL.createObjectURL(blob));
+      } catch {
+        cardBlobRef.current = null;
+        setCardPreviewUrl(null);
+      } finally {
+        setCardGenerating(false);
+      }
+    };
+
+    void buildCard();
+
+    return () => {
+      if (cardPreviewUrl) URL.revokeObjectURL(cardPreviewUrl);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, reportSummary, referralData, t]);
+
   if (!open) return null;
+
+  const discountAmount = referralData?.discount_jpy ?? 100;
 
   const finalShareUrl = (() => {
     try {
@@ -74,11 +143,37 @@ export default function ShareSheet({ open, onClose, shareUrl, orderId }: ShareSh
     }
   })();
 
+  const saveCard = async () => {
+    if (!cardBlobRef.current) return;
+
+    const file = new File([cardBlobRef.current], 'contractguard-report.png', { type: 'image/png' });
+
+    // Try native share with file first (works on mobile)
+    if (navigator.share) {
+      try {
+        await navigator.share({ files: [file] });
+        return;
+      } catch {
+        // Fall through to download
+      }
+    }
+
+    // Download fallback
+    const url = URL.createObjectURL(cardBlobRef.current);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'contractguard-report.png';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  };
+
   const copyLink = async () => {
     try {
       await navigator.clipboard.writeText(finalShareUrl);
       setCopiedLink(true);
-      setTimeout(() => setCopiedLink(false), 1800);
+      setTimeout(() => setCopiedLink(false), 2000);
     } catch {
       setCopiedLink(false);
     }
@@ -86,11 +181,12 @@ export default function ShareSheet({ open, onClose, shareUrl, orderId }: ShareSh
 
   const triggerNativeShare = async () => {
     if (!navigator.share) return;
-
     try {
       await navigator.share({
-        title: t('report.title'),
-        text: t('report.share_text'),
+        title: 'ContractGuard',
+        text: reportSummary
+          ? t('share.card_text', { total: reportSummary.totalClauses, high: reportSummary.highCount })
+          : undefined,
         url: finalShareUrl,
       });
     } catch {
@@ -101,68 +197,96 @@ export default function ShareSheet({ open, onClose, shareUrl, orderId }: ShareSh
   return (
     <div className="dialog-backdrop" role="presentation" onClick={onClose}>
       <div
-        className="dialog-shell share-dialog share-dialog-compact"
+        className="dialog-shell share-dialog share-dialog-v2"
         role="dialog"
         aria-modal="true"
         aria-labelledby="share-dialog-title"
         onClick={(event) => event.stopPropagation()}
       >
-        <div className="share-dialog-header">
-          <h2 id="share-dialog-title" className="dialog-title share-dialog-title-compact">
-            {t('report.share')}
+        {/* ── Header ── */}
+        <div className="share-v2-header">
+          <h2 id="share-dialog-title" className="share-v2-title">
+            {t('share.kicker')}
           </h2>
-          <button type="button" className="dialog-close-btn" onClick={onClose} aria-label={t('share.close')}>
+          <button type="button" className="share-v2-close" onClick={onClose} aria-label={t('share.close')}>
             <svg viewBox="0 0 20 20" focusable="false">
               <path d="M5 5l10 10M15 5L5 15" />
             </svg>
           </button>
         </div>
 
-        <div className="share-inline-row">
-          <div className="share-url-block share-url-block-compact">
-            <span>{t('share.link_label')}</span>
-            <strong>{referralLoading ? t('share.copy_link') : finalShareUrl}</strong>
-          </div>
-          <div className="share-icon-actions">
-            <button
-              type="button"
-              className="share-icon-btn"
-              onClick={() => void copyLink()}
-              aria-label={copiedLink ? t('share.link_copied') : t('share.copy_link')}
-              title={copiedLink ? t('share.link_copied') : t('share.copy_link')}
-            >
-              <span className="share-icon-btn-glyph" aria-hidden="true">
-                {copiedLink ? (
-                  <svg viewBox="0 0 20 20" focusable="false">
-                    <path d="M4 10l4 4 8-8" />
-                  </svg>
-                ) : (
-                  <svg viewBox="0 0 20 20" focusable="false">
-                    <rect x="7" y="5" width="9" height="11" rx="2" />
-                    <rect x="4" y="2" width="9" height="11" rx="2" />
-                  </svg>
-                )}
-              </span>
-              <span>{copiedLink ? t('share.link_copied') : t('share.copy_link')}</span>
-            </button>
-            {supportsNativeShare && (
-              <button
-                type="button"
-                className="share-icon-btn"
-                onClick={() => void triggerNativeShare()}
-                aria-label={t('share.native_share')}
-                title={t('share.native_share')}
-              >
-                <span className="share-icon-btn-glyph" aria-hidden="true">
-                  <svg viewBox="0 0 20 20" focusable="false">
-                    <path d="M10 4v8M7 7l3-3 3 3" />
-                    <path d="M5 12v2a2 2 0 002 2h6a2 2 0 002-2v-2" />
-                  </svg>
-                </span>
-                <span>{t('share.native_share')}</span>
-              </button>
+        {/* ── Incentive ── */}
+        <div className="share-v2-incentive">
+          <div className="share-v2-incentive-amount">¥{discountAmount}</div>
+          <div className="share-v2-incentive-text">
+            <span>{t('share.incentive_banner', { amount: discountAmount })}</span>
+            {referralData && (
+              <span className="share-v2-incentive-code">{referralData.referral_code}</span>
             )}
           </div>
+        </div>
+
+        {/* ── Card Preview ── */}
+        {reportSummary && (
+          <div className="share-v2-card-section">
+            <div className="share-v2-card-frame">
+              {cardGenerating || referralLoading ? (
+                <div className="share-v2-card-loading">
+                  <div className="spinner spinner-small" />
+                </div>
+              ) : cardPreviewUrl ? (
+                <img
+                  src={cardPreviewUrl}
+                  alt={t('share.save_card_label')}
+                  className="share-v2-card-img"
+                />
+              ) : null}
+            </div>
+            <button
+              type="button"
+              className="share-v2-save-btn"
+              onClick={() => void saveCard()}
+              disabled={!cardBlobRef.current}
+            >
+              <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false">
+                <path d="M10 3v9m0 0l3.5-3.5M10 12L6.5 8.5" />
+                <path d="M4 14v1.5A1.5 1.5 0 005.5 17h9a1.5 1.5 0 001.5-1.5V14" />
+              </svg>
+              {t('share.save_card')}
+            </button>
+          </div>
+        )}
+
+        {/* ── Actions ── */}
+        <div className="share-v2-actions">
+          <button
+            type="button"
+            className={`share-v2-action-btn share-v2-action-copy${copiedLink ? ' is-copied' : ''}`}
+            onClick={() => void copyLink()}
+          >
+            {copiedLink ? (
+              <svg viewBox="0 0 20 20" focusable="false"><path d="M4 10l4 4 8-8" /></svg>
+            ) : (
+              <svg viewBox="0 0 20 20" focusable="false">
+                <path d="M13.5 6.5h1A1.5 1.5 0 0116 8v7a1.5 1.5 0 01-1.5 1.5h-7A1.5 1.5 0 016 15v-1" />
+                <rect x="4" y="3.5" width="9" height="10" rx="1.5" />
+              </svg>
+            )}
+            <span>{copiedLink ? t('share.link_copied') : t('share.copy_link')}</span>
+          </button>
+          {supportsNativeShare && (
+            <button
+              type="button"
+              className="share-v2-action-btn share-v2-action-native"
+              onClick={() => void triggerNativeShare()}
+            >
+              <svg viewBox="0 0 20 20" focusable="false">
+                <path d="M10 3v9M7 6l3-3 3 3" />
+                <path d="M4 12v3a2 2 0 002 2h8a2 2 0 002-2v-3" />
+              </svg>
+              <span>{t('share.native_share')}</span>
+            </button>
+          )}
         </div>
       </div>
     </div>
