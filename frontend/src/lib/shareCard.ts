@@ -201,41 +201,17 @@ export async function generateShareCard(options: ShareCardOptions): Promise<Blob
   ctx.fillStyle = TEXT_WHITE;
   ctx.textBaseline = 'middle';
   ctx.fillText(badgeText, PAD + 36, y + 50);
-  y += 118;
-
-  // ── Clause stats with colored dots ──
-  ctx.font = `500 28px ${FONT}`;
-  ctx.fillStyle = 'rgba(255,255,255,0.85)';
+  const headerStatsX = W - PAD - 360;
+  const headerStatsY = y + 10;
+  ctx.font = `700 26px ${FONT}`;
+  ctx.fillStyle = 'rgba(255,255,255,0.88)';
   ctx.textBaseline = 'top';
-  ctx.fillText(options.labels.clauseStats, PAD, y);
-  y += 46;
-
-  // Stat pills
-  const pillConfigs = [
-    { count: options.highCount, color: DANGER, bg: 'rgba(192,57,43,0.25)' },
-    { count: options.mediumCount, color: WARNING, bg: 'rgba(212,136,28,0.25)' },
-    { count: options.lowCount, color: SUCCESS, bg: 'rgba(45,123,98,0.25)' },
-  ];
-  let px = PAD;
-  for (const pill of pillConfigs) {
-    if (pill.count <= 0) continue;
-    const pillW = 72;
-    drawRoundedRect(ctx, px, y, pillW, 40, 20);
-    ctx.fillStyle = pill.bg;
-    ctx.fill();
-    ctx.fillStyle = pill.color;
-    ctx.font = `700 12px ${FONT}`;
-    ctx.textBaseline = 'middle';
-    // Circle dot
-    ctx.beginPath();
-    ctx.arc(px + 18, y + 20, 5, 0, Math.PI * 2);
-    ctx.fill();
-    // Count
-    ctx.font = `700 22px ${FONT}`;
-    ctx.fillText(String(pill.count), px + 30, y + 21);
-    px += pillW + 12;
-  }
-  // y is now at bottom of header zone — move into content zone
+  ctx.textAlign = 'right';
+  const headerStatLines = wrapText(ctx, options.labels.clauseStats, 360, 2);
+  headerStatLines.forEach((line, index) => {
+    ctx.fillText(line, W - PAD, headerStatsY + index * 34);
+  });
+  ctx.textAlign = 'left';
 
   // ── White content card overlapping header/body boundary ──
   const cardX = PAD;
@@ -270,12 +246,12 @@ export async function generateShareCard(options: ShareCardOptions): Promise<Blob
     ctx.fillStyle = barColor;
     ctx.fill();
 
-  ctx.font = `400 26px ${FONT}`;
-  ctx.fillStyle = TEXT_DARK;
-  ctx.textBaseline = 'top';
-  findingLines.forEach((line, i) => {
+    ctx.font = `400 26px ${FONT}`;
+    ctx.fillStyle = TEXT_DARK;
+    ctx.textBaseline = 'top';
+    findingLines.forEach((line, i) => {
       ctx.fillText(line, cardX + 56, cy + i * 40);
-  });
+    });
     cy += findingLines.length * 40 + 34;
   }
 
@@ -342,10 +318,6 @@ export async function generateShareCard(options: ShareCardOptions): Promise<Blob
   ctx.font = `500 22px ${FONT}`;
   ctx.fillStyle = TEXT_SOFT;
   ctx.textBaseline = 'top';
-  const summaryLines = wrapText(ctx, options.labels.clauseStats, rewardW - 10, 2);
-  summaryLines.forEach((line, index) => {
-    ctx.fillText(line, rewardX, codeY + 114 + index * 32);
-  });
 
   ctx.strokeStyle = 'rgba(176,138,74,0.14)';
   ctx.lineWidth = 2;
