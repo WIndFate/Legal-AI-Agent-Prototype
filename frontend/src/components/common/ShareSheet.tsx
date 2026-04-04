@@ -8,7 +8,6 @@ export interface ReportSummary {
   highCount: number;
   mediumCount: number;
   lowCount: number;
-  topFinding: string;
   targetLanguage: string;
 }
 
@@ -123,7 +122,6 @@ export default function ShareSheet({ open, onClose, shareUrl, orderId, reportSum
           highCount: reportSummary.highCount,
           mediumCount: reportSummary.mediumCount,
           lowCount: reportSummary.lowCount,
-          topFinding: reportSummary.topFinding,
           referralCode: referralData.referral_code,
           siteUrl,
           shareUrl: finalShareUrl,

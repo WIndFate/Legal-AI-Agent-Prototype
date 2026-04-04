@@ -6,7 +6,6 @@ export interface ShareCardOptions {
   highCount: number;
   mediumCount: number;
   lowCount: number;
-  topFinding: string;
   referralCode: string;
   siteUrl: string;
   shareUrl: string;
@@ -131,33 +130,25 @@ function drawQrCode(ctx: CanvasRenderingContext2D, url: string, cx: number, cy: 
 }
 
 export async function generateShareCard(options: ShareCardOptions): Promise<Blob> {
-  // ── Pre-measure text to calculate dynamic height ──
+  // ── Pre-measure ──
   const measureCanvas = document.createElement('canvas');
   measureCanvas.width = W;
   measureCanvas.height = 100;
   const mc = measureCanvas.getContext('2d')!;
 
-  mc.font = `400 26px ${FONT}`;
-  const findingLines = options.topFinding
-    ? wrapText(mc, options.topFinding, CONTENT_W - 72, 3)
-    : [];
-
   mc.font = `600 26px ${FONT}`;
   const incentiveLines = wrapText(mc, options.labels.incentiveText, 380, 2);
 
   // ── Calculate section heights ──
-  const headerH = 340;                                   // brand + risk + stats
-  const findingH = findingLines.length > 0
-    ? findingLines.length * 36 + 56                      // quote card
-    : 0;
+  const headerH = 380;     // brand + risk badge + stat blocks
   const qrSize = 160;
   const bottomH = Math.max(
-    44 + 76 + 16 + incentiveLines.length * 34 + 24 + 56, // left: ¥ + text + code
-    44 + qrSize + 70,                                     // right: QR + labels
+    44 + 76 + 16 + incentiveLines.length * 34 + 24 + 56,
+    44 + qrSize + 70,
   );
-  const H = headerH + findingH + 28 + bottomH + 24;
+  const H = headerH + 28 + bottomH + 24;
 
-  // ── Create real canvas ──
+  // ── Create canvas ──
   const canvas = document.createElement('canvas');
   canvas.width = W;
   canvas.height = H;
@@ -179,7 +170,7 @@ export async function generateShareCard(options: ShareCardOptions): Promise<Blob
   ctx.fill();
 
   // ── Brand row ──
-  let y = 52;
+  let y = 48;
   drawShieldIcon(ctx, PAD + 22, y + 20, 38);
   ctx.font = `700 36px ${FONT}`;
   ctx.fillStyle = TEXT_WHITE;
@@ -188,7 +179,7 @@ export async function generateShareCard(options: ShareCardOptions): Promise<Blob
   ctx.font = `400 19px ${FONT}`;
   ctx.fillStyle = BRAND_LIGHT;
   ctx.fillText(options.labels.brandSubtitle, PAD + 56, y + 50);
-  y += 86;
+  y += 82;
 
   // Thin line
   ctx.strokeStyle = 'rgba(255,255,255,0.06)';
@@ -197,15 +188,16 @@ export async function generateShareCard(options: ShareCardOptions): Promise<Blob
   ctx.moveTo(PAD, y);
   ctx.lineTo(W - PAD, y);
   ctx.stroke();
-  y += 28;
+  y += 24;
 
-  // ── Risk row: badge left, stats right ──
+  // ── Risk label ──
   ctx.font = `500 20px ${FONT}`;
-  ctx.fillStyle = 'rgba(200,214,232,0.6)';
+  ctx.fillStyle = 'rgba(200,214,232,0.55)';
   ctx.textBaseline = 'top';
   ctx.fillText(options.labels.overallRiskLabel, PAD, y);
   y += 30;
 
+  // ── Risk badge (large) ──
   const color = riskColor(options.overallRisk);
   ctx.font = `800 58px ${FONT}`;
   const badgeText = options.overallRisk;
@@ -217,44 +209,47 @@ export async function generateShareCard(options: ShareCardOptions): Promise<Blob
   ctx.fillStyle = TEXT_WHITE;
   ctx.textBaseline = 'middle';
   ctx.fillText(badgeText, PAD + 26, y + badgeH / 2 + 1);
+  y += badgeH + 20;
 
-  // Stats right-aligned, vertically centered with badge
-  ctx.font = `500 21px ${FONT}`;
-  ctx.fillStyle = 'rgba(255,255,255,0.75)';
-  ctx.textAlign = 'right';
-  ctx.textBaseline = 'middle';
-  ctx.fillText(options.labels.clauseStats, W - PAD, y + badgeH / 2);
-  ctx.textAlign = 'left';
-
-  // ── Finding quote card (overlapping dark/light boundary) ──
-  const cardY = headerH - 24;
-  if (findingLines.length > 0) {
-    const cardH = findingLines.length * 36 + 48;
-    ctx.save();
-    ctx.shadowColor = 'rgba(0,0,0,0.05)';
-    ctx.shadowBlur = 24;
-    ctx.shadowOffsetY = 4;
-    drawRoundedRect(ctx, PAD, cardY, CONTENT_W, cardH, 18);
-    ctx.fillStyle = '#FFFFFF';
+  // ── Risk stat blocks (colored number cards) ──
+  const statConfigs = [
+    { count: options.highCount, color: DANGER, bg: 'rgba(192,57,43,0.18)', label: 'High' },
+    { count: options.mediumCount, color: WARNING, bg: 'rgba(212,136,28,0.18)', label: 'Med' },
+    { count: options.lowCount, color: SUCCESS, bg: 'rgba(45,123,98,0.18)', label: 'Low' },
+  ];
+  const blockGap = 16;
+  const blockW = (CONTENT_W - blockGap * 2) / 3;
+  const blockH = 72;
+  let bx = PAD;
+  for (const stat of statConfigs) {
+    // Block background
+    drawRoundedRect(ctx, bx, y, blockW, blockH, 14);
+    ctx.fillStyle = stat.bg;
     ctx.fill();
-    ctx.restore();
-
-    // Accent bar
-    const barH = findingLines.length * 36 - 4;
-    drawRoundedRect(ctx, PAD + 24, cardY + 24, 4, barH, 2);
-    ctx.fillStyle = color;
-    ctx.fill();
-
-    ctx.font = `400 26px ${FONT}`;
-    ctx.fillStyle = TEXT_DARK;
-    ctx.textBaseline = 'top';
-    findingLines.forEach((line, i) => {
-      ctx.fillText(line, PAD + 44, cardY + 24 + i * 36);
-    });
+    // Large count number
+    ctx.font = `800 36px ${FONT}`;
+    ctx.fillStyle = stat.color;
+    ctx.textBaseline = 'middle';
+    ctx.textAlign = 'left';
+    ctx.fillText(String(stat.count), bx + 20, y + blockH / 2 - 1);
+    // Label
+    const numW = ctx.measureText(String(stat.count)).width;
+    ctx.font = `600 18px ${FONT}`;
+    ctx.fillStyle = 'rgba(255,255,255,0.55)';
+    ctx.fillText(stat.label, bx + 20 + numW + 10, y + blockH / 2);
+    // Total clause count on the rightmost block
+    if (stat === statConfigs[statConfigs.length - 1]) {
+      ctx.font = `500 17px ${FONT}`;
+      ctx.fillStyle = 'rgba(255,255,255,0.4)';
+      ctx.textAlign = 'right';
+      ctx.fillText(`/ ${options.totalClauses}`, PAD + CONTENT_W - 16, y + blockH / 2);
+      ctx.textAlign = 'left';
+    }
+    bx += blockW + blockGap;
   }
 
   // ── Bottom section: ¥ reward (left) | QR (right) ──
-  const btmY = cardY + (findingLines.length > 0 ? findingLines.length * 36 + 48 : 0) + 24;
+  const btmY = headerH + 20;
 
   // Left side: ¥ amount + text + code
   const leftX = PAD + 8;

@@ -292,17 +292,12 @@ export default function ReportPage() {
   const report = data.report;
 
   // Build summary for ShareSheet card generation
-  const topHighRisk = report.clause_analyses.find((c) => normalizeRiskLevel(c.risk_level) === 'high');
-  const topFinding = topHighRisk?.risk_reason
-    || report.clause_analyses.find((c) => normalizeRiskLevel(c.risk_level) === 'medium')?.risk_reason
-    || '';
   const reportSummary: ReportSummary = {
     overallRisk: report.overall_risk_level,
     totalClauses: report.total_clauses,
     highCount: report.high_risk_count,
     mediumCount: report.medium_risk_count,
     lowCount: report.low_risk_count,
-    topFinding,
     targetLanguage: data.language,
   };
 
