@@ -155,7 +155,7 @@ export async function generateShareCard(options: ShareCardOptions): Promise<Blob
     44 + 76 + 16 + incentiveLines.length * 34 + 24 + 56, // left: ¥ + text + code
     44 + qrSize + 70,                                     // right: QR + labels
   );
-  const H = headerH + findingH + 28 + bottomH + PAD;
+  const H = headerH + findingH + 28 + bottomH + 24;
 
   // ── Create real canvas ──
   const canvas = document.createElement('canvas');
