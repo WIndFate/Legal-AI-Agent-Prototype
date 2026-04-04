@@ -116,6 +116,9 @@
   display: grid;
   place-items: center;
   padding: 20px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  touch-action: none;
   background: rgba(20, 25, 34, 0.42);
   backdrop-filter: blur(10px);
 }
@@ -125,6 +128,9 @@
   width: min(100%, 560px);
   max-height: min(88vh, 780px);
   overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
   padding: 28px;
   border-radius: 28px;
   border: 1px solid rgba(255, 255, 255, 0.34);
@@ -212,8 +218,10 @@
 
 .share-dialog-v2 {
   width: min(100%, 560px);
+  max-height: min(88vh, 780px);
   padding: 0;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
   background:
     radial-gradient(circle at top left, rgba(176, 138, 74, 0.16), transparent 36%),
     linear-gradient(180deg, rgba(255, 252, 247, 0.98) 0%, rgba(246, 249, 252, 0.98) 100%);
