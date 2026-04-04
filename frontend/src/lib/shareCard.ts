@@ -9,6 +9,8 @@ export interface ShareCardOptions {
   topFinding: string;
   referralCode: string;
   siteUrl: string;
+  shareUrl: string;
+  discountAmount: number;
   // Translated strings (caller resolves i18n)
   labels: {
     brandSubtitle: string;
@@ -145,8 +147,8 @@ export async function generateShareCard(options: ShareCardOptions): Promise<Blob
   canvas.height = H;
   const ctx = canvas.getContext('2d')!;
 
-  // ── Dark header zone (top 38%) ──
-  const headerH = 520;
+  // ── Dark header zone ──
+  const headerH = 470;
   const gradient = ctx.createLinearGradient(0, 0, 0, headerH);
   gradient.addColorStop(0, '#1A2D48');
   gradient.addColorStop(1, '#243B5C');
@@ -165,7 +167,7 @@ export async function generateShareCard(options: ShareCardOptions): Promise<Blob
     ctx.fill();
   }
 
-  let y = PAD;
+  let y = PAD - 2;
 
   // ── Brand: shield + name ──
   drawShieldIcon(ctx, PAD + 26, y + 26, 44);
@@ -177,35 +179,35 @@ export async function generateShareCard(options: ShareCardOptions): Promise<Blob
   ctx.font = `400 22px ${FONT}`;
   ctx.fillStyle = BRAND_LIGHT;
   ctx.fillText(options.labels.brandSubtitle, PAD + 64, y + 62);
-  y += 120;
+  y += 108;
 
   // ── Risk level label ──
   ctx.font = `500 26px ${FONT}`;
   ctx.fillStyle = BRAND_LIGHT;
   ctx.textBaseline = 'top';
   ctx.fillText(options.labels.overallRiskLabel, PAD, y);
-  y += 48;
+  y += 38;
 
   // ── Risk badge (large) ──
   const color = riskColor(options.overallRisk);
   const badgeText = options.overallRisk;
   ctx.font = `800 72px ${FONT}`;
   const badgeW = ctx.measureText(badgeText).width + 72;
-  drawRoundedRect(ctx, PAD, y, badgeW, 100, 20);
+  drawRoundedRect(ctx, PAD, y, badgeW, 96, 20);
   ctx.fillStyle = color;
   ctx.fill();
   ctx.font = `800 72px ${FONT}`;
   ctx.fillStyle = TEXT_WHITE;
   ctx.textBaseline = 'middle';
-  ctx.fillText(badgeText, PAD + 36, y + 52);
-  y += 130;
+  ctx.fillText(badgeText, PAD + 36, y + 50);
+  y += 118;
 
   // ── Clause stats with colored dots ──
   ctx.font = `500 28px ${FONT}`;
   ctx.fillStyle = 'rgba(255,255,255,0.85)';
   ctx.textBaseline = 'top';
   ctx.fillText(options.labels.clauseStats, PAD, y);
-  y += 52;
+  y += 46;
 
   // Stat pills
   const pillConfigs = [
@@ -236,16 +238,16 @@ export async function generateShareCard(options: ShareCardOptions): Promise<Blob
 
   // ── White content card overlapping header/body boundary ──
   const cardX = PAD;
-  const cardY = headerH - 20;
+  const cardY = headerH - 48;
   const cardW = CONTENT_W;
 
   // Measure finding height
   ctx.font = `400 28px ${FONT}`;
   const findingLines = options.topFinding
-    ? wrapText(ctx, options.topFinding, cardW - 80, 3)
+    ? wrapText(ctx, options.topFinding, cardW - 96, 4)
     : [];
-  const findingBlockH = findingLines.length > 0 ? 56 + findingLines.length * 42 + 24 : 0;
-  const cardH = findingBlockH + 130; // incentive + padding
+  const findingBlockH = findingLines.length > 0 ? 72 + findingLines.length * 42 + 26 : 0;
+  const cardH = findingBlockH + 118;
 
   // Draw card
   ctx.save();
@@ -257,13 +259,13 @@ export async function generateShareCard(options: ShareCardOptions): Promise<Blob
   ctx.fill();
   ctx.restore();
 
-  let cy = cardY + 36;
+  let cy = cardY + 34;
 
   // ── Top finding quote ──
   if (findingLines.length > 0) {
     // Left accent bar
     const barColor = riskColor(options.overallRisk);
-    drawRoundedRect(ctx, cardX + 28, cy, 4, findingLines.length * 42 + 4, 2);
+    drawRoundedRect(ctx, cardX + 30, cy, 4, findingLines.length * 42 + 4, 2);
     ctx.fillStyle = barColor;
     ctx.fill();
 
@@ -271,42 +273,94 @@ export async function generateShareCard(options: ShareCardOptions): Promise<Blob
     ctx.fillStyle = TEXT_DARK;
     ctx.textBaseline = 'top';
     findingLines.forEach((line, i) => {
-      ctx.fillText(line, cardX + 48, cy + i * 42);
+      ctx.fillText(line, cardX + 56, cy + i * 42);
     });
-    cy += findingLines.length * 42 + 32;
+    cy += findingLines.length * 42 + 34;
   }
 
   // ── Incentive line inside card ──
-  drawRoundedRect(ctx, cardX + 28, cy, cardW - 56, 64, 14);
+  drawRoundedRect(ctx, cardX + 28, cy, cardW - 56, 68, 16);
   ctx.fillStyle = 'rgba(250,241,222,0.7)';
   ctx.fill();
   ctx.strokeStyle = 'rgba(176,138,74,0.2)';
   ctx.lineWidth = 1;
-  drawRoundedRect(ctx, cardX + 28, cy, cardW - 56, 64, 14);
+  drawRoundedRect(ctx, cardX + 28, cy, cardW - 56, 68, 16);
   ctx.stroke();
 
   ctx.font = `600 24px ${FONT}`;
   ctx.fillStyle = GOLD_TEXT;
   ctx.textBaseline = 'middle';
-  ctx.fillText(options.labels.incentiveText, cardX + 56, cy + 32);
+  ctx.fillText(options.labels.incentiveText, cardX + 56, cy + 34);
 
-  // ── QR + URL section (below the card) ──
-  const qrSectionY = cardY + cardH + 48;
-  const qrSize = 180;
-  const qrUrl = `${options.siteUrl}?ref=${options.referralCode}`;
-  const qrX = W / 2 - qrSize / 2;
-  drawQrCode(ctx, qrUrl, qrX, qrSectionY, qrSize);
+  // ── Lower info panel ──
+  const panelX = PAD;
+  const panelY = cardY + cardH + 38;
+  const panelW = CONTENT_W;
+  const panelH = H - panelY - PAD;
+  drawRoundedRect(ctx, panelX, panelY, panelW, panelH, 30);
+  ctx.fillStyle = 'rgba(255, 250, 243, 0.9)';
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(176,138,74,0.12)';
+  ctx.lineWidth = 2;
+  ctx.stroke();
 
-  const textY = qrSectionY + qrSize + 28;
-  ctx.textAlign = 'center';
-  ctx.font = `600 28px ${FONT}`;
+  const rewardX = panelX + 42;
+  const rewardY = panelY + 46;
+  const rewardW = 410;
+  const qrCardW = 290;
+  const qrCardX = panelX + panelW - qrCardW - 42;
+  const qrCardY = panelY + 38;
+  const qrSize = 190;
+
+  ctx.font = `800 86px ${FONT}`;
+  ctx.fillStyle = '#B07A24';
+  ctx.textBaseline = 'top';
+  ctx.fillText(`¥${options.discountAmount}`, rewardX, rewardY);
+
+  ctx.font = `600 36px ${FONT}`;
+  ctx.fillStyle = GOLD_TEXT;
+  const rewardLines = wrapText(ctx, options.labels.incentiveText, rewardW, 3);
+  rewardLines.forEach((line, index) => {
+    ctx.fillText(line, rewardX + 190, rewardY + 10 + index * 46);
+  });
+
+  const codeY = rewardY + 160;
+  drawRoundedRect(ctx, rewardX, codeY, 220, 76, 38);
+  ctx.fillStyle = 'rgba(255,255,255,0.9)';
+  ctx.fill();
+  ctx.font = `700 42px ${FONT}`;
+  ctx.fillStyle = '#B08A4A';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(options.referralCode, rewardX + 24, codeY + 38);
+
+  ctx.font = `400 26px ${FONT}`;
   ctx.fillStyle = TEXT_DARK;
   ctx.textBaseline = 'top';
-  ctx.fillText(options.siteUrl.replace('https://', ''), W / 2, textY);
+  const summaryLines = wrapText(ctx, options.labels.clauseStats, rewardW, 3);
+  summaryLines.forEach((line, index) => {
+    ctx.fillText(line, rewardX, codeY + 110 + index * 36);
+  });
+
+  drawRoundedRect(ctx, qrCardX, qrCardY, qrCardW, panelH - 76, 24);
+  ctx.fillStyle = '#FFFFFF';
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(31,58,95,0.08)';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  const qrX = qrCardX + (qrCardW - qrSize) / 2;
+  const qrY = qrCardY + 34;
+  drawQrCode(ctx, options.shareUrl, qrX, qrY, qrSize);
+
+  ctx.textAlign = 'center';
+  ctx.font = `600 26px ${FONT}`;
+  ctx.fillStyle = TEXT_DARK;
+  ctx.textBaseline = 'top';
+  ctx.fillText(options.siteUrl.replace(/^https?:\/\//, ''), qrCardX + qrCardW / 2, qrY + qrSize + 30);
 
   ctx.font = `400 20px ${FONT}`;
   ctx.fillStyle = TEXT_FAINT;
-  ctx.fillText(`${options.labels.referralLabel}: ${options.referralCode}`, W / 2, textY + 40);
+  ctx.fillText(`${options.labels.referralLabel}: ${options.referralCode}`, qrCardX + qrCardW / 2, qrY + qrSize + 70);
 
   ctx.textAlign = 'left';
 

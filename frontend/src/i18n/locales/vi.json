@@ -203,8 +203,8 @@
   },
   "share": {
     "kicker": "Chia sẻ",
-    "title": "Chia sẻ từ bảng chia sẻ riêng",
-    "description": "Sử dụng bảng chia sẻ được thiết kế riêng với phần xem trước quảng bá, sao chép liên kết và chia sẻ gốc của thiết bị khi được hỗ trợ.",
+    "title": "Chia sẻ báo cáo này",
+    "description": "Lưu thẻ chia sẻ hoặc gửi trực tiếp liên kết giới thiệu của bạn từ đây.",
     "preview_badge": "Share Kit",
     "preview_title": "Hiểu hợp đồng tiếng Nhật mà không phải đoán mò.",
     "preview_desc": "ContractGuard rà soát hợp đồng tiếng Nhật và trả về báo cáo rủi ro rõ ràng bằng ngôn ngữ của bạn.",

@@ -203,8 +203,8 @@
   },
   "share": {
     "kicker": "分享",
-    "title": "使用我們自己的分享面板",
-    "description": "這裡會先提供一個更完整的分享介面，包含宣傳內容、可複製連結，以及裝置支援時的原生分享入口。",
+    "title": "分享這份報告",
+    "description": "你可以在這裡儲存分享卡，或直接把帶推薦碼的連結傳給朋友。",
     "preview_badge": "Share Kit",
     "preview_title": "看懂日文合約，不再靠猜。",
     "preview_desc": "ContractGuard 可以分析日文合約風險，並用你的語言給出清晰報告。",

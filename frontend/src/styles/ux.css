@@ -302,66 +302,13 @@
 
 .share-v2-body {
   display: grid;
-  gap: 18px;
+  gap: 16px;
   padding: 18px 24px 24px;
 }
 
-.share-v2-hero {
+.share-v2-summary {
   display: grid;
-  gap: 16px;
-  padding: 18px 18px 16px;
-  border-radius: 20px;
-  border: 1px solid rgba(31, 58, 95, 0.08);
-  background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.86), rgba(250, 244, 234, 0.9)),
-    rgba(255, 255, 255, 0.88);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55);
-}
-
-.share-v2-hero-copy {
-  display: grid;
-  gap: 8px;
-}
-
-.share-v2-hero-title {
-  margin: 0;
-  color: var(--brand-ink);
-  font-family: "Iowan Old Style", "Georgia", "Times New Roman", serif;
-  font-size: 1.25rem;
-  font-weight: 700;
-  line-height: 1.15;
-}
-
-.share-v2-hero-text {
-  margin: 0;
-  color: var(--text-soft);
-  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
-  font-size: 0.92rem;
-  line-height: 1.65;
-}
-
-.share-v2-points {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.share-v2-points span {
-  display: inline-flex;
-  align-items: center;
-  padding: 8px 10px;
-  border-radius: 999px;
-  background: rgba(31, 58, 95, 0.06);
-  color: var(--brand);
-  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
-  font-size: 0.76rem;
-  font-weight: 600;
-  line-height: 1.35;
-}
-
-.share-v2-meta-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
   gap: 12px;
 }
 
@@ -420,17 +367,16 @@
   letter-spacing: 0.06em;
 }
 
-.share-v2-link-card {
+.share-v2-report-summary {
   display: grid;
-  align-content: start;
-  gap: 8px;
-  padding: 14px 16px;
+  gap: 10px;
+  padding: 16px 18px;
   border-radius: 18px;
   border: 1px solid rgba(31, 58, 95, 0.1);
   background: rgba(255, 255, 255, 0.72);
-  min-width: 0;
 }
 
+.share-v2-report-label,
 .share-v2-link-label {
   color: var(--text-faint);
   font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
@@ -440,12 +386,43 @@
   text-transform: uppercase;
 }
 
-.share-v2-link-value {
+.share-v2-report-main {
+  display: grid;
+  gap: 6px;
+}
+
+.share-v2-report-risk {
   margin: 0;
   color: var(--brand-ink);
+  font-family: "Iowan Old Style", "Georgia", "Times New Roman", serif;
+  font-size: 1.08rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.share-v2-report-stats {
+  margin: 0;
+  color: var(--text-soft);
+  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
+  font-size: 0.84rem;
+  line-height: 1.55;
+}
+
+.share-v2-link-note {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  grid-column: 1 / -1;
+  padding: 0 2px;
+}
+
+.share-v2-link-value {
+  margin: 0;
+  color: var(--text-faint);
   font-family: "SF Mono", "Cascadia Code", "Roboto Mono", monospace;
-  font-size: 0.75rem;
-  line-height: 1.65;
+  font-size: 0.72rem;
+  line-height: 1.5;
   word-break: break-all;
 }
 
@@ -456,7 +433,7 @@
 
 .share-v2-card-copy {
   display: grid;
-  gap: 6px;
+  gap: 4px;
 }
 
 .share-v2-card-copy-top {
@@ -480,15 +457,6 @@
   text-transform: uppercase;
 }
 
-.share-v2-card-copy-risk {
-  margin: 0;
-  color: var(--brand-ink);
-  font-family: "Iowan Old Style", "Georgia", "Times New Roman", serif;
-  font-size: 0.98rem;
-  font-weight: 700;
-}
-
-.share-v2-card-copy-stats,
 .share-v2-card-copy-note {
   margin: 0;
   color: var(--text-soft);
@@ -543,50 +511,11 @@
   line-height: 1.65;
 }
 
-.share-v2-save-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  width: fit-content;
-  padding: 10px 14px;
-  border: 1px solid rgba(31, 58, 95, 0.12);
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.8);
-  color: var(--brand);
-  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
-  font-size: 0.84rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
-}
-
-.share-v2-save-btn:hover:not(:disabled) {
-  background: rgba(31, 58, 95, 0.06);
-  border-color: rgba(31, 58, 95, 0.18);
-  transform: translateY(-1px);
-}
-
-.share-v2-save-btn:disabled {
-  opacity: 0.4;
-  cursor: default;
-}
-
-.share-v2-save-btn svg {
-  width: 18px;
-  height: 18px;
-  stroke: currentColor;
-  stroke-width: 2;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  fill: none;
-}
-
 .share-v2-actions {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
-  padding-top: 6px;
+  padding-top: 4px;
 }
 
 .share-v2-action-btn {
@@ -609,11 +538,25 @@
   transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
 }
 
+.share-v2-action-btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+  box-shadow: none;
+}
+
 .share-v2-action-btn:hover {
   background: rgba(255, 255, 255, 0.98);
   border-color: rgba(31, 58, 95, 0.2);
   box-shadow: 0 12px 22px rgba(31, 58, 95, 0.08);
   transform: translateY(-1px);
+}
+
+.share-v2-action-full {
+  grid-column: 1 / -1;
+}
+
+.share-v2-action-save {
+  background: rgba(255, 255, 255, 0.94);
 }
 
 .share-v2-action-copy {
@@ -906,8 +849,7 @@
     font-size: 1.2rem;
   }
 
-  .share-v2-desc,
-  .share-v2-hero-text {
+  .share-v2-desc {
     font-size: 0.86rem;
   }
 
@@ -916,22 +858,14 @@
     gap: 14px;
   }
 
-  .share-v2-hero {
-    padding: 16px 15px 14px;
-    border-radius: 18px;
-  }
-
-  .share-v2-hero-title {
-    font-size: 1.08rem;
-  }
-
-  .share-v2-meta-grid {
+  .share-v2-summary {
     grid-template-columns: 1fr;
   }
 
-  .share-v2-card-copy-top {
+  .share-v2-link-note {
     align-items: flex-start;
     flex-direction: column;
+    gap: 4px;
   }
 
   .share-v2-card-loading,

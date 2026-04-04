@@ -203,8 +203,8 @@
   },
   "share": {
     "kicker": "공유",
-    "title": "전용 공유 패널로 보내기",
-    "description": "홍보용 미리보기, 링크 복사, 기기 공유를 한곳에 모은 공유 패널을 사용할 수 있습니다.",
+    "title": "이 보고서 공유하기",
+    "description": "공유 카드를 저장하거나 추천 링크를 바로 보낼 수 있습니다.",
     "preview_badge": "Share Kit",
     "preview_title": "짐작하지 않고 일본어 계약을 이해하세요.",
     "preview_desc": "ContractGuard는 일본어 계약서를 검토하고 선택한 언어로 명확한 리스크 보고서를 제공합니다.",

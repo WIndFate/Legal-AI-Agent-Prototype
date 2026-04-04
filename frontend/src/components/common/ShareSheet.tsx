@@ -33,6 +33,25 @@ export default function ShareSheet({ open, onClose, shareUrl, orderId, reportSum
   const cardBlobRef = useRef<Blob | null>(null);
 
   const supportsNativeShare = useMemo(() => typeof navigator !== 'undefined' && !!navigator.share, []);
+  const finalShareUrl = useMemo(() => {
+    try {
+      const url = new URL(shareUrl, window.location.origin);
+      if (referralData?.referral_code) {
+        url.searchParams.set('ref', referralData.referral_code);
+      }
+      return url.toString();
+    } catch {
+      return shareUrl;
+    }
+  }, [referralData?.referral_code, shareUrl]);
+
+  const shareDomain = useMemo(() => {
+    try {
+      return new URL(finalShareUrl).hostname.replace(/^www\./, '');
+    } catch {
+      return finalShareUrl;
+    }
+  }, [finalShareUrl]);
 
   useEffect(() => {
     if (!open) return;
@@ -115,6 +134,8 @@ export default function ShareSheet({ open, onClose, shareUrl, orderId, reportSum
           topFinding: reportSummary.topFinding,
           referralCode: referralData.referral_code,
           siteUrl,
+          shareUrl: finalShareUrl,
+          discountAmount: referralData.discount_jpy ?? 100,
           labels: {
             brandSubtitle: t('share.card_brand_subtitle'),
             overallRiskLabel: t('share.card_risk_label'),
@@ -144,7 +165,7 @@ export default function ShareSheet({ open, onClose, shareUrl, orderId, reportSum
       if (cardPreviewUrl) URL.revokeObjectURL(cardPreviewUrl);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, reportSummary, referralData, t]);
+  }, [finalShareUrl, open, reportSummary, referralData, t]);
 
   if (!open) return null;
 
@@ -157,18 +178,6 @@ export default function ShareSheet({ open, onClose, shareUrl, orderId, reportSum
         low: reportSummary.lowCount,
       })
     : null;
-
-  const finalShareUrl = (() => {
-    try {
-      const url = new URL(shareUrl, window.location.origin);
-      if (referralData?.referral_code) {
-        url.searchParams.set('ref', referralData.referral_code);
-      }
-      return url.toString();
-    } catch {
-      return shareUrl;
-    }
-  })();
 
   const saveCard = async () => {
     if (!cardBlobRef.current) return;
@@ -246,19 +255,7 @@ export default function ShareSheet({ open, onClose, shareUrl, orderId, reportSum
         </div>
 
         <div className="share-v2-body">
-          <div className="share-v2-hero">
-            <div className="share-v2-hero-copy">
-              <p className="share-v2-hero-title">{t('share.preview_title')}</p>
-              <p className="share-v2-hero-text">{t('share.preview_desc')}</p>
-            </div>
-            <div className="share-v2-points">
-              <span>{t('share.point_fast')}</span>
-              <span>{t('share.point_private')}</span>
-              <span>{t('share.point_multilingual')}</span>
-            </div>
-          </div>
-
-          <div className="share-v2-meta-grid">
+          <div className="share-v2-summary">
             <div className="share-v2-incentive">
               <div className="share-v2-incentive-amount">¥{discountAmount}</div>
               <div className="share-v2-incentive-text">
@@ -272,10 +269,18 @@ export default function ShareSheet({ open, onClose, shareUrl, orderId, reportSum
                 )}
               </div>
             </div>
-
-            <div className="share-v2-link-card">
-              <span className="share-v2-link-label">{t('share.link_label')}</span>
-              <p className="share-v2-link-value">{finalShareUrl}</p>
+            {reportSummary && (
+              <div className="share-v2-report-summary">
+                <span className="share-v2-report-label">{t('share.card_risk_label')}</span>
+                <div className="share-v2-report-main">
+                  <p className="share-v2-report-risk">{reportSummary.overallRisk}</p>
+                  {riskSummaryText && <p className="share-v2-report-stats">{riskSummaryText}</p>}
+                </div>
+              </div>
+            )}
+            <div className="share-v2-link-note">
+              <span className="share-v2-link-label">{t('share.referral_link_label')}</span>
+              <p className="share-v2-link-value">{shareDomain}</p>
             </div>
           </div>
 
@@ -284,9 +289,7 @@ export default function ShareSheet({ open, onClose, shareUrl, orderId, reportSum
               <div className="share-v2-card-copy">
                 <div className="share-v2-card-copy-top">
                   <span className="share-v2-card-copy-badge">ContractGuard</span>
-                  <p className="share-v2-card-copy-risk">{reportSummary.overallRisk}</p>
                 </div>
-                {riskSummaryText && <p className="share-v2-card-copy-stats">{riskSummaryText}</p>}
                 <p className="share-v2-card-copy-note">{t('share.referral_reward', { amount: discountAmount })}</p>
               </div>
               <div className="share-v2-card-frame">
@@ -307,22 +310,22 @@ export default function ShareSheet({ open, onClose, shareUrl, orderId, reportSum
                   </div>
                 )}
               </div>
-              <button
-                type="button"
-                className="share-v2-save-btn"
-                onClick={() => void saveCard()}
-                disabled={!cardBlobRef.current}
-              >
-                <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false">
-                  <path d="M10 3v9m0 0l3.5-3.5M10 12L6.5 8.5" />
-                  <path d="M4 14v1.5A1.5 1.5 0 005.5 17h9a1.5 1.5 0 001.5-1.5V14" />
-                </svg>
-                {t('share.save_card')}
-              </button>
             </div>
           )}
 
           <div className="share-v2-actions">
+            <button
+              type="button"
+              className="share-v2-action-btn share-v2-action-save share-v2-action-full"
+              onClick={() => void saveCard()}
+              disabled={!cardBlobRef.current}
+            >
+              <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false">
+                <path d="M10 3v9m0 0l3.5-3.5M10 12L6.5 8.5" />
+                <path d="M4 14v1.5A1.5 1.5 0 005.5 17h9a1.5 1.5 0 001.5-1.5V14" />
+              </svg>
+              <span>{t('share.save_card')}</span>
+            </button>
             <button
               type="button"
               className={`share-v2-action-btn share-v2-action-copy${copiedLink ? ' is-copied' : ''}`}

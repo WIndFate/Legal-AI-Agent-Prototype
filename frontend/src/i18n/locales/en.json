@@ -203,8 +203,8 @@
   },
   "share": {
     "kicker": "Share",
-    "title": "Share from a polished panel",
-    "description": "Use a purpose-built share sheet with a promotional preview, copyable link, and native share when your device supports it.",
+    "title": "Share this report",
+    "description": "Save the share card or send your referral link directly from here.",
     "preview_badge": "Share Kit",
     "preview_title": "Understand Japanese contracts without guessing.",
     "preview_desc": "ContractGuard reviews Japanese contracts and returns a clear risk report in your language.",

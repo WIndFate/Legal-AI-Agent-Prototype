@@ -203,8 +203,8 @@
   },
   "share": {
     "kicker": "共有",
-    "title": "専用の共有パネルから送る",
-    "description": "宣伝用プレビュー、リンクコピー、端末共有を一つにまとめた共有パネルを使えます。",
+    "title": "このレポートを共有",
+    "description": "共有カードの保存や、紹介リンクの送信をここからすぐ行えます。",
     "preview_badge": "Share Kit",
     "preview_title": "日本語契約を、勘に頼らず理解する。",
     "preview_desc": "ContractGuard は日本語契約書を分析し、あなたの言語で明確なリスクレポートを返します。",
