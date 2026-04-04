@@ -227,7 +227,19 @@
     "native_share_referral": "Chia sẻ liên kết giới thiệu",
     "copy_order": "Sao chép mã đơn hàng",
     "order_copied": "Đã sao chép mã đơn hàng",
-    "close": "Đóng"
+    "close": "Đóng",
+    "incentive_banner": "Chia sẻ với bạn bè — cả hai được giảm ¥{{amount}} lần sau",
+    "save_card_label": "Thẻ Chia sẻ",
+    "save_card": "Lưu Thẻ Chia sẻ",
+    "copy_text_label": "Văn bản Chia sẻ",
+    "copy_text": "Sao chép Văn bản",
+    "text_copied": "Đã sao chép Văn bản",
+    "card_brand_subtitle": "Phân tích Rủi ro Hợp đồng bằng AI",
+    "card_risk_label": "Mức Rủi ro Tổng thể",
+    "card_clause_stats": "{{total}} điều khoản · {{high}} cao · {{medium}} trung bình · {{low}} thấp",
+    "card_text": "Đã dùng ContractGuard để phân tích hợp đồng tiếng Nhật. Phát hiện {{high}} mục rủi ro cao trong {{total}} điều khoản. Rất khuyên dùng",
+    "cta_title": "Hữu ích? Chia sẻ với bạn bè",
+    "cta_desc": "Chia sẻ với bạn bè — cả hai được giảm ¥{{amount}} lần sau"
   },
   "privacy": {
     "page_title": "Chính sách bảo mật",

@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 
 interface AnalysisEventItem {
   seq: number;
-  event_type: 'node_start' | 'node_end' | 'tool_call' | 'tool_result' | 'complete' | 'error';
+  event_type: 'node_start' | 'node_end' | 'tool_call' | 'tool_result' | 'clause_progress' | 'complete' | 'error';
   step: 'parsing' | 'analyzing' | 'generating' | null;
   message: string | null;
   payload_json: Record<string, unknown> | null;
@@ -191,10 +191,12 @@ export default function ReviewPage() {
           setTotalClauses(typeof nextTotal === 'number' ? nextTotal : null);
         }
         break;
-      case 'tool_call':
-        if (evt.payload_json?.tool === 'analyze_clause_risk') {
-          setAnalyzedClauses((current) => current + 1);
+      case 'clause_progress':
+        if (typeof evt.payload_json?.analyzed === 'number') {
+          setAnalyzedClauses(evt.payload_json.analyzed as number);
         }
+        break;
+      case 'tool_call':
         if (eventMessage) pushActivityEvent(evt);
         break;
       case 'tool_result':

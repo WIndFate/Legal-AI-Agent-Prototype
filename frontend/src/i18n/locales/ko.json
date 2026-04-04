@@ -227,7 +227,19 @@
     "native_share_referral": "추천 링크 공유",
     "copy_order": "주문 번호 복사",
     "order_copied": "주문 번호가 복사되었습니다",
-    "close": "닫기"
+    "close": "닫기",
+    "incentive_banner": "친구에게 공유하면 양쪽 모두 다음에 ¥{{amount}} 할인",
+    "save_card_label": "공유 카드",
+    "save_card": "공유 카드 저장",
+    "copy_text_label": "공유 텍스트",
+    "copy_text": "텍스트 복사",
+    "text_copied": "텍스트 복사됨",
+    "card_brand_subtitle": "AI 계약 리스크 분석",
+    "card_risk_label": "전체 리스크 수준",
+    "card_clause_stats": "총 {{total}}조항 · 고위험 {{high}} · 중위험 {{medium}} · 저위험 {{low}}",
+    "card_text": "ContractGuard로 일본어 계약서를 AI 분석했습니다. {{total}}개 조항 중 고위험 {{high}}건 발견. 추천합니다",
+    "cta_title": "도움이 되셨나요? 친구에게 공유하세요",
+    "cta_desc": "친구에게 공유하면 양쪽 모두 다음에 ¥{{amount}} 할인"
   },
   "privacy": {
     "page_title": "개인정보 처리방침",

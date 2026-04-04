@@ -227,7 +227,19 @@
     "native_share_referral": "紹介リンクを共有",
     "copy_order": "注文番号をコピー",
     "order_copied": "注文番号をコピーしました",
-    "close": "閉じる"
+    "close": "閉じる",
+    "incentive_banner": "友だちに共有すると、双方とも次回 ¥{{amount}} オフ",
+    "save_card_label": "共有カード",
+    "save_card": "共有カードを保存",
+    "copy_text_label": "共有テキスト",
+    "copy_text": "テキストをコピー",
+    "text_copied": "テキストをコピーしました",
+    "card_brand_subtitle": "AI契約リスク分析",
+    "card_risk_label": "総合リスクレベル",
+    "card_clause_stats": "全{{total}}条項 · 高リスク{{high}} · 中リスク{{medium}} · 低リスク{{low}}",
+    "card_text": "ContractGuardで契約書をAI分析。{{total}}条項中、高リスク{{high}}件を検出。おすすめです",
+    "cta_title": "役に立ちましたか？友だちに共有しましょう",
+    "cta_desc": "友だちに共有すると、双方とも次回 ¥{{amount}} オフ"
   },
   "privacy": {
     "page_title": "プライバシーポリシー",

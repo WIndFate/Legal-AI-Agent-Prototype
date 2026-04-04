@@ -227,7 +227,19 @@
     "native_share_referral": "Bagikan tautan referral",
     "copy_order": "Salin ID pesanan",
     "order_copied": "ID pesanan disalin",
-    "close": "Tutup"
+    "close": "Tutup",
+    "incentive_banner": "Bagikan ke teman — keduanya dapat diskon ¥{{amount}}",
+    "save_card_label": "Kartu Berbagi",
+    "save_card": "Simpan Kartu Berbagi",
+    "copy_text_label": "Teks Berbagi",
+    "copy_text": "Salin Teks",
+    "text_copied": "Teks Disalin",
+    "card_brand_subtitle": "Analisis Risiko Kontrak dengan AI",
+    "card_risk_label": "Tingkat Risiko Keseluruhan",
+    "card_clause_stats": "{{total}} klausul · {{high}} tinggi · {{medium}} sedang · {{low}} rendah",
+    "card_text": "Menggunakan ContractGuard untuk menganalisis kontrak Jepang saya. {{high}} item risiko tinggi dalam {{total}} klausul. Sangat direkomendasikan",
+    "cta_title": "Bermanfaat? Bagikan ke teman",
+    "cta_desc": "Bagikan ke teman — keduanya dapat diskon ¥{{amount}}"
   },
   "privacy": {
     "page_title": "Kebijakan Privasi",

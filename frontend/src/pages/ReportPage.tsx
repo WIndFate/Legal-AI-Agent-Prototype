@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 
-import ShareSheet from '../components/common/ShareSheet';
+import ShareSheet, { type ReportSummary } from '../components/common/ShareSheet';
 import { fetchWithRetry } from '../lib/fetchWithRetry';
 interface ClauseAnalysis {
   clause_number: string;
@@ -290,6 +290,22 @@ export default function ReportPage() {
   if (!data) return null;
 
   const report = data.report;
+
+  // Build summary for ShareSheet card generation
+  const topHighRisk = report.clause_analyses.find((c) => normalizeRiskLevel(c.risk_level) === 'high');
+  const topFinding = topHighRisk?.risk_reason
+    || report.clause_analyses.find((c) => normalizeRiskLevel(c.risk_level) === 'medium')?.risk_reason
+    || '';
+  const reportSummary: ReportSummary = {
+    overallRisk: report.overall_risk_level,
+    totalClauses: report.total_clauses,
+    highCount: report.high_risk_count,
+    mediumCount: report.medium_risk_count,
+    lowCount: report.low_risk_count,
+    topFinding,
+    targetLanguage: data.language,
+  };
+
   const filteredClauses = report.clause_analyses.filter((clause) => {
     const normalized = normalizeRiskLevel(clause.risk_level);
     return normalized ? selectedRisks.includes(normalized) : true;
@@ -345,6 +361,7 @@ export default function ReportPage() {
         onClose={() => setShareOpen(false)}
         shareUrl={`${window.location.origin}/report/${data.order_id}`}
         orderId={data.order_id}
+        reportSummary={reportSummary}
       />
       {isOffline && (
         <div className="offline-banner report-offline-banner">
@@ -496,6 +513,19 @@ export default function ReportPage() {
           ))}
         </div>
       )}
+
+      {/* Share CTA card */}
+      <div className="report-share-cta" onClick={() => setShareOpen(true)} role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter') setShareOpen(true); }}>
+        <div className="report-share-cta-copy">
+          <strong>{t('share.cta_title')}</strong>
+          <p>{t('share.cta_desc', { amount: 100 })}</p>
+        </div>
+        <span className="report-share-cta-arrow" aria-hidden="true">
+          <svg viewBox="0 0 20 20" focusable="false">
+            <path d="M7 4l6 6-6 6" />
+          </svg>
+        </span>
+      </div>
 
       <div className="report-actions report-actions-bottom">
         <button className="btn-share report-download-trigger" onClick={() => void handleDownloadPdf()} disabled={downloadingPdf}>

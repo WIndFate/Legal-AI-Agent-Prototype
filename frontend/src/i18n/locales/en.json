@@ -227,7 +227,19 @@
     "native_share_referral": "Share referral link",
     "copy_order": "Copy order ID",
     "order_copied": "Order ID copied",
-    "close": "Close"
+    "close": "Close",
+    "incentive_banner": "Share with friends — both get ¥{{amount}} off next time",
+    "save_card_label": "Share Card",
+    "save_card": "Save Share Card",
+    "copy_text_label": "Share Text",
+    "copy_text": "Copy Text",
+    "text_copied": "Text Copied",
+    "card_brand_subtitle": "AI Contract Risk Analysis",
+    "card_risk_label": "Overall Risk Level",
+    "card_clause_stats": "{{total}} clauses · {{high}} high · {{medium}} medium · {{low}} low risk",
+    "card_text": "Used ContractGuard to analyze my Japanese contract. Found {{high}} high-risk items in {{total}} clauses. Highly recommend",
+    "cta_title": "Found it useful? Share with friends",
+    "cta_desc": "Share with friends — both get ¥{{amount}} off next time"
   },
   "privacy": {
     "page_title": "Privacy Policy",

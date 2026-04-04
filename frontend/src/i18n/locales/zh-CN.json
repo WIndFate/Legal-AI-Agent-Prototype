@@ -227,7 +227,19 @@
     "native_share_referral": "分享推荐链接",
     "copy_order": "复制订单号",
     "order_copied": "订单号已复制",
-    "close": "关闭"
+    "close": "关闭",
+    "incentive_banner": "分享给朋友，双方各省 ¥{{amount}}",
+    "save_card_label": "分享卡片",
+    "save_card": "保存分享卡片",
+    "copy_text_label": "分享文案",
+    "copy_text": "复制文案",
+    "text_copied": "文案已复制",
+    "card_brand_subtitle": "AI合同风险分析",
+    "card_risk_label": "总体风险等级",
+    "card_clause_stats": "共{{total}}条款 · 高风险{{high}} · 中风险{{medium}} · 低风险{{low}}",
+    "card_text": "用ContractGuard分析了日文合同，{{total}}个条款里发现了{{high}}个高风险项。几分钟就出了中文报告，推荐给在日本签合同的朋友们",
+    "cta_title": "觉得有用？分享给朋友吧",
+    "cta_desc": "分享给朋友，双方下次各省 ¥{{amount}}"
   },
   "privacy": {
     "page_title": "隐私政策",

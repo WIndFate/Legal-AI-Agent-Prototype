@@ -227,7 +227,19 @@
     "native_share_referral": "Compartilhar link de indicação",
     "copy_order": "Copiar ID do pedido",
     "order_copied": "ID do pedido copiado",
-    "close": "Fechar"
+    "close": "Fechar",
+    "incentive_banner": "Compartilhe com amigos — ambos ganham ¥{{amount}} de desconto",
+    "save_card_label": "Cartão de Compartilhamento",
+    "save_card": "Salvar Cartão",
+    "copy_text_label": "Texto para Compartilhar",
+    "copy_text": "Copiar Texto",
+    "text_copied": "Texto Copiado",
+    "card_brand_subtitle": "Análise de Risco de Contrato com IA",
+    "card_risk_label": "Nível de Risco Geral",
+    "card_clause_stats": "{{total}} cláusulas · {{high}} alto · {{medium}} médio · {{low}} baixo risco",
+    "card_text": "Usei o ContractGuard para analisar meu contrato japonês. {{high}} itens de alto risco em {{total}} cláusulas. Recomendo",
+    "cta_title": "Achou útil? Compartilhe com amigos",
+    "cta_desc": "Compartilhe com amigos — ambos ganham ¥{{amount}} de desconto"
   },
   "privacy": {
     "page_title": "Política de Privacidade",
