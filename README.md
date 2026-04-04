@@ -185,7 +185,7 @@ docker compose up -d backend postgres redis
 - Frontend route pages are lazy-loaded, and analytics libraries are bootstrapped asynchronously so they do not bloat the initial application chunk.
 - `frontend/index.html` now ships static OG / Twitter metadata, and `frontend/public/og-image.svg` provides a lightweight branded share image for social previews.
 - Route changes without a hash anchor now reset scroll to the top so privacy/terms and other page-to-page navigation do not preserve the previous scroll position.
-- Frontend UX now includes reusable `RevealSection`, `OrderReminderDialog`, and `ShareSheet` components for scroll reveal, order-saving prompts, and custom sharing.
+- Frontend UX now includes reusable `RevealSection`, `OrderReminderDialog`, and `ShareSheet` components for scroll reveal, order-saving prompts, and a more polished result-sharing surface.
 - `frontend/src/lib/fetchWithRetry.ts` now centralizes timeout-aware retries for startup-time proxy failures on key frontend fetch paths.
 - `/api/report/{order_id}` now returns the same payload shape for both Redis cache hits and PostgreSQL fallback reads.
 - `analyze_clause_risk` performs RAG lookup internally; there is no separate retrieval node.
@@ -220,7 +220,7 @@ docker compose up -d backend postgres redis
 - [`frontend/src/pages/ExamplesPage.tsx`](./frontend/src/pages/ExamplesPage.tsx): dedicated examples gallery / report sample page
 - [`frontend/src/pages/LookupPage.tsx`](./frontend/src/pages/LookupPage.tsx): order-ID based result lookup page
 - [`frontend/src/components/common/OrderReminderDialog.tsx`](./frontend/src/components/common/OrderReminderDialog.tsx): modal prompting users to save order details
-- [`frontend/src/components/common/ShareSheet.tsx`](./frontend/src/components/common/ShareSheet.tsx): custom share panel with copy/native-share actions
+- [`frontend/src/components/common/ShareSheet.tsx`](./frontend/src/components/common/ShareSheet.tsx): custom share panel with referral-aware sharing, preview-card save, and stronger presentation hierarchy
 - [`tests/`](./tests/): integration tests for all 7 API routers + unit tests
 - [`SPEC.md`](./SPEC.md): detailed implementation status, pending work, and risks
 - [`DESIGN.md`](./DESIGN.md): product rationale and go-to-market plan

@@ -175,7 +175,7 @@ docker compose up -d backend postgres redis
 - 前端页面采用路由懒加载，分析相关 SDK 改为异步初始化，避免把 observability 依赖塞进首屏主 chunk。
 - `frontend/index.html` 现已补充静态 OG / Twitter 元标签，`frontend/public/og-image.svg` 提供了轻量品牌分享图。
 - 前端无 hash 的页面跳转现在会自动滚动到顶部，避免法律页等跨页阅读从旧滚动位置开始。
-- 前端现在新增了 `RevealSection`、`OrderReminderDialog`、`ShareSheet` 三类通用 UX 组件，分别用于滚动显现、订单号提醒弹层和自定义分享面板；其中分享面板已补齐专属推荐链接生成、复制与原生分享。
+- 前端现在新增了 `RevealSection`、`OrderReminderDialog`、`ShareSheet` 三类通用 UX 组件，分别用于滚动显现、订单号提醒弹层和自定义分享面板；其中分享面板现已补齐更有层次的成果展示、专属推荐链接生成、预览卡保存、复制与原生分享。
 - `frontend/src/lib/fetchWithRetry.ts` 统一封装了关键页面的超时与轻量重试逻辑，用于后端刚 ready 的瞬间和短时弱网抖动。
 - `/api/report/{order_id}` 在 Redis 命中和 PostgreSQL fallback 两种情况下，现在都会返回一致的 payload 结构。
 - `analyze_clause_risk` 工具内部直接做 RAG 检索，没有单独的 retrieval node。
@@ -190,7 +190,7 @@ docker compose up -d backend postgres redis
 - 首页在生成报价后会自动滚动到支付区域，并对支付卡片做短暂高亮，避免用户点击“开始分析”后误以为页面没有反应。
 - 现在新增 `/lookup` 结果查询页，用户输入订单号即可重新进入付款状态页、分析页或最终报告页。
 - 支付成功和分析完成后，前端会弹出订单提醒框，引导用户截图或复制订单号。
-- 报告页分享按钮现在先打开极简自定义分享面板：内部自动生成带推荐码的报告链接，对外只暴露复制链接和设备原生分享。
+- 报告页分享按钮现在会先打开重构后的自定义分享面板：内部自动生成带推荐码的报告链接，并以标题区、奖励区、链接区、预览区的顺序组织内容。
 - 推荐链接现在会以 `?ref=` 的形式回到首页，并自动带入支付表单中的推荐码。
 - 查询页和报告页现在会更明确地区分订单号格式错误、弱网、离线和可重试失败状态。
 - 分析流程现在通过统一状态快照接口、可回放历史事件和增量事件流驱动，而不再由单个 SSE POST 请求直接启动执行。
@@ -216,7 +216,7 @@ docker compose up -d backend postgres redis
 - [`frontend/src/pages/ExamplesPage.tsx`](./frontend/src/pages/ExamplesPage.tsx)：独立案例画廊 / 报告样张页
 - [`frontend/src/pages/LookupPage.tsx`](./frontend/src/pages/LookupPage.tsx)：订单号结果查询页
 - [`frontend/src/components/common/OrderReminderDialog.tsx`](./frontend/src/components/common/OrderReminderDialog.tsx)：订单号保存提醒弹层
-- [`frontend/src/components/common/ShareSheet.tsx`](./frontend/src/components/common/ShareSheet.tsx)：自定义分享面板
+- [`frontend/src/components/common/ShareSheet.tsx`](./frontend/src/components/common/ShareSheet.tsx)：自定义分享面板（推荐链接、预览卡保存、分享动作）
 - [`tests/`](./tests/)：全部 7 个 API 路由的集成测试 + 单元测试
 - [`SPEC.md`](./SPEC.md)：详细进度、待办和风险
 - [`DESIGN.md`](./DESIGN.md)：产品设计和商业定位
