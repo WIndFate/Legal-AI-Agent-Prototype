@@ -67,7 +67,7 @@ Built with LangGraph (agentic loop), PostgreSQL pgvector (RAG), FastAPI (REST + 
 
 **Target MVP pipeline (per DESIGN.md):** `upload_contract → recognize_text (OCR) → parse_contract → analyze_risks → generate_report → output_chinese_report`
 
-Current status as of 2026-03-28:
+Current status as of 2026-04-04:
 - Local Docker end-to-end flow is verified through upload, payment creation, persistent analysis-task start, status/event restoration, replayable event streaming, report retrieval, and contract deletion.
 - `APP_ENV=development` enables local-only conveniences such as auto table bootstrap and dev payment bypass.
 - Dual-OCR groundwork is now in code: text/text-layer PDFs are quoted before payment, while image/scanned PDFs can be staged for local pre-estimation and formal OCR after payment.
@@ -86,6 +86,7 @@ Current status as of 2026-03-28:
 - CSS partially migrated to CSS Modules: layout, home, examples, legal use scoped modules; report/review remain global due to cross-page sharing and responsive dependencies.
 - Frontend UX polish now includes result lookup, order reminder dialogs, a compact share sheet that silently appends referral codes to report links, direct review-to-report handoff on completion, a redesigned three-zone review progress experience (stage header + segmented progress bar + activity feed + elapsed timer), report risk-level filters, a real backend-generated PDF download action, reveal-on-scroll homepage sections, a curated standalone examples gallery whose report sample layout mirrors the real report page more closely, explicit homepage trust messaging for supported contract types, privacy-flow transparency on the legal page, mobile-specific compact header / left-menu / safe-area refinements, iOS input zoom prevention, top-of-page route resets, and a simplified homepage upload flow (`Upload File` / `Paste Text`).
 - The homepage quote flow now gives immediate in-button loading feedback while preview generation runs, and the payment panel explicitly confirms the locked report-generation language before payment. The in-progress review activity feed is also re-localized from raw events, so switching the surrounding site language mid-analysis updates the feed immediately.
+- Review progress now also emits parse-time clause counts and tool-complete events, so the ReviewPage can show quantified clause progress (`3 / 12`), keep failure messaging inside the same live card, tighten the mobile activity list, and disable review-only motion flourishes under reduced-motion preferences.
 - Persistent analysis-task architecture is now the primary runtime flow: `analysis_jobs` / `analysis_events`, event bus, extracted report persistence helpers, new analysis start/status/events/stream routes, and frontend snapshot-plus-replay event restoration are all in code.
 - Failed analyses now persist the partial AI cost summary already incurred up to the failure point into `analysis_jobs.cost_summary`, instead of keeping it only in memory/logs.
 - Payment-time cost estimation is now persisted separately in `order_cost_estimates`: each order stores an `estimate_snapshot`, later an `actual_snapshot`, and finally a `comparison_snapshot`, all tagged with the estimate version, pricing-policy version, and the planned/actual model mix so pricing accuracy can be audited across future model upgrades.
@@ -230,7 +231,7 @@ frontend/
       ExamplesPage.tsx      # Dedicated examples gallery / report sample page
       LookupPage.tsx        # Order-ID based result lookup page
       PaymentPage.tsx       # Payment polling + order reminder prompt
-      ReviewPage.tsx        # Snapshot + replayed events + incremental progress + completion prompt
+      ReviewPage.tsx        # Snapshot + replayed events + quantified clause progress + in-card failure prompt
       ReportPage.tsx        # Saved report page + custom share sheet
       PrivacyPage.tsx       # Privacy policy (i18n summary + JP legal text)
       TermsPage.tsx         # Terms of service (i18n summary + JP legal text)
@@ -348,6 +349,7 @@ Embeddings are generated via OpenAI API (httpx direct call, not langchain).
 
 ### Review/report UX behavior
 - The review page is now a processing-only surface. It should show user-facing progress text during persistent event-stream playback and redirect into `/report/:orderId` once the saved report is ready; do not expose raw internal tool names like `analyze_clause_risk` to end users.
+- The review page should quantify clause progress once parse returns the total clause count, keep failure states inside the same progress card instead of dropping to a detached error block, and use compact segmented-bar labels on smaller screens.
 - If parse determines the uploaded content is not a contract, the analysis should terminate immediately with a dedicated `non_contract_document` failure state instead of continuing through full risk review.
 - If parse determines the uploaded content is not a contract, the analysis should terminate immediately with a dedicated `non_contract_document` failure state instead of continuing through full risk review.
 - `/api/report/{order_id}` must return the same payload shape whether data comes from Redis or PostgreSQL.
@@ -376,6 +378,7 @@ Eval references the explicit document IDs in `egov_laws.json`.
 - `ReviewPage.tsx` now restores `/api/orders/{id}/status`, replays `/api/orders/{id}/events?after_seq=...`, and then subscribes to `/api/orders/{id}/stream?after_seq=...`.
 - Reconnection uses `lastSeq` rather than client-side event indexes, so resumed sessions do not depend on a single in-memory SSE run.
 - Terminal states (`completed`, `failed`) are represented in persisted job state, so lookup can route directly to the correct page even after the browser closes.
+- `run_review_stream` now also emits `node_end` events for parse-time clause counts and `tool_result` events for completed clause-analysis / suggestion steps, so the frontend can render quantified progress and less technical activity text.
 
 ### RAG embedding batching
 - `store.py` implements `_get_embeddings_batch_sync()` for batched embedding API calls.

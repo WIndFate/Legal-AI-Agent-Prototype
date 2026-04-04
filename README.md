@@ -6,7 +6,7 @@ AI-powered Japanese contract risk analysis for foreign residents in Japan. Users
 
 ## Status
 
-As of 2026-03-28, the local MVP flow is working in Docker:
+As of 2026-04-04, the local MVP flow is working in Docker:
 
 - `upload -> payment/create -> analysis/start -> orders/{id}/status + events/stream -> report retrieval -> contract deletion`
 - Text and text-layer PDFs are quoted before payment from extracted text; image/scanned PDF uploads now use a dual-OCR path with temporary staging plus post-payment formal OCR
@@ -27,6 +27,7 @@ As of 2026-03-28, the local MVP flow is working in Docker:
 - Payment success and analysis completion now show an order reminder dialog so users can screenshot or copy their order ID before moving on
 - Review now acts as a processing surface only; once analysis finishes, the user is redirected straight into the saved `/report/{orderId}` page
 - The review page now uses a cleaner three-zone structure: a single stage header, a segmented progress bar, a user-friendly activity feed with clause-level messages, and an elapsed timer instead of the older duplicate panel / badge / spinner stack
+- The review page now also shows quantified clause progress, keeps failures inside the same live card, uses shorter progress labels, and trims motion/activity density on mobile or reduced-motion setups
 - That review activity feed is now derived from raw persisted events, so changing the surrounding site language mid-analysis immediately re-localizes the in-progress feed instead of leaving stale strings behind
 - If the uploaded content is judged not to be a contract during the parse step, analysis now stops early with a dedicated user-facing error instead of consuming the full review flow
 - The saved report page now supports risk-level filtering, denser clause cards, a direct backend-generated `Download PDF` action, and a more compact one-row summary on desktop
