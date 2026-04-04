@@ -376,8 +376,7 @@
   background: rgba(255, 255, 255, 0.72);
 }
 
-.share-v2-report-label,
-.share-v2-link-label {
+.share-v2-report-label {
   color: var(--text-faint);
   font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
   font-size: 0.72rem;
@@ -408,24 +407,6 @@
   line-height: 1.55;
 }
 
-.share-v2-link-note {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 12px;
-  grid-column: 1 / -1;
-  padding: 0 2px;
-}
-
-.share-v2-link-value {
-  margin: 0;
-  color: var(--text-faint);
-  font-family: "SF Mono", "Cascadia Code", "Roboto Mono", monospace;
-  font-size: 0.72rem;
-  line-height: 1.5;
-  word-break: break-all;
-}
-
 .share-v2-card-section {
   display: grid;
   gap: 12px;
@@ -434,27 +415,6 @@
 .share-v2-card-copy {
   display: grid;
   gap: 4px;
-}
-
-.share-v2-card-copy-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.share-v2-card-copy-badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 5px 9px;
-  border-radius: 999px;
-  background: rgba(31, 58, 95, 0.08);
-  color: var(--brand);
-  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
-  font-size: 0.7rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
 }
 
 .share-v2-card-copy-note {
@@ -860,12 +820,6 @@
 
   .share-v2-summary {
     grid-template-columns: 1fr;
-  }
-
-  .share-v2-link-note {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 4px;
   }
 
   .share-v2-card-loading,

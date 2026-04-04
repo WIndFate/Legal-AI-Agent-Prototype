@@ -45,14 +45,6 @@ export default function ShareSheet({ open, onClose, shareUrl, orderId, reportSum
     }
   }, [referralData?.referral_code, shareUrl]);
 
-  const shareDomain = useMemo(() => {
-    try {
-      return new URL(finalShareUrl).hostname.replace(/^www\./, '');
-    } catch {
-      return finalShareUrl;
-    }
-  }, [finalShareUrl]);
-
   useEffect(() => {
     if (!open) return;
 
@@ -278,18 +270,11 @@ export default function ShareSheet({ open, onClose, shareUrl, orderId, reportSum
                 </div>
               </div>
             )}
-            <div className="share-v2-link-note">
-              <span className="share-v2-link-label">{t('share.referral_link_label')}</span>
-              <p className="share-v2-link-value">{shareDomain}</p>
-            </div>
           </div>
 
           {reportSummary && (
             <div className="share-v2-card-section">
               <div className="share-v2-card-copy">
-                <div className="share-v2-card-copy-top">
-                  <span className="share-v2-card-copy-badge">ContractGuard</span>
-                </div>
                 <p className="share-v2-card-copy-note">{t('share.referral_reward', { amount: discountAmount })}</p>
               </div>
               <div className="share-v2-card-frame">
