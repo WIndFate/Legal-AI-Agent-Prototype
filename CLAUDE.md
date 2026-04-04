@@ -92,6 +92,7 @@ Current status as of 2026-03-28:
 - Local Docker startup now uses health checks for `postgres`, `redis`, and `backend`, and key frontend pages use a small retry wrapper so brief backend warm-up windows do not surface as user-facing proxy failures.
 - Backend containers now auto-apply Alembic migrations to `head` on startup before Uvicorn boots, guarded by a PostgreSQL advisory lock and a legacy-schema detection/stamp path so old Docker volumes can move forward safely without manual migration steps.
 - A new read-only operational endpoint, `GET /api/eval/operations`, now exposes margin, estimate-vs-actual deltas, language/input/pricing-model splits, paid-price-band splits, model-signature splits, and recent-order summaries for business monitoring.
+- Report expired page redesigned: shield+clock SVG icon, softer "securely removed" tone, primary "upload new contract" CTA, secondary home link, and trust footer across all 9 languages.
 - Production credentials and live third-party testing still pending.
 
 ---
