@@ -229,38 +229,61 @@
 
 .share-v2-header {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
-  padding: 16px 20px 0;
+  padding: 18px 18px 0;
+}
+
+.share-v2-header-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.share-v2-kicker {
+  margin: 0;
+  color: rgba(31, 58, 95, 0.7);
+  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 h2.share-v2-title {
   font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
-  font-size: 0.88rem;
-  font-weight: 600;
-  color: var(--text-faint);
-  line-height: 1;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--brand-ink);
+  line-height: 1.2;
   margin: 0;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+}
+
+.share-v2-desc {
+  margin: 0;
+  color: var(--text-faint);
+  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
+  font-size: 0.82rem;
+  font-weight: 400;
+  line-height: 1.45;
 }
 
 .share-v2-close {
-  width: 30px;
-  height: 30px;
+  width: 26px;
+  height: 26px;
   flex: 0 0 auto;
   border: none;
-  border-radius: 50%;
-  background: rgba(31, 58, 95, 0.06);
-  color: rgba(31, 58, 95, 0.55);
+  background: transparent;
+  color: rgba(31, 58, 95, 0.3);
   cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease;
+  transition: color 0.15s ease;
 }
 
 .share-v2-close:hover {
-  background: rgba(31, 58, 95, 0.12);
-  color: rgba(31, 58, 95, 0.8);
+  color: rgba(31, 58, 95, 0.56);
 }
 
 .share-v2-close svg {
@@ -274,20 +297,16 @@ h2.share-v2-title {
 
 .share-v2-body {
   display: grid;
-  gap: 12px;
-  padding: 10px 16px 16px;
-}
-
-.share-v2-card-section {
-  display: grid;
+  gap: 14px;
+  padding: 8px 10px 14px;
 }
 
 .share-v2-card-frame {
-  border-radius: 14px;
+  border-radius: 10px;
   overflow: hidden;
-  border: 1px solid rgba(31, 58, 95, 0.08);
-  background: #F4F2EC;
-  box-shadow: 0 6px 20px rgba(31, 58, 95, 0.06);
+  border: none;
+  background: transparent;
+  box-shadow: 0 4px 16px rgba(31, 58, 95, 0.08);
 }
 
 .share-v2-card-img {
@@ -306,8 +325,8 @@ h2.share-v2-title {
 .share-v2-actions {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
-  padding-top: 2px;
+  gap: 8px;
+  padding-top: 0;
 }
 
 .share-v2-action-btn {
@@ -315,18 +334,18 @@ h2.share-v2-title {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 7px;
-  min-height: 46px;
-  padding: 0 14px;
+  gap: 6px;
+  min-height: 42px;
+  padding: 0 12px;
   border: 1px solid rgba(31, 58, 95, 0.1);
-  border-radius: 14px;
+  border-radius: 10px;
   background: rgba(255, 255, 255, 0.8);
   color: var(--brand-ink);
   font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
-  font-size: 0.86rem;
-  font-weight: 700;
+  font-size: 0.84rem;
+  font-weight: 600;
   cursor: pointer;
-  box-shadow: 0 8px 18px rgba(31, 58, 95, 0.06);
+  box-shadow: 0 3px 10px rgba(31, 58, 95, 0.05);
   transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
 }
 
@@ -339,7 +358,7 @@ h2.share-v2-title {
 .share-v2-action-btn:hover {
   background: rgba(255, 255, 255, 0.98);
   border-color: rgba(31, 58, 95, 0.2);
-  box-shadow: 0 12px 22px rgba(31, 58, 95, 0.08);
+  box-shadow: 0 5px 14px rgba(31, 58, 95, 0.07);
   transform: translateY(-1px);
 }
 
@@ -351,6 +370,10 @@ h2.share-v2-title {
   background: linear-gradient(135deg, rgba(31, 58, 95, 0.96), rgba(53, 85, 124, 0.96));
   color: #fff;
   border-color: transparent;
+  min-height: 44px;
+  border-radius: 11px;
+  font-weight: 700;
+  box-shadow: 0 4px 14px rgba(31, 58, 95, 0.14);
 }
 
 .share-v2-action-save:hover:not(:disabled) {
@@ -360,6 +383,24 @@ h2.share-v2-title {
 
 .share-v2-action-copy {
   background: rgba(255, 255, 255, 0.85);
+  min-height: 38px;
+}
+
+.share-v2-action-native {
+  min-height: 38px;
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+  color: rgba(31, 58, 95, 0.62);
+  font-weight: 500;
+}
+
+.share-v2-action-native:hover {
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+  color: rgba(31, 58, 95, 0.82);
+  transform: none;
 }
 
 .share-v2-action-btn.is-copied {
@@ -369,8 +410,8 @@ h2.share-v2-title {
 }
 
 .share-v2-action-btn svg {
-  width: 16px;
-  height: 16px;
+  width: 15px;
+  height: 15px;
   stroke: currentColor;
   stroke-width: 2;
   stroke-linecap: round;
@@ -634,33 +675,29 @@ h2.share-v2-title {
   }
 
   .share-v2-header {
-    padding: 20px 18px 0;
+    padding: 16px 14px 0;
   }
 
   .share-v2-title {
-    font-size: 1.2rem;
+    font-size: 1.1rem;
   }
 
   .share-v2-desc {
-    font-size: 0.86rem;
+    font-size: 0.8rem;
   }
 
   .share-v2-body {
-    padding: 16px 18px 18px;
-    gap: 14px;
+    padding: 8px 8px 14px;
+    gap: 12px;
   }
 
-  .share-v2-summary {
-    grid-template-columns: 1fr;
-  }
-
-  .share-v2-card-loading,
-  .share-v2-card-fallback {
+  .share-v2-card-loading {
     min-height: 190px;
   }
 
   .share-v2-actions {
     grid-template-columns: 1fr;
+    gap: 6px;
   }
 
   .report-share-cta {

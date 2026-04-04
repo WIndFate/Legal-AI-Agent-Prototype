@@ -221,9 +221,13 @@ export default function ShareSheet({ open, onClose, shareUrl, orderId, reportSum
       >
         {/* ── Compact header ── */}
         <div className="share-v2-header">
-          <h2 id="share-dialog-title" className="share-v2-title">
-            {t('share.kicker')}
-          </h2>
+          <div className="share-v2-header-text">
+            <p className="share-v2-kicker">{t('share.kicker')}</p>
+            <h2 id="share-dialog-title" className="share-v2-title">
+              {t('share.title')}
+            </h2>
+            <p className="share-v2-desc">{t('share.description')}</p>
+          </div>
           <button type="button" className="share-v2-close" onClick={onClose} aria-label={t('share.close')}>
             <svg viewBox="0 0 20 20" focusable="false">
               <path d="M5 5l10 10M15 5L5 15" />
@@ -267,7 +271,7 @@ export default function ShareSheet({ open, onClose, shareUrl, orderId, reportSum
             </button>
             <button
               type="button"
-              className={`share-v2-action-btn share-v2-action-copy${copiedLink ? ' is-copied' : ''}`}
+              className={`share-v2-action-btn share-v2-action-copy${copiedLink ? ' is-copied' : ''}${!supportsNativeShare ? ' share-v2-action-full' : ''}`}
               onClick={() => void copyLink()}
             >
               {copiedLink ? (
