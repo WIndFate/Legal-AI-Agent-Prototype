@@ -31,7 +31,7 @@ As of 2026-04-04, the local MVP flow is working in Docker:
 - That review activity feed is now derived from raw persisted events, so changing the surrounding site language mid-analysis immediately re-localizes the in-progress feed instead of leaving stale strings behind
 - If the uploaded content is judged not to be a contract during the parse step, analysis now stops early with a dedicated user-facing error instead of consuming the full review flow
 - The saved report page now supports risk-level filtering, denser clause cards, a direct backend-generated `Download PDF` action, and a more compact one-row summary on desktop
-- Report sharing now uses a compact custom share sheet that keeps the reward summary and preview card visible, generates a referral-tagged report link behind the scenes, and places save/copy/share actions in a tighter layout
+- Report sharing now uses a compact custom share sheet with a clearer title block, a larger preview card, a referral-tagged report link generated behind the scenes, and a more intentional save/copy/share action hierarchy
 - Referral links now return to the homepage with `?ref=` so the referral code is carried into the payment form automatically
 - Lookup and report pages now distinguish invalid order IDs, unstable networks, offline states, and retryable loading failures more clearly
 - Mobile lookup input no longer triggers iOS auto-zoom, legal-page route changes now reset back to the top, and horizontal overflow that exposed the page background on small screens has been removed
@@ -151,7 +151,7 @@ docker compose up -d backend postgres redis
 18. After a quote is generated, the homepage automatically scrolls to the payment panel and highlights the next-step area so users do not miss that the flow has advanced.
 19. Payment success and review completion now open a reminder dialog that emphasizes saving the order ID for later lookup.
 20. A dedicated `/lookup` page can reopen pending-payment, in-progress review, or finished report states from the same order ID.
-21. The report page now opens a compact custom share sheet first, silently appends the personal referral code to the report URL, emphasizes the reward summary plus preview card, and groups save/copy/share actions into a tighter action block.
+21. The report page now opens a compact custom share sheet first, silently appends the personal referral code to the report URL, gives the preview card more visual weight, and groups save/copy/share actions into a tighter tiered action block.
 22. Referral links now return to the homepage with `?ref=` so the referral code is prefilled for the next user.
 23. Lookup and report pages now surface clearer weak-network states, retry actions, offline banners, timeout-aware loading feedback, and a dedicated expired-report fallback back to home.
 24. Report summary cards stay clickable as the primary risk filters on both desktop and mobile, with denser sizing tuned to remain stable even when counts reach two digits.
@@ -220,7 +220,7 @@ docker compose up -d backend postgres redis
 - [`frontend/src/pages/ExamplesPage.tsx`](./frontend/src/pages/ExamplesPage.tsx): dedicated examples gallery / report sample page
 - [`frontend/src/pages/LookupPage.tsx`](./frontend/src/pages/LookupPage.tsx): order-ID based result lookup page
 - [`frontend/src/components/common/OrderReminderDialog.tsx`](./frontend/src/components/common/OrderReminderDialog.tsx): modal prompting users to save order details
-- [`frontend/src/components/common/ShareSheet.tsx`](./frontend/src/components/common/ShareSheet.tsx): custom share panel with referral-aware sharing, denser preview-card layout, and a tighter save/copy/share action stack
+- [`frontend/src/components/common/ShareSheet.tsx`](./frontend/src/components/common/ShareSheet.tsx): custom share panel with referral-aware sharing, a stronger header + preview hierarchy, and a tighter tiered save/copy/share action stack
 - [`tests/`](./tests/): integration tests for all 7 API routers + unit tests
 - [`SPEC.md`](./SPEC.md): detailed implementation status, pending work, and risks
 - [`DESIGN.md`](./DESIGN.md): product rationale and go-to-market plan
