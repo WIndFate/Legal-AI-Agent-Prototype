@@ -175,9 +175,11 @@
     "filter_all": "All clauses",
     "filter_empty": "No clauses match the current filter.",
     "expired_kicker": "Report expired",
-    "expired_title": "This report is older than 72 hours",
-    "expired_body": "For privacy, the report has already been deleted. Upload a new contract to start a fresh analysis.",
-    "expired_action": "Back to home"
+    "expired_title": "Your report has been securely removed",
+    "expired_body": "To protect your privacy, reports are automatically deleted 72 hours after generation. Next time, we recommend downloading the PDF while the report is still available.",
+    "expired_action": "Upload a new contract",
+    "expired_home_link": "Back to home",
+    "expired_trust": "Contract text is deleted immediately after analysis; reports are retained for 72 hours only"
   },
   "errors": {
     "upload_failed": "Upload failed. Please try again.",

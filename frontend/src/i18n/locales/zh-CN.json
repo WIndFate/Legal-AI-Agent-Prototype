@@ -175,9 +175,11 @@
     "filter_all": "全部条款",
     "filter_empty": "当前筛选下没有可显示的条款。",
     "expired_kicker": "报告已过期",
-    "expired_title": "该报告已超过 72 小时",
-    "expired_body": "为了保护隐私，报告已自动删除。建议重新上传合同并开始新的分析。",
-    "expired_action": "返回首页"
+    "expired_title": "报告已安全清除",
+    "expired_body": "为保护您的隐私，报告在生成 72 小时后自动删除。建议下次在有效期内下载 PDF 留存。",
+    "expired_action": "上传新合同",
+    "expired_home_link": "返回首页",
+    "expired_trust": "合同文本在分析后立即删除，报告仅保留 72 小时"
   },
   "errors": {
     "upload_failed": "上传失败，请重试。",

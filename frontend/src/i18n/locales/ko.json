@@ -175,9 +175,11 @@
     "filter_all": "전체 조항",
     "filter_empty": "현재 필터에 맞는 조항이 없습니다.",
     "expired_kicker": "보고서 만료",
-    "expired_title": "이 보고서는 72시간이 지났습니다",
-    "expired_body": "개인정보 보호를 위해 보고서가 이미 삭제되었습니다. 새 계약서를 업로드해 다시 분석해 주세요.",
-    "expired_action": "홈으로 돌아가기"
+    "expired_title": "보고서가 안전하게 삭제되었습니다",
+    "expired_body": "개인정보 보호를 위해 보고서는 생성 후 72시간이 지나면 자동 삭제됩니다. 다음에는 유효 기간 내에 PDF를 다운로드하여 보관하시기 바랍니다.",
+    "expired_action": "새 계약서 업로드",
+    "expired_home_link": "홈으로 돌아가기",
+    "expired_trust": "계약서 원문은 분석 후 즉시 삭제되며, 보고서는 72시간만 보관됩니다"
   },
   "errors": {
     "upload_failed": "업로드에 실패했습니다. 다시 시도해 주세요.",

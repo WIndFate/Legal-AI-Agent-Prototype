@@ -175,9 +175,11 @@
     "filter_all": "Semua klausul",
     "filter_empty": "Tidak ada klausul yang cocok dengan filter saat ini.",
     "expired_kicker": "Laporan kedaluwarsa",
-    "expired_title": "Laporan ini sudah lebih dari 72 jam",
-    "expired_body": "Untuk privasi, laporan ini sudah dihapus otomatis. Unggah kontrak baru untuk memulai analisis lagi.",
-    "expired_action": "Kembali ke beranda"
+    "expired_title": "Laporan Anda telah dihapus dengan aman",
+    "expired_body": "Untuk melindungi privasi Anda, laporan otomatis dihapus 72 jam setelah dibuat. Lain kali, kami sarankan mengunduh PDF selagi laporan masih tersedia.",
+    "expired_action": "Unggah kontrak baru",
+    "expired_home_link": "Kembali ke beranda",
+    "expired_trust": "Teks kontrak dihapus segera setelah analisis; laporan hanya disimpan selama 72 jam"
   },
   "errors": {
     "upload_failed": "Gagal mengunggah. Silakan coba lagi.",

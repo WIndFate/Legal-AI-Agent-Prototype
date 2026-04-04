@@ -175,9 +175,11 @@
     "filter_all": "全部條款",
     "filter_empty": "目前篩選條件下沒有可顯示的條款。",
     "expired_kicker": "報告已過期",
-    "expired_title": "此報告已超過 72 小時",
-    "expired_body": "為保護隱私，報告已自動刪除。建議重新上傳合約並開始新的分析。",
-    "expired_action": "返回首頁"
+    "expired_title": "報告已安全清除",
+    "expired_body": "為保護您的隱私，報告在生成 72 小時後自動刪除。建議下次在有效期內下載 PDF 留存。",
+    "expired_action": "上傳新合約",
+    "expired_home_link": "返回首頁",
+    "expired_trust": "合約文本在分析後立即刪除，報告僅保留 72 小時"
   },
   "errors": {
     "upload_failed": "上傳失敗，請重試。",

@@ -175,9 +175,11 @@
     "filter_all": "Todas as cláusulas",
     "filter_empty": "Nenhuma cláusula corresponde ao filtro atual.",
     "expired_kicker": "Relatório expirado",
-    "expired_title": "Este relatório já passou de 72 horas",
-    "expired_body": "Por privacidade, o relatório já foi excluído automaticamente. Envie um novo contrato para iniciar outra análise.",
-    "expired_action": "Voltar para a página inicial"
+    "expired_title": "Seu relatório foi removido com segurança",
+    "expired_body": "Para proteger sua privacidade, os relatórios são excluídos automaticamente 72 horas após a geração. Da próxima vez, recomendamos baixar o PDF enquanto o relatório ainda estiver disponível.",
+    "expired_action": "Enviar novo contrato",
+    "expired_home_link": "Voltar para a página inicial",
+    "expired_trust": "O texto do contrato é excluído imediatamente após a análise; os relatórios são mantidos por apenas 72 horas"
   },
   "errors": {
     "upload_failed": "Falha no envio. Tente novamente.",

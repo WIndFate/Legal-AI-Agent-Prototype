@@ -175,9 +175,11 @@
     "filter_all": "Tất cả điều khoản",
     "filter_empty": "Không có điều khoản nào phù hợp với bộ lọc hiện tại.",
     "expired_kicker": "Báo cáo đã hết hạn",
-    "expired_title": "Báo cáo này đã quá 72 giờ",
-    "expired_body": "Vì quyền riêng tư, báo cáo đã được xóa tự động. Hãy tải lên hợp đồng mới để phân tích lại.",
-    "expired_action": "Về trang chủ"
+    "expired_title": "Báo cáo đã được xóa an toàn",
+    "expired_body": "Để bảo vệ quyền riêng tư, báo cáo sẽ tự động xóa sau 72 giờ kể từ khi tạo. Lần sau, hãy tải PDF trong thời hạn hiệu lực để lưu giữ.",
+    "expired_action": "Tải lên hợp đồng mới",
+    "expired_home_link": "Về trang chủ",
+    "expired_trust": "Văn bản hợp đồng được xóa ngay sau khi phân tích; báo cáo chỉ lưu giữ trong 72 giờ"
   },
   "errors": {
     "upload_failed": "Tải lên thất bại. Vui lòng thử lại.",
