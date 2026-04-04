@@ -375,8 +375,69 @@
 }
 
 .report-expired-panel {
-  max-width: 620px;
+  max-width: 520px;
   margin: 0 auto;
+  text-align: center;
+  padding: 36px 28px 28px;
+}
+
+.report-expired-icon {
+  margin: 0 auto 18px;
+  width: 56px;
+  height: 56px;
+  opacity: 0.88;
+}
+
+.report-expired-panel h2 {
+  font-size: 1.35rem;
+  margin-top: 4px;
+}
+
+.report-expired-panel .dialog-body {
+  margin-top: 10px;
+  font-size: 0.92rem;
+  line-height: 1.7;
+}
+
+.report-expired-panel .soft-error-actions {
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.report-expired-panel .btn-primary {
+  max-width: 320px;
+}
+
+.report-expired-home-link {
+  display: inline-block;
+  margin-top: 12px;
+  background: none;
+  border: none;
+  color: var(--brand-soft);
+  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
+  font-size: 0.88rem;
+  cursor: pointer;
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.report-expired-home-link:hover {
+  color: var(--brand);
+}
+
+.report-expired-divider {
+  margin: 20px auto 14px;
+  max-width: 200px;
+  border: none;
+  border-top: 1px solid var(--line);
+}
+
+.report-expired-trust {
+  color: var(--text-faint);
+  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
+  font-size: 0.78rem;
+  line-height: 1.6;
+  letter-spacing: 0.01em;
 }
 
 .report-actions {

@@ -225,20 +225,37 @@ export default function ReportPage() {
   }
 
   if (expired) {
+    const homePath = referralCode ? `/?ref=${encodeURIComponent(referralCode)}` : '/';
     return (
       <div className="page report-page">
         <div className="soft-error-panel report-expired-panel">
+          <div className="report-expired-icon" aria-hidden="true">
+            <svg width="56" height="56" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+              {/* Shield outline */}
+              <path d="M28 4L8 14v14c0 12.4 8.5 24 20 28 11.5-4 20-15.6 20-28V14L28 4Z"
+                stroke="var(--brand-soft)" strokeWidth="2.2" fill="rgba(31,58,95,0.06)" strokeLinejoin="round" />
+              {/* Clock circle */}
+              <circle cx="28" cy="26" r="10" stroke="var(--brand)" strokeWidth="2" fill="none" />
+              {/* Clock hands */}
+              <line x1="28" y1="26" x2="28" y2="20" stroke="var(--brand)" strokeWidth="2" strokeLinecap="round" />
+              <line x1="28" y1="26" x2="33" y2="26" stroke="var(--brand)" strokeWidth="2" strokeLinecap="round" />
+              {/* Checkmark at bottom of shield */}
+              <path d="M22 38l4 4 8-8" stroke="var(--success)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+            </svg>
+          </div>
           <p className="section-kicker">{t('report.expired_kicker')}</p>
           <h2>{t('report.expired_title')}</h2>
           <p className="dialog-body">{t('report.expired_body')}</p>
           <div className="soft-error-actions">
-            <button
-              className="btn-primary"
-              onClick={() => navigate(referralCode ? `/?ref=${encodeURIComponent(referralCode)}` : '/')}
-            >
+            <button className="btn-primary" onClick={() => navigate(homePath)}>
               {t('report.expired_action')}
             </button>
           </div>
+          <button className="report-expired-home-link" onClick={() => navigate(homePath)}>
+            {t('report.expired_home_link')}
+          </button>
+          <hr className="report-expired-divider" />
+          <p className="report-expired-trust">{t('report.expired_trust')}</p>
         </div>
       </div>
     );
