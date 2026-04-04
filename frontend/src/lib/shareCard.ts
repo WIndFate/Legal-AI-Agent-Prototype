@@ -22,16 +22,13 @@ export interface ShareCardOptions {
 }
 
 const W = 1080;
-const H = 1350;
-const PAD = 80;
+const PAD = 72;
 const CONTENT_W = W - PAD * 2;
 
-const BG_TOP = '#1B2E4A';
-const BG_BOTTOM = '#F7F4EE';
-const BRAND_LIGHT = '#C8D6E8';
 const TEXT_WHITE = '#FFFFFF';
 const TEXT_DARK = '#1A1714';
 const TEXT_FAINT = '#9A9189';
+const BRAND_LIGHT = '#C8D6E8';
 const SUCCESS = '#2D7B62';
 const DANGER = '#C0392B';
 const WARNING = '#D4881C';
@@ -48,17 +45,15 @@ function riskColor(level: string): string {
 function wrapText(ctx: CanvasRenderingContext2D, text: string, maxWidth: number, maxLines: number): string[] {
   const lines: string[] = [];
   let remaining = text;
-
   while (remaining.length > 0 && lines.length < maxLines) {
     let end = remaining.length;
-    while (ctx.measureText(remaining.slice(0, end)).width > maxWidth && end > 1) {
-      end--;
-    }
+    while (ctx.measureText(remaining.slice(0, end)).width > maxWidth && end > 1) end--;
     if (end < remaining.length && end > 10) {
-      const breakIdx = remaining.lastIndexOf('。', end);
-      const commaIdx = remaining.lastIndexOf('、', end);
-      const spaceIdx = remaining.lastIndexOf(' ', end);
-      const best = Math.max(breakIdx, commaIdx, spaceIdx);
+      const best = Math.max(
+        remaining.lastIndexOf('。', end),
+        remaining.lastIndexOf('、', end),
+        remaining.lastIndexOf(' ', end),
+      );
       if (best > end * 0.4) end = best + 1;
     }
     let line = remaining.slice(0, end);
@@ -70,18 +65,6 @@ function wrapText(ctx: CanvasRenderingContext2D, text: string, maxWidth: number,
     lines.push(line);
   }
   return lines;
-}
-
-function splitClauseStatsText(text: string): string[] {
-  const bullet = '·';
-  if (!text.includes(bullet)) return [text];
-
-  const parts = text.split(bullet).map((part) => part.trim()).filter(Boolean);
-  if (parts.length <= 1) return [text];
-
-  const firstLine = parts[0];
-  const secondLine = parts.slice(1).join(` ${bullet} `);
-  return [firstLine, secondLine];
 }
 
 function drawRoundedRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
@@ -110,11 +93,8 @@ function drawShieldIcon(ctx: CanvasRenderingContext2D, cx: number, cy: number, s
   ctx.quadraticCurveTo(-16 * s, 16 * s, -16 * s, 4 * s);
   ctx.lineTo(-16 * s, -10 * s);
   ctx.closePath();
-
   ctx.fillStyle = 'rgba(255,255,255,0.15)';
   ctx.fill();
-
-  // Checkmark
   ctx.strokeStyle = TEXT_WHITE;
   ctx.lineWidth = 3 * s;
   ctx.lineCap = 'round';
@@ -127,23 +107,20 @@ function drawShieldIcon(ctx: CanvasRenderingContext2D, cx: number, cy: number, s
   ctx.restore();
 }
 
-function drawQrCode(ctx: CanvasRenderingContext2D, url: string, x: number, y: number, size: number) {
+function drawQrCode(ctx: CanvasRenderingContext2D, url: string, cx: number, cy: number, size: number) {
   const qr = qrcode(0, 'M');
   qr.addData(url);
   qr.make();
-
   const moduleCount = qr.getModuleCount();
   const cellSize = size / moduleCount;
-
+  const x = cx - size / 2;
+  const y = cy - size / 2;
   // White background
-  ctx.save();
-  drawRoundedRect(ctx, x - 10, y - 10, size + 20, size + 20, 8);
+  drawRoundedRect(ctx, x - 8, y - 8, size + 16, size + 16, 6);
   ctx.fillStyle = '#FFFFFF';
   ctx.fill();
-  ctx.restore();
-
-  // Draw modules
-  ctx.fillStyle = BG_TOP;
+  // Modules
+  ctx.fillStyle = '#1B2E4A';
   for (let row = 0; row < moduleCount; row++) {
     for (let col = 0; col < moduleCount; col++) {
       if (qr.isDark(row, col)) {
@@ -154,212 +131,180 @@ function drawQrCode(ctx: CanvasRenderingContext2D, url: string, x: number, y: nu
 }
 
 export async function generateShareCard(options: ShareCardOptions): Promise<Blob> {
+  // ── Pre-measure text to calculate dynamic height ──
+  const measureCanvas = document.createElement('canvas');
+  measureCanvas.width = W;
+  measureCanvas.height = 100;
+  const mc = measureCanvas.getContext('2d')!;
+
+  mc.font = `400 26px ${FONT}`;
+  const findingLines = options.topFinding
+    ? wrapText(mc, options.topFinding, CONTENT_W - 72, 3)
+    : [];
+
+  mc.font = `600 26px ${FONT}`;
+  const incentiveLines = wrapText(mc, options.labels.incentiveText, 380, 2);
+
+  // ── Calculate section heights ──
+  const headerH = 340;                                   // brand + risk + stats
+  const findingH = findingLines.length > 0
+    ? findingLines.length * 36 + 56                      // quote card
+    : 0;
+  const qrSize = 160;
+  const bottomH = Math.max(
+    44 + 76 + 16 + incentiveLines.length * 34 + 24 + 56, // left: ¥ + text + code
+    44 + qrSize + 70,                                     // right: QR + labels
+  );
+  const H = headerH + findingH + 28 + bottomH + PAD;
+
+  // ── Create real canvas ──
   const canvas = document.createElement('canvas');
   canvas.width = W;
   canvas.height = H;
   const ctx = canvas.getContext('2d')!;
 
-  // ── Dark header zone ──
-  const headerH = 420;
-  const gradient = ctx.createLinearGradient(0, 0, 0, headerH + 40);
-  gradient.addColorStop(0, '#172842');
-  gradient.addColorStop(0.7, '#1F3A5C');
-  gradient.addColorStop(1, '#264570');
-  ctx.fillStyle = gradient;
+  // ── Background ──
+  const bgGrad = ctx.createLinearGradient(0, 0, 0, headerH);
+  bgGrad.addColorStop(0, '#152740');
+  bgGrad.addColorStop(1, '#1E3958');
+  ctx.fillStyle = bgGrad;
   ctx.fillRect(0, 0, W, headerH);
-
-  // Light lower zone
-  ctx.fillStyle = BG_BOTTOM;
+  ctx.fillStyle = '#F6F3EC';
   ctx.fillRect(0, headerH, W, H - headerH);
 
-  // Subtle decorative circles on header
-  ctx.fillStyle = 'rgba(255,255,255,0.015)';
-  for (let i = 0; i < 4; i++) {
-    ctx.beginPath();
-    ctx.arc(W * 0.85 - i * 20, 80 + i * 60, 200 - i * 30, 0, Math.PI * 2);
-    ctx.fill();
-  }
+  // Subtle glow
+  ctx.fillStyle = 'rgba(255,255,255,0.012)';
+  ctx.beginPath();
+  ctx.arc(W * 0.82, 100, 220, 0, Math.PI * 2);
+  ctx.fill();
 
-  let y = PAD;
-
-  // ── Brand: shield + name ──
-  drawShieldIcon(ctx, PAD + 24, y + 22, 40);
-  ctx.font = `700 38px ${FONT}`;
+  // ── Brand row ──
+  let y = 52;
+  drawShieldIcon(ctx, PAD + 22, y + 20, 38);
+  ctx.font = `700 36px ${FONT}`;
   ctx.fillStyle = TEXT_WHITE;
   ctx.textBaseline = 'middle';
-  ctx.fillText('ContractGuard', PAD + 60, y + 20);
-
-  ctx.font = `400 20px ${FONT}`;
+  ctx.fillText('ContractGuard', PAD + 56, y + 18);
+  ctx.font = `400 19px ${FONT}`;
   ctx.fillStyle = BRAND_LIGHT;
-  ctx.fillText(options.labels.brandSubtitle, PAD + 60, y + 54);
-  y += 96;
+  ctx.fillText(options.labels.brandSubtitle, PAD + 56, y + 50);
+  y += 86;
 
-  // ── Thin separator ──
-  ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+  // Thin line
+  ctx.strokeStyle = 'rgba(255,255,255,0.06)';
   ctx.lineWidth = 1;
   ctx.beginPath();
   ctx.moveTo(PAD, y);
   ctx.lineTo(W - PAD, y);
   ctx.stroke();
-  y += 32;
+  y += 28;
 
-  // ── Risk level label ──
-  ctx.font = `500 22px ${FONT}`;
-  ctx.fillStyle = 'rgba(200,214,232,0.7)';
+  // ── Risk row: badge left, stats right ──
+  ctx.font = `500 20px ${FONT}`;
+  ctx.fillStyle = 'rgba(200,214,232,0.6)';
   ctx.textBaseline = 'top';
   ctx.fillText(options.labels.overallRiskLabel, PAD, y);
-  y += 36;
+  y += 30;
 
-  // ── Risk badge ──
   const color = riskColor(options.overallRisk);
+  ctx.font = `800 58px ${FONT}`;
   const badgeText = options.overallRisk;
-  ctx.font = `800 64px ${FONT}`;
-  const badgeW = ctx.measureText(badgeText).width + 60;
-  drawRoundedRect(ctx, PAD, y, badgeW, 86, 18);
+  const badgeW = ctx.measureText(badgeText).width + 52;
+  const badgeH = 78;
+  drawRoundedRect(ctx, PAD, y, badgeW, badgeH, 16);
   ctx.fillStyle = color;
   ctx.fill();
   ctx.fillStyle = TEXT_WHITE;
   ctx.textBaseline = 'middle';
-  ctx.fillText(badgeText, PAD + 30, y + 45);
+  ctx.fillText(badgeText, PAD + 26, y + badgeH / 2 + 1);
 
-  // ── Clause stats on the same line, right-aligned ──
-  const headerStatLines = splitClauseStatsText(options.labels.clauseStats);
-  ctx.font = `600 22px ${FONT}`;
-  ctx.fillStyle = 'rgba(255,255,255,0.8)';
-  ctx.textBaseline = 'middle';
+  // Stats right-aligned, vertically centered with badge
+  ctx.font = `500 21px ${FONT}`;
+  ctx.fillStyle = 'rgba(255,255,255,0.75)';
   ctx.textAlign = 'right';
-  headerStatLines.forEach((line, index) => {
-    ctx.fillText(line, W - PAD, y + 28 + index * 30);
-  });
+  ctx.textBaseline = 'middle';
+  ctx.fillText(options.labels.clauseStats, W - PAD, y + badgeH / 2);
   ctx.textAlign = 'left';
 
-  // ── White content card overlapping header/body boundary ──
-  const cardX = PAD;
-  const cardY = headerH - 36;
-  const cardW = CONTENT_W;
-
-  // Measure finding height
-  ctx.font = `400 26px ${FONT}`;
-  const findingLines = options.topFinding
-    ? wrapText(ctx, options.topFinding, cardW - 80, 4)
-    : [];
-  const findingBlockH = findingLines.length > 0 ? findingLines.length * 38 + 24 : 0;
-  const cardH = findingBlockH + 56;
-
-  // Draw card shadow + fill
-  ctx.save();
-  ctx.shadowColor = 'rgba(0,0,0,0.06)';
-  ctx.shadowBlur = 30;
-  ctx.shadowOffsetY = 6;
-  drawRoundedRect(ctx, cardX, cardY, cardW, cardH, 20);
-  ctx.fillStyle = '#FFFFFF';
-  ctx.fill();
-  ctx.restore();
-
-  // ── Top finding quote ──
+  // ── Finding quote card (overlapping dark/light boundary) ──
+  const cardY = headerH - 24;
   if (findingLines.length > 0) {
-    const quoteY = cardY + 28;
-    // Left accent bar
-    const barColor = riskColor(options.overallRisk);
-    drawRoundedRect(ctx, cardX + 28, quoteY, 4, findingLines.length * 38, 2);
-    ctx.fillStyle = barColor;
+    const cardH = findingLines.length * 36 + 48;
+    ctx.save();
+    ctx.shadowColor = 'rgba(0,0,0,0.05)';
+    ctx.shadowBlur = 24;
+    ctx.shadowOffsetY = 4;
+    drawRoundedRect(ctx, PAD, cardY, CONTENT_W, cardH, 18);
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fill();
+    ctx.restore();
+
+    // Accent bar
+    const barH = findingLines.length * 36 - 4;
+    drawRoundedRect(ctx, PAD + 24, cardY + 24, 4, barH, 2);
+    ctx.fillStyle = color;
     ctx.fill();
 
     ctx.font = `400 26px ${FONT}`;
     ctx.fillStyle = TEXT_DARK;
     ctx.textBaseline = 'top';
     findingLines.forEach((line, i) => {
-      ctx.fillText(line, cardX + 48, quoteY + i * 38);
+      ctx.fillText(line, PAD + 44, cardY + 24 + i * 36);
     });
   }
 
-  // ── Lower info panel ──
-  const panelX = PAD;
-  const panelY = cardY + cardH + 30;
-  const panelW = CONTENT_W;
-  const panelH = H - panelY - PAD;
-  drawRoundedRect(ctx, panelX, panelY, panelW, panelH, 28);
-  ctx.fillStyle = 'rgba(255, 250, 243, 0.92)';
-  ctx.fill();
-  ctx.strokeStyle = 'rgba(176,138,74,0.1)';
-  ctx.lineWidth = 1.5;
-  drawRoundedRect(ctx, panelX, panelY, panelW, panelH, 28);
-  ctx.stroke();
+  // ── Bottom section: ¥ reward (left) | QR (right) ──
+  const btmY = cardY + (findingLines.length > 0 ? findingLines.length * 36 + 48 : 0) + 24;
 
-  const rewardX = panelX + 44;
-  const rewardY = panelY + 40;
-  const qrCardW = 270;
-  const qrCardX = panelX + panelW - qrCardW - 38;
-  const qrCardY = panelY + 30;
-  const qrCardH = panelH - 60;
-  const qrSize = 170;
-  const rewardW = qrCardX - rewardX - 40;
+  // Left side: ¥ amount + text + code
+  const leftX = PAD + 8;
+  let ly = btmY + 8;
 
-  // ¥ amount
-  ctx.font = `800 76px ${FONT}`;
+  ctx.font = `800 68px ${FONT}`;
   ctx.fillStyle = '#B07A24';
   ctx.textBaseline = 'top';
-  ctx.fillText(`¥${options.discountAmount}`, rewardX, rewardY);
+  ctx.fillText(`¥${options.discountAmount}`, leftX, ly);
+  ly += 84;
 
-  // Incentive text
-  ctx.font = `600 28px ${FONT}`;
+  ctx.font = `600 26px ${FONT}`;
   ctx.fillStyle = GOLD_TEXT;
-  const rewardLines = wrapText(ctx, options.labels.incentiveText, rewardW, 2);
-  rewardLines.forEach((line, index) => {
-    ctx.fillText(line, rewardX, rewardY + 100 + index * 38);
+  ctx.textBaseline = 'top';
+  incentiveLines.forEach((line, i) => {
+    ctx.fillText(line, leftX, ly + i * 34);
   });
+  ly += incentiveLines.length * 34 + 16;
 
-  // Referral code label
-  ctx.font = `500 17px ${FONT}`;
+  // Referral code inline
+  ctx.font = `500 16px ${FONT}`;
   ctx.fillStyle = TEXT_FAINT;
-  ctx.fillText(options.labels.referralLabel, rewardX, rewardY + 196);
-
-  // Referral code pill
-  const codeY = rewardY + 226;
-  ctx.font = `700 36px ${FONT}`;
-  const codeW = ctx.measureText(options.referralCode).width + 48;
-  drawRoundedRect(ctx, rewardX, codeY, codeW, 66, 33);
-  ctx.fillStyle = 'rgba(255,255,255,0.88)';
+  ctx.fillText(options.labels.referralLabel, leftX, ly);
+  ly += 24;
+  ctx.font = `700 32px ${FONT}`;
+  const codeW = ctx.measureText(options.referralCode).width + 40;
+  drawRoundedRect(ctx, leftX, ly, codeW, 52, 26);
+  ctx.fillStyle = 'rgba(255,255,255,0.85)';
   ctx.fill();
-  ctx.strokeStyle = 'rgba(176,138,74,0.15)';
+  ctx.strokeStyle = 'rgba(176,138,74,0.14)';
   ctx.lineWidth = 1;
-  drawRoundedRect(ctx, rewardX, codeY, codeW, 66, 33);
+  drawRoundedRect(ctx, leftX, ly, codeW, 52, 26);
   ctx.stroke();
   ctx.fillStyle = '#B08A4A';
   ctx.textBaseline = 'middle';
-  ctx.fillText(options.referralCode, rewardX + 24, codeY + 34);
+  ctx.fillText(options.referralCode, leftX + 20, ly + 27);
 
-  // Vertical divider
-  ctx.strokeStyle = 'rgba(176,138,74,0.12)';
-  ctx.lineWidth = 1.5;
-  ctx.beginPath();
-  ctx.moveTo(qrCardX - 22, panelY + 36);
-  ctx.lineTo(qrCardX - 22, panelY + panelH - 36);
-  ctx.stroke();
-
-  // QR code card
-  drawRoundedRect(ctx, qrCardX, qrCardY, qrCardW, qrCardH, 22);
-  ctx.fillStyle = '#FFFFFF';
-  ctx.fill();
-  ctx.strokeStyle = 'rgba(31,58,95,0.06)';
-  ctx.lineWidth = 1;
-  drawRoundedRect(ctx, qrCardX, qrCardY, qrCardW, qrCardH, 22);
-  ctx.stroke();
-
-  const qrX = qrCardX + (qrCardW - qrSize) / 2;
-  const qrY = qrCardY + 26;
-  drawQrCode(ctx, options.shareUrl, qrX, qrY, qrSize);
+  // Right side: QR code + site URL
+  const rightCx = W - PAD - 130;
+  const qrCy = btmY + 12 + qrSize / 2;
+  drawQrCode(ctx, options.shareUrl, rightCx, qrCy, qrSize);
 
   ctx.textAlign = 'center';
-  ctx.font = `600 22px ${FONT}`;
+  ctx.font = `600 20px ${FONT}`;
   ctx.fillStyle = TEXT_DARK;
   ctx.textBaseline = 'top';
-  ctx.fillText(options.siteUrl.replace(/^https?:\/\//, ''), qrCardX + qrCardW / 2, qrY + qrSize + 22);
-
-  ctx.font = `400 16px ${FONT}`;
+  ctx.fillText(options.siteUrl.replace(/^https?:\/\//, ''), rightCx, qrCy + qrSize / 2 + 16);
+  ctx.font = `400 15px ${FONT}`;
   ctx.fillStyle = TEXT_FAINT;
-  ctx.fillText(`${options.labels.referralLabel}: ${options.referralCode}`, qrCardX + qrCardW / 2, qrY + qrSize + 52);
-
+  ctx.fillText(`${options.labels.referralLabel}: ${options.referralCode}`, rightCx, qrCy + qrSize / 2 + 44);
   ctx.textAlign = 'left';
 
   return new Promise<Blob>((resolve, reject) => {

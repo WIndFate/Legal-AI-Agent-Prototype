@@ -231,22 +231,23 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
-  padding: 20px 24px 0;
+  gap: 12px;
+  padding: 16px 20px 0;
 }
 
 .share-v2-title {
   font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
-  font-size: 1.1rem;
+  font-size: 0.95rem;
   font-weight: 700;
-  color: var(--brand-ink);
+  color: var(--text-soft);
   line-height: 1;
   margin: 0;
+  letter-spacing: 0.02em;
 }
 
 .share-v2-close {
-  width: 34px;
-  height: 34px;
+  width: 30px;
+  height: 30px;
   flex: 0 0 auto;
   border: none;
   border-radius: 50%;
@@ -272,8 +273,8 @@
 
 .share-v2-body {
   display: grid;
-  gap: 14px;
-  padding: 14px 20px 20px;
+  gap: 12px;
+  padding: 10px 16px 16px;
 }
 
 .share-v2-card-section {
@@ -281,11 +282,11 @@
 }
 
 .share-v2-card-frame {
-  border-radius: 18px;
+  border-radius: 14px;
   overflow: hidden;
-  border: 1px solid rgba(31, 58, 95, 0.1);
-  background: linear-gradient(180deg, rgba(245, 243, 238, 0.98), rgba(233, 238, 244, 0.92));
-  box-shadow: 0 14px 28px rgba(31, 58, 95, 0.08);
+  border: 1px solid rgba(31, 58, 95, 0.08);
+  background: #F4F2EC;
+  box-shadow: 0 6px 20px rgba(31, 58, 95, 0.06);
 }
 
 .share-v2-card-img {
@@ -304,8 +305,8 @@
 .share-v2-actions {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-  padding-top: 4px;
+  gap: 10px;
+  padding-top: 2px;
 }
 
 .share-v2-action-btn {
@@ -313,9 +314,9 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  min-height: 52px;
-  padding: 0 16px;
+  gap: 7px;
+  min-height: 46px;
+  padding: 0 14px;
   border: 1px solid rgba(31, 58, 95, 0.1);
   border-radius: 14px;
   background: rgba(255, 255, 255, 0.8);
