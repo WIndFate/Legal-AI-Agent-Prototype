@@ -230,17 +230,18 @@ export default function ReportPage() {
       <div className="page report-page">
         <div className="soft-error-panel report-expired-panel">
           <div className="report-expired-icon" aria-hidden="true">
-            <svg width="56" height="56" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <svg width="56" height="64" viewBox="0 0 56 64" fill="none" xmlns="http://www.w3.org/2000/svg">
               {/* Shield outline */}
-              <path d="M28 4L8 14v14c0 12.4 8.5 24 20 28 11.5-4 20-15.6 20-28V14L28 4Z"
-                stroke="var(--brand-soft)" strokeWidth="2.2" fill="rgba(31,58,95,0.06)" strokeLinejoin="round" />
+              <path d="M28 3L7 13v15c0 13 9 25 21 29 12-4 21-16 21-29V13L28 3Z"
+                stroke="var(--brand-soft)" strokeWidth="2" fill="rgba(31,58,95,0.06)" strokeLinejoin="round" />
               {/* Clock circle */}
-              <circle cx="28" cy="26" r="10" stroke="var(--brand)" strokeWidth="2" fill="none" />
+              <circle cx="28" cy="24" r="9" stroke="var(--brand)" strokeWidth="1.8" fill="var(--panel)" />
               {/* Clock hands */}
-              <line x1="28" y1="26" x2="28" y2="20" stroke="var(--brand)" strokeWidth="2" strokeLinecap="round" />
-              <line x1="28" y1="26" x2="33" y2="26" stroke="var(--brand)" strokeWidth="2" strokeLinecap="round" />
-              {/* Checkmark at bottom of shield */}
-              <path d="M22 38l4 4 8-8" stroke="var(--success)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+              <line x1="28" y1="24" x2="28" y2="18.5" stroke="var(--brand)" strokeWidth="1.8" strokeLinecap="round" />
+              <line x1="28" y1="24" x2="32.5" y2="24" stroke="var(--brand)" strokeWidth="1.8" strokeLinecap="round" />
+              {/* Checkmark badge — offset below clock */}
+              <circle cx="28" cy="44" r="7" fill="var(--panel)" stroke="var(--success)" strokeWidth="1.6" />
+              <path d="M24.5 44l2.5 2.5 5-5" stroke="var(--success)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" fill="none" />
             </svg>
           </div>
           <p className="section-kicker">{t('report.expired_kicker')}</p>
