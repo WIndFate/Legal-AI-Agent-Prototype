@@ -170,16 +170,16 @@ export async function generateShareCard(options: ShareCardOptions): Promise<Blob
   ctx.fill();
 
   // ── Brand row ──
-  let y = 28;
-  drawShieldIcon(ctx, PAD + 18, y + 22, 42);
+  let y = 36;
+  drawShieldIcon(ctx, PAD + 10, y + 22, 42);
   ctx.font = `700 44px ${FONT}`;
   ctx.fillStyle = TEXT_WHITE;
   ctx.textBaseline = 'middle';
-  ctx.fillText('ContractGuard', PAD + 52, y + 20);
+  ctx.fillText('ContractGuard', PAD + 42, y + 20);
   ctx.font = `500 22px ${FONT}`;
   ctx.fillStyle = BRAND_LIGHT;
-  ctx.fillText(options.labels.brandSubtitle, PAD + 52, y + 56);
-  y += 68;
+  ctx.fillText(options.labels.brandSubtitle, PAD + 42, y + 56);
+  y += 62;
 
   // ── Risk hero area ──
   const brandBottom = y;
