@@ -140,10 +140,10 @@ export async function generateShareCard(options: ShareCardOptions): Promise<Blob
   const incentiveLines = wrapText(mc, options.labels.incentiveText, 380, 2);
 
   // ── Calculate section heights ──
-  const headerH = 340;     // brand + risk badge + stat blocks
+  const headerH = 424;     // brand + risk badge + stat blocks
   const qrSize = 160;
   const bottomH = Math.max(
-    44 + 84 + 18 + incentiveLines.length * 34 + 22 + 52 + 18,
+    44 + 84 + 18 + incentiveLines.length * 34 + 22 + 52 + 8,
     36 + qrSize + 42,
   );
   const H = headerH + 20 + bottomH + 16;
@@ -190,27 +190,30 @@ export async function generateShareCard(options: ShareCardOptions): Promise<Blob
   ctx.stroke();
   y += 18;
 
-  // ── Risk label ──
-  ctx.font = `600 25px ${FONT}`;
-  ctx.fillStyle = 'rgba(200,214,232,0.72)';
+  // ── Risk label (large left block) ──
+  ctx.font = `700 40px ${FONT}`;
+  ctx.fillStyle = 'rgba(200,214,232,0.92)';
   ctx.textBaseline = 'top';
-  ctx.fillText(options.labels.overallRiskLabel, PAD, y);
-  y += 24;
+  const riskLabelLines = wrapText(ctx, options.labels.overallRiskLabel, 430, 2);
+  riskLabelLines.forEach((line, index) => {
+    ctx.fillText(line, PAD, y + index * 48);
+  });
+  const riskLabelBottom = y + riskLabelLines.length * 48;
 
-  // ── Risk badge (top-right) ──
+  // ── Risk badge (dominant top-right block) ──
   const color = riskColor(options.overallRisk);
-  ctx.font = `800 58px ${FONT}`;
+  ctx.font = `800 116px ${FONT}`;
   const badgeText = options.overallRisk;
-  const badgeW = ctx.measureText(badgeText).width + 52;
-  const badgeH = 78;
+  const badgeW = Math.max(196, ctx.measureText(badgeText).width + 94);
+  const badgeH = 158;
   const badgeX = W - PAD - badgeW;
-  drawRoundedRect(ctx, badgeX, y - 2, badgeW, badgeH, 16);
+  drawRoundedRect(ctx, badgeX, y - 8, badgeW, badgeH, 24);
   ctx.fillStyle = color;
   ctx.fill();
   ctx.fillStyle = TEXT_WHITE;
   ctx.textBaseline = 'middle';
-  ctx.fillText(badgeText, badgeX + 26, y + badgeH / 2 - 1);
-  y += badgeH + 12;
+  ctx.fillText(badgeText, badgeX + 46, y + badgeH / 2 + 2);
+  y = Math.max(riskLabelBottom, y - 8 + badgeH) + 18;
 
   // ── Risk stat blocks (colored number cards) ──
   const statConfigs = [
@@ -254,7 +257,7 @@ export async function generateShareCard(options: ShareCardOptions): Promise<Blob
 
   // Left side: ¥ amount + text + code
   const leftX = PAD + 8;
-  let ly = btmY + 10;
+  let ly = btmY + 6;
 
   ctx.font = `800 68px ${FONT}`;
   ctx.fillStyle = '#B07A24';

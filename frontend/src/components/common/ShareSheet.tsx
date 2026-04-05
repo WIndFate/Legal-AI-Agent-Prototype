@@ -222,7 +222,6 @@ export default function ShareSheet({ open, onClose, shareUrl, orderId, reportSum
         {/* ── Compact header ── */}
         <div className="share-v2-header">
           <div className="share-v2-header-text">
-            <p className="share-v2-kicker">{t('share.kicker')}</p>
             <h2 id="share-dialog-title" className="share-v2-title">
               {t('share.title')}
             </h2>
