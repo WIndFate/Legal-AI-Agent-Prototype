@@ -182,11 +182,15 @@ export async function generateShareCard(options: ShareCardOptions): Promise<Blob
   y += 76;
 
   // ── Risk hero area ──
-  const heroTop = y + 6;
+  const brandBottom = y;
+  const heroTop = brandBottom + 10;
+  const leftHeroX = PAD;
+  const leftHeroY = heroTop + 38;
+  const leftHeroH = 136;
 
-  // Badge rises into the brand-subtitle zone so the right side feels occupied
+  // Right badge spans the brand-subtitle band and the risk-label band without shrinking the brand area
   const color = riskColor(options.overallRisk);
-  const badgeY = heroTop - 22;
+  const badgeY = 70;
   ctx.font = `800 126px ${FONT}`;
   const badgeText = options.overallRisk;
   const badgeW = Math.max(220, ctx.measureText(badgeText).width + 108);
@@ -199,17 +203,13 @@ export async function generateShareCard(options: ShareCardOptions): Promise<Blob
   ctx.textBaseline = 'middle';
   ctx.fillText(badgeText, badgeX + 52, badgeY + badgeH / 2 + 3);
 
-  // Risk label becomes a large two-line left block that occupies the hero height
-  ctx.font = `700 52px ${FONT}`;
+  // Left risk label stays one line and uses the hero block height with vertical centering
+  ctx.font = `700 48px ${FONT}`;
   ctx.fillStyle = 'rgba(200,214,232,0.94)';
-  ctx.textBaseline = 'top';
-  const riskLabelLines = wrapText(ctx, options.labels.overallRiskLabel, 360, 2);
-  const riskLabelY = heroTop + 42;
-  riskLabelLines.forEach((line, index) => {
-    ctx.fillText(line, PAD, riskLabelY + index * 60);
-  });
+  ctx.textBaseline = 'middle';
+  ctx.fillText(options.labels.overallRiskLabel, leftHeroX, leftHeroY + leftHeroH / 2);
 
-  const heroBottom = Math.max(riskLabelY + riskLabelLines.length * 60, badgeY + badgeH);
+  const heroBottom = Math.max(leftHeroY + leftHeroH, badgeY + badgeH);
 
   // Thin line now sits below the whole hero block instead of slicing through it
   ctx.strokeStyle = 'rgba(255,255,255,0.06)';
