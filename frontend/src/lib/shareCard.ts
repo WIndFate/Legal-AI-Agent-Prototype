@@ -141,10 +141,10 @@ export async function generateShareCard(options: ShareCardOptions): Promise<Blob
 
   // ── Calculate section heights ──
   const headerH = 424;     // brand + risk badge + stat blocks
-  const qrSize = 160;
+  const qrSize = 210;
   const bottomH = Math.max(
     44 + 84 + 18 + incentiveLines.length * 34 + 22 + 52 + 8,
-    36 + qrSize + 42,
+    28 + qrSize + 54,
   );
   const H = headerH + 20 + bottomH + 16;
 
@@ -298,15 +298,15 @@ export async function generateShareCard(options: ShareCardOptions): Promise<Blob
   ctx.fillText(options.referralCode, leftX + 20, ly + 27);
 
   // Right side: QR code + site URL
-  const rightCx = W - PAD - 130;
-  const qrCy = btmY + 6 + qrSize / 2;
+  const rightCx = W - PAD - 138;
+  const qrCy = btmY + 14 + qrSize / 2;
   drawQrCode(ctx, options.shareUrl, rightCx, qrCy, qrSize);
 
   ctx.textAlign = 'center';
   ctx.font = `600 20px ${FONT}`;
   ctx.fillStyle = TEXT_DARK;
   ctx.textBaseline = 'top';
-  ctx.fillText(options.siteUrl.replace(/^https?:\/\//, ''), rightCx, qrCy + qrSize / 2 + 14);
+  ctx.fillText(options.siteUrl.replace(/^https?:\/\//, ''), rightCx, qrCy + qrSize / 2 + 18);
   ctx.textAlign = 'left';
 
   return new Promise<Blob>((resolve, reject) => {
