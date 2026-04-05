@@ -140,13 +140,13 @@ export async function generateShareCard(options: ShareCardOptions): Promise<Blob
   const incentiveLines = wrapText(mc, options.labels.incentiveText, 380, 2);
 
   // ── Calculate section heights ──
-  const headerH = 380;     // brand + risk badge + stat blocks
+  const headerH = 340;     // brand + risk badge + stat blocks
   const qrSize = 160;
   const bottomH = Math.max(
-    44 + 76 + 16 + incentiveLines.length * 34 + 24 + 56,
-    44 + qrSize + 70,
+    44 + 84 + 18 + incentiveLines.length * 34 + 22 + 52 + 18,
+    36 + qrSize + 42,
   );
-  const H = headerH + 28 + bottomH + 24;
+  const H = headerH + 20 + bottomH + 16;
 
   // ── Create canvas ──
   const canvas = document.createElement('canvas');
@@ -170,7 +170,7 @@ export async function generateShareCard(options: ShareCardOptions): Promise<Blob
   ctx.fill();
 
   // ── Brand row ──
-  let y = 48;
+  let y = 40;
   drawShieldIcon(ctx, PAD + 22, y + 20, 38);
   ctx.font = `700 36px ${FONT}`;
   ctx.fillStyle = TEXT_WHITE;
@@ -179,7 +179,7 @@ export async function generateShareCard(options: ShareCardOptions): Promise<Blob
   ctx.font = `400 19px ${FONT}`;
   ctx.fillStyle = BRAND_LIGHT;
   ctx.fillText(options.labels.brandSubtitle, PAD + 56, y + 50);
-  y += 82;
+  y += 76;
 
   // Thin line
   ctx.strokeStyle = 'rgba(255,255,255,0.06)';
@@ -188,28 +188,29 @@ export async function generateShareCard(options: ShareCardOptions): Promise<Blob
   ctx.moveTo(PAD, y);
   ctx.lineTo(W - PAD, y);
   ctx.stroke();
-  y += 24;
+  y += 18;
 
   // ── Risk label ──
-  ctx.font = `500 20px ${FONT}`;
-  ctx.fillStyle = 'rgba(200,214,232,0.55)';
+  ctx.font = `600 25px ${FONT}`;
+  ctx.fillStyle = 'rgba(200,214,232,0.72)';
   ctx.textBaseline = 'top';
   ctx.fillText(options.labels.overallRiskLabel, PAD, y);
-  y += 30;
+  y += 24;
 
-  // ── Risk badge (large) ──
+  // ── Risk badge (top-right) ──
   const color = riskColor(options.overallRisk);
   ctx.font = `800 58px ${FONT}`;
   const badgeText = options.overallRisk;
   const badgeW = ctx.measureText(badgeText).width + 52;
   const badgeH = 78;
-  drawRoundedRect(ctx, PAD, y, badgeW, badgeH, 16);
+  const badgeX = W - PAD - badgeW;
+  drawRoundedRect(ctx, badgeX, y - 2, badgeW, badgeH, 16);
   ctx.fillStyle = color;
   ctx.fill();
   ctx.fillStyle = TEXT_WHITE;
   ctx.textBaseline = 'middle';
-  ctx.fillText(badgeText, PAD + 26, y + badgeH / 2 + 1);
-  y += badgeH + 20;
+  ctx.fillText(badgeText, badgeX + 26, y + badgeH / 2 - 1);
+  y += badgeH + 12;
 
   // ── Risk stat blocks (colored number cards) ──
   const statConfigs = [
@@ -249,11 +250,11 @@ export async function generateShareCard(options: ShareCardOptions): Promise<Blob
   }
 
   // ── Bottom section: ¥ reward (left) | QR (right) ──
-  const btmY = headerH + 20;
+  const btmY = headerH + 14;
 
   // Left side: ¥ amount + text + code
   const leftX = PAD + 8;
-  let ly = btmY + 8;
+  let ly = btmY + 10;
 
   ctx.font = `800 68px ${FONT}`;
   ctx.fillStyle = '#B07A24';
@@ -267,13 +268,13 @@ export async function generateShareCard(options: ShareCardOptions): Promise<Blob
   incentiveLines.forEach((line, i) => {
     ctx.fillText(line, leftX, ly + i * 34);
   });
-  ly += incentiveLines.length * 34 + 16;
+  ly += incentiveLines.length * 34 + 22;
 
   // Referral code inline
   ctx.font = `500 16px ${FONT}`;
   ctx.fillStyle = TEXT_FAINT;
   ctx.fillText(options.labels.referralLabel, leftX, ly);
-  ly += 24;
+  ly += 22;
   ctx.font = `700 32px ${FONT}`;
   const codeW = ctx.measureText(options.referralCode).width + 40;
   drawRoundedRect(ctx, leftX, ly, codeW, 52, 26);
@@ -289,17 +290,14 @@ export async function generateShareCard(options: ShareCardOptions): Promise<Blob
 
   // Right side: QR code + site URL
   const rightCx = W - PAD - 130;
-  const qrCy = btmY + 12 + qrSize / 2;
+  const qrCy = btmY + 6 + qrSize / 2;
   drawQrCode(ctx, options.shareUrl, rightCx, qrCy, qrSize);
 
   ctx.textAlign = 'center';
   ctx.font = `600 20px ${FONT}`;
   ctx.fillStyle = TEXT_DARK;
   ctx.textBaseline = 'top';
-  ctx.fillText(options.siteUrl.replace(/^https?:\/\//, ''), rightCx, qrCy + qrSize / 2 + 16);
-  ctx.font = `400 15px ${FONT}`;
-  ctx.fillStyle = TEXT_FAINT;
-  ctx.fillText(`${options.labels.referralLabel}: ${options.referralCode}`, rightCx, qrCy + qrSize / 2 + 44);
+  ctx.fillText(options.siteUrl.replace(/^https?:\/\//, ''), rightCx, qrCy + qrSize / 2 + 14);
   ctx.textAlign = 'left';
 
   return new Promise<Blob>((resolve, reject) => {
