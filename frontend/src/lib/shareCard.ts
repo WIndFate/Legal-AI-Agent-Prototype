@@ -181,39 +181,45 @@ export async function generateShareCard(options: ShareCardOptions): Promise<Blob
   ctx.fillText(options.labels.brandSubtitle, PAD + 56, y + 50);
   y += 76;
 
-  // Thin line
-  ctx.strokeStyle = 'rgba(255,255,255,0.06)';
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  ctx.moveTo(PAD, y);
-  ctx.lineTo(W - PAD, y);
-  ctx.stroke();
-  y += 18;
+  // ── Risk hero area ──
+  const heroTop = y + 6;
 
-  // ── Risk label (large left block) ──
-  ctx.font = `700 40px ${FONT}`;
-  ctx.fillStyle = 'rgba(200,214,232,0.92)';
-  ctx.textBaseline = 'top';
-  const riskLabelLines = wrapText(ctx, options.labels.overallRiskLabel, 430, 2);
-  riskLabelLines.forEach((line, index) => {
-    ctx.fillText(line, PAD, y + index * 48);
-  });
-  const riskLabelBottom = y + riskLabelLines.length * 48;
-
-  // ── Risk badge (dominant top-right block) ──
+  // Badge rises into the brand-subtitle zone so the right side feels occupied
   const color = riskColor(options.overallRisk);
-  ctx.font = `800 116px ${FONT}`;
+  const badgeY = heroTop - 22;
+  ctx.font = `800 126px ${FONT}`;
   const badgeText = options.overallRisk;
-  const badgeW = Math.max(196, ctx.measureText(badgeText).width + 94);
-  const badgeH = 158;
+  const badgeW = Math.max(220, ctx.measureText(badgeText).width + 108);
+  const badgeH = 188;
   const badgeX = W - PAD - badgeW;
-  drawRoundedRect(ctx, badgeX, y - 8, badgeW, badgeH, 24);
+  drawRoundedRect(ctx, badgeX, badgeY, badgeW, badgeH, 28);
   ctx.fillStyle = color;
   ctx.fill();
   ctx.fillStyle = TEXT_WHITE;
   ctx.textBaseline = 'middle';
-  ctx.fillText(badgeText, badgeX + 46, y + badgeH / 2 + 2);
-  y = Math.max(riskLabelBottom, y - 8 + badgeH) + 18;
+  ctx.fillText(badgeText, badgeX + 52, badgeY + badgeH / 2 + 3);
+
+  // Risk label becomes a large two-line left block that occupies the hero height
+  ctx.font = `700 52px ${FONT}`;
+  ctx.fillStyle = 'rgba(200,214,232,0.94)';
+  ctx.textBaseline = 'top';
+  const riskLabelLines = wrapText(ctx, options.labels.overallRiskLabel, 360, 2);
+  const riskLabelY = heroTop + 42;
+  riskLabelLines.forEach((line, index) => {
+    ctx.fillText(line, PAD, riskLabelY + index * 60);
+  });
+
+  const heroBottom = Math.max(riskLabelY + riskLabelLines.length * 60, badgeY + badgeH);
+
+  // Thin line now sits below the whole hero block instead of slicing through it
+  ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(PAD, heroBottom + 16);
+  ctx.lineTo(W - PAD, heroBottom + 16);
+  ctx.stroke();
+
+  y = heroBottom + 34;
 
   // ── Risk stat blocks (colored number cards) ──
   const statConfigs = [
