@@ -4,6 +4,20 @@ from urllib.parse import urlparse
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+# Hostnames that are unambiguously local/development. Anything else is treated as
+# potentially production and triggers the APP_ENV guard in validate_runtime().
+_LOCAL_HOSTNAMES = {
+    "localhost",
+    "127.0.0.1",
+    "::1",
+    "0.0.0.0",
+    "postgres",
+    "redis",
+    "backend",
+    "frontend",
+    "host.docker.internal",
+}
+
 
 class Settings(BaseSettings):
     """Application settings loaded from environment variables."""
@@ -75,8 +89,32 @@ class Settings(BaseSettings):
         host = urlparse(self.FRONTEND_URL).hostname or ""
         return host in {"localhost", "127.0.0.1"}
 
+    def _looks_remote(self, value: str) -> bool:
+        """Return True when a URL hostname looks like an externally hosted service."""
+        host = (urlparse(value).hostname or "").lower()
+        if not host:
+            return False
+        return host not in _LOCAL_HOSTNAMES
+
     def validate_runtime(self) -> None:
+        # Guardrail: if any critical URL points at an external host, refuse to boot
+        # in non-production mode. This catches the deploy-time mistake of forgetting
+        # to set APP_ENV=production, which would otherwise enable the dev payment
+        # bypass and the lenient CORS list against real infrastructure.
         if not self.is_production:
+            remote_urls = {
+                "DATABASE_URL": self._looks_remote(self.DATABASE_URL),
+                "REDIS_URL": self._looks_remote(self.REDIS_URL),
+                "FRONTEND_URL": self._looks_remote(self.FRONTEND_URL),
+            }
+            offenders = [name for name, is_remote in remote_urls.items() if is_remote]
+            if offenders:
+                joined = ", ".join(offenders)
+                raise ValueError(
+                    "Refusing to start: APP_ENV is not 'production' but the following "
+                    f"URLs point at remote hosts: {joined}. Set APP_ENV=production or "
+                    "switch these URLs back to local hostnames."
+                )
             return
 
         missing = []
