@@ -28,12 +28,22 @@ async def lifespan(app: FastAPI):
     if settings.is_production and not settings.POSTHOG_API_KEY:
         logger.warning("APP_ENV=production but POSTHOG_API_KEY is not configured.")
 
-    # Initialize RAG knowledge base
+    # Initialize RAG knowledge base. In production a failure here means the
+    # very first user request would crash deep inside analyze_risks, so we
+    # refuse to boot. In development we keep the lazy-retry behavior so a
+    # missing pgvector extension does not block local iteration.
     logger.info("Loading legal knowledge into RAG store...")
     try:
         count = await load_legal_knowledge()
         logger.info(f"Loaded {count} legal knowledge documents.")
+        if settings.is_production and count == 0:
+            raise RuntimeError(
+                "RAG knowledge base loaded 0 documents — refusing to start in production."
+            )
     except Exception as e:
+        if settings.is_production:
+            logger.exception("Fatal: failed to load legal knowledge in production")
+            raise
         logger.warning(f"Failed to load legal knowledge (will retry on first request): {e}")
 
     # Initialize Sentry
