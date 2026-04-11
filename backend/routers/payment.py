@@ -18,13 +18,9 @@ from backend.services.payment import (
     resolve_frontend_base_url,
 )
 from backend.services.analytics import capture as posthog_capture
+from backend.services.analytics import capture_message as sentry_capture_message
 from backend.services.quote_guard import load_quote_context
 from backend.services.token_estimator import estimate_page_count_from_tokens
-
-try:
-    import sentry_sdk
-except ImportError:
-    sentry_sdk = None  # type: ignore[assignment]
 
 logger = logging.getLogger(__name__)
 
@@ -163,6 +159,11 @@ async def payment_webhook(
     if event is None:
         logger.warning("Payment webhook rejected: reason=invalid_signature")
         posthog_capture("anonymous", "payment_webhook_rejected", {"reason": "invalid_signature"})
+        sentry_capture_message(
+            "KOMOJU webhook signature rejected",
+            level="error",
+            tags={"component": "payment_webhook", "reason": "invalid_signature"},
+        )
         raise HTTPException(status_code=401, detail="Invalid webhook signature")
 
     event_type = event.get("type", "")

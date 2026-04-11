@@ -1,4 +1,8 @@
-"""PostHog analytics helper. Captures events only when PostHog is configured."""
+"""Analytics helpers. PostHog event capture and Sentry exception forwarding.
+
+Both helpers are no-ops when the corresponding SDK is not configured, so the
+main request flow is never blocked by an observability failure.
+"""
 
 import logging
 from typing import Any
@@ -24,3 +28,41 @@ def capture(distinct_id: str, event: str, properties: dict[str, Any] | None = No
     except Exception as e:
         # Never let analytics break the main flow
         logger.debug("PostHog capture failed: %s", e)
+
+
+def capture_exception(exc: BaseException, *, tags: dict[str, str] | None = None) -> None:
+    """Forward an exception to Sentry. No-op if Sentry is not initialized."""
+    try:
+        import sentry_sdk
+
+        if sentry_sdk.Hub.current.client is None:
+            logger.debug("Sentry not initialized; skipping exception capture")
+            return
+        if tags:
+            with sentry_sdk.push_scope() as scope:
+                for key, value in tags.items():
+                    scope.set_tag(key, value)
+                sentry_sdk.capture_exception(exc)
+        else:
+            sentry_sdk.capture_exception(exc)
+    except Exception as e:
+        logger.debug("Sentry capture_exception failed: %s", e)
+
+
+def capture_message(message: str, *, level: str = "warning", tags: dict[str, str] | None = None) -> None:
+    """Forward a message to Sentry. No-op if Sentry is not initialized."""
+    try:
+        import sentry_sdk
+
+        if sentry_sdk.Hub.current.client is None:
+            logger.debug("Sentry not initialized; skipping message capture")
+            return
+        if tags:
+            with sentry_sdk.push_scope() as scope:
+                for key, value in tags.items():
+                    scope.set_tag(key, value)
+                sentry_sdk.capture_message(message, level=level)
+        else:
+            sentry_sdk.capture_message(message, level=level)
+    except Exception as e:
+        logger.debug("Sentry capture_message failed: %s", e)

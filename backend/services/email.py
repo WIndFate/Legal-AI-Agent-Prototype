@@ -4,6 +4,7 @@ import httpx
 
 from backend.config import get_settings
 from backend.services.analytics import capture as posthog_capture
+from backend.services.analytics import capture_exception as sentry_capture_exception
 
 logger = logging.getLogger(__name__)
 
@@ -84,5 +85,9 @@ async def send_report_email(email: str, order_id: str, language: str) -> bool:
             email or order_id,
             "report_email_failed",
             {"order_id": order_id, "language": language, "error": str(e)},
+        )
+        sentry_capture_exception(
+            e,
+            tags={"component": "email", "order_id": order_id, "language": language},
         )
         return False

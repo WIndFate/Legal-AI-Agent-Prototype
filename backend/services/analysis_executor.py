@@ -12,6 +12,7 @@ from backend.models.analysis_job import AnalysisJob
 from backend.models.order import Order
 from backend.models.order_cost_estimate import OrderCostEstimate
 from backend.services.analytics import capture as posthog_capture
+from backend.services.analytics import capture_exception as sentry_capture_exception
 from backend.services.costing import (
     clear_order_cost_summary,
     get_order_cost_summary,
@@ -261,6 +262,13 @@ async def _run_analysis(job_id: str, order_id: str) -> None:
                 clear_order_cost_summary(order_id)
             logger.exception("Analysis executor failed: job_id=%s order_id=%s", job_id, order_id)
             posthog_capture(email or order_id, "analysis_failed", {"order_id": order_id, "job_id": job_id, "error": str(exc)})
+            # NonContractDocumentError is an expected business outcome, not an
+            # incident — only forward unexpected failures to Sentry.
+            if not isinstance(exc, NonContractDocumentError):
+                sentry_capture_exception(
+                    exc,
+                    tags={"component": "analysis_executor", "order_id": order_id, "job_id": job_id},
+                )
             return
         finally:
             reset_cost_order_context(cost_context)
