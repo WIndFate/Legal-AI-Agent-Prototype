@@ -2,10 +2,10 @@ import asyncio
 from logging.config import fileConfig
 
 from alembic import context
-from sqlalchemy import pool
-from sqlalchemy.ext.asyncio import async_engine_from_config
+from sqlalchemy.ext.asyncio import create_async_engine
 
 from backend.config import get_settings
+from backend.db.url import split_database_ssl_settings, sqlalchemy_connect_args
 from backend.models.base import Base
 
 # Import all models so they register with Base.metadata
@@ -20,7 +20,8 @@ target_metadata = Base.metadata
 
 
 def get_url() -> str:
-    return get_settings().DATABASE_URL
+    database_url, _ = split_database_ssl_settings(get_settings().DATABASE_URL)
+    return database_url
 
 
 def run_migrations_offline() -> None:
@@ -31,25 +32,32 @@ def run_migrations_offline() -> None:
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
+        # Some revision IDs (e.g. 006_analysis_job_cost_summary_and_72h_ttl) exceed
+        # Alembic's default VARCHAR(32). Match ensure_alembic_version_capacity so
+        # fresh databases create the column wide enough on first upgrade.
+        version_table_column_length=255,
     )
     with context.begin_transaction():
         context.run_migrations()
 
 
 def do_run_migrations(connection):
-    context.configure(connection=connection, target_metadata=target_metadata)
+    context.configure(
+        connection=connection,
+        target_metadata=target_metadata,
+        version_table_column_length=255,
+    )
     with context.begin_transaction():
         context.run_migrations()
 
 
 async def run_async_migrations() -> None:
     """Run migrations in 'online' mode with async engine."""
-    configuration = config.get_section(config.config_ini_section, {})
-    configuration["sqlalchemy.url"] = get_url()
-    connectable = async_engine_from_config(
-        configuration,
-        prefix="sqlalchemy.",
-        poolclass=pool.NullPool,
+    settings = get_settings()
+    connectable = create_async_engine(
+        get_url(),
+        pool_pre_ping=True,
+        connect_args=sqlalchemy_connect_args(settings.DATABASE_URL),
     )
 
     async with connectable.connect() as connection:
