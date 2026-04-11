@@ -44,10 +44,11 @@
 - 生产基础设施已有进展：Supabase 项目已创建并启用 `pgvector`，Upstash Redis 已创建，前端已部署到 `https://contractguard-app.vercel.app`，且生产链路上的前后端 `/api/health` 现在都已返回 200
 - Fly / Vercel / KOMOJU / Resend / Sentry 的大部分生产密钥已经配置完成，包括 KOMOJU test keys、webhook secret、`FRONTEND_URL` 和后端观测配置
 - Supabase 全新数据库上的启动迁移问题已在代码中修复：asyncpg + SSL DSN 兼容已补齐，startup migration 也会为新库预创建 / 扩容 `alembic_version.version_num` 到 255
+- KOMOJU checkout 的 `payment_types` 现在从 `backend/data/komoju_payment_methods.json` 读取，不再硬编码在 Python 中；当前默认配置覆盖信用卡、银联、支付宝、微信支付（`wechatpay`）、PayPay、韩国/巴西卡，以及部分东南亚 / 台湾常用钱包
 
 仓库外仍待完成：
 
-- 第三方真实联调：KOMOJU sandbox/production 支付链路、webhook 回调、Resend 送达、Vercel -> Fly SSE 稳定性
+- 第三方真实联调：KOMOJU sandbox/production 支付链路、merchant 账户支付方式开通确认、webhook 回调、Resend 送达、Vercel -> Fly SSE 稳定性
 - 真机拍照和跨设备手动测试
 - 用户反馈收集机制（P2）
 - 分享文案与更强的增长闭环（P2）
@@ -166,6 +167,7 @@ docker compose up -d backend postgres redis
 - `GET /api/eval/costs` 现在还会按 `estimate_version` 和模型签名聚合 estimate-vs-actual 偏差，方便长期追踪定价模型和模型更换后的经营表现。
 - `GET /api/eval/operations` 是一个只读运营接口，只统计真实订单，不混入 seed 样本；它会输出收入、实际成本、实际毛利、估算偏差、最近订单，以及按定价模型、已支付价格带、输入类型、报价模式、语言、估算版本、模型签名的聚合结果。
 - 运行时定价现在从 `backend/data/pricing_policy.json` 读取，不再把价格硬编码在 Python 里。当前线上策略改为线性计价：`每 1000 tokens 收费 ¥75`，最低 `¥200`。
+- KOMOJU session 的 `payment_types` 也改为由 `backend/data/komoju_payment_methods.json` 配置驱动；只有当前 merchant 账户已开通的 provider code 才应该保留在 `session_payment_types` 里，否则仍可能触发 HTTP 422。
 - 订单表现在通过 `orders.pricing_model` 保存当前定价策略；旧的 `price_tier` 字段已经退役，容器启动时的自动迁移会兼容并升级旧 Docker volume。
 - `/api/eval/costs` 现在会同时返回“成本底线建议价”和“目标毛利建议价”，默认目标毛利率 `target_margin_rate=0.75`，方便区分“不能低于多少”和“商业上该卖多少”。
 - `PARSE_MODEL` 和 `SUGGESTION_MODEL` 现在已经可配置，默认切到 `gpt-4o-mini`；正式 OCR 和逐条风险判断默认仍保持 `gpt-4o`。
@@ -206,6 +208,7 @@ docker compose up -d backend postgres redis
 - [`backend/services/analysis_executor.py`](./backend/services/analysis_executor.py)：进程内持久化分析执行器与事件落库
 - [`backend/rag/store.py`](./backend/rag/store.py)：pgvector 存储与检索
 - [`backend/eval/evaluator.py`](./backend/eval/evaluator.py)：RAG 评估指标与数据集执行入口
+- [`backend/data/komoju_payment_methods.json`](./backend/data/komoju_payment_methods.json)：KOMOJU 支付 provider code 列表，以及按语言/地区整理的推荐支付方式配置
 - [`scripts/smoke_local_flow.sh`](./scripts/smoke_local_flow.sh)：端到端本地 smoke/regression 脚本
 - [`scripts/check_locale_keys.sh`](./scripts/check_locale_keys.sh)：多语言 key 一致性检查
 - [`scripts/check_rag_eval.sh`](./scripts/check_rag_eval.sh)：本地 RAG 指标回归检查

@@ -98,7 +98,8 @@ Current status as of 2026-04-12:
 - UUID path parameters are now validated at the router layer via `backend/routers/_helpers.parse_order_id` — the 7 order-id endpoints (analysis status/events/stream, analysis start, report get/pdf, payment status, referral generate) return a clean 404 for non-UUID strings instead of leaking SQL DataError as 500, and the payment webhook skips malformed `metadata.order_id` with a structured log line so KOMOJU never retries on corrupt payloads.
 - Production infra is now largely configured: Supabase + `pgvector`, Upstash Redis, Fly app `contractguard-prod`, Vercel frontend at `https://contractguard-app.vercel.app`, and Sentry-backed observability are all in place, and both frontend/backend `/api/health` checks now return 200 in the production path.
 - Fresh Supabase startup issues have been addressed in code: asyncpg-compatible SSL DSN handling is in place, and startup migrations now pre-create / widen `alembic_version.version_num` to 255 for new databases.
-- Live third-party validation is still pending: KOMOJU payment/webhook verification, Resend delivery, Vercel -> Fly SSE stability, and real-device acceptance.
+- KOMOJU session `payment_types` are now config-driven via `backend/data/komoju_payment_methods.json`; the default list targets cards, UnionPay, Alipay, WeChat Pay (`wechatpay`), PayPay, Korea/Brazil card variants, and selected Southeast Asia / Taiwan wallets, but only merchant-enabled provider codes should remain active in production.
+- Live third-party validation is still pending: KOMOJU payment/webhook verification, merchant-account payment-method enablement confirmation, Resend delivery, Vercel -> Fly SSE stability, and real-device acceptance.
 
 ---
 
@@ -161,7 +162,7 @@ backend/
     evaluator.py  # Recall@K and MRR evaluation logic
   mcp/
     server.py     # FastMCP server exposing review_contract + search_legal_reference
-  config.py       # pydantic-settings (OPENAI_API_KEY, DATABASE_URL, REDIS_URL, KOMOJU, etc.)
+  config.py       # pydantic-settings (OPENAI_API_KEY, DATABASE_URL, REDIS_URL, KOMOJU, payment-method file path, etc.)
   dependencies.py # FastAPI deps: get_redis()
   main.py         # FastAPI app (router-based, lifespan: RAG load + Sentry + PostHog + APScheduler)
   db/
@@ -200,7 +201,7 @@ backend/
     temp_uploads.py   # Temporary upload staging for pre-payment OCR flows
     token_estimator.py # tiktoken + linear token pricing (`¥75 / 1k`, minimum `¥200`) + internal page-count fallback
     pii_detector.py   # Regex PII detection (phone, email, mynumber, address, postal)
-    payment.py        # KOMOJU API client + HMAC webhook verification
+    payment.py        # KOMOJU API client + config-driven session payment_types + HMAC webhook verification
     email.py          # Resend API client (9-language subjects)
     report_cache.py   # Redis report cache (72h TTL)
     cleanup.py        # APScheduler: expired reports + contract nullification
@@ -208,9 +209,11 @@ backend/
     cost_samples_seed.json # Seeded cost baseline used until enough real cost samples exist
     egov_laws.json     # e-Gov API sourced law article corpus for RAG
     eval_dataset.json  # Hand-labeled eval test set (20 samples)
+    komoju_payment_methods.json # KOMOJU provider-code list + language/region recommendations
     pricing_policy.json # Runtime pricing table loaded by token_estimator
 tests/
   test_cost_analysis.py    # Cost aggregation + pricing recommendation unit tests
+  test_payment_service.py  # KOMOJU payment-method config loading + session payload tests
   test_token_estimator.py  # Token estimation + pricing unit tests
   test_pii_detector.py     # PII detection unit tests
   test_router_health.py    # Health endpoint integration test
@@ -296,9 +299,15 @@ Embeddings are generated via OpenAI API (httpx direct call, not langchain).
 5. Contract text nullified immediately after analysis (privacy)
 6. Redis cache expires in 72h; APScheduler cleans DB hourly
 
+### KOMOJU payment methods are config-driven
+- `backend/services/payment.py` no longer hardcodes `payment_types`; it loads them from `backend/data/komoju_payment_methods.json`.
+- The file has two roles: `session_payment_types` controls what gets sent to KOMOJU, while `recommended_by_language` records the product's intended regional/language payment coverage.
+- Provider codes must match KOMOJU's exact identifiers (`wechatpay`, `unionpay`, `paypay`, etc.). Typos or merchant-disabled methods can cause `POST /api/payment/create` to fail with HTTP 422.
+
 ### Runtime pricing policy
 - Upload pricing is no longer hardcoded directly in Python constants.
 - `token_estimator.py` loads the active linear pricing policy from `backend/data/pricing_policy.json`.
+- KOMOJU payment-method selection is likewise configuration-driven through `backend/data/komoju_payment_methods.json`, so region/payment expansion can happen without another code edit.
 - The current runtime policy is `¥75 / 1000 tokens` with a `¥200` minimum charge. Internally, page estimates remain only as a guardrail for upload limits and OCR planning.
 - Exact quote uploads now emit a `quote_token`; Redis caches the resulting clause preview and `prepayment_snapshot` by normalized `content_hash`, so repeated uploads of the same contract reuse that preview instead of re-running the preview LLM call.
 - The upload flow applies separate per-IP rate limits to raw upload requests and preview generation, preventing the exact-quote preview endpoint from being abused to generate unlimited anonymous LLM cost.

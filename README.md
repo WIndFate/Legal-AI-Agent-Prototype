@@ -50,10 +50,11 @@ As of 2026-04-12, the local MVP flow is working in Docker, and the production se
 - Production infra progress: Supabase project has been created, `pgvector` is enabled, Upstash Redis is provisioned, the frontend is deployed at `https://contractguard-app.vercel.app`, and both frontend/backend `/api/health` checks now return 200 in the production path
 - Production secrets are now mostly configured in Fly/Vercel/KOMOJU/Resend/Sentry, including KOMOJU test keys, a webhook secret, `FRONTEND_URL`, and backend observability
 - Fresh-database startup migration issues on Supabase have been fixed in code: asyncpg-compatible SSL DSN handling is in place, and startup migrations now pre-create / widen `alembic_version.version_num` to 255 for new databases
+- KOMOJU checkout payment methods are now loaded from `backend/data/komoju_payment_methods.json` instead of being hardcoded in Python; the current config covers cards, UnionPay, Alipay, WeChat Pay (`wechatpay`), PayPay, Korea/Brazil card variants, and selected Southeast Asia / Taiwan wallets
 
 Still pending outside the repo:
 
-- Live third-party validation: KOMOJU sandbox/production payment flow, webhook callback confirmation, Resend delivery, and Vercel -> Fly SSE verification
+- Live third-party validation: KOMOJU sandbox/production payment flow, merchant-account method enablement confirmation, webhook callback confirmation, Resend delivery, and Vercel -> Fly SSE verification
 - Mobile camera/manual cross-device testing
 - User feedback collection on report page (P2)
 - Social sharing copy and richer growth loops (P2)
@@ -176,6 +177,7 @@ docker compose up -d backend postgres redis
 - `GET /api/eval/costs` now also groups estimate-vs-actual deltas by `estimate_version` and by model signature, making pricing-model revisions and model swaps auditable over time.
 - `GET /api/eval/operations` is a read-only operations endpoint built on real orders only; it surfaces revenue, actual cost, actual margin, estimate-vs-actual deltas, recent orders, and groupings by pricing model, paid-price band, input type, quote mode, language, estimate version, and model signature.
 - Runtime pricing is now loaded from `backend/data/pricing_policy.json` instead of being hardcoded in Python. The current policy is linear: `¥75 / 1000 tokens` with a `¥200` minimum charge.
+- KOMOJU session payment types are also config-driven via `backend/data/komoju_payment_methods.json`; use only provider codes enabled on the current merchant account, because unsupported methods can still make session creation fail with HTTP 422.
 - The orders schema now stores the active billing strategy in `orders.pricing_model`; the old `price_tier` column has been retired and startup migrations reconcile older Docker volumes automatically.
 - `/api/eval/costs` now reports both a cost-floor recommendation and a target-margin recommendation (`target_margin_rate`, default `0.75`) so pricing reviews can distinguish “minimum safe price” from “commercial target price”.
 - `PARSE_MODEL` and `SUGGESTION_MODEL` are now configurable and default to `gpt-4o-mini`, while formal OCR and per-clause risk classification remain on `gpt-4o` by default.
@@ -210,6 +212,7 @@ docker compose up -d backend postgres redis
 - [`backend/services/analysis_executor.py`](./backend/services/analysis_executor.py): in-process persistent analysis executor and event persistence
 - [`backend/rag/store.py`](./backend/rag/store.py): pgvector storage and search
 - [`backend/eval/evaluator.py`](./backend/eval/evaluator.py): RAG evaluation metrics and dataset runner
+- [`backend/data/komoju_payment_methods.json`](./backend/data/komoju_payment_methods.json): config-driven KOMOJU provider-code list + regional/language payment recommendations
 - [`scripts/smoke_local_flow.sh`](./scripts/smoke_local_flow.sh): end-to-end local smoke/regression flow
 - [`scripts/check_locale_keys.sh`](./scripts/check_locale_keys.sh): locale key consistency check
 - [`scripts/check_rag_eval.sh`](./scripts/check_rag_eval.sh): local RAG metric regression check
