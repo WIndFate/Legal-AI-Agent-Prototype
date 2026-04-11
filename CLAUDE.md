@@ -67,7 +67,7 @@ Built with LangGraph (agentic loop), PostgreSQL pgvector (RAG), FastAPI (REST + 
 
 **Target MVP pipeline (per DESIGN.md):** `upload_contract → recognize_text (OCR) → parse_contract → analyze_risks → generate_report → output_chinese_report`
 
-Current status as of 2026-04-04:
+Current status as of 2026-04-11:
 - Local Docker end-to-end flow is verified through upload, payment creation, persistent analysis-task start, status/event restoration, replayable event streaming, report retrieval, and contract deletion.
 - `APP_ENV=development` enables local-only conveniences such as auto table bootstrap and dev payment bypass.
 - Dual-OCR groundwork is now in code: text/text-layer PDFs are quoted before payment, while image/scanned PDFs can be staged for local pre-estimation and formal OCR after payment.
@@ -94,6 +94,7 @@ Current status as of 2026-04-04:
 - Backend containers now auto-apply Alembic migrations to `head` on startup before Uvicorn boots, guarded by a PostgreSQL advisory lock and a legacy-schema detection/stamp path so old Docker volumes can move forward safely without manual migration steps.
 - A new read-only operational endpoint, `GET /api/eval/operations`, now exposes margin, estimate-vs-actual deltas, language/input/pricing-model splits, paid-price-band splits, model-signature splits, and recent-order summaries for business monitoring.
 - Report expired page redesigned: shield+clock SVG icon, softer "securely removed" tone, primary "upload new contract" CTA, secondary home link, and trust footer across all 9 languages.
+- Pre-launch P0.5 hardening landed: `config.validate_runtime()` now refuses to boot when `APP_ENV` is not `production` while `DATABASE_URL`/`REDIS_URL`/`FRONTEND_URL` point at remote hosts; RAG knowledge load failure in production is now a hard boot failure instead of a warning; `email`, `payment_webhook` (signature rejection), and `analysis_executor` failure paths now forward to Sentry via the new `analytics.capture_exception` / `capture_message` helpers (skipping the expected `NonContractDocumentError` business outcome); the frontend now has a localized `*` 404 fallback route at `frontend/src/pages/NotFoundPage.tsx`.
 - Production credentials and live third-party testing still pending.
 
 ---
