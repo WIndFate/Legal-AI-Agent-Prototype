@@ -299,5 +299,11 @@
     "parttime_c1_suggestion": "Điều khoản này bất hợp pháp. Yêu cầu sửa thành: 'Phụ cấp làm thêm ít nhất 25% sẽ được trả cho tất cả giờ vượt quá giờ làm việc luật định.'",
     "parttime_c2_reason": "Yêu cầu nhân viên bồi thường toàn bộ thiệt hại thường bị tòa án hạn chế, thường chỉ phán quyết trách nhiệm một phần. Ngoài ra, khấu trừ từ lương đòi hỏi sự đồng ý bằng văn bản của người lao động — nếu không sẽ vi phạm nguyên tắc thanh toán lương đầy đủ.",
     "parttime_c2_suggestion": "Xác nhận xem công ty có bảo hiểm trách nhiệm kinh doanh không, và yêu cầu ghi rõ 'khấu trừ lương cần có sự đồng ý bằng văn bản của nhân viên'."
+  },
+  "not_found": {
+    "title": "Không tìm thấy trang",
+    "body": "Trang bạn đang tìm không tồn tại hoặc đã được di chuyển.",
+    "home_action": "Quay về trang chủ",
+    "lookup_action": "Tra cứu theo mã đơn hàng"
   }
 }

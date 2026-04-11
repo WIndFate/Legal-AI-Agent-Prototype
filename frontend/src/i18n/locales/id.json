@@ -299,5 +299,11 @@
     "parttime_c1_suggestion": "Klausul ini ilegal. Minta diubah menjadi: 'Premi lembur minimal 25% dibayarkan untuk semua jam yang melebihi jam kerja resmi.'",
     "parttime_c2_reason": "Mengharuskan karyawan mengganti kerugian penuh biasanya dibatasi oleh pengadilan, yang umumnya hanya memberikan tanggung jawab sebagian. Selain itu, pemotongan dari gaji memerlukan persetujuan tertulis pekerja — jika tidak, melanggar prinsip pembayaran gaji penuh.",
     "parttime_c2_suggestion": "Konfirmasi apakah perusahaan memiliki asuransi tanggung jawab bisnis, dan minta agar 'pemotongan gaji memerlukan persetujuan tertulis karyawan' dinyatakan secara eksplisit."
+  },
+  "not_found": {
+    "title": "Halaman tidak ditemukan",
+    "body": "Halaman yang Anda cari tidak ada atau mungkin telah dipindahkan.",
+    "home_action": "Kembali ke beranda",
+    "lookup_action": "Cari berdasarkan ID pesanan"
   }
 }

@@ -299,5 +299,11 @@
     "parttime_c1_suggestion": "This clause is illegal. Demand it be amended to: 'Overtime premium of at least 25% shall be paid for all hours exceeding statutory working hours.'",
     "parttime_c2_reason": "Requiring employees to compensate full damages is typically limited by courts, which usually award only partial liability. Also, deducting from wages requires the worker's written consent — otherwise it violates the full wage payment principle.",
     "parttime_c2_suggestion": "Confirm whether the company has business liability insurance, and request that 'wage deductions require the employee's written consent' be explicitly stated."
+  },
+  "not_found": {
+    "title": "Page not found",
+    "body": "The page you are looking for does not exist or may have been moved.",
+    "home_action": "Back to home",
+    "lookup_action": "Look up by order ID"
   }
 }

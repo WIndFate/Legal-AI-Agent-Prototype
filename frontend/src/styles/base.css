@@ -388,3 +388,69 @@ a {
 .section-kicker + .dialog-title {
   margin-top: 2px;
 }
+
+/* ── 404 Not Found page ── */
+
+.not-found-page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+}
+
+.not-found-card {
+  width: min(440px, 100%);
+  padding: 40px 32px;
+  border-radius: var(--radius-lg, 18px);
+  background: rgba(255, 255, 255, 0.86);
+  border: 1px solid rgba(31, 58, 95, 0.08);
+  box-shadow: 0 20px 40px rgba(20, 40, 63, 0.08);
+  text-align: center;
+}
+
+.not-found-code {
+  margin: 0;
+  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
+  font-size: 3.2rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: var(--brand, #1f3a5f);
+  opacity: 0.85;
+}
+
+.not-found-title {
+  margin: 8px 0 12px;
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--brand, #1f3a5f);
+}
+
+.not-found-body {
+  margin: 0 0 8px;
+  font-size: 0.95rem;
+  line-height: 1.7;
+  color: #4a5566;
+}
+
+.not-found-path {
+  margin: 0 0 24px;
+  padding: 6px 12px;
+  display: inline-block;
+  border-radius: 999px;
+  background: rgba(31, 58, 95, 0.06);
+  font-family: "JetBrains Mono", "SF Mono", Menlo, monospace;
+  font-size: 0.78rem;
+  color: #6a7383;
+  word-break: break-all;
+}
+
+.not-found-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.not-found-action {
+  text-decoration: none;
+  text-align: center;
+}
