@@ -7,6 +7,7 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 
 from backend.config import get_settings
+from backend.db.url import split_database_ssl_settings, sqlalchemy_connect_args, to_asyncpg_dsn
 from backend.services.costing import log_embedding_usage
 
 logger = logging.getLogger(__name__)
@@ -16,7 +17,13 @@ EMBEDDING_DIM = 1536
 def _get_engine():
     """Create async engine for RAG store (separate from main app engine)."""
     settings = get_settings()
-    return create_async_engine(settings.DATABASE_URL, echo=False, pool_pre_ping=True)
+    database_url, _ = split_database_ssl_settings(settings.DATABASE_URL)
+    return create_async_engine(
+        database_url,
+        echo=False,
+        pool_pre_ping=True,
+        connect_args=sqlalchemy_connect_args(settings.DATABASE_URL),
+    )
 
 
 def _get_embedding_sync(text_input: str) -> list[float]:
@@ -220,8 +227,8 @@ class LegalKnowledgeStore:
         """Batch embedding + individual DB searches."""
         await self._ensure_table()
         embeddings = _get_embeddings_batch_sync(queries)
-        dsn = get_settings().DATABASE_URL.replace("+asyncpg", "")
-        conn = await asyncpg.connect(dsn)
+        dsn, ssl_value = to_asyncpg_dsn(get_settings().DATABASE_URL)
+        conn = await asyncpg.connect(dsn, ssl=ssl_value) if ssl_value else await asyncpg.connect(dsn)
         try:
             all_results: list[list[dict]] = []
             for emb in embeddings:
@@ -258,9 +265,9 @@ class LegalKnowledgeStore:
         await self._ensure_table()
         query_embedding = _get_embedding_sync(query)
         emb_str = "[" + ",".join(str(x) for x in query_embedding) + "]"
-        dsn = get_settings().DATABASE_URL.replace("+asyncpg", "")
+        dsn, ssl_value = to_asyncpg_dsn(get_settings().DATABASE_URL)
 
-        conn = await asyncpg.connect(dsn)
+        conn = await asyncpg.connect(dsn, ssl=ssl_value) if ssl_value else await asyncpg.connect(dsn)
         try:
             rows = await conn.fetch(
                 """

@@ -7,6 +7,7 @@ import asyncpg
 
 from backend.config import get_settings
 from backend.db.session import prepare_legacy_schema_for_stamp
+from backend.db.url import to_asyncpg_dsn
 
 logger = logging.getLogger(__name__)
 
@@ -23,17 +24,18 @@ REVISION_ORDER = {
 }
 
 
-def to_sync_dsn(database_url: str) -> str:
-    return database_url.replace("+asyncpg", "")
-
-
-async def wait_for_database(dsn: str, timeout_seconds: int) -> None:
+async def wait_for_database(
+    dsn: str,
+    timeout_seconds: int,
+    ssl_value: str | None = None,
+) -> None:
     deadline = time.monotonic() + timeout_seconds
     last_error: Exception | None = None
+    connect_kwargs: dict = {"ssl": ssl_value} if ssl_value else {}
 
     while time.monotonic() < deadline:
         try:
-            conn = await asyncpg.connect(dsn)
+            conn = await asyncpg.connect(dsn, **connect_kwargs)
             await conn.close()
             return
         except Exception as exc:  # pragma: no cover - network failure path
@@ -90,6 +92,12 @@ async def read_alembic_revision(conn: asyncpg.Connection) -> str | None:
     return await conn.fetchval("SELECT version_num FROM alembic_version LIMIT 1")
 
 
+async def ensure_alembic_version_capacity(conn: asyncpg.Connection) -> None:
+    if not await has_alembic_version_table(conn):
+        return
+    await conn.execute("ALTER TABLE alembic_version ALTER COLUMN version_num TYPE VARCHAR(255)")
+
+
 async def detect_schema_revision(conn: asyncpg.Connection) -> str | None:
     if await column_exists(conn, "orders", "pricing_model"):
         return "008_orders_pricing_model"
@@ -129,13 +137,15 @@ def run_alembic(*args: str) -> None:
 
 async def run_startup_migrations() -> None:
     settings = get_settings()
-    dsn = to_sync_dsn(settings.DATABASE_URL)
+    dsn, ssl_value = to_asyncpg_dsn(settings.DATABASE_URL)
+    connect_kwargs: dict = {"ssl": ssl_value} if ssl_value else {}
 
-    await wait_for_database(dsn, settings.DB_STARTUP_TIMEOUT_SECONDS)
+    await wait_for_database(dsn, settings.DB_STARTUP_TIMEOUT_SECONDS, ssl_value)
 
-    conn = await asyncpg.connect(dsn)
+    conn = await asyncpg.connect(dsn, **connect_kwargs)
     try:
         await acquire_migration_lock(conn, settings.MIGRATION_LOCK_ID)
+        await ensure_alembic_version_capacity(conn)
 
         current_revision = await read_alembic_revision(conn)
         detected_revision = await detect_schema_revision(conn)
@@ -158,3 +168,5 @@ async def run_startup_migrations() -> None:
             await release_migration_lock(conn, settings.MIGRATION_LOCK_ID)
         finally:
             await conn.close()
+
+

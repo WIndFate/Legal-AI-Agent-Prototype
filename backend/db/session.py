@@ -3,6 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 
 from backend.config import get_settings
 from backend.models.base import Base
+from backend.db.url import split_database_ssl_settings, sqlalchemy_connect_args
 
 _engine = None
 _session_factory = None
@@ -12,7 +13,13 @@ def get_engine():
     global _engine
     if _engine is None:
         settings = get_settings()
-        _engine = create_async_engine(settings.DATABASE_URL, echo=False, pool_pre_ping=True)
+        database_url, _ = split_database_ssl_settings(settings.DATABASE_URL)
+        _engine = create_async_engine(
+            database_url,
+            echo=False,
+            pool_pre_ping=True,
+            connect_args=sqlalchemy_connect_args(settings.DATABASE_URL),
+        )
     return _engine
 
 
