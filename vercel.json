@@ -5,7 +5,7 @@
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "https://contract-checker-api.fly.dev/api/$1"
+      "destination": "https://contractguard-prod.fly.dev/api/$1"
     },
     {
       "source": "/(.*)",
