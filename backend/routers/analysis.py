@@ -12,6 +12,7 @@ from backend.models.analysis_event import AnalysisEvent
 from backend.models.analysis_job import AnalysisJob
 from backend.models.order import Order
 from backend.models.report import Report
+from backend.routers._helpers import parse_order_id
 from backend.schemas.analysis import (
     AnalysisEventItem,
     AnalysisEventsResponse,
@@ -32,7 +33,8 @@ async def start_analysis(
     request: AnalysisStartRequest,
     db: AsyncSession = Depends(get_db),
 ):
-    order = await db.get(Order, request.order_id)
+    order_uuid = parse_order_id(request.order_id)
+    order = await db.get(Order, order_uuid)
     if order is None:
         raise HTTPException(status_code=404, detail="Order not found")
     if order.payment_status != "paid":
@@ -64,7 +66,8 @@ async def get_order_status(
     order_id: str,
     db: AsyncSession = Depends(get_db),
 ):
-    order = await db.get(Order, order_id)
+    order_uuid = parse_order_id(order_id)
+    order = await db.get(Order, order_uuid)
     if order is None:
         raise HTTPException(status_code=404, detail="Order not found")
 
@@ -101,7 +104,8 @@ async def get_analysis_events(
     after_seq: int = Query(default=0, ge=0),
     db: AsyncSession = Depends(get_db),
 ):
-    order = await db.get(Order, order_id)
+    order_uuid = parse_order_id(order_id)
+    order = await db.get(Order, order_uuid)
     if order is None:
         raise HTTPException(status_code=404, detail="Order not found")
     result = await db.execute(select(AnalysisJob).where(AnalysisJob.order_id == order.id))
@@ -135,7 +139,8 @@ async def stream_analysis_events(
     after_seq: int = Query(default=0, ge=0),
     db: AsyncSession = Depends(get_db),
 ):
-    order = await db.get(Order, order_id)
+    order_uuid = parse_order_id(order_id)
+    order = await db.get(Order, order_uuid)
     if order is None:
         raise HTTPException(status_code=404, detail="Order not found")
     result = await db.execute(select(AnalysisJob).where(AnalysisJob.order_id == order.id))

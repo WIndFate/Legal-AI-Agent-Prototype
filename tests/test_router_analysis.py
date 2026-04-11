@@ -214,6 +214,20 @@ async def test_get_analysis_events_returns_history():
 
 
 @pytest.mark.asyncio
+async def test_order_status_rejects_non_uuid_order_id_as_404():
+    # Non-UUID path parameters must return 404 instead of leaking a SQL DataError as 500.
+    session = FakeSession()
+    app.dependency_overrides[get_db] = _override_db(session)
+    try:
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            response = await client.get("/api/orders/not-a-uuid/status")
+        assert response.status_code == 404
+    finally:
+        app.dependency_overrides.pop(get_db, None)
+
+
+@pytest.mark.asyncio
 async def test_stream_analysis_events_replays_terminal_history_only():
     order = FakeOrder()
     job = FakeJob(order_id=order.id, status="completed")

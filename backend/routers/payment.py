@@ -1,5 +1,6 @@
 import logging
 from datetime import datetime, timezone
+from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy import select
@@ -9,6 +10,7 @@ from backend.db.session import get_db
 from backend.models.order import Order
 from backend.models.referral import Referral
 from backend.dependencies import get_redis
+from backend.routers._helpers import parse_order_id
 from backend.schemas.payment import PaymentCreateRequest, PaymentCreateResponse
 from backend.services.order_cost_estimate import build_order_cost_estimate_snapshot, upsert_order_cost_estimate
 from backend.services.payment import (
@@ -173,8 +175,14 @@ async def payment_webhook(
         payment_data = event.get("data", {})
         order_id = payment_data.get("metadata", {}).get("order_id")
         if order_id:
+            try:
+                order_uuid = UUID(order_id)
+            except ValueError:
+                logger.warning("Payment webhook malformed order_id: order_id=%s", order_id)
+                posthog_capture("anonymous", "payment_webhook_malformed_order_id", {"order_id": order_id})
+                return {"ok": True}
             result = await db.execute(
-                select(Order).where(Order.id == order_id)
+                select(Order).where(Order.id == order_uuid)
             )
             order = result.scalar_one_or_none()
             if order is None:
@@ -220,7 +228,8 @@ async def payment_status(
     db: AsyncSession = Depends(get_db),
 ):
     """Check payment status for an order."""
-    result = await db.execute(select(Order).where(Order.id == order_id))
+    order_uuid = parse_order_id(order_id)
+    result = await db.execute(select(Order).where(Order.id == order_uuid))
     order = result.scalar_one_or_none()
     if order is None:
         logger.warning("Payment status lookup failed: order_id=%s", order_id)

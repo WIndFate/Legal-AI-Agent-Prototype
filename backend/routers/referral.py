@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from backend.db.session import get_db
 from backend.models.order import Order
 from backend.models.referral import Referral
+from backend.routers._helpers import parse_order_id
 from backend.config import get_settings
 
 logger = logging.getLogger(__name__)
@@ -27,7 +28,8 @@ async def generate_referral(
 ):
     """Generate a referral code for a paid order."""
     settings = get_settings()
-    order_result = await db.execute(select(Order).where(Order.id == request.order_id))
+    order_uuid = parse_order_id(request.order_id)
+    order_result = await db.execute(select(Order).where(Order.id == order_uuid))
     order = order_result.scalar_one_or_none()
     if order is None:
         raise HTTPException(status_code=404, detail="Order not found")
@@ -35,7 +37,7 @@ async def generate_referral(
         raise HTTPException(status_code=409, detail="Referral link is available after payment")
 
     existing_result = await db.execute(
-        select(Referral).where(Referral.referrer_order_id == request.order_id)
+        select(Referral).where(Referral.referrer_order_id == order_uuid)
     )
     existing_referral = existing_result.scalar_one_or_none()
     if existing_referral is not None:
@@ -48,7 +50,7 @@ async def generate_referral(
     code = secrets.token_urlsafe(6).upper()[:8]
 
     referral = Referral(
-        referrer_order_id=request.order_id,
+        referrer_order_id=order_uuid,
         referral_code=code,
     )
     db.add(referral)

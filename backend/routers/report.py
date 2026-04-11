@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.db.session import get_db
 from backend.models.report import Report
+from backend.routers._helpers import parse_order_id
 from backend.services.analytics import capture as posthog_capture
 from backend.services.report_cache import get_cached_report
 from backend.services.report_pdf import renderer as report_pdf_renderer
@@ -34,7 +35,8 @@ def _sort_clause_analyses(clause_analyses: list[dict] | None) -> list[dict]:
 
 
 async def _load_report_row(order_id: str, db: AsyncSession) -> Report:
-    result = await db.execute(select(Report).where(Report.order_id == order_id))
+    order_uuid = parse_order_id(order_id)
+    result = await db.execute(select(Report).where(Report.order_id == order_uuid))
     report = result.scalar_one_or_none()
 
     if report is None:
@@ -56,6 +58,7 @@ async def get_report(
     db: AsyncSession = Depends(get_db),
 ):
     """Get analysis report by order ID. Checks Redis cache first, then DB."""
+    parse_order_id(order_id)
     # Try Redis cache first
     cached = await get_cached_report(order_id)
     if cached and "report" in cached:
@@ -102,6 +105,7 @@ async def download_report_pdf(
     download: int = Query(default=1),
     db: AsyncSession = Depends(get_db),
 ):
+    parse_order_id(order_id)
     report = await _load_report_row(order_id, db)
 
     pdf_bytes = report_pdf_renderer.build_pdf(
