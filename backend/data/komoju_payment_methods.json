@@ -1,0 +1,31 @@
+{
+  "version": "2026-04-12-komoju-payment-methods-v1",
+  "source": "komoju_session_payment_types",
+  "note": "Only keep payment methods that are enabled on the active KOMOJU merchant account. Unsupported methods can make session creation fail with HTTP 422.",
+  "session_payment_types": [
+    "credit_card",
+    "unionpay",
+    "alipay",
+    "wechatpay",
+    "paypay",
+    "credit_card_korea",
+    "credit_card_brazil",
+    "kakaopay",
+    "dana",
+    "gcash",
+    "tng",
+    "alipay_hk",
+    "jkopay"
+  ],
+  "recommended_by_language": {
+    "ja": ["credit_card", "paypay", "alipay", "unionpay"],
+    "en": ["credit_card", "paypay", "alipay", "wechatpay", "unionpay"],
+    "zh-CN": ["alipay", "wechatpay", "unionpay", "credit_card", "paypay"],
+    "zh-TW": ["jkopay", "credit_card", "unionpay", "alipay", "paypay"],
+    "pt-BR": ["credit_card_brazil", "credit_card", "paypay", "alipay"],
+    "id": ["dana", "credit_card", "paypay", "alipay"],
+    "ko": ["kakaopay", "credit_card_korea", "credit_card", "paypay"],
+    "vi": ["credit_card", "paypay", "alipay", "wechatpay"],
+    "ne": ["credit_card", "paypay", "alipay", "wechatpay"]
+  }
+}
