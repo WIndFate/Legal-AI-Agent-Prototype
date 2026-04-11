@@ -67,7 +67,7 @@ Built with LangGraph (agentic loop), PostgreSQL pgvector (RAG), FastAPI (REST + 
 
 **Target MVP pipeline (per DESIGN.md):** `upload_contract → recognize_text (OCR) → parse_contract → analyze_risks → generate_report → output_chinese_report`
 
-Current status as of 2026-04-11:
+Current status as of 2026-04-12:
 - Local Docker end-to-end flow is verified through upload, payment creation, persistent analysis-task start, status/event restoration, replayable event streaming, report retrieval, and contract deletion.
 - `APP_ENV=development` enables local-only conveniences such as auto table bootstrap and dev payment bypass.
 - Dual-OCR groundwork is now in code: text/text-layer PDFs are quoted before payment, while image/scanned PDFs can be staged for local pre-estimation and formal OCR after payment.
@@ -75,7 +75,7 @@ Current status as of 2026-04-11:
 - Exact text and text-layer PDF quotes now also include a lightweight clause-preview extraction so users can confirm the contract structure before they pay.
 - Exact quote previews now generate a `quote_token`, cache clause previews by normalized content hash, and reuse those cached previews/cost snapshots when the same contract is uploaded again.
 - Upload and preview generation are now both protected by Redis-backed per-IP rate limits so anonymous/scripted traffic cannot burn unbounded pre-payment preview cost.
-- Deployment configs ready: `fly.toml` (NRT, force_https) + `vercel.json` (API proxy, security headers) + Alembic migration chain through `008`.
+- Deployment configs ready: `fly.toml` (Fly app `contractguard-prod`, NRT, force_https) + `vercel.json` (API proxy, security headers) + Alembic migration chain through `008`.
 - `frontend/index.html` now includes static OG / Twitter metadata, and `frontend/public/og-image.svg` provides a lightweight branded social preview image.
 - RAG knowledge base expanded to 331+ law articles across 10 legal categories (rental, labor, part-time, business outsourcing, sales, etc.).
 - Eval dataset expanded to 20 labeled samples covering multiple contract types.
@@ -96,7 +96,9 @@ Current status as of 2026-04-11:
 - Report expired page redesigned: shield+clock SVG icon, softer "securely removed" tone, primary "upload new contract" CTA, secondary home link, and trust footer across all 9 languages.
 - Pre-launch P0.5 hardening landed: `config.validate_runtime()` now refuses to boot when `APP_ENV` is not `production` while `DATABASE_URL`/`REDIS_URL`/`FRONTEND_URL` point at remote hosts; RAG knowledge load failure in production is now a hard boot failure instead of a warning; `email`, `payment_webhook` (signature rejection), and `analysis_executor` failure paths now forward to Sentry via the new `analytics.capture_exception` / `capture_message` helpers (skipping the expected `NonContractDocumentError` business outcome); the frontend now has a localized `*` 404 fallback route at `frontend/src/pages/NotFoundPage.tsx`.
 - UUID path parameters are now validated at the router layer via `backend/routers/_helpers.parse_order_id` — the 7 order-id endpoints (analysis status/events/stream, analysis start, report get/pdf, payment status, referral generate) return a clean 404 for non-UUID strings instead of leaking SQL DataError as 500, and the payment webhook skips malformed `metadata.order_id` with a structured log line so KOMOJU never retries on corrupt payloads.
-- Production credentials and live third-party testing still pending.
+- Production infra is now largely configured: Supabase + `pgvector`, Upstash Redis, Fly app `contractguard-prod`, Vercel frontend at `https://contractguard-app.vercel.app`, and Sentry-backed observability are all in place, and both frontend/backend `/api/health` checks now return 200 in the production path.
+- Fresh Supabase startup issues have been addressed in code: asyncpg-compatible SSL DSN handling is in place, and startup migrations now pre-create / widen `alembic_version.version_num` to 255 for new databases.
+- Live third-party validation is still pending: KOMOJU payment/webhook verification, Resend delivery, Vercel -> Fly SSE stability, and real-device acceptance.
 
 ---
 

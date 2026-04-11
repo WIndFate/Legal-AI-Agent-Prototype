@@ -6,7 +6,7 @@
 
 ## 現在の状況
 
-2026-04-04 時点で、ローカル Docker 上の MVP フローは動作確認済みです。
+2026-04-12 時点で、ローカル Docker 上の MVP フローは動作確認済みで、本番環境の下準備も一部完了しています。
 
 - `upload -> payment/create -> analysis/start -> orders/{id}/status + events/stream -> report -> 契約本文削除`
 - テキスト入力とテキスト抽出可能な PDF は支払い前にそのまま見積もりし、画像 / スキャン PDF は一時保存 + 支払い後の正式 OCR を使う二段階 OCR フローになりました
@@ -31,7 +31,7 @@
 - 共有パネルはさらに磨き込みが進み、小さなキッカー付きヘッダーと大きめのプレビューカードを軸に、紹介コード付き URL を内部生成しつつ保存 / コピー / 端末共有を段階的に提示します
 - ルート単位の遅延読み込みと分析 SDK の遅延初期化により、初期フロントエンド bundle を軽量化
 - `APP_ENV=development` かつ `KOMOJU_SECRET_KEY` 未設定の場合のみ、ローカル開発では自動的に支払い済み扱いになります
-- デプロイ設定済み: `fly.toml`（NRT リージョン、HTTPS 強制）+ `vercel.json`（API プロキシ + セキュリティヘッダー）
+- デプロイ設定済み: `fly.toml`（Fly アプリ名 `contractguard-prod`、NRT リージョン、HTTPS 強制）+ `vercel.json`（API プロキシ + セキュリティヘッダー）
 - 統合テストスイート: 7 つのルーターテストファイルで、現行ランタイムの全 API エンドポイントをカバー
 - 分析ページは持続化された分析タスク上に再構築され、バックエンドが `analysis_jobs` / `analysis_events` を保持し、フロントエンドは履歴イベント復元後に新しい更新を購読します
 - `docker compose` には postgres・redis・backend API の healthcheck が入り、ローカル起動時に frontend が準備前の backend へ先に当たりにくくなりました
@@ -41,10 +41,13 @@
 - 不要コードのクリーンアップ完了（未使用の `analyze_risks_streaming` を削除）
 - よく使うクエリパスにデータベースインデックスを追加（email, payment_status, expires_at, analysis_status）
 - CSS を部分的に CSS Modules へ移行: layout / home / examples / legal はスコープ付きモジュール + `clsx`、report / review はページ間共有のためグローバル維持
+- 本番インフラの進捗として、Supabase プロジェクト作成と `pgvector` 有効化、Upstash Redis 作成、フロントエンドの `https://contractguard-app.vercel.app` へのデプロイまでは完了しており、本番経路の frontend / backend `/api/health` も 200 を返す状態です
+- Fly / Vercel / KOMOJU / Resend / Sentry の主要シークレットも概ね設定済みで、KOMOJU テストキー、webhook secret、`FRONTEND_URL`、観測系設定まで入りました
+- Supabase fresh database 向けの起動 migration 問題もコード上で解消済みです。asyncpg + SSL DSN 互換を補い、新規 DB では `alembic_version.version_num` を 255 で事前作成 / 拡張するようにしています
 
 リポジトリ外で未完了の項目:
 
-- KOMOJU、Resend、Sentry、PostHog の本番用認証情報と実結合テスト
+- KOMOJU sandbox / production の実決済確認、webhook コールバック、Resend 配信、Vercel -> Fly SSE の実地検証
 - モバイル撮影と実機での手動テスト
 - ユーザーフィードバック収集機能（P2）
 - 共有文言やより強い成長導線（P2）

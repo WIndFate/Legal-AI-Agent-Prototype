@@ -6,7 +6,7 @@
 
 ## 当前状态
 
-截至 2026-04-04，本地 Docker MVP 流程已经跑通：
+截至 2026-04-12，本地 Docker MVP 流程已经跑通，生产环境也已完成一部分配置：
 
 - `upload -> payment/create -> analysis/start -> orders/{id}/status + events/stream -> report -> 合同文本删除`
 - 文本和可提取文本 PDF 会在付款前直接按文本估价；图片 / 扫描 PDF 现在走”双层 OCR”路径：先临时暂存并预估，付款后再做正式 OCR
@@ -31,7 +31,7 @@
 - 分享面板现已进一步打磨为更完整的成果分享结构：顶部是更清晰的标题层级，中间用更大的预览卡作为主视觉，下方再提供分级的保存卡片、复制链接和系统分享动作；带推荐码的报告链接仍在内部自动生成
 - 前端已加入路由级懒加载和延迟分析初始化，降低首屏 bundle 压力
 - 仅当 `APP_ENV=development` 且 `KOMOJU_SECRET_KEY` 为空时，本地开发可走自动支付
-- 部署配置已就绪：`fly.toml`（NRT 东京区域，强制 HTTPS）+ `vercel.json`（API 代理 + 安全头）
+- 部署配置已就绪：`fly.toml`（Fly 应用名 `contractguard-prod`、NRT 东京区域、强制 HTTPS）+ `vercel.json`（API 代理 + 安全头）
 - 集成测试套件：7 个路由测试文件，覆盖当前运行态的全部 API 端点
 - 分析页现已建立在持久化分析任务之上：后端保存 `analysis_jobs` / `analysis_events`，前端会先恢复历史进度，再订阅新的事件更新
 - `docker compose` 现已补充 postgres、redis、backend 的健康检查，本地启动时 frontend 会等待真正 healthy 的 backend，避免代理抢跑
@@ -41,10 +41,13 @@
 - 死代码已清理（移除未使用的 `analyze_risks_streaming`）
 - 数据库已为常用查询路径添加索引（email、payment_status、expires_at、analysis_status）
 - CSS 部分迁移到 CSS Modules：layout、home、examples、legal 组件使用作用域模块 + `clsx`；report/review 因跨页面共享保持全局
+- 生产基础设施已有进展：Supabase 项目已创建并启用 `pgvector`，Upstash Redis 已创建，前端已部署到 `https://contractguard-app.vercel.app`，且生产链路上的前后端 `/api/health` 现在都已返回 200
+- Fly / Vercel / KOMOJU / Resend / Sentry 的大部分生产密钥已经配置完成，包括 KOMOJU test keys、webhook secret、`FRONTEND_URL` 和后端观测配置
+- Supabase 全新数据库上的启动迁移问题已在代码中修复：asyncpg + SSL DSN 兼容已补齐，startup migration 也会为新库预创建 / 扩容 `alembic_version.version_num` 到 255
 
 仓库外仍待完成：
 
-- KOMOJU、Resend、Sentry、PostHog 生产密钥与真实联调
+- 第三方真实联调：KOMOJU sandbox/production 支付链路、webhook 回调、Resend 送达、Vercel -> Fly SSE 稳定性
 - 真机拍照和跨设备手动测试
 - 用户反馈收集机制（P2）
 - 分享文案与更强的增长闭环（P2）

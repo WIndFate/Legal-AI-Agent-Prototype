@@ -6,7 +6,7 @@ AI-powered Japanese contract risk analysis for foreign residents in Japan. Users
 
 ## Status
 
-As of 2026-04-04, the local MVP flow is working in Docker:
+As of 2026-04-12, the local MVP flow is working in Docker, and the production setup is partially in place:
 
 - `upload -> payment/create -> analysis/start -> orders/{id}/status + events/stream -> report retrieval -> contract deletion`
 - Text and text-layer PDFs are quoted before payment from extracted text; image/scanned PDF uploads now use a dual-OCR path with temporary staging plus post-payment formal OCR
@@ -37,7 +37,7 @@ As of 2026-04-04, the local MVP flow is working in Docker:
 - Mobile lookup input no longer triggers iOS auto-zoom, legal-page route changes now reset back to the top, and horizontal overflow that exposed the page background on small screens has been removed
 - Route-level lazy loading and deferred analytics bootstrap now reduce the initial frontend bundle
 - Dev-mode payment works only when `APP_ENV=development` and `KOMOJU_SECRET_KEY` is absent
-- Deployment configs ready: `fly.toml` (NRT region, force HTTPS) and `vercel.json` (API proxy, security headers)
+- Deployment configs ready: `fly.toml` (Fly app `contractguard-prod`, NRT region, force HTTPS) and `vercel.json` (API proxy, security headers)
 - Integration test suite: 7 router test files covering all API endpoints in the current runtime flow
 - Persistent analysis tasks now back the review flow, with status snapshots plus replayable event history before subscribing to incremental updates
 - `docker compose` now includes health checks for PostgreSQL, Redis, and the backend API so the frontend does not race a half-started backend during local boot
@@ -47,10 +47,13 @@ As of 2026-04-04, the local MVP flow is working in Docker:
 - Dead code cleanup completed (removed unused `analyze_risks_streaming`)
 - Database indexes on commonly queried columns (email, payment_status, expires_at, analysis_status)
 - CSS partially migrated to CSS Modules: layout, home, examples, legal components use scoped modules with `clsx`; report/review remain global due to cross-page sharing
+- Production infra progress: Supabase project has been created, `pgvector` is enabled, Upstash Redis is provisioned, the frontend is deployed at `https://contractguard-app.vercel.app`, and both frontend/backend `/api/health` checks now return 200 in the production path
+- Production secrets are now mostly configured in Fly/Vercel/KOMOJU/Resend/Sentry, including KOMOJU test keys, a webhook secret, `FRONTEND_URL`, and backend observability
+- Fresh-database startup migration issues on Supabase have been fixed in code: asyncpg-compatible SSL DSN handling is in place, and startup migrations now pre-create / widen `alembic_version.version_num` to 255 for new databases
 
 Still pending outside the repo:
 
-- KOMOJU, Resend, Sentry, and PostHog production credentials and live testing
+- Live third-party validation: KOMOJU sandbox/production payment flow, webhook callback confirmation, Resend delivery, and Vercel -> Fly SSE verification
 - Mobile camera/manual cross-device testing
 - User feedback collection on report page (P2)
 - Social sharing copy and richer growth loops (P2)
