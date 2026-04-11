@@ -101,6 +101,15 @@ async def create_payment_session(order_id: str, amount_jpy: int, email: str, fro
                 "metadata": {"order_id": order_id},
             },
         )
+        if response.is_error:
+            logger.error(
+                "KOMOJU session creation failed: status=%s body=%s order_id=%s amount_jpy=%s frontend_base_url=%s",
+                response.status_code,
+                response.text,
+                order_id,
+                amount_jpy,
+                frontend_base_url,
+            )
         response.raise_for_status()
         data = response.json()
         return data["session_url"]
