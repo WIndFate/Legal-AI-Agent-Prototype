@@ -95,6 +95,7 @@ Current status as of 2026-04-11:
 - A new read-only operational endpoint, `GET /api/eval/operations`, now exposes margin, estimate-vs-actual deltas, language/input/pricing-model splits, paid-price-band splits, model-signature splits, and recent-order summaries for business monitoring.
 - Report expired page redesigned: shield+clock SVG icon, softer "securely removed" tone, primary "upload new contract" CTA, secondary home link, and trust footer across all 9 languages.
 - Pre-launch P0.5 hardening landed: `config.validate_runtime()` now refuses to boot when `APP_ENV` is not `production` while `DATABASE_URL`/`REDIS_URL`/`FRONTEND_URL` point at remote hosts; RAG knowledge load failure in production is now a hard boot failure instead of a warning; `email`, `payment_webhook` (signature rejection), and `analysis_executor` failure paths now forward to Sentry via the new `analytics.capture_exception` / `capture_message` helpers (skipping the expected `NonContractDocumentError` business outcome); the frontend now has a localized `*` 404 fallback route at `frontend/src/pages/NotFoundPage.tsx`.
+- UUID path parameters are now validated at the router layer via `backend/routers/_helpers.parse_order_id` — the 7 order-id endpoints (analysis status/events/stream, analysis start, report get/pdf, payment status, referral generate) return a clean 404 for non-UUID strings instead of leaking SQL DataError as 500, and the payment webhook skips malformed `metadata.order_id` with a structured log line so KOMOJU never retries on corrupt payloads.
 - Production credentials and live third-party testing still pending.
 
 ---
@@ -175,6 +176,7 @@ backend/
     report.py     # Report response schema
     upload.py     # UploadResponse
   routers/
+    _helpers.py   # Shared router helpers (parse_order_id UUID validator → 404)
     health.py     # GET /api/health
     upload.py     # POST /api/upload (image/PDF/text + OCR + PII + pricing)
     payment.py    # POST /api/payment/create + /api/payment/webhook
