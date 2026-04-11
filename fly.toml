@@ -1,4 +1,4 @@
-app = "contract-checker-api"
+app = "contractguard-prod"
 primary_region = "nrt"  # Tokyo — closest to Japan users
 
 [build]
