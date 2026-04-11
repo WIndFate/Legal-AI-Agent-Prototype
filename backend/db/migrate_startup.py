@@ -93,9 +93,21 @@ async def read_alembic_revision(conn: asyncpg.Connection) -> str | None:
 
 
 async def ensure_alembic_version_capacity(conn: asyncpg.Connection) -> None:
-    if not await has_alembic_version_table(conn):
-        return
-    await conn.execute("ALTER TABLE alembic_version ALTER COLUMN version_num TYPE VARCHAR(255)")
+    # Some revision IDs (e.g. 006_analysis_job_cost_summary_and_72h_ttl) exceed
+    # Alembic's default VARCHAR(32). Pre-create the table at VARCHAR(255) if it's
+    # missing, and widen the column if it was left behind by an earlier deploy.
+    # Both statements are idempotent so this is safe to run on every boot.
+    await conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS public.alembic_version (
+            version_num VARCHAR(255) NOT NULL,
+            CONSTRAINT alembic_version_pkc PRIMARY KEY (version_num)
+        )
+        """
+    )
+    await conn.execute(
+        "ALTER TABLE public.alembic_version ALTER COLUMN version_num TYPE VARCHAR(255)"
+    )
 
 
 async def detect_schema_revision(conn: asyncpg.Connection) -> str | None:
