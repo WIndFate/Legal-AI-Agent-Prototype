@@ -96,6 +96,7 @@ Current status as of 2026-04-12:
 - Report expired page redesigned: shield+clock SVG icon, softer "securely removed" tone, primary "upload new contract" CTA, secondary home link, and trust footer across all 9 languages.
 - Pre-launch P0.5 hardening landed: `config.validate_runtime()` now refuses to boot when `APP_ENV` is not `production` while `DATABASE_URL`/`REDIS_URL`/`FRONTEND_URL` point at remote hosts; RAG knowledge load failure in production is now a hard boot failure instead of a warning; `email`, `payment_webhook` (signature rejection), and `analysis_executor` failure paths now forward to Sentry via the new `analytics.capture_exception` / `capture_message` helpers (skipping the expected `NonContractDocumentError` business outcome); the frontend now has a localized `*` 404 fallback route at `frontend/src/pages/NotFoundPage.tsx`.
 - UUID path parameters are now validated at the router layer via `backend/routers/_helpers.parse_order_id` — the 7 order-id endpoints (analysis status/events/stream, analysis start, report get/pdf, payment status, referral generate) return a clean 404 for non-UUID strings instead of leaking SQL DataError as 500, and the payment webhook skips malformed `metadata.order_id` with a structured log line so KOMOJU never retries on corrupt payloads.
+- A `/commercial` page now provides the legally required 特定商取引法に基づく表記 (Specified Commercial Transactions Act disclosure) with business operator details in a responsive table layout. This page is required by Japanese law for paid online services and is a prerequisite for KOMOJU production account approval.
 - Production infra is now largely configured: Supabase + `pgvector`, Upstash Redis, Fly app `contractguard-prod`, Vercel frontend at `https://contractguard-app.vercel.app`, and Sentry-backed observability are all in place, and both frontend/backend `/api/health` checks now return 200 in the production path.
 - Fresh Supabase startup issues have been addressed in code: asyncpg-compatible SSL DSN handling is in place, and startup migrations now pre-create / widen `alembic_version.version_num` to 255 for new databases.
 - KOMOJU session `payment_types` are now config-driven via `backend/data/komoju_payment_methods.json`; the default list targets cards, UnionPay, Alipay, WeChat Pay (`wechatpay`), PayPay, Korea/Brazil card variants, and selected Southeast Asia / Taiwan wallets, but only merchant-enabled provider codes should remain active in production.
@@ -243,6 +244,7 @@ frontend/
       ReportPage.tsx        # Saved report page + custom share sheet
       PrivacyPage.tsx       # Privacy policy (i18n summary + JP legal text)
       TermsPage.tsx         # Terms of service (i18n summary + JP legal text)
+      CommercialPage.tsx    # 特定商取引法に基づく表記 (i18n summary + JP legal table)
 docker-compose.yml  # backend + frontend + pgvector/pg16 + redis:7-alpine
 scripts/
   smoke_local_flow.sh  # local end-to-end regression script
@@ -356,7 +358,7 @@ Embeddings are generated via OpenAI API (httpx direct call, not langchain).
 - Homepage: hero card + flow steps + upload section, plus a guided entry point to the standalone examples gallery page
 - The standalone examples page should feel like a curated report sample gallery, using chapter-like scenario switching and report-card spacing that stays visually close to the real saved report page
 - Example reports use i18n keys for `risk_reason`/`suggestion` (key pattern: `examples.{scenario}_c{n}_reason/suggestion`), while `original_text`, `referenced_law`, `clause_number` stay in Japanese in `exampleReports.ts`
-- Legal pages (`/privacy`, `/terms`): localized summary at top + hardcoded Japanese legal full text (required by law)
+- Legal pages (`/privacy`, `/terms`, `/commercial`): localized summary at top + hardcoded Japanese legal full text (required by law). The `/commercial` page displays 特定商取引法に基づく表記 in a responsive table layout.
 - Layout: sticky header with brand mark + nav links + language selector on desktop, plus a mobile left-menu / centered-logo variant; footer is intentionally reduced to Home / Privacy / Terms plus legal disclaimer and copyright
 - Homepage reveal motion should stay restrained: fade/up reveal plus payment-panel spotlight is acceptable; avoid heavy parallax or novelty animations.
 - Frontend routes should stay lazy-loaded where practical, and analytics/observability SDKs should bootstrap asynchronously so they do not bloat the initial application chunk
