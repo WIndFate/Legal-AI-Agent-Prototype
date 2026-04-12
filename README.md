@@ -16,6 +16,7 @@ As of 2026-04-12, the local MVP flow is working in Docker, and the production se
 - Uploads and preview generation now both have Redis-backed per-IP rate limits so repeated anonymous/scripted requests cannot burn unbounded preview cost
 - `pgvector` RAG is running in PostgreSQL with 331+ law articles across 10 legal categories (rental, labor, part-time, business outsourcing, sales, etc.)
 - 9-language frontend with professional branding (ContractGuard), privacy/terms pages, and a dedicated examples gallery with report-style samples
+- A `/commercial` page now publishes the legally required 特定商取引法に基づく表記 and is linked from the site footer / homepage legal navigation for payment-provider review
 - The standalone `/examples` page now uses a curated chapter-switching layout, and its report sample styling is intentionally closer to the real report page
 - The homepage trust strip now explicitly calls out supported contract types, the payment panel links to a privacy explainer, and the privacy page now shows a transparent upload→analysis→deletion flow plus supported / unsupported use cases
 - The examples area now includes a direct “view full sample report” entry, and the sample report itself now reads more like a complete saved report instead of a short teaser
@@ -148,7 +149,7 @@ docker compose up -d backend postgres redis
 11. Each clause analysis can expand its matching original clause excerpt inline for direct comparison throughout the 72-hour report lifetime, including reopened report links.
 12. Expanded clause comparison is optimized for readability: mobile keeps a stacked reading flow, while larger screens place the original clause beside the analysis content.
 13. The standalone `/examples` page presents three contract scenarios (rental, employment, part-time) as a gallery-style report showcase with localized clause analysis in all 9 languages.
-14. Privacy policy (`/privacy`) and Terms of service (`/terms`) pages combine localized summaries with hardcoded Japanese legal text.
+14. Privacy policy (`/privacy`) and Terms of service (`/terms`) pages now show complete localized explanatory text in the active UI language, while preserving the Japanese legal text as the official controlling version in an expandable section.
 15. Referenced law citations (`referenced_law`) in reports are always kept in Japanese original text, regardless of the user's selected language.
 16. The saved report page is now styled as a more document-like review report, and it can also download a true PDF generated from the saved report payload within the same 72-hour retention window.
 17. Homepage anchor navigation (`Home` / `Examples`) now scrolls to explicit page sections, and the hero pricing copy no longer hardcodes a visible maximum price.
