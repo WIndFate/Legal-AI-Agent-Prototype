@@ -2,8 +2,6 @@ import hashlib
 import hmac
 import json
 import logging
-from functools import lru_cache
-from pathlib import Path
 from urllib.parse import urlparse
 
 import httpx
@@ -12,59 +10,12 @@ from backend.config import get_settings
 
 logger = logging.getLogger(__name__)
 INTERNAL_SERVICE_HOSTS = {"backend", "frontend", "postgres", "redis"}
-DEFAULT_KOMOJU_PAYMENT_METHODS = {
-    "session_payment_types": [
-        "credit_card",
-        "unionpay",
-        "alipay",
-        "wechatpay",
-        "paypay",
-        "credit_card_korea",
-        "credit_card_brazil",
-        "kakaopay",
-        "dana",
-        "gcash",
-        "tng",
-        "alipay_hk",
-        "jkopay",
-    ]
-}
 
 
 def is_dev_payment_mode() -> bool:
     """Allow checkout bypass only in development when KOMOJU is not configured."""
     settings = get_settings()
     return settings.is_development and not settings.KOMOJU_SECRET_KEY
-
-
-@lru_cache(maxsize=1)
-def get_komoju_payment_methods() -> dict[str, object]:
-    settings = get_settings()
-    config_path = Path(settings.KOMOJU_PAYMENT_METHODS_FILE)
-    if not config_path.is_absolute():
-        config_path = Path.cwd() / config_path
-
-    try:
-        payload = json.loads(config_path.read_text(encoding="utf-8"))
-        if _payment_methods_config_is_valid(payload):
-            return payload
-        logger.warning(
-            "Invalid KOMOJU payment-method configuration in %s; falling back to defaults",
-            config_path,
-        )
-    except (OSError, json.JSONDecodeError):
-        logger.warning(
-            "Failed to load KOMOJU payment-method configuration from %s; falling back to defaults",
-            config_path,
-        )
-
-    return DEFAULT_KOMOJU_PAYMENT_METHODS
-
-
-def get_komoju_session_payment_types() -> list[str]:
-    payload = get_komoju_payment_methods()
-    session_payment_types = payload.get("session_payment_types", [])
-    return [str(value) for value in session_payment_types]
 
 
 def resolve_frontend_base_url(
@@ -136,8 +87,6 @@ async def create_payment_session(order_id: str, amount_jpy: int, email: str, fro
         logger.warning("KOMOJU_SECRET_KEY not set, returning placeholder payment URL")
         return f"{frontend_base_url}/review/{order_id}?dev_payment=true"
 
-    payment_types = get_komoju_session_payment_types()
-
     async with httpx.AsyncClient() as client:
         response = await client.post(
             "https://komoju.com/api/v1/sessions",
@@ -145,7 +94,6 @@ async def create_payment_session(order_id: str, amount_jpy: int, email: str, fro
             json={
                 "amount": amount_jpy,
                 "currency": "JPY",
-                "payment_types": payment_types,
                 "return_url": f"{frontend_base_url}/review/{order_id}",
                 "default_locale": "ja",
                 "email": email,
@@ -154,13 +102,12 @@ async def create_payment_session(order_id: str, amount_jpy: int, email: str, fro
         )
         if response.is_error:
             logger.error(
-                "KOMOJU session creation failed: status=%s body=%s order_id=%s amount_jpy=%s frontend_base_url=%s payment_types=%s",
+                "KOMOJU session creation failed: status=%s body=%s order_id=%s amount_jpy=%s frontend_base_url=%s",
                 response.status_code,
                 response.text,
                 order_id,
                 amount_jpy,
                 frontend_base_url,
-                payment_types,
             )
         response.raise_for_status()
         data = response.json()
@@ -188,12 +135,3 @@ async def verify_webhook(payload: bytes, signature: str) -> dict | None:
     return json.loads(payload)
 
 
-def _payment_methods_config_is_valid(payload: object) -> bool:
-    if not isinstance(payload, dict):
-        return False
-
-    session_payment_types = payload.get("session_payment_types")
-    if not isinstance(session_payment_types, list) or not session_payment_types:
-        return False
-
-    return all(isinstance(value, str) and value.strip() for value in session_payment_types)

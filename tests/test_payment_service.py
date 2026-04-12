@@ -5,41 +5,9 @@ import pytest
 from backend.services import payment
 
 
-@pytest.fixture(autouse=True)
-def clear_payment_method_cache():
-    payment.get_komoju_payment_methods.cache_clear()
-    yield
-    payment.get_komoju_payment_methods.cache_clear()
-
-
-def test_get_komoju_payment_methods_reads_json_file(tmp_path, monkeypatch):
-    config_path = tmp_path / "komoju_payment_methods.json"
-    config_path.write_text(
-        """
-        {
-          "session_payment_types": ["credit_card", "wechatpay", "alipay", "unionpay", "paypay"]
-        }
-        """,
-        encoding="utf-8",
-    )
-
-    monkeypatch.setattr(
-        payment,
-        "get_settings",
-        lambda: SimpleNamespace(KOMOJU_PAYMENT_METHODS_FILE=str(config_path)),
-    )
-
-    assert payment.get_komoju_session_payment_types() == [
-        "credit_card",
-        "wechatpay",
-        "alipay",
-        "unionpay",
-        "paypay",
-    ]
-
-
 @pytest.mark.asyncio
-async def test_create_payment_session_uses_configured_payment_types(monkeypatch):
+async def test_create_payment_session_omits_payment_types(monkeypatch):
+    """KOMOJU session should NOT include payment_types so the merchant account controls availability."""
     posted = {}
 
     class FakeResponse:
@@ -74,13 +42,7 @@ async def test_create_payment_session_uses_configured_payment_types(monkeypatch)
             FRONTEND_URL="https://contractguard-app.vercel.app",
             is_development=False,
             uses_local_frontend_url=lambda: False,
-            KOMOJU_PAYMENT_METHODS_FILE="unused",
         ),
-    )
-    monkeypatch.setattr(
-        payment,
-        "get_komoju_session_payment_types",
-        lambda: ["credit_card", "wechatpay", "alipay", "unionpay", "paypay"],
     )
     monkeypatch.setattr(payment.httpx, "AsyncClient", FakeAsyncClient)
 
@@ -93,10 +55,7 @@ async def test_create_payment_session_uses_configured_payment_types(monkeypatch)
 
     assert session_url == "https://komoju.test/session"
     assert posted["url"] == "https://komoju.com/api/v1/sessions"
-    assert posted["json"]["payment_types"] == [
-        "credit_card",
-        "wechatpay",
-        "alipay",
-        "unionpay",
-        "paypay",
-    ]
+    assert "payment_types" not in posted["json"]
+    assert posted["json"]["amount"] == 200
+    assert posted["json"]["currency"] == "JPY"
+    assert posted["json"]["metadata"] == {"order_id": "test-order-id"}
