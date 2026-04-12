@@ -24,7 +24,7 @@ def _mock_analytics():
 @pytest.fixture(autouse=True)
 def _mock_clause_preview():
     """Avoid real LLM preview extraction in upload tests unless a case overrides it."""
-    with patch("backend.routers.upload._extract_clause_preview", return_value=(None, None, None)):
+    with patch("backend.routers.upload._extract_clause_preview", return_value=(None, None, None, None)):
         yield
 
 
@@ -58,7 +58,7 @@ async def test_upload_text_returns_pricing():
     """Text upload should return token estimate, pricing, and exact quote mode."""
     with patch(
         "backend.routers.upload._extract_clause_preview",
-        return_value=([{"number": "第1条", "title": "目的"}], 1, {"preview_succeeded": True}),
+        return_value=([{"number": "第1条", "title": "目的"}], 1, {"preview_succeeded": True}, True),
     ):
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
@@ -80,7 +80,30 @@ async def test_upload_text_returns_pricing():
     assert body["contract_text"] != ""
     assert body["clause_count"] == 1
     assert body["clause_preview"][0]["number"] == "第1条"
+    assert body["is_contract"] is True
     assert body["quote_token"] == "quote-test-token"
+
+
+@pytest.mark.asyncio
+async def test_upload_text_non_contract_sets_is_contract_false():
+    """Exact quote uploads should surface non-contract detection before payment."""
+    with patch(
+        "backend.routers.upload._extract_clause_preview",
+        return_value=(None, None, {"preview_succeeded": True}, False),
+    ):
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            resp = await client.post(
+                "/api/upload",
+                data={
+                    "input_type": "text",
+                    "text": "これは会議メモです。契約条件や当事者間の合意条項は含まれていません。",
+                },
+            )
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["price_jpy"] > 0
+    assert body["is_contract"] is False
 
 
 @pytest.mark.asyncio
@@ -308,7 +331,7 @@ async def test_upload_short_text_skips_clause_preview():
 @pytest.mark.asyncio
 async def test_upload_text_preview_failure_does_not_block_pricing():
     """Preview extraction failures should gracefully degrade to null preview."""
-    with patch("backend.routers.upload._extract_clause_preview", return_value=(None, None, None)):
+    with patch("backend.routers.upload._extract_clause_preview", return_value=(None, None, None, None)):
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
             resp = await client.post(
@@ -324,6 +347,7 @@ async def test_upload_text_preview_failure_does_not_block_pricing():
     assert body["price_jpy"] > 0
     assert body["clause_preview"] is None
     assert body["clause_count"] is None
+    assert body["is_contract"] is None
 
 
 # -- Upload limit enforcement ------------------------------------------------
