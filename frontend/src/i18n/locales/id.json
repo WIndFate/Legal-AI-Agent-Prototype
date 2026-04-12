@@ -199,6 +199,7 @@
     "disclaimer": "Layanan ini bukan konsultasi hukum. Silakan berkonsultasi dengan pengacara untuk keputusan hukum tertentu.",
     "privacy": "Kebijakan Privasi",
     "terms": "Ketentuan Layanan",
+    "commercial": "UU Transaksi Komersial",
     "copyright": "© 2026 ContractGuard"
   },
   "share": {
@@ -299,6 +300,11 @@
     "parttime_c1_suggestion": "Klausul ini ilegal. Minta diubah menjadi: 'Premi lembur minimal 25% dibayarkan untuk semua jam yang melebihi jam kerja resmi.'",
     "parttime_c2_reason": "Mengharuskan karyawan mengganti kerugian penuh biasanya dibatasi oleh pengadilan, yang umumnya hanya memberikan tanggung jawab sebagian. Selain itu, pemotongan dari gaji memerlukan persetujuan tertulis pekerja — jika tidak, melanggar prinsip pembayaran gaji penuh.",
     "parttime_c2_suggestion": "Konfirmasi apakah perusahaan memiliki asuransi tanggung jawab bisnis, dan minta agar 'pemotongan gaji memerlukan persetujuan tertulis karyawan' dinyatakan secara eksplisit."
+  },
+  "commercial": {
+    "page_title": "Informasi Berdasarkan UU Transaksi Komersial",
+    "summary": "Informasi penyedia layanan yang diungkapkan sesuai dengan Undang-Undang Transaksi Komersial Tertentu Jepang.",
+    "last_updated": "Terakhir diperbarui: {{date}}"
   },
   "not_found": {
     "title": "Halaman tidak ditemukan",

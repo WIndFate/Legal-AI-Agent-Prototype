@@ -70,7 +70,55 @@
   margin-bottom: 8px;
 }
 
+/* ── Info table for commercial transactions page ── */
+
+.infoTable {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 12px;
+}
+
+.infoTable th,
+.infoTable td {
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(31, 58, 95, 0.08);
+  text-align: left;
+  vertical-align: top;
+  line-height: 1.8;
+}
+
+.infoTable th {
+  width: 30%;
+  min-width: 120px;
+  color: var(--brand-ink);
+  font-weight: 600;
+  font-size: 0.88rem;
+  white-space: nowrap;
+}
+
+.infoTable td {
+  color: var(--text-soft);
+  font-size: 0.88rem;
+}
+
 @media (max-width: 767px) {
+  .infoTable th,
+  .infoTable td {
+    display: block;
+    width: 100%;
+    padding: 8px 12px;
+  }
+
+  .infoTable th {
+    padding-bottom: 2px;
+    border-bottom: none;
+    white-space: normal;
+  }
+
+  .infoTable td {
+    padding-top: 0;
+  }
+
   .flowCard,
   .scopeCard {
     padding: 16px;

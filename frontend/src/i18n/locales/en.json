@@ -199,6 +199,7 @@
     "disclaimer": "This service is not legal advice. Please consult a licensed attorney for specific legal decisions.",
     "privacy": "Privacy Policy",
     "terms": "Terms of Service",
+    "commercial": "Commercial Transactions Act",
     "copyright": "© 2026 ContractGuard"
   },
   "share": {
@@ -299,6 +300,11 @@
     "parttime_c1_suggestion": "This clause is illegal. Demand it be amended to: 'Overtime premium of at least 25% shall be paid for all hours exceeding statutory working hours.'",
     "parttime_c2_reason": "Requiring employees to compensate full damages is typically limited by courts, which usually award only partial liability. Also, deducting from wages requires the worker's written consent — otherwise it violates the full wage payment principle.",
     "parttime_c2_suggestion": "Confirm whether the company has business liability insurance, and request that 'wage deductions require the employee's written consent' be explicitly stated."
+  },
+  "commercial": {
+    "page_title": "Specified Commercial Transactions Act",
+    "summary": "Business operator information disclosed in accordance with Japan's Act on Specified Commercial Transactions.",
+    "last_updated": "Last updated: {{date}}"
   },
   "not_found": {
     "title": "Page not found",

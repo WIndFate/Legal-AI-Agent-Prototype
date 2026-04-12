@@ -199,6 +199,7 @@
     "disclaimer": "Este serviço não constitui assessoria jurídica. Consulte um advogado para decisões legais específicas.",
     "privacy": "Política de Privacidade",
     "terms": "Termos de Serviço",
+    "commercial": "Lei de Transações Comerciais",
     "copyright": "© 2026 ContractGuard"
   },
   "share": {
@@ -299,6 +300,11 @@
     "parttime_c1_suggestion": "Esta cláusula é ilegal. Exija que seja alterada para: 'Adicional de pelo menos 25% será pago para todas as horas que excedam o horário legal de trabalho.'",
     "parttime_c2_reason": "Exigir que funcionários compensem integralmente os danos é tipicamente limitado pelos tribunais, que geralmente concedem apenas responsabilidade parcial. Além disso, descontar do salário requer consentimento escrito do trabalhador — caso contrário, viola o princípio do pagamento integral do salário.",
     "parttime_c2_suggestion": "Confirme se a empresa possui seguro de responsabilidade empresarial e solicite que 'descontos salariais requerem consentimento escrito do funcionário' seja expressamente declarado."
+  },
+  "commercial": {
+    "page_title": "Lei de Transações Comerciais Especificadas",
+    "summary": "Informações do operador de serviço divulgadas de acordo com a Lei de Transações Comerciais Especificadas do Japão.",
+    "last_updated": "Última atualização: {{date}}"
   },
   "not_found": {
     "title": "Página não encontrada",

@@ -175,6 +175,7 @@ export default function Layout({ children }: LayoutProps) {
           <a href={homeHref} onClick={navigateToAnchor('top')}>{t('nav.home')}</a>
           <Link to="/privacy">{t('footer.privacy')}</Link>
           <Link to="/terms">{t('footer.terms')}</Link>
+          <Link to="/commercial">{t('footer.commercial')}</Link>
         </nav>
         <p className={styles.footerDisclaimer}>
           {t('footer.disclaimer')}
