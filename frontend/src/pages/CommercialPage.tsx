@@ -47,7 +47,7 @@ export default function CommercialPage() {
             </tr>
             <tr>
               <th>支払方法</th>
-              <td>クレジットカード、WeChat Pay、Alipay（KOMOJU決済）</td>
+              <td>クレジットカードおよび各種ウォレット決済（KOMOJU決済、利用可能な支払方法は決済画面に表示されます）</td>
             </tr>
             <tr>
               <th>支払時期</th>

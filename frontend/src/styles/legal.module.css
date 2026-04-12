@@ -35,6 +35,10 @@
   margin-bottom: 12px;
 }
 
+.legalSection {
+  margin-bottom: 26px;
+}
+
 .content ul {
   padding-left: 20px;
 }
@@ -47,13 +51,23 @@
 }
 
 .flowCard,
-.scopeCard {
+.scopeCard,
+.noticeCard,
+.officialDetails {
   margin-bottom: 24px;
   padding: 18px 20px;
   border-radius: 22px;
   border: 1px solid rgba(31, 58, 95, 0.1);
   background: rgba(255, 255, 255, 0.78);
   box-shadow: 0 14px 28px rgba(18, 31, 52, 0.05);
+}
+
+.noticeCard {
+  background: linear-gradient(180deg, rgba(255, 248, 235, 0.94), rgba(255, 255, 255, 0.94));
+}
+
+.noticeCard h3 {
+  margin-top: 0;
 }
 
 .flowList {
@@ -68,6 +82,45 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 16px;
   margin-bottom: 8px;
+}
+
+.officialDetails {
+  padding: 0;
+  overflow: hidden;
+}
+
+.officialDetails summary {
+  cursor: pointer;
+  list-style: none;
+  padding: 18px 20px;
+  color: var(--brand-ink);
+  font-weight: 600;
+}
+
+.officialDetails summary::-webkit-details-marker {
+  display: none;
+}
+
+.officialDetails summary::after {
+  content: '+';
+  float: right;
+  color: var(--brand);
+  font-size: 1.1rem;
+}
+
+.officialDetails[open] summary::after {
+  content: '−';
+}
+
+.officialContent {
+  padding: 0 20px 20px;
+  border-top: 1px solid rgba(31, 58, 95, 0.08);
+}
+
+.officialSummary {
+  margin-top: 16px;
+  color: var(--text-faint);
+  font-size: 0.8rem;
 }
 
 /* ── Info table for commercial transactions page ── */
@@ -120,9 +173,15 @@
   }
 
   .flowCard,
-  .scopeCard {
+  .scopeCard,
+  .noticeCard,
+  .officialDetails {
     padding: 16px;
     border-radius: 18px;
+  }
+
+  .officialContent {
+    padding: 0 16px 16px;
   }
 
   .scopeGrid {

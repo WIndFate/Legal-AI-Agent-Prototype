@@ -1,8 +1,38 @@
 import { useTranslation } from 'react-i18next';
+import { OFFICIAL_TERMS_SECTIONS, getTermsCopy, type LegalSection } from '../data/legalContent';
 import styles from '../styles/legal.module.css';
 
+function LegalSectionList({ sections }: { sections: LegalSection[] }) {
+  return (
+    <>
+      {sections.map((section) => (
+        <section key={section.title} className={styles.legalSection}>
+          <h3>{section.title}</h3>
+          {section.blocks.map((block, index) =>
+            block.type === 'paragraph' ? (
+              <div key={`${section.title}-${index}`}>
+                {block.content.map((paragraph) => (
+                  <p key={paragraph}>{paragraph}</p>
+                ))}
+              </div>
+            ) : (
+              <ul key={`${section.title}-${index}`}>
+                {block.content.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            ),
+          )}
+        </section>
+      ))}
+    </>
+  );
+}
+
 export default function TermsPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const copy = getTermsCopy(i18n.language);
+  const isJapanese = i18n.language.startsWith('ja');
 
   return (
     <div className={`page ${styles.legalPage}`}>
@@ -15,64 +45,22 @@ export default function TermsPage() {
       <div className={styles.content}>
         <p className={styles.lastUpdated}>{t('terms.last_updated', { date: '2026-03-25' })}</p>
 
-        <h3>第1条（サービスの内容）</h3>
-        <p>
-          ContractGuard（以下「本サービス」）は、AI技術を活用した契約書リスク分析サービスです。
-          ユーザーがアップロードした日本語の契約書テキストに対し、条項ごとのリスク評価と改善提案を提供します。
-        </p>
+        <section className={styles.noticeCard}>
+          <h3>{copy.noticeTitle}</h3>
+          <p>{copy.noticeBody}</p>
+        </section>
 
-        <h3>第2条（法律相談ではないことの明示）</h3>
-        <p>
-          本サービスは弁護士法第72条に定める法律事務を行うものではありません。
-          本サービスが提供する分析結果は、あくまでAIによる参考情報であり、法的助言ではありません。
-          具体的な法的判断や契約の締結に関する決定は、必ず弁護士等の専門家にご相談ください。
-        </p>
+        <LegalSectionList sections={copy.sections} />
 
-        <h3>第3条（料金と支払い）</h3>
-        <p>
-          本サービスは都度払い方式（Pay-per-use）を採用しています。
-          料金は契約書のページ数（トークン数）に基づく4段階の価格帯で決定されます。
-          決済はKOMOJU株式会社の決済サービスを通じて行われます。
-        </p>
-
-        <h3>第4条（返金ポリシー）</h3>
-        <p>
-          AI分析の処理が開始された後の返金には応じかねます。
-          決済完了前にサービスの利用をキャンセルされた場合、課金は発生しません。
-          システム障害等により分析が正常に完了しなかった場合は、個別にご対応いたします。
-        </p>
-
-        <h3>第5条（レポートの有効期限）</h3>
-        <p>
-          分析レポートは生成から72時間後に自動的に削除されます。
-          レポートリンクはメールで送信されますが、72時間経過後はアクセスできなくなります。
-          レポートの保存が必要な場合は、有効期限内にお客様ご自身でダウンロード・スクリーンショット等をお願いいたします。
-        </p>
-
-        <h3>第6条（免責事項）</h3>
-        <p>
-          本サービスは、AI分析結果の正確性、完全性、有用性について、いかなる保証も行いません。
-          本サービスの利用により生じた損害について、当サービス運営者は法令上許容される範囲で責任を負いません。
-          AI分析は参考情報として活用し、重要な判断は必ず専門家にご確認ください。
-        </p>
-
-        <h3>第7条（プライバシー）</h3>
-        <p>
-          個人情報の取扱いについては、別途定めるプライバシーポリシーに従います。
-          アップロードされた契約書テキストは分析完了後に即時削除され、当サービスのサーバーに保存されることはありません。
-        </p>
-
-        <h3>第8条（利用規約の変更）</h3>
-        <p>
-          当サービスは、必要に応じて本利用規約を変更することがあります。
-          変更後の利用規約は、本ページに掲載した時点で効力を生じます。
-        </p>
-
-        <h3>第9条（準拠法・管轄）</h3>
-        <p>
-          本利用規約は日本法に準拠し、解釈されるものとします。
-          本サービスに関する紛争については、東京地方裁判所を第一審の専属的合意管轄裁判所とします。
-        </p>
+        {!isJapanese && (
+          <details className={styles.officialDetails}>
+            <summary>{copy.officialToggleLabel}</summary>
+            <div className={styles.officialContent}>
+              <p className={styles.officialSummary}>{copy.officialSummary}</p>
+              <LegalSectionList sections={OFFICIAL_TERMS_SECTIONS} />
+            </div>
+          </details>
+        )}
       </div>
     </div>
   );
