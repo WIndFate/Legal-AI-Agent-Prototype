@@ -13,6 +13,7 @@ As of 2026-04-12, the local MVP flow is working in Docker, and the production se
 - Image and scanned-PDF quotes now return OCR quality hints (`low` / `medium` / post-payment notice) before the user pays
 - Exact text / text-layer PDF quotes now also return a lightweight clause-structure preview so users can confirm we parsed the contract before paying
 - Exact quote previews now generate a `quote_token`, cache the clause preview by normalized content hash, and reuse that cached preview/cost snapshot when the same contract is uploaded again
+- Exact text / text-layer PDF quotes now also return `is_contract`; if the preview judges the upload is not a contract, the homepage blocks payment UI and `/api/payment/create` rejects the exact-quote payment request server-side
 - Uploads and preview generation now both have Redis-backed per-IP rate limits so repeated anonymous/scripted requests cannot burn unbounded preview cost
 - `pgvector` RAG is running in PostgreSQL with 331+ law articles across 10 legal categories (rental, labor, part-time, business outsourcing, sales, etc.)
 - 9-language frontend with professional branding (ContractGuard), privacy/terms pages, and a dedicated examples gallery with report-style samples
@@ -31,6 +32,7 @@ As of 2026-04-12, the local MVP flow is working in Docker, and the production se
 - The review page now also shows quantified clause progress, keeps failures inside the same live card, uses shorter progress labels, and trims motion/activity density on mobile or reduced-motion setups
 - That review activity feed is now derived from raw persisted events, so changing the surrounding site language mid-analysis immediately re-localizes the in-progress feed instead of leaving stale strings behind
 - If the uploaded content is judged not to be a contract during the parse step, analysis now stops early with a dedicated user-facing error instead of consuming the full review flow
+- Order status snapshots now expose machine-readable `error_code` alongside human-readable `error_message`, so ReviewPage can render stable failure states without comparing localized strings
 - The saved report page now supports risk-level filtering, denser clause cards, a direct backend-generated `Download PDF` action, and a more compact one-row summary on desktop
 - Report sharing now uses a compact custom share sheet with a clearer title block, a larger preview card, a referral-tagged report link generated behind the scenes, and a more intentional save/copy/share action hierarchy
 - Referral links now return to the homepage with `?ref=` so the referral code is carried into the payment form automatically
@@ -137,12 +139,12 @@ docker compose up -d backend postgres redis
 ## Local Flow
 
 1. Open the frontend and upload contract text, image, or PDF.
-2. Review pricing and PII warnings.
-3. Create payment.
+2. Review pricing, PII warnings, and for exact quotes the pre-payment contract check (`is_contract`).
+3. Create payment. Exact quotes must carry a live `quote_token`; stale, mismatched, or non-contract exact quotes are rejected server-side before order creation.
 4. In local dev, if `APP_ENV=development` and `KOMOJU_SECRET_KEY` is empty, the order is auto-marked as paid and redirected to review.
 5. `/review/:orderId` starts or resumes the persistent analysis task, restores saved progress events, and then subscribes to new updates.
 6. When analysis completes, the UI redirects directly into `/report/:orderId`.
-7. If parse determines the uploaded content is not a contract, the review flow stops immediately and shows a dedicated message instead of continuing into risk analysis.
+7. If parse determines the uploaded content is not a contract, the review flow stops immediately and shows a dedicated message instead of continuing into risk analysis; the same state is keyed off `error_code=non_contract_document` in the status/event APIs.
 8. The saved report page supports risk-level filtering so long reports can be narrowed to high / medium / low findings.
 9. During the live review, the UI now shows user-facing progress text instead of raw internal tool names.
 10. The saved report keeps the language chosen at payment time; switching the site language later only changes the page chrome.
@@ -174,6 +176,7 @@ docker compose up -d backend postgres redis
 - `GET /api/eval/costs` now aggregates persisted `reports.cost_summary` samples and, when live data is still sparse, backfills to a 10-sample baseline from `backend/data/cost_samples_seed.json`.
 - Each paid order now also writes a persisted `order_cost_estimates` row: payment-time `estimate_snapshot`, later `actual_snapshot`, and finally `comparison_snapshot`.
 - Payment-time estimate snapshots now also include a `prepayment_snapshot` when an exact quote generated a clause preview, so pre-payment preview cost is audited separately and then merged into total predicted/actual cost.
+- Exact-quote payments now validate the cached preview context on the server before order creation: the request must include a live `quote_token`, the normalized content hash must still match the uploaded contract text, and `is_contract=false` previews are rejected before any order is created.
 - Those snapshots record both the planned model mix and the actual model usage (`ocr / parse / analyze / suggestion / translation / embedding`) so future model upgrades can be compared by margin impact, not just total spend.
 - `GET /api/eval/costs` now also groups estimate-vs-actual deltas by `estimate_version` and by model signature, making pricing-model revisions and model swaps auditable over time.
 - `GET /api/eval/operations` is a read-only operations endpoint built on real orders only; it surfaces revenue, actual cost, actual margin, estimate-vs-actual deltas, recent orders, and groupings by pricing model, paid-price band, input type, quote mode, language, estimate version, and model signature.

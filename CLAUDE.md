@@ -74,8 +74,9 @@ Current status as of 2026-04-12:
 - Pre-payment image and scanned-PDF quotes now return OCR quality hints so users can correct blurry captures before paying.
 - Exact text and text-layer PDF quotes now also include a lightweight clause-preview extraction so users can confirm the contract structure before they pay.
 - Exact quote previews now generate a `quote_token`, cache clause previews by normalized content hash, and reuse those cached previews/cost snapshots when the same contract is uploaded again.
+- Exact text / text-layer PDF uploads now also return `is_contract`; homepage payment UI is blocked when `is_contract == false`, and `/api/payment/create` now enforces the same exact-quote check server-side via `quote_token` + content-hash validation.
 - Upload and preview generation are now both protected by Redis-backed per-IP rate limits so anonymous/scripted traffic cannot burn unbounded pre-payment preview cost.
-- Deployment configs ready: `fly.toml` (Fly app `contractguard-prod`, NRT, force_https) + `vercel.json` (API proxy, security headers) + Alembic migration chain through `008`.
+- Deployment configs ready: `fly.toml` (Fly app `contractguard-prod`, NRT, force_https) + `vercel.json` (API proxy, security headers) + Alembic migration chain through `009`.
 - `frontend/index.html` now includes static OG / Twitter metadata, and `frontend/public/og-image.svg` provides a lightweight branded social preview image.
 - RAG knowledge base expanded to 331+ law articles across 10 legal categories (rental, labor, part-time, business outsourcing, sales, etc.).
 - Eval dataset expanded to 20 labeled samples covering multiple contract types.
@@ -89,6 +90,7 @@ Current status as of 2026-04-12:
 - Review progress now also emits parse-time clause counts and tool-complete events, so the ReviewPage can show quantified clause progress (`3 / 12`), keep failure messaging inside the same live card, tighten the mobile activity list, and disable review-only motion flourishes under reduced-motion preferences.
 - Persistent analysis-task architecture is now the primary runtime flow: `analysis_jobs` / `analysis_events`, event bus, extracted report persistence helpers, new analysis start/status/events/stream routes, and frontend snapshot-plus-replay event restoration are all in code.
 - Failed analyses now persist the partial AI cost summary already incurred up to the failure point into `analysis_jobs.cost_summary`, instead of keeping it only in memory/logs.
+- Analysis job failures now store machine-readable `error_code` separately from human-readable `error_message`, and the status API exposes both so ReviewPage can key dedicated failure states off `error_code`.
 - Payment-time cost estimation is now persisted separately in `order_cost_estimates`: each order stores an `estimate_snapshot`, later an `actual_snapshot`, and finally a `comparison_snapshot`, all tagged with the estimate version, pricing-policy version, and the planned/actual model mix so pricing accuracy can be audited across future model upgrades.
 - Local Docker startup now uses health checks for `postgres`, `redis`, and `backend`, and key frontend pages use a small retry wrapper so brief backend warm-up windows do not surface as user-facing proxy failures.
 - Backend containers now auto-apply Alembic migrations to `head` on startup before Uvicorn boots, guarded by a PostgreSQL advisory lock and a legacy-schema detection/stamp path so old Docker volumes can move forward safely without manual migration steps.
@@ -175,16 +177,16 @@ backend/
     report.py     # Report model (JSONB clause_analyses, 72h expires_at)
     referral.py   # Referral model (referral_code, uses_count, discount_jpy)
   schemas/
-    analysis.py   # Analysis start/status/events/stream schemas
-    payment.py    # PaymentCreateRequest/Response
+    analysis.py   # Analysis start/status/events/stream schemas (+ error_code in status snapshots)
+    payment.py    # PaymentCreateRequest/Response (exact quote_token validation)
     report.py     # Report response schema
-    upload.py     # UploadResponse
+    upload.py     # UploadResponse (+ clause preview + is_contract for exact quotes)
   routers/
     _helpers.py   # Shared router helpers (parse_order_id UUID validator → 404)
     health.py     # GET /api/health
     upload.py     # POST /api/upload (image/PDF/text + OCR + PII + pricing)
-    payment.py    # POST /api/payment/create + /api/payment/webhook
-    analysis.py   # POST /api/analysis/start + GET status/events/stream
+    payment.py    # POST /api/payment/create + /api/payment/webhook (server-side exact quote validation)
+    analysis.py   # POST /api/analysis/start + GET status/events/stream (error_code + error_message)
     report.py     # GET /api/report/{order_id} + /api/report/{order_id}/pdf
     referral.py   # POST /api/referral/generate + GET /api/referral/{code}
     eval.py       # GET /api/eval/rag + /api/eval/costs + /api/eval/operations
@@ -313,6 +315,7 @@ Embeddings are generated via OpenAI API (httpx direct call, not langchain).
 - KOMOJU payment-method availability is fully merchant-account-controlled; no `payment_types` list is sent, so new methods appear automatically as KOMOJU approves them.
 - The current runtime policy is `¥75 / 1000 tokens` with a `¥200` minimum charge. Internally, page estimates remain only as a guardrail for upload limits and OCR planning.
 - Exact quote uploads now emit a `quote_token`; Redis caches the resulting clause preview and `prepayment_snapshot` by normalized `content_hash`, so repeated uploads of the same contract reuse that preview instead of re-running the preview LLM call.
+- `/api/payment/create` now validates that exact-quote `quote_token` context still exists, still matches the uploaded contract hash, and was not flagged as `is_contract == false` before creating an order.
 - The upload flow applies separate per-IP rate limits to raw upload requests and preview generation, preventing the exact-quote preview endpoint from being abused to generate unlimited anonymous LLM cost.
 - Each paid order now also stores a payment-time estimate snapshot keyed by `COST_ESTIMATE_VERSION` and `pricing_policy_version`, including predicted clause counts, step-level estimated costs, quoted margin, and the planned model mix (`ocr/parse/analyze/suggestion/translation/embedding`).
 - When an exact quote generated a pre-payment clause preview, that preview cost is persisted as `prepayment_snapshot` and merged into both the predicted and actual total cost snapshots.
@@ -368,7 +371,7 @@ Embeddings are generated via OpenAI API (httpx direct call, not langchain).
 - The review page is now a processing-only surface. It should show user-facing progress text during persistent event-stream playback and redirect into `/report/:orderId` once the saved report is ready; do not expose raw internal tool names like `analyze_clause_risk` to end users.
 - The review page should quantify clause progress once parse returns the total clause count, keep failure states inside the same progress card instead of dropping to a detached error block, and use compact segmented-bar labels on smaller screens.
 - If parse determines the uploaded content is not a contract, the analysis should terminate immediately with a dedicated `non_contract_document` failure state instead of continuing through full risk review.
-- If parse determines the uploaded content is not a contract, the analysis should terminate immediately with a dedicated `non_contract_document` failure state instead of continuing through full risk review.
+- ReviewPage should key that dedicated failure state off `error_code`, not by comparing localized `error_message` strings.
 - `/api/report/{order_id}` must return the same payload shape whether data comes from Redis or PostgreSQL.
 - Report content is fixed in the language chosen at payment time; later UI language switches only affect surrounding page chrome unless an explicit re-translation feature is implemented.
 - Original contract comparison should be clause-level and inline with each analysis card, not as a full-document dump at the bottom of the page.
