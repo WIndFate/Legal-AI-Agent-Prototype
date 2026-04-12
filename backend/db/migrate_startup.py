@@ -25,6 +25,12 @@ REVISION_ORDER = {
 }
 
 
+def to_sync_dsn(database_url: str) -> str:
+    """Return a sync-compatible PostgreSQL DSN for Alembic/logging helpers."""
+    dsn, _ = to_asyncpg_dsn(database_url)
+    return dsn
+
+
 async def wait_for_database(
     dsn: str,
     timeout_seconds: int,
@@ -183,5 +189,4 @@ async def run_startup_migrations() -> None:
             await release_migration_lock(conn, settings.MIGRATION_LOCK_ID)
         finally:
             await conn.close()
-
 
