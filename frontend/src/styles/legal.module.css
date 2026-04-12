@@ -117,12 +117,6 @@
   border-top: 1px solid rgba(31, 58, 95, 0.08);
 }
 
-.officialSummary {
-  margin-top: 16px;
-  color: var(--text-faint);
-  font-size: 0.8rem;
-}
-
 /* ── Info table for commercial transactions page ── */
 
 .infoTable {

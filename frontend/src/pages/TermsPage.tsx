@@ -1,33 +1,7 @@
 import { useTranslation } from 'react-i18next';
-import { OFFICIAL_TERMS_SECTIONS, getTermsCopy, type LegalSection } from '../data/legalContent';
+import LegalSectionList from '../components/common/LegalSectionList';
+import { OFFICIAL_TERMS_SECTIONS, getTermsCopy } from '../data/legalContent';
 import styles from '../styles/legal.module.css';
-
-function LegalSectionList({ sections }: { sections: LegalSection[] }) {
-  return (
-    <>
-      {sections.map((section) => (
-        <section key={section.title} className={styles.legalSection}>
-          <h3>{section.title}</h3>
-          {section.blocks.map((block, index) =>
-            block.type === 'paragraph' ? (
-              <div key={`${section.title}-${index}`}>
-                {block.content.map((paragraph) => (
-                  <p key={paragraph}>{paragraph}</p>
-                ))}
-              </div>
-            ) : (
-              <ul key={`${section.title}-${index}`}>
-                {block.content.map((item) => (
-                  <li key={item}>{item}</li>
-                ))}
-              </ul>
-            ),
-          )}
-        </section>
-      ))}
-    </>
-  );
-}
 
 export default function TermsPage() {
   const { t, i18n } = useTranslation();
@@ -56,7 +30,6 @@ export default function TermsPage() {
           <details className={styles.officialDetails}>
             <summary>{copy.officialToggleLabel}</summary>
             <div className={styles.officialContent}>
-              <p className={styles.officialSummary}>{copy.officialSummary}</p>
               <LegalSectionList sections={OFFICIAL_TERMS_SECTIONS} />
             </div>
           </details>

@@ -10,7 +10,6 @@ export type LegalSection = {
 type LegalDocumentCopy = {
   noticeTitle: string;
   noticeBody: string;
-  officialSummary: string;
   officialToggleLabel: string;
   sections: LegalSection[];
 };
@@ -942,17 +941,15 @@ const TERMS_NE: LegalSection[] = [
 const LEGAL_COPY: Record<SupportedLegalLanguage, LegalCopy> = {
   ja: {
     privacy: {
-      noticeTitle: 'この日本語本文が正式版です。',
-      noticeBody: '法的な解釈が必要な場合は、この日本語版を基準としてご確認ください。',
-      officialSummary: '以下は正式な日本語本文です。',
-      officialToggleLabel: '日本語版（正式版）を表示',
+      noticeTitle: 'お客様の情報を大切にお預かりします。',
+      noticeBody: '当サービスはアップロードされた契約書を分析完了後に即時削除し、必要最小限の情報のみを取り扱います。詳細は以下をご確認ください。',
+      officialToggleLabel: '',
       sections: PRIVACY_JP,
     },
     terms: {
-      noticeTitle: 'この日本語本文が正式版です。',
-      noticeBody: '翻訳版との間に差異が生じる場合は、この日本語版が優先します。',
-      officialSummary: '以下は正式な日本語本文です。',
-      officialToggleLabel: '日本語版（正式版）を表示',
+      noticeTitle: 'ご利用前にご確認ください。',
+      noticeBody: '本サービスはAIによる契約書リスク分析の参考情報を提供するものであり、法律相談ではありません。以下の利用規約をお読みのうえ、ご利用ください。',
+      officialToggleLabel: '',
       sections: TERMS_JP,
     },
   },
@@ -960,14 +957,12 @@ const LEGAL_COPY: Record<SupportedLegalLanguage, LegalCopy> = {
     privacy: {
       noticeTitle: 'This translation is provided for reference.',
       noticeBody: 'The official controlling version is the Japanese text shown below. If there is any inconsistency, the Japanese version prevails.',
-      officialSummary: 'Official Japanese version',
       officialToggleLabel: 'Show official Japanese text',
       sections: PRIVACY_EN,
     },
     terms: {
       noticeTitle: 'This translation is provided for reference.',
       noticeBody: 'The official controlling version is the Japanese text shown below. If there is any inconsistency, the Japanese version prevails.',
-      officialSummary: 'Official Japanese version',
       officialToggleLabel: 'Show official Japanese text',
       sections: TERMS_EN,
     },
@@ -976,14 +971,12 @@ const LEGAL_COPY: Record<SupportedLegalLanguage, LegalCopy> = {
     privacy: {
       noticeTitle: '当前翻译版仅供参考。',
       noticeBody: '下方日文版为正式有效版本。如翻译内容与日文版存在差异，以日文版为准。',
-      officialSummary: '日文正式版',
       officialToggleLabel: '查看日文正式版',
       sections: PRIVACY_ZH_CN,
     },
     terms: {
       noticeTitle: '当前翻译版仅供参考。',
       noticeBody: '下方日文版为正式有效版本。如翻译内容与日文版存在差异，以日文版为准。',
-      officialSummary: '日文正式版',
       officialToggleLabel: '查看日文正式版',
       sections: TERMS_ZH_CN,
     },
@@ -992,14 +985,12 @@ const LEGAL_COPY: Record<SupportedLegalLanguage, LegalCopy> = {
     privacy: {
       noticeTitle: '目前翻譯版僅供參考。',
       noticeBody: '下方日文版為正式有效版本；若翻譯內容與日文版不一致，以日文版為準。',
-      officialSummary: '日文正式版',
       officialToggleLabel: '查看日文正式版',
       sections: PRIVACY_ZH_TW,
     },
     terms: {
       noticeTitle: '目前翻譯版僅供參考。',
       noticeBody: '下方日文版為正式有效版本；若翻譯內容與日文版不一致，以日文版為準。',
-      officialSummary: '日文正式版',
       officialToggleLabel: '查看日文正式版',
       sections: TERMS_ZH_TW,
     },
@@ -1008,14 +999,12 @@ const LEGAL_COPY: Record<SupportedLegalLanguage, LegalCopy> = {
     privacy: {
       noticeTitle: '현재 번역본은 참고용입니다.',
       noticeBody: '아래의 일본어 본문이 공식 기준 버전이며, 내용 차이가 있을 경우 일본어 버전이 우선합니다.',
-      officialSummary: '공식 일본어 버전',
       officialToggleLabel: '일본어 공식 본문 보기',
       sections: PRIVACY_KO,
     },
     terms: {
       noticeTitle: '현재 번역본은 참고용입니다.',
       noticeBody: '아래의 일본어 본문이 공식 기준 버전이며, 내용 차이가 있을 경우 일본어 버전이 우선합니다.',
-      officialSummary: '공식 일본어 버전',
       officialToggleLabel: '일본어 공식 본문 보기',
       sections: TERMS_KO,
     },
@@ -1024,14 +1013,12 @@ const LEGAL_COPY: Record<SupportedLegalLanguage, LegalCopy> = {
     privacy: {
       noticeTitle: 'Bản dịch này chỉ để tham khảo.',
       noticeBody: 'Bản tiếng Nhật bên dưới là bản chính thức có giá trị ưu tiên. Nếu có khác biệt, bản tiếng Nhật sẽ được áp dụng.',
-      officialSummary: 'Bản tiếng Nhật chính thức',
       officialToggleLabel: 'Xem bản tiếng Nhật chính thức',
       sections: PRIVACY_VI,
     },
     terms: {
       noticeTitle: 'Bản dịch này chỉ để tham khảo.',
       noticeBody: 'Bản tiếng Nhật bên dưới là bản chính thức có giá trị ưu tiên. Nếu có khác biệt, bản tiếng Nhật sẽ được áp dụng.',
-      officialSummary: 'Bản tiếng Nhật chính thức',
       officialToggleLabel: 'Xem bản tiếng Nhật chính thức',
       sections: TERMS_VI,
     },
@@ -1040,14 +1027,12 @@ const LEGAL_COPY: Record<SupportedLegalLanguage, LegalCopy> = {
     privacy: {
       noticeTitle: 'Versi terjemahan ini hanya untuk referensi.',
       noticeBody: 'Versi resmi yang mengikat adalah teks bahasa Jepang di bawah. Jika ada perbedaan, versi Jepang yang berlaku.',
-      officialSummary: 'Versi resmi bahasa Jepang',
       officialToggleLabel: 'Lihat teks resmi bahasa Jepang',
       sections: PRIVACY_ID,
     },
     terms: {
       noticeTitle: 'Versi terjemahan ini hanya untuk referensi.',
       noticeBody: 'Versi resmi yang mengikat adalah teks bahasa Jepang di bawah. Jika ada perbedaan, versi Jepang yang berlaku.',
-      officialSummary: 'Versi resmi bahasa Jepang',
       officialToggleLabel: 'Lihat teks resmi bahasa Jepang',
       sections: TERMS_ID,
     },
@@ -1056,14 +1041,12 @@ const LEGAL_COPY: Record<SupportedLegalLanguage, LegalCopy> = {
     privacy: {
       noticeTitle: 'Esta tradução é apenas para referência.',
       noticeBody: 'A versão oficial aplicável é o texto em japonês exibido abaixo. Em caso de divergência, prevalece a versão em japonês.',
-      officialSummary: 'Versão oficial em japonês',
       officialToggleLabel: 'Ver texto oficial em japonês',
       sections: PRIVACY_PT_BR,
     },
     terms: {
       noticeTitle: 'Esta tradução é apenas para referência.',
       noticeBody: 'A versão oficial aplicável é o texto em japonês exibido abaixo. Em caso de divergência, prevalece a versão em japonês.',
-      officialSummary: 'Versão oficial em japonês',
       officialToggleLabel: 'Ver texto oficial em japonês',
       sections: TERMS_PT_BR,
     },
@@ -1072,14 +1055,12 @@ const LEGAL_COPY: Record<SupportedLegalLanguage, LegalCopy> = {
     privacy: {
       noticeTitle: 'यो अनुवाद केवल सन्दर्भका लागि हो।',
       noticeBody: 'तलको जापानी पाठ नै औपचारिक मान्य संस्करण हो। फरक देखिएमा जापानी संस्करण लागू हुन्छ।',
-      officialSummary: 'आधिकारिक जापानी संस्करण',
       officialToggleLabel: 'आधिकारिक जापानी पाठ हेर्नुहोस्',
       sections: PRIVACY_NE,
     },
     terms: {
       noticeTitle: 'यो अनुवाद केवल सन्दर्भका लागि हो।',
       noticeBody: 'तलको जापानी पाठ नै औपचारिक मान्य संस्करण हो। फरक देखिएमा जापानी संस्करण लागू हुन्छ।',
-      officialSummary: 'आधिकारिक जापानी संस्करण',
       officialToggleLabel: 'आधिकारिक जापानी पाठ हेर्नुहोस्',
       sections: TERMS_NE,
     },
