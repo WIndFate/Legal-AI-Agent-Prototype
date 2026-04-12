@@ -10,6 +10,11 @@ from typing import Any
 logger = logging.getLogger(__name__)
 
 
+def _sentry_initialized(sentry_sdk: Any) -> bool:
+    client = sentry_sdk.get_client()
+    return bool(client and client.is_active())
+
+
 def capture(distinct_id: str, event: str, properties: dict[str, Any] | None = None) -> None:
     """Send an event to PostHog. No-op if PostHog is not configured."""
     try:
@@ -35,7 +40,7 @@ def capture_exception(exc: BaseException, *, tags: dict[str, str] | None = None)
     try:
         import sentry_sdk
 
-        if sentry_sdk.Hub.current.client is None:
+        if not _sentry_initialized(sentry_sdk):
             logger.debug("Sentry not initialized; skipping exception capture")
             return
         if tags:
@@ -54,7 +59,7 @@ def capture_message(message: str, *, level: str = "warning", tags: dict[str, str
     try:
         import sentry_sdk
 
-        if sentry_sdk.Hub.current.client is None:
+        if not _sentry_initialized(sentry_sdk):
             logger.debug("Sentry not initialized; skipping message capture")
             return
         if tags:
