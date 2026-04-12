@@ -45,7 +45,7 @@
 - 本番インフラの進捗として、Supabase プロジェクト作成と `pgvector` 有効化、Upstash Redis 作成、フロントエンドの `https://contractguard-app.vercel.app` へのデプロイまでは完了しており、本番経路の frontend / backend `/api/health` も 200 を返す状態です
 - Fly / Vercel / KOMOJU / Resend / Sentry の主要シークレットも概ね設定済みで、KOMOJU テストキー、webhook secret、`FRONTEND_URL`、観測系設定まで入りました
 - Supabase fresh database 向けの起動 migration 問題もコード上で解消済みです。asyncpg + SSL DSN 互換を補い、新規 DB では `alembic_version.version_num` を 255 で事前作成 / 拡張するようにしています
-- KOMOJU checkout の `payment_types` は `backend/data/komoju_payment_methods.json` から読む構成に変わり、Python 側に固定値を埋め込まないようにしました。現在のデフォルト設定はクレジットカード、UnionPay、Alipay、WeChat Pay（`wechatpay`）、PayPay、韓国/ブラジル向けカード、東南アジア / 台湾向けの一部ウォレットを含みます
+- KOMOJU checkout session 作成時には `payment_types` を送らない構成に変更し、checkout に表示される決済手段は merchant アカウント側で承認済みのものに一本化しました。`backend/data/komoju_payment_methods.json` は地域別の導入計画を残すための参考資料としてのみ保持しています
 
 リポジトリ外で未完了の項目:
 
@@ -208,7 +208,7 @@ docker compose up -d backend postgres redis
 - [`backend/services/analysis_executor.py`](./backend/services/analysis_executor.py): プロセス内の持続化分析実行器とイベント永続化
 - [`backend/rag/store.py`](./backend/rag/store.py): pgvector 保存と検索
 - [`backend/eval/evaluator.py`](./backend/eval/evaluator.py): RAG 評価指標とデータセット実行
-- [`backend/data/komoju_payment_methods.json`](./backend/data/komoju_payment_methods.json): KOMOJU の provider code 一覧と、言語/地域ごとの推奨決済手段設定
+- [`backend/data/komoju_payment_methods.json`](./backend/data/komoju_payment_methods.json): 地域・言語ごとの決済手段導入計画を残すための参考資料（ランタイムでは読み込まれません）
 - [`scripts/smoke_local_flow.sh`](./scripts/smoke_local_flow.sh): ローカル end-to-end smoke/regression スクリプト
 - [`scripts/check_locale_keys.sh`](./scripts/check_locale_keys.sh): locale キー整合性チェック
 - [`scripts/check_rag_eval.sh`](./scripts/check_rag_eval.sh): ローカル RAG 回帰チェック
