@@ -134,6 +134,7 @@ async def test_create_payment_happy_path():
                         "input_type": "text",
                         "estimated_tokens": 50,
                         "price_jpy": 299,
+                        "quote_mode": "estimated_pre_ocr",
                         "target_language": "zh-CN",
                     },
                 )
@@ -191,6 +192,97 @@ async def test_create_payment_includes_quote_context_in_estimate_snapshot():
 
 
 @pytest.mark.asyncio
+async def test_create_payment_rejects_missing_exact_quote_context():
+    """Exact quotes must be backed by a live quote_token context before payment."""
+    session = FakeSession()
+
+    app.dependency_overrides[get_db] = _override_db(session)
+    try:
+        with (
+            patch(
+                "backend.routers.payment.create_payment_session",
+                new_callable=AsyncMock,
+                return_value="https://komoju.com/sessions/test123",
+            ),
+            patch("backend.routers.payment.is_dev_payment_mode", return_value=False),
+            patch(
+                "backend.routers.payment.load_quote_context",
+                new_callable=AsyncMock,
+                return_value=None,
+            ),
+        ):
+            transport = ASGITransport(app=app)
+            async with AsyncClient(transport=transport, base_url="http://test") as client:
+                resp = await client.post(
+                    "/api/payment/create",
+                    json={
+                        "email": "user@example.com",
+                        "contract_text": "第1条 テスト契約",
+                        "input_type": "text",
+                        "estimated_tokens": 50,
+                        "price_jpy": 299,
+                        "target_language": "zh-CN",
+                        "quote_mode": "exact",
+                        "quote_token": "quote-test-token",
+                    },
+                )
+        assert resp.status_code == 409
+        assert "upload the contract again" in resp.json()["detail"]
+        assert session.commit_count == 0
+    finally:
+        app.dependency_overrides.pop(get_db, None)
+
+
+@pytest.mark.asyncio
+async def test_create_payment_rejects_non_contract_exact_quote():
+    """Exact quotes flagged as non-contract must be blocked server-side before order creation."""
+    session = FakeSession()
+
+    app.dependency_overrides[get_db] = _override_db(session)
+    try:
+        with (
+            patch(
+                "backend.routers.payment.create_payment_session",
+                new_callable=AsyncMock,
+                return_value="https://komoju.com/sessions/test123",
+            ),
+            patch("backend.routers.payment.is_dev_payment_mode", return_value=False),
+            patch(
+                "backend.routers.payment.load_quote_context",
+                new_callable=AsyncMock,
+                return_value={
+                    "content_hash": "d8f16f31f4f2df67f7d8f6b9f6b73f7d5bdfb1779a40d7f6b7c72f3f6b754f15",
+                    "is_contract": False,
+                },
+            ),
+            patch(
+                "backend.routers.payment.build_contract_content_hash",
+                return_value="d8f16f31f4f2df67f7d8f6b9f6b73f7d5bdfb1779a40d7f6b7c72f3f6b754f15",
+            ),
+        ):
+            transport = ASGITransport(app=app)
+            async with AsyncClient(transport=transport, base_url="http://test") as client:
+                resp = await client.post(
+                    "/api/payment/create",
+                    json={
+                        "email": "user@example.com",
+                        "contract_text": "これは会議メモです。",
+                        "input_type": "text",
+                        "estimated_tokens": 50,
+                        "price_jpy": 299,
+                        "target_language": "zh-CN",
+                        "quote_mode": "exact",
+                        "quote_token": "quote-test-token",
+                    },
+                )
+        assert resp.status_code == 409
+        assert "non-contract material" in resp.json()["detail"]
+        assert session.commit_count == 0
+    finally:
+        app.dependency_overrides.pop(get_db, None)
+
+
+@pytest.mark.asyncio
 async def test_create_payment_dev_bypass():
     """In dev mode with no KOMOJU key, payment should be auto-marked paid."""
     session = FakeSession()
@@ -215,6 +307,7 @@ async def test_create_payment_dev_bypass():
                         "input_type": "text",
                         "estimated_tokens": 10,
                         "price_jpy": 299,
+                        "quote_mode": "estimated_pre_ocr",
                     },
                 )
         assert resp.status_code == 200
@@ -249,6 +342,7 @@ async def test_create_payment_prefers_request_origin_for_frontend_base_url():
                         "input_type": "text",
                         "estimated_tokens": 10,
                         "price_jpy": 299,
+                        "quote_mode": "estimated_pre_ocr",
                     },
                 )
         assert resp.status_code == 200
@@ -280,6 +374,7 @@ async def test_create_payment_ignores_internal_backend_host_for_frontend_base_ur
                         "input_type": "text",
                         "estimated_tokens": 10,
                         "price_jpy": 299,
+                        "quote_mode": "estimated_pre_ocr",
                     },
                 )
         assert resp.status_code == 200

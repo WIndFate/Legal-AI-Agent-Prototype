@@ -21,12 +21,36 @@ from backend.services.payment import (
 )
 from backend.services.analytics import capture as posthog_capture
 from backend.services.analytics import capture_message as sentry_capture_message
-from backend.services.quote_guard import load_quote_context
+from backend.services.quote_guard import build_contract_content_hash, load_quote_context
 from backend.services.token_estimator import estimate_page_count_from_tokens
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
+
+
+def _validate_exact_quote_context(request: PaymentCreateRequest, quote_context: dict | None) -> None:
+    if request.quote_mode != "exact":
+        return
+    if not request.quote_token or quote_context is None:
+        raise HTTPException(
+            status_code=409,
+            detail="Exact quote expired or missing. Please upload the contract again before payment.",
+        )
+
+    expected_hash = quote_context.get("content_hash")
+    actual_hash = build_contract_content_hash(request.contract_text)
+    if isinstance(expected_hash, str) and expected_hash != actual_hash:
+        raise HTTPException(
+            status_code=409,
+            detail="Exact quote no longer matches the uploaded contract. Please upload again.",
+        )
+
+    if quote_context.get("is_contract") is False:
+        raise HTTPException(
+            status_code=409,
+            detail="The uploaded content was identified as non-contract material. Please upload a contract before payment.",
+        )
 
 
 @router.post("/api/payment/create", response_model=PaymentCreateResponse)
@@ -44,6 +68,9 @@ async def create_payment(
         request.target_language,
         request.referral_code is not None,
     )
+    redis = await get_redis()
+    quote_context = await load_quote_context(redis, request.quote_token)
+    _validate_exact_quote_context(request, quote_context)
 
     # Validate and apply referral discount
     discount_jpy = 0
@@ -87,8 +114,6 @@ async def create_payment(
     db.add(order)
     await db.commit()
     await db.refresh(order)
-    redis = await get_redis()
-    quote_context = await load_quote_context(redis, request.quote_token)
     estimate_snapshot = build_order_cost_estimate_snapshot(order, prepayment_quote=quote_context)
     await upsert_order_cost_estimate(db, order=order, estimate_snapshot=estimate_snapshot)
     await db.commit()
