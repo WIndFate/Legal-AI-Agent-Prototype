@@ -21,6 +21,7 @@ class OrderStatusResponse(BaseModel):
     progress_message: str | None = None
     progress_seq: int = 0
     report_ready: bool = False
+    error_code: str | None = None
     error_message: str | None = None
     started_at: datetime | None = None
     finished_at: datetime | None = None

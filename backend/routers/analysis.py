@@ -92,6 +92,7 @@ async def get_order_status(
         progress_message=job.progress_message,
         progress_seq=job.progress_seq,
         report_ready=report_ready,
+        error_code=job.error_code,
         error_message=job.error_message,
         started_at=job.started_at,
         finished_at=job.finished_at,

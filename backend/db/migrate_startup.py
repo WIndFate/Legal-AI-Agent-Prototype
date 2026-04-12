@@ -11,7 +11,7 @@ from backend.db.url import to_asyncpg_dsn
 
 logger = logging.getLogger(__name__)
 
-LEGACY_BASELINE_REVISION = "008_orders_pricing_model"
+LEGACY_BASELINE_REVISION = "009_analysis_job_error_code"
 REVISION_ORDER = {
     "001": 1,
     "002": 2,
@@ -21,6 +21,7 @@ REVISION_ORDER = {
     "006_analysis_job_cost_summary_and_72h_ttl": 6,
     "007_order_cost_estimates": 7,
     "008_orders_pricing_model": 8,
+    "009_analysis_job_error_code": 9,
 }
 
 
@@ -111,6 +112,8 @@ async def ensure_alembic_version_capacity(conn: asyncpg.Connection) -> None:
 
 
 async def detect_schema_revision(conn: asyncpg.Connection) -> str | None:
+    if await column_exists(conn, "analysis_jobs", "error_code"):
+        return "009_analysis_job_error_code"
     if await column_exists(conn, "orders", "pricing_model"):
         return "008_orders_pricing_model"
     if await table_exists(conn, "order_cost_estimates"):

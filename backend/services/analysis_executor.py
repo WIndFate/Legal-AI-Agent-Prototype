@@ -97,6 +97,7 @@ async def _append_event(
     event: dict,
     *,
     terminal_status: str | None = None,
+    error_code: str | None = None,
     error_message: str | None = None,
 ) -> dict:
     next_seq = job.progress_seq + 1
@@ -122,10 +123,12 @@ async def _append_event(
     if terminal_status == "completed":
         job.status = "completed"
         job.finished_at = now
+        job.error_code = None
         job.error_message = None
     elif terminal_status == "failed":
         job.status = "failed"
         job.failed_at = now
+        job.error_code = error_code
         job.error_message = error_message or message
 
     await session.commit()
@@ -254,7 +257,8 @@ async def _run_analysis(job_id: str, order_id: str) -> None:
                         job,
                         error_event,
                         terminal_status="failed",
-                        error_message=error_code,
+                        error_code=error_code,
+                        error_message=str(exc),
                     )
                 if order is not None:
                     order.analysis_status = "failed"
@@ -404,6 +408,7 @@ async def reset_failed_job(job_id: str) -> None:
         job.progress_message = None
         job.progress_seq = 0
         job.cost_summary = None
+        job.error_code = None
         job.error_message = None
         job.failed_at = None
         clear_order_cost_summary(str(job.order_id))
