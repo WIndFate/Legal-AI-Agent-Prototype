@@ -222,80 +222,11 @@ export default function HomeUploadSection({
       )}
 
       {uploadResult && uploadResult.price_jpy > 0 && (
-        <div
-          id="payment-panel"
-          className={clsx('pricing-card', 'polished-card', spotlightResult && 'spotlight-card')}
-        >
-          <div className={clsx('next-step-banner', styles.paymentBanner)}>
-            <strong>{t('order.next_step_title')}</strong>
-            <p>{t('order.next_step_body')}</p>
-          </div>
-          <div className="pricing-card-header">
-            <div>
-              <p className="section-kicker">{t('pricing.title')}</p>
-              <h3>{t('pricing.length_based')}</h3>
-            </div>
-            <div className="pricing-price-lockup">
-              <span>{t('pricing.price')}</span>
-              <p className={styles.priceAmount}>¥{uploadResult.price_jpy.toLocaleString()}</p>
-            </div>
-          </div>
-          {hasOcrNotice && (
-            <div
-              className={clsx(
-                styles.ocrNotice,
-                isLowOcrConfidence ? styles.ocrNoticeWarning : styles.ocrNoticeInfo,
-              )}
-              role="status"
-            >
-              <strong>{t(isLowOcrConfidence ? 'upload.ocr_notice_title' : 'upload.ocr_notice_info_title')}</strong>
-              <ul>
-                {uploadResult.ocr_warnings.map((warning) => (
-                  <li key={warning}>{t(warning)}</li>
-                ))}
-              </ul>
-              {isMediumOcrConfidence && uploadResult.ocr_confidence === 'medium' && (
-                <p>{t('upload.ocr_post_payment_notice')}</p>
-              )}
-            </div>
-          )}
-          <div className={styles.pricingQuoteMeta}>
-            <p>{t('pricing.length_based_desc')}</p>
-            <span>{t('pricing.minimum_price', { price: 200 })}</span>
-          </div>
-          {uploadResult.quote_mode === 'exact' && previewItems.length > 0 && (
-            <div className={styles.clausePreviewCard}>
-              <div className={styles.clausePreviewHeader}>
-                <strong>{t('upload.clause_preview_title', { count: uploadResult.clause_count ?? previewItems.length })}</strong>
-                {previewItems.length > 5 && (
-                  <button
-                    type="button"
-                    className={styles.clausePreviewToggle}
-                    onClick={() => setPreviewExpanded((current) => !current)}
-                  >
-                    {previewExpanded
-                      ? t('upload.clause_preview_collapse')
-                      : t('upload.clause_preview_expand', { count: previewItems.length })}
-                  </button>
-                )}
-              </div>
-              <ul className={styles.clausePreviewList}>
-                {visiblePreviewItems.map((item, index) => (
-                  <li key={`${item.number}-${item.title}-${index}`} className={styles.clausePreviewItem}>
-                    <span>{item.number}</span>
-                    <strong>{item.title}</strong>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-          {uploadResult.quote_mode === 'estimated_pre_ocr' && (
-            <div className={clsx(styles.clausePreviewCard, styles.clausePreviewPending)}>
-              <strong>{t('upload.clause_preview_pending_title')}</strong>
-              <p>{t('upload.clause_preview_unavailable')}</p>
-            </div>
-          )}
-          {uploadResult.is_contract === false ? (
+        uploadResult.is_contract === false ? (
+          <div
+            id="payment-panel"
+            className={clsx('pricing-card', 'polished-card', spotlightResult && 'spotlight-card')}
+          >
             <div className={clsx(styles.clausePreviewCard, styles.notContractCard)}>
               <strong>{t('upload.not_contract_title')}</strong>
               <p>{t('upload.not_contract_desc')}</p>
@@ -303,87 +234,159 @@ export default function HomeUploadSection({
                 {t('upload.not_contract_retry')}
               </button>
             </div>
-          ) : (
-            <>
-              <div className={styles.pricingHighlights} aria-label={t('payment.title')}>
-                <div className={styles.pricingHighlight}>
-                  <strong>{t('payment.secure_note')}</strong>
-                </div>
-                <div className={styles.pricingHighlight}>
-                  <strong>{t('pricing.assurance_privacy_title')}</strong>
-                  <span>{t('pricing.assurance_privacy_desc')}</span>
-                </div>
-                <div className={styles.pricingHighlight}>
-                  <strong>{t('pricing.assurance_delivery_title')}</strong>
-                  <span>{t('pricing.assurance_delivery_desc')}</span>
-                </div>
+          </div>
+        ) : (
+          <div
+            id="payment-panel"
+            className={clsx('pricing-card', 'polished-card', spotlightResult && 'spotlight-card')}
+          >
+            <div className={clsx('next-step-banner', styles.paymentBanner)}>
+              <strong>{t('order.next_step_title')}</strong>
+              <p>{t('order.next_step_body')}</p>
+            </div>
+            <div className="pricing-card-header">
+              <div>
+                <p className="section-kicker">{t('pricing.title')}</p>
+                <h3>{t('pricing.length_based')}</h3>
               </div>
-
-              <div className={styles.paymentForm}>
-                <h3>{t('payment.title')}</h3>
-                <div className={styles.languageLockCard}>
-                  <div className={styles.languageLockHeader}>
-                    <strong>{t('payment.language_lock_title')}</strong>
-                    <span className={styles.languageLockBadge}>{currentLanguageLabel}</span>
-                  </div>
-                  <p>{t('payment.language_lock_body', { language: currentLanguageLabel })}</p>
-                  <label className={styles.languageLockConfirm}>
-                    <input
-                      type="checkbox"
-                      checked={languageConfirmed}
-                      onChange={(e) => setLanguageConfirmed(e.target.checked)}
-                    />
-                    <span
-                      className={clsx(
-                        styles.languageLockControl,
-                        languageConfirmed && styles.languageLockControlChecked,
-                      )}
-                      aria-hidden="true"
+              <div className="pricing-price-lockup">
+                <span>{t('pricing.price')}</span>
+                <p className={styles.priceAmount}>¥{uploadResult.price_jpy.toLocaleString()}</p>
+              </div>
+            </div>
+            {hasOcrNotice && (
+              <div
+                className={clsx(
+                  styles.ocrNotice,
+                  isLowOcrConfidence ? styles.ocrNoticeWarning : styles.ocrNoticeInfo,
+                )}
+                role="status"
+              >
+                <strong>{t(isLowOcrConfidence ? 'upload.ocr_notice_title' : 'upload.ocr_notice_info_title')}</strong>
+                <ul>
+                  {uploadResult.ocr_warnings.map((warning) => (
+                    <li key={warning}>{t(warning)}</li>
+                  ))}
+                </ul>
+                {isMediumOcrConfidence && uploadResult.ocr_confidence === 'medium' && (
+                  <p>{t('upload.ocr_post_payment_notice')}</p>
+                )}
+              </div>
+            )}
+            <div className={styles.pricingQuoteMeta}>
+              <p>{t('pricing.length_based_desc')}</p>
+              <span>{t('pricing.minimum_price', { price: 200 })}</span>
+            </div>
+            {uploadResult.quote_mode === 'exact' && previewItems.length > 0 && (
+              <div className={styles.clausePreviewCard}>
+                <div className={styles.clausePreviewHeader}>
+                  <strong>{t('upload.clause_preview_title', { count: uploadResult.clause_count ?? previewItems.length })}</strong>
+                  {previewItems.length > 5 && (
+                    <button
+                      type="button"
+                      className={styles.clausePreviewToggle}
+                      onClick={() => setPreviewExpanded((current) => !current)}
                     >
-                      <span className={styles.languageLockCheckmark} />
-                    </span>
-                    <span className={styles.languageLockConfirmText}>
-                      {t('payment.language_lock_confirm')}
-                    </span>
-                  </label>
+                      {previewExpanded
+                        ? t('upload.clause_preview_collapse')
+                        : t('upload.clause_preview_expand', { count: previewItems.length })}
+                    </button>
+                  )}
                 </div>
-                <label>
-                  {t('payment.email_label')}
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder={t('payment.email_placeholder')}
-                    inputMode="email"
-                    autoComplete="email"
-                  />
-                </label>
-                <label>
-                  {t('payment.referral_label')}
-                  <input
-                    type="text"
-                    value={referralCode}
-                    onChange={(e) => setReferralCode(e.target.value)}
-                    placeholder={t('payment.referral_placeholder')}
-                    autoCapitalize="characters"
-                    autoCorrect="off"
-                    spellCheck={false}
-                  />
-                </label>
-                <button
-                  className="btn-primary btn-pay"
-                  onClick={() => void onPayment()}
-                  disabled={paying || !email || !languageConfirmed}
-                >
-                  {paying
-                    ? t('payment.processing')
-                    : t('payment.pay_button', { price: uploadResult.price_jpy.toLocaleString() })}
-                </button>
-                <p className="payment-note">{t('payment.secure_note')}</p>
+                <ul className={styles.clausePreviewList}>
+                  {visiblePreviewItems.map((item, index) => (
+                    <li key={`${item.number}-${item.title}-${index}`} className={styles.clausePreviewItem}>
+                      <span>{item.number}</span>
+                      <strong>{item.title}</strong>
+                    </li>
+                  ))}
+                </ul>
               </div>
-            </>
-          )}
-        </div>
+            )}
+            {uploadResult.quote_mode === 'estimated_pre_ocr' && (
+              <div className={clsx(styles.clausePreviewCard, styles.clausePreviewPending)}>
+                <strong>{t('upload.clause_preview_pending_title')}</strong>
+                <p>{t('upload.clause_preview_unavailable')}</p>
+              </div>
+            )}
+            <div className={styles.pricingHighlights} aria-label={t('payment.title')}>
+              <div className={styles.pricingHighlight}>
+                <strong>{t('payment.secure_note')}</strong>
+              </div>
+              <div className={styles.pricingHighlight}>
+                <strong>{t('pricing.assurance_privacy_title')}</strong>
+                <span>{t('pricing.assurance_privacy_desc')}</span>
+              </div>
+              <div className={styles.pricingHighlight}>
+                <strong>{t('pricing.assurance_delivery_title')}</strong>
+                <span>{t('pricing.assurance_delivery_desc')}</span>
+              </div>
+            </div>
+
+            <div className={styles.paymentForm}>
+              <h3>{t('payment.title')}</h3>
+              <div className={styles.languageLockCard}>
+                <div className={styles.languageLockHeader}>
+                  <strong>{t('payment.language_lock_title')}</strong>
+                  <span className={styles.languageLockBadge}>{currentLanguageLabel}</span>
+                </div>
+                <p>{t('payment.language_lock_body', { language: currentLanguageLabel })}</p>
+                <label className={styles.languageLockConfirm}>
+                  <input
+                    type="checkbox"
+                    checked={languageConfirmed}
+                    onChange={(e) => setLanguageConfirmed(e.target.checked)}
+                  />
+                  <span
+                    className={clsx(
+                      styles.languageLockControl,
+                      languageConfirmed && styles.languageLockControlChecked,
+                    )}
+                    aria-hidden="true"
+                  >
+                    <span className={styles.languageLockCheckmark} />
+                  </span>
+                  <span className={styles.languageLockConfirmText}>
+                    {t('payment.language_lock_confirm')}
+                  </span>
+                </label>
+              </div>
+              <label>
+                {t('payment.email_label')}
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder={t('payment.email_placeholder')}
+                  inputMode="email"
+                  autoComplete="email"
+                />
+              </label>
+              <label>
+                {t('payment.referral_label')}
+                <input
+                  type="text"
+                  value={referralCode}
+                  onChange={(e) => setReferralCode(e.target.value)}
+                  placeholder={t('payment.referral_placeholder')}
+                  autoCapitalize="characters"
+                  autoCorrect="off"
+                  spellCheck={false}
+                />
+              </label>
+              <button
+                className="btn-primary btn-pay"
+                onClick={() => void onPayment()}
+                disabled={paying || !email || !languageConfirmed}
+              >
+                {paying
+                  ? t('payment.processing')
+                  : t('payment.pay_button', { price: uploadResult.price_jpy.toLocaleString() })}
+              </button>
+              <p className="payment-note">{t('payment.secure_note')}</p>
+            </div>
+          </div>
+        )
       )}
     </section>
   );
