@@ -19,6 +19,7 @@ interface OrderStatusResponse {
   progress_message: string | null;
   progress_seq: number;
   report_ready: boolean;
+  error_code: string | null;
   error_message: string | null;
   started_at: string | null;
   finished_at: string | null;
@@ -42,6 +43,7 @@ export default function ReviewPage() {
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [errorCode, setErrorCode] = useState<string | null>(null);
   const [analysisStatus, setAnalysisStatus] = useState<OrderStatusResponse['analysis_status']>('queued');
   const [currentStep, setCurrentStep] = useState<AnalysisStep>('parsing');
   const [activityEvents, setActivityEvents] = useState<AnalysisEventItem[]>([]);
@@ -213,6 +215,7 @@ export default function ReviewPage() {
         break;
       case 'error':
         setAnalysisStatus('failed');
+        setErrorCode(typeof evt.payload_json?.error_code === 'string' ? evt.payload_json.error_code : null);
         setError(resolveReviewError(
           typeof evt.payload_json?.error_code === 'string' ? evt.payload_json.error_code : null,
           eventMessage || t('errors.review_failed'),
@@ -319,6 +322,7 @@ export default function ReviewPage() {
     streamAbortRef.current?.abort();
     setLoading(true);
     setError('');
+    setErrorCode(null);
     setActivityEvents([]);
     setElapsedSeconds(0);
     setAnalysisStartedAtMs(null);
@@ -341,7 +345,8 @@ export default function ReviewPage() {
 
     if (status.analysis_status === 'failed' && !retryFailed) {
       setLoading(false);
-      setError(resolveReviewError(status.error_message, status.error_message));
+      setErrorCode(status.error_code);
+      setError(resolveReviewError(status.error_code, status.error_message));
       return;
     }
 
@@ -357,7 +362,8 @@ export default function ReviewPage() {
       applyStatusSnapshot(status);
       if (status.analysis_status === 'failed') {
         setLoading(false);
-        setError(resolveReviewError(status.error_message, status.error_message));
+        setErrorCode(status.error_code);
+        setError(resolveReviewError(status.error_code, status.error_message));
         return;
       }
       if (status.report_ready && status.analysis_status === 'completed') {
@@ -375,7 +381,7 @@ export default function ReviewPage() {
     void bootstrap(true);
   }, [bootstrap]);
 
-  const isNonContractError = error === t('errors.non_contract_document');
+  const isNonContractError = errorCode === 'non_contract_document';
 
   useEffect(() => {
     if (started.current || !orderId) return;
