@@ -452,9 +452,15 @@ export default function ReviewPage() {
                 <span />
               </div>
               <h2 className="review-stage-title">
-                {error ? t('errors.review_failed') : analysisStatus === 'completed' ? t('review.complete_title') : currentPhase.title}
+                {error
+                  ? (isNonContractError ? t('review.not_contract_title') : t('errors.review_failed'))
+                  : analysisStatus === 'completed' ? t('review.complete_title') : currentPhase.title}
               </h2>
-              <p className="review-stage-desc">{error || currentPhase.desc}</p>
+              <p className="review-stage-desc">
+                {error
+                  ? (isNonContractError ? t('review.not_contract_desc') : error)
+                  : currentPhase.desc}
+              </p>
             </div>
 
             <div className="review-progress">
@@ -524,7 +530,7 @@ export default function ReviewPage() {
 
             {error && (
               <div className="review-error-body">
-                <p>{error}</p>
+                {!isNonContractError && <p>{error}</p>}
                 {isNonContractError ? (
                   <button
                     className="btn-primary btn-retry"

@@ -48,7 +48,10 @@
     "clause_preview_expand": "Xem toàn bộ {{count}}",
     "clause_preview_collapse": "Thu gọn",
     "clause_preview_pending_title": "Cấu trúc hợp đồng",
-    "clause_preview_unavailable": "Sau khi thanh toán, chúng tôi sẽ nhận dạng chính thức cấu trúc hợp đồng và hiển thị tiêu đề điều khoản chi tiết."
+    "clause_preview_unavailable": "Sau khi thanh toán, chúng tôi sẽ nhận dạng chính thức cấu trúc hợp đồng và hiển thị tiêu đề điều khoản chi tiết.",
+    "not_contract_title": "Không nhận dạng được là hợp đồng",
+    "not_contract_desc": "Nội dung tải lên có vẻ không phải là hợp đồng nên không thể phân tích. Vui lòng tải lên văn bản, hình ảnh hoặc PDF hợp đồng.",
+    "not_contract_retry": "Tải lên tệp khác"
   },
   "pii": {
     "warning": "Phát hiện thông tin cá nhân. Vui lòng kiểm tra trước khi gửi.",
@@ -144,7 +147,9 @@
     "complete_title": "Phân tích hoàn tất",
     "reconnecting": "Kết nối bị gián đoạn. Đang kết nối lại...",
     "reconnect_failed": "Không thể kết nối lại. Vui lòng nhấn nút bên dưới để thử lại.",
-    "retry": "Thử lại"
+    "retry": "Thử lại",
+    "not_contract_title": "Không nhận dạng được là hợp đồng",
+    "not_contract_desc": "Nội dung tải lên có vẻ không phải là hợp đồng nên quá trình phân tích đã dừng. Vui lòng quay lại trang chủ và tải lên tài liệu hợp đồng."
   },
   "report": {
     "title": "Báo cáo phân tích",

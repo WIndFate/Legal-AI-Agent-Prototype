@@ -48,7 +48,10 @@
     "clause_preview_expand": "Show all {{count}}",
     "clause_preview_collapse": "Collapse",
     "clause_preview_pending_title": "Contract structure",
-    "clause_preview_unavailable": "We will recognize the contract structure after payment and then show detailed clause titles."
+    "clause_preview_unavailable": "We will recognize the contract structure after payment and then show detailed clause titles.",
+    "not_contract_title": "This does not appear to be a contract",
+    "not_contract_desc": "The uploaded content does not look like a contract, so analysis cannot proceed. Please upload a contract document (text, image, or PDF).",
+    "not_contract_retry": "Upload a different file"
   },
   "pii": {
     "warning": "Personal information detected. Please review before submitting.",
@@ -144,7 +147,9 @@
     "complete_title": "Analysis Complete",
     "reconnecting": "Connection interrupted. Reconnecting...",
     "reconnect_failed": "Unable to reconnect. Please tap the button below to try again.",
-    "retry": "Retry"
+    "retry": "Retry",
+    "not_contract_title": "This does not appear to be a contract",
+    "not_contract_desc": "The uploaded content does not look like a contract, so analysis was stopped. Please go back to the homepage and upload a contract document."
   },
   "report": {
     "title": "Analysis Report",

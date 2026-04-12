@@ -48,7 +48,10 @@
     "clause_preview_expand": "展开全部 {{count}} 条",
     "clause_preview_collapse": "收起",
     "clause_preview_pending_title": "合同结构",
-    "clause_preview_unavailable": "支付后会正式识别合同结构，并展示详细条款标题。"
+    "clause_preview_unavailable": "支付后会正式识别合同结构，并展示详细条款标题。",
+    "not_contract_title": "未识别为合同文件",
+    "not_contract_desc": "上传的内容可能不是合同，无法进行分析。请上传合同的正文、图片或PDF文件。",
+    "not_contract_retry": "上传其他文件"
   },
   "pii": {
     "warning": "检测到个人信息，请在提交前确认。",
@@ -144,7 +147,9 @@
     "complete_title": "分析完成",
     "reconnecting": "连接中断，正在重新连接…",
     "reconnect_failed": "无法重新连接。请点击下方按钮重试。",
-    "retry": "重试"
+    "retry": "重试",
+    "not_contract_title": "未识别为合同文件",
+    "not_contract_desc": "上传的内容可能不是合同，分析已停止。请返回首页上传合同的正文、图片或PDF文件。"
   },
   "report": {
     "title": "分析报告",

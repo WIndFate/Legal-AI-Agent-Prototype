@@ -159,6 +159,7 @@ export default function HomePage() {
           paying={paying}
           onUpload={handleUpload}
           onPayment={handlePayment}
+          onReset={() => { setUploadResult(null); setResultReady(false); }}
           spotlightResult={resultReady}
         />
       </RevealSection>

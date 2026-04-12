@@ -48,7 +48,10 @@
     "clause_preview_expand": "展開全部 {{count}} 條",
     "clause_preview_collapse": "收起",
     "clause_preview_pending_title": "合約結構",
-    "clause_preview_unavailable": "付款後會正式辨識合約結構，並顯示詳細條款標題。"
+    "clause_preview_unavailable": "付款後會正式辨識合約結構，並顯示詳細條款標題。",
+    "not_contract_title": "未識別為合約文件",
+    "not_contract_desc": "上傳的內容可能不是合約，無法進行分析。請上傳合約的正文、圖片或PDF文件。",
+    "not_contract_retry": "上傳其他文件"
   },
   "pii": {
     "warning": "偵測到個人資料，請在提交前確認。",
@@ -144,7 +147,9 @@
     "complete_title": "分析完成",
     "reconnecting": "連線中斷，正在重新連線…",
     "reconnect_failed": "無法重新連線。請點擊下方按鈕重試。",
-    "retry": "重試"
+    "retry": "重試",
+    "not_contract_title": "未識別為合約文件",
+    "not_contract_desc": "上傳的內容可能不是合約，分析已停止。請返回首頁上傳合約的正文、圖片或PDF文件。"
   },
   "report": {
     "title": "分析報告",

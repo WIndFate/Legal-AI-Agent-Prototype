@@ -12,6 +12,7 @@ export interface UploadResult {
   ocr_warnings: string[];
   clause_preview?: Array<{ number: string; title: string }> | null;
   clause_count?: number | null;
+  is_contract?: boolean | null;
   upload_token?: string | null;
   upload_name?: string | null;
   upload_mime_type?: string | null;

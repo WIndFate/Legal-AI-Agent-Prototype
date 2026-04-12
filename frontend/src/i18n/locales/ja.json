@@ -48,7 +48,10 @@
     "clause_preview_expand": "全 {{count}} 件を表示",
     "clause_preview_collapse": "折りたたむ",
     "clause_preview_pending_title": "契約構造",
-    "clause_preview_unavailable": "決済後に契約構造を正式に認識し、詳しい条項タイトルを表示します。"
+    "clause_preview_unavailable": "決済後に契約構造を正式に認識し、詳しい条項タイトルを表示します。",
+    "not_contract_title": "契約書として認識できませんでした",
+    "not_contract_desc": "アップロードされた内容は契約書ではない可能性が高いため、分析を行えません。契約書の本文・画像・PDFをアップロードしてください。",
+    "not_contract_retry": "別のファイルをアップロード"
   },
   "pii": {
     "warning": "個人情報が検出されました。送信前にご確認ください。",
@@ -144,7 +147,9 @@
     "complete_title": "分析完了",
     "reconnecting": "接続が中断されました。再接続しています…",
     "reconnect_failed": "接続を再確立できませんでした。下のボタンで再試行してください。",
-    "retry": "再試行"
+    "retry": "再試行",
+    "not_contract_title": "契約書として認識できませんでした",
+    "not_contract_desc": "アップロードされた内容は契約書ではない可能性が高いため、分析を停止しました。ホームに戻って契約書の本文・画像・PDFをアップロードしてください。"
   },
   "report": {
     "title": "分析レポート",

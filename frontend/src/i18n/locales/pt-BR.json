@@ -48,7 +48,10 @@
     "clause_preview_expand": "Mostrar todas {{count}}",
     "clause_preview_collapse": "Recolher",
     "clause_preview_pending_title": "Estrutura do contrato",
-    "clause_preview_unavailable": "Após o pagamento, vamos reconhecer a estrutura do contrato e mostrar os títulos detalhados das cláusulas."
+    "clause_preview_unavailable": "Após o pagamento, vamos reconhecer a estrutura do contrato e mostrar os títulos detalhados das cláusulas.",
+    "not_contract_title": "Não reconhecido como contrato",
+    "not_contract_desc": "O conteúdo enviado não parece ser um contrato, portanto a análise não pode ser realizada. Envie o texto, imagem ou PDF de um contrato.",
+    "not_contract_retry": "Enviar outro arquivo"
   },
   "pii": {
     "warning": "Informações pessoais detectadas. Verifique antes de enviar.",
@@ -144,7 +147,9 @@
     "complete_title": "Análise concluída",
     "reconnecting": "Conexão interrompida. Reconectando...",
     "reconnect_failed": "Não foi possível reconectar. Toque no botão abaixo para tentar novamente.",
-    "retry": "Tentar novamente"
+    "retry": "Tentar novamente",
+    "not_contract_title": "Não reconhecido como contrato",
+    "not_contract_desc": "O conteúdo enviado não parece ser um contrato e a análise foi interrompida. Volte à página inicial e envie um documento de contrato."
   },
   "report": {
     "title": "Relatório de Análise",

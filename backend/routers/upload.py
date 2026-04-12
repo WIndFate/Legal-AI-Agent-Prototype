@@ -76,25 +76,31 @@ def _estimate_with_local_ocr(upload_token: str, page_estimate: int) -> tuple[str
     return local_ocr_text, estimated_tokens, confidence, warnings
 
 
-def _extract_clause_preview(contract_text: str) -> tuple[list[dict[str, str]] | None, int | None, dict | None]:
+def _extract_clause_preview(
+    contract_text: str,
+) -> tuple[list[dict[str, str]] | None, int | None, dict | None, bool | None]:
     if len(contract_text.strip()) < 100:
-        return None, None, None
+        return None, None, None, None
 
     messages = [
         SystemMessage(
             content=(
                 "あなたは日本語契約書の構造を短く整理するアシスタントです。"
-                "リスク判断はせず、条項番号と短い見出しだけを JSON 配列で返してください。"
+                "まず文書が契約書かどうかを判定し、契約書であれば条項番号と短い見出しを抽出してください。"
             )
         ),
         HumanMessage(
             content=(
-                "以下の契約文から主要な条項だけを抽出してください。\n"
-                "必ず JSON 配列のみを返してください。\n"
-                '出力形式: [{"number":"第1条","title":"目的"}]\n'
-                "条項番号が不明でも、見出しが推定できる場合は短く付けてください。\n"
-                "本文全文は返さないでください。\n\n"
-                f"契約文:\n{contract_text}"
+                "以下の文書が契約書かどうかを判定し、条項を抽出してください。\n"
+                "必ず JSON オブジェクトのみを返してください。\n\n"
+                '出力形式: {"is_contract": true, "clauses": [{"number":"第1条","title":"目的"}]}\n\n'
+                "判定ルール:\n"
+                "- 契約書・合意書・利用規約・覚書・申込契約など、当事者間の権利義務を定める文書なら is_contract=true\n"
+                "- メール、案内文、ニュース記事、説明文、履歴書、メモ、請求書なら is_contract=false\n"
+                "- is_contract=false の場合、clauses は空配列にしてください\n"
+                "- 条項番号が不明でも、見出しが推定できる場合は短く付けてください\n"
+                "- 本文全文は返さないでください\n\n"
+                f"文書:\n{contract_text}"
             )
         ),
     ]
@@ -118,11 +124,21 @@ def _extract_clause_preview(contract_text: str) -> tuple[list[dict[str, str]] | 
         elif "```" in content:
             content = content.split("```")[1].split("```")[0].strip()
         payload = json.loads(content)
-        if not isinstance(payload, list):
-            return None, None, preview_snapshot
+
+        if isinstance(payload, list):
+            clauses_raw = payload
+            is_contract: bool | None = True
+        elif isinstance(payload, dict):
+            clauses_raw = payload.get("clauses") or []
+            is_contract = bool(payload.get("is_contract", True))
+        else:
+            return None, None, preview_snapshot, None
+
+        if not is_contract:
+            return None, None, preview_snapshot, False
 
         preview: list[dict[str, str]] = []
-        for item in payload:
+        for item in clauses_raw:
             if not isinstance(item, dict):
                 continue
             number = str(item.get("number") or "").strip()
@@ -132,11 +148,11 @@ def _extract_clause_preview(contract_text: str) -> tuple[list[dict[str, str]] | 
             preview.append({"number": number or "条項", "title": title or "内容"})
 
         if not preview:
-            return None, None, preview_snapshot
-        return preview, len(preview), preview_snapshot
+            return None, None, preview_snapshot, is_contract
+        return preview, len(preview), preview_snapshot, is_contract
     except Exception as exc:
         logger.warning("Clause preview extraction failed: %s", exc)
-        return None, None, None
+        return None, None, None, None
 
 
 @router.post("/api/upload", response_model=UploadResponse)
@@ -164,6 +180,7 @@ async def upload_contract(
     pii_warnings = []
     clause_preview: list[dict[str, str]] | None = None
     clause_count: int | None = None
+    is_contract: bool | None = None
     preview_snapshot: dict | None = None
     estimation = {
         "estimated_tokens": 0,
@@ -226,12 +243,13 @@ async def upload_contract(
         if cached_quote is not None:
             clause_preview = cached_quote.get("clause_preview")
             clause_count = cached_quote.get("clause_count")
+            is_contract = cached_quote.get("is_contract")
             preview_snapshot = (cached_quote.get("prepayment_snapshot") or {}) | {"cache_hit": True}
             quote_token = cached_quote.get("quote_token")
         else:
             preview_allowed = await allow_preview_generation(redis, client_ip)
             if preview_allowed:
-                clause_preview, clause_count, preview_snapshot = _extract_clause_preview(contract_text)
+                clause_preview, clause_count, preview_snapshot, is_contract = _extract_clause_preview(contract_text)
             if preview_snapshot is None:
                 preview_snapshot = {
                     "preview_model": parse_model,
@@ -255,6 +273,7 @@ async def upload_contract(
                     "content_hash": content_hash,
                     "clause_preview": clause_preview,
                     "clause_count": clause_count,
+                    "is_contract": is_contract,
                     "prepayment_snapshot": preview_snapshot,
                 },
             )
@@ -272,6 +291,7 @@ async def upload_contract(
             ocr_warnings=ocr_warnings,
             clause_preview=clause_preview,
             clause_count=clause_count,
+            is_contract=is_contract,
             upload_token=upload_token,
             upload_name=upload_name,
             upload_mime_type=upload_mime_type,
@@ -313,6 +333,7 @@ async def upload_contract(
         ocr_warnings=ocr_warnings,
         clause_preview=clause_preview,
         clause_count=clause_count,
+        is_contract=is_contract,
         upload_token=upload_token,
         upload_name=upload_name,
         upload_mime_type=upload_mime_type,

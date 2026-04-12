@@ -48,7 +48,10 @@
     "clause_preview_expand": "Lihat semua {{count}}",
     "clause_preview_collapse": "Tutup",
     "clause_preview_pending_title": "Struktur kontrak",
-    "clause_preview_unavailable": "Setelah pembayaran kami akan mengenali struktur kontrak secara resmi dan menampilkan judul klausul yang lebih rinci."
+    "clause_preview_unavailable": "Setelah pembayaran kami akan mengenali struktur kontrak secara resmi dan menampilkan judul klausul yang lebih rinci.",
+    "not_contract_title": "Tidak dikenali sebagai kontrak",
+    "not_contract_desc": "Konten yang diunggah tampaknya bukan kontrak sehingga tidak dapat dianalisis. Silakan unggah dokumen kontrak (teks, gambar, atau PDF).",
+    "not_contract_retry": "Unggah file lain"
   },
   "pii": {
     "warning": "Informasi pribadi terdeteksi. Harap periksa sebelum mengirim.",
@@ -144,7 +147,9 @@
     "complete_title": "Analisis selesai",
     "reconnecting": "Koneksi terputus. Menyambung kembali...",
     "reconnect_failed": "Gagal menyambung kembali. Silakan tekan tombol di bawah untuk mencoba lagi.",
-    "retry": "Coba lagi"
+    "retry": "Coba lagi",
+    "not_contract_title": "Tidak dikenali sebagai kontrak",
+    "not_contract_desc": "Konten yang diunggah tampaknya bukan kontrak sehingga analisis dihentikan. Silakan kembali ke beranda dan unggah dokumen kontrak."
   },
   "report": {
     "title": "Laporan Analisis",
