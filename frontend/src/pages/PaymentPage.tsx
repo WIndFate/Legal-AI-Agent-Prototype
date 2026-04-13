@@ -23,6 +23,22 @@ export default function PaymentPage() {
   const [retryingPayment, setRetryingPayment] = useState(false);
   const [terminalPaymentStatus, setTerminalPaymentStatus] = useState<TerminalPaymentStatus>(null);
   const [retryError, setRetryError] = useState('');
+  const [pendingElapsed, setPendingElapsed] = useState(0);
+
+  const PENDING_HINT_DELAY_S = 30;
+
+  // Track how long we've been in checking/pending state
+  useEffect(() => {
+    if (status !== 'checking' && status !== 'pending') {
+      setPendingElapsed(0);
+      return;
+    }
+    const start = Date.now();
+    const timer = window.setInterval(() => {
+      setPendingElapsed(Math.floor((Date.now() - start) / 1000));
+    }, 1000);
+    return () => window.clearInterval(timer);
+  }, [status]);
 
   const handleCopyOrderId = async () => {
     if (!orderId) return;
@@ -186,29 +202,30 @@ export default function PaymentPage() {
         <div className="payment-status-header">
           <p className="section-kicker">{t('payment.title')}</p>
           <h2>{t('app.title')}</h2>
-          <p className="status-subtext">{t('payment.waiting_note')}</p>
         </div>
 
-        <div className="payment-summary-grid">
-          <div className="payment-summary-item">
-            <span>ID</span>
-            <strong>{orderId?.slice(0, 8)}</strong>
-          </div>
-          <div className="payment-summary-item">
-            <span>{t('report.title')}</span>
-            <strong>72h</strong>
-          </div>
-          <div className="payment-summary-item payment-summary-item-wide">
-            <span>{t('upload.trust_privacy')}</span>
-            <strong>{t('payment.secure_note')}</strong>
-          </div>
+        <div className="payment-meta-strip">
+          <span className="payment-meta-tag">{t('order.order_id')}: {orderId?.slice(0, 8)}</span>
+          <span className="payment-meta-sep" aria-hidden="true">·</span>
+          <span className="payment-meta-tag">{t('report.title')}: 72h</span>
+          <span className="payment-meta-sep" aria-hidden="true">·</span>
+          <span className="payment-meta-tag">{t('payment.secure_note')}</span>
         </div>
 
         {(status === 'checking' || status === 'pending') && (
           <div className="loading-state">
             <div className="spinner" />
-            <p className="status-text">{t('payment.processing')}</p>
-            <p className="status-subtext">{t('payment.waiting_note')}</p>
+            <p className="status-text">{t('payment.pending_title')}</p>
+            <p className="status-subtext">{t('payment.pending_desc')}</p>
+            {pendingElapsed >= PENDING_HINT_DELAY_S && (
+              <div className="payment-pending-hint">
+                <p className="payment-pending-hint-text">{t('payment.pending_hint')}</p>
+                <button className="btn-primary" onClick={handleRetryPayment} disabled={retryingPayment}>
+                  {retryingPayment ? t('payment.processing') : t('payment.retry_payment')}
+                </button>
+                {retryError && <p className="error-message">{retryError}</p>}
+              </div>
+            )}
             <button className="btn-share" onClick={() => navigate('/')}>
               {t('payment.cancel_waiting')}
             </button>
