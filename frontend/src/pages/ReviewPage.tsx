@@ -217,7 +217,7 @@ export default function ReviewPage() {
         break;
       case 'complete':
         setAnalysisStatus('completed');
-        if (evt.created_at) {
+        if (analysisFinishedAtMs == null && evt.created_at) {
           const parsedEnd = Date.parse(evt.created_at);
           if (!Number.isNaN(parsedEnd)) setAnalysisFinishedAtMs(parsedEnd);
         }
@@ -238,7 +238,7 @@ export default function ReviewPage() {
         setLoading(false);
         break;
     }
-  }, [navigate, orderId, pushActivityEvent, resolveEventMessage, resolveReviewError, t]);
+  }, [analysisFinishedAtMs, navigate, orderId, pushActivityEvent, resolveEventMessage, resolveReviewError, t]);
 
   const loadHistory = useCallback(async () => {
     const res = await fetch(`/api/orders/${orderId}/events?after_seq=0`);

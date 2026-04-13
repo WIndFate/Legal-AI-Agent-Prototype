@@ -32,13 +32,9 @@ _DISCLAIMER_TRANSLATIONS = {
 
 
 def _build_disclaimer_html(language: str) -> str:
-    """Build bilingual disclaimer: user language + Japanese original."""
+    """Build a disclaimer in the user's language, falling back to Japanese."""
     localized = _DISCLAIMER_TRANSLATIONS.get(language)
-    lines = []
-    if localized:
-        lines.append(localized)
-    lines.append(_DISCLAIMER_JA)
-    return "<br>".join(lines)
+    return localized or _DISCLAIMER_JA
 
 
 def _wrap_email_shell(html_body: str, language: str) -> str:
