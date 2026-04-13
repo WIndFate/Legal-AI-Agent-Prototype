@@ -1,4 +1,6 @@
 import logging
+from datetime import datetime, timezone
+from urllib.parse import urlencode
 
 import httpx
 
@@ -66,7 +68,7 @@ def _wrap_email_shell(html_body: str, language: str) -> str:
         "</div>"
         # Copyright outside card
         '<p style="text-align:center;font-size:11px;color:#aaa;margin:16px 0 0;">'
-        "\u00a9 2026 ContractGuard</p>"
+        f"\u00a9 {datetime.now(timezone.utc).year} ContractGuard</p>"
         "</div>"
     )
 
@@ -251,7 +253,7 @@ async def send_payment_confirmation_email(
 ) -> bool:
     """Send payment confirmation with review progress link."""
     settings = get_settings()
-    review_url = f"{settings.FRONTEND_URL}/review/{order_id}?lang={language}"
+    review_url = f"{settings.FRONTEND_URL}/review/{order_id}?{urlencode({'lang': language})}"
 
     subject = _PAYMENT_SUBJECTS.get(language, _PAYMENT_SUBJECTS["ja"])
     intro, track_label, cta_text, save_note = _PAYMENT_BODIES.get(language, _PAYMENT_BODIES["ja"])
@@ -376,7 +378,7 @@ _REPORT_ORDER_ID_LABELS = {
 async def send_report_email(email: str, order_id: str, language: str) -> bool:
     """Send report-ready notification with prominent expiration warning."""
     settings = get_settings()
-    report_url = f"{settings.FRONTEND_URL}/report/{order_id}?lang={language}"
+    report_url = f"{settings.FRONTEND_URL}/report/{order_id}?{urlencode({'lang': language})}"
     ttl = settings.REPORT_TTL_HOURS
 
     subject = _REPORT_SUBJECTS.get(language, _REPORT_SUBJECTS["ja"])

@@ -42,8 +42,7 @@ i18n
     fallbackLng: 'ja',
     supportedLngs: SUPPORTED_LANGUAGES.map(l => l.code),
     detection: {
-      order: ['querystring', 'localStorage', 'navigator', 'htmlTag'],
-      lookupQuerystring: 'lang',
+      order: ['localStorage', 'navigator', 'htmlTag'],
       lookupLocalStorage: 'language',
       caches: ['localStorage'],
     },
@@ -51,5 +50,19 @@ i18n
       escapeValue: false,
     },
   });
+
+// Apply ?lang= from email links for this visit only — do not persist to
+// localStorage so the user's manually chosen site language is not overwritten.
+const _langParam = new URLSearchParams(window.location.search).get('lang');
+if (_langParam && SUPPORTED_LANGUAGES.some(l => l.code === _langParam)) {
+  const _prev = localStorage.getItem('language');
+  i18n.changeLanguage(_langParam);
+  // Restore localStorage to the value before changeLanguage wrote to it
+  if (_prev !== null) {
+    localStorage.setItem('language', _prev);
+  } else {
+    localStorage.removeItem('language');
+  }
+}
 
 export default i18n;
