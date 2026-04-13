@@ -22,3 +22,9 @@ class PaymentCreateResponse(BaseModel):
     komoju_session_url: str
     price_jpy: int
     discount_applied: int = 0
+
+
+class PaymentRetryResponse(BaseModel):
+    order_id: str
+    komoju_session_url: str
+    price_jpy: int

@@ -6,6 +6,7 @@ import OrderReminderDialog from '../components/common/OrderReminderDialog';
 import { fetchWithRetry } from '../lib/fetchWithRetry';
 
 type PaymentStatus = 'checking' | 'success' | 'failed' | 'pending' | 'timeout';
+type TerminalPaymentStatus = 'failed' | 'cancelled' | null;
 
 const PAYMENT_POLL_INTERVAL_MS = 3_000;
 const PAYMENT_POLL_TIMEOUT_MS = 5 * 60 * 1_000;
@@ -19,6 +20,9 @@ export default function PaymentPage() {
   const [nextRoute, setNextRoute] = useState<string | null>(null);
   const [pollNonce, setPollNonce] = useState(0);
   const [copied, setCopied] = useState(false);
+  const [retryingPayment, setRetryingPayment] = useState(false);
+  const [terminalPaymentStatus, setTerminalPaymentStatus] = useState<TerminalPaymentStatus>(null);
+  const [retryError, setRetryError] = useState('');
 
   const handleCopyOrderId = async () => {
     if (!orderId) return;
@@ -31,6 +35,36 @@ export default function PaymentPage() {
     }
   };
 
+  const handleRetryPayment = async () => {
+    if (!orderId) return;
+    setRetryingPayment(true);
+    setRetryError('');
+
+    try {
+      const res = await fetchWithRetry(`/api/payment/${orderId}/retry`, {
+        method: 'POST',
+      }, {
+        timeoutMs: 12_000,
+        retries: 1,
+        retryDelayMs: 700,
+      });
+      if (!res.ok) {
+        throw new Error(`Retry payment failed: ${res.status}`);
+      }
+      const data = await res.json();
+      if (data.komoju_session_url) {
+        window.location.href = data.komoju_session_url;
+        return;
+      }
+      setStatus('checking');
+      setPollNonce((value) => value + 1);
+    } catch {
+      setRetryError(t('payment.retry_failed'));
+    } finally {
+      setRetryingPayment(false);
+    }
+  };
+
   useEffect(() => {
     if (!orderId) return;
     let cancelled = false;
@@ -40,6 +74,7 @@ export default function PaymentPage() {
     const checkStatus = async () => {
       if (cancelled) return;
       if (Date.now() >= pollDeadline) {
+        setTerminalPaymentStatus(null);
         setStatus('timeout');
         return;
       }
@@ -60,6 +95,7 @@ export default function PaymentPage() {
 
         const data = await statusRes.json();
         if (data.report_ready || data.analysis_status === 'completed') {
+          setTerminalPaymentStatus(null);
           setStatus('success');
           setNextRoute(`/report/${orderId}`);
           setShowOrderPrompt(true);
@@ -67,23 +103,27 @@ export default function PaymentPage() {
         }
 
         if (data.payment_status === 'paid' || data.payment_status === 'captured') {
+          setTerminalPaymentStatus(null);
           setStatus('success');
           setNextRoute(`/review/${orderId}`);
           setShowOrderPrompt(true);
           return;
         }
         if (data.payment_status === 'failed' || data.payment_status === 'cancelled') {
+          setTerminalPaymentStatus(data.payment_status);
           setStatus('failed');
           return;
         }
 
         // Still waiting for payment confirmation.
+        setTerminalPaymentStatus(null);
         setStatus('pending');
         if (!cancelled) {
           pollTimer = window.setTimeout(checkStatus, PAYMENT_POLL_INTERVAL_MS);
         }
       } catch {
         if (Date.now() >= pollDeadline) {
+          setTerminalPaymentStatus(null);
           setStatus('timeout');
           return;
         }
@@ -166,7 +206,10 @@ export default function PaymentPage() {
               <button className="btn-share" onClick={handleCopyOrderId}>
                 {copied ? t('order.copied') : t('order.copy_id')}
               </button>
-              <button className="btn-primary" onClick={() => { setStatus('checking'); setPollNonce((value) => value + 1); }}>
+              <button className="btn-primary" onClick={handleRetryPayment} disabled={retryingPayment}>
+                {retryingPayment ? t('payment.processing') : t('payment.retry_payment')}
+              </button>
+              <button className="btn-share" onClick={() => { setRetryError(''); setStatus('checking'); setPollNonce((value) => value + 1); }}>
                 {t('payment.check_again')}
               </button>
               <button className="btn-share" onClick={() => navigate('/lookup')}>
@@ -176,6 +219,7 @@ export default function PaymentPage() {
                 {t('nav.home')}
               </button>
             </div>
+            {retryError && <p className="error-message">{retryError}</p>}
           </div>
         )}
 
@@ -198,7 +242,12 @@ export default function PaymentPage() {
 
         {status === 'failed' && (
           <div className="error-state">
-            <p className="error-message">{t('errors.payment_failed')}</p>
+            <p className="status-text">
+              {terminalPaymentStatus === 'cancelled' ? t('payment.cancelled_title') : t('payment.failed_title')}
+            </p>
+            <p className="status-subtext">
+              {terminalPaymentStatus === 'cancelled' ? t('payment.cancelled_desc') : t('payment.failed_desc')}
+            </p>
             <div className="order-inline-card payment-timeout-order-card">
               <span>{t('order.order_id')}</span>
               <strong>{orderId}</strong>
@@ -208,13 +257,17 @@ export default function PaymentPage() {
               <button className="btn-share" onClick={handleCopyOrderId}>
                 {copied ? t('order.copied') : t('order.copy_id')}
               </button>
+              <button className="btn-primary" onClick={handleRetryPayment} disabled={retryingPayment}>
+                {retryingPayment ? t('payment.processing') : t('payment.retry_payment')}
+              </button>
               <button className="btn-share" onClick={() => navigate('/lookup')}>
                 {t('nav.lookup')}
               </button>
-              <button className="btn-primary" onClick={() => navigate('/')}>
+              <button className="payment-link-button" onClick={() => navigate('/')}>
                 {t('nav.home')}
               </button>
             </div>
+            {retryError && <p className="error-message">{retryError}</p>}
           </div>
         )}
       </div>

@@ -88,6 +88,12 @@
     "timeout_title": "支付未确认",
     "timeout_desc": "暂未检测到支付完成。如果你已经完成支付，请稍后重新检查。",
     "check_again": "重新检查",
+    "retry_payment": "重新支付",
+    "retry_failed": "暂时无法重新打开支付页，请稍后再试。",
+    "failed_title": "支付失败",
+    "failed_desc": "本次支付尝试没有成功完成。你可以重新打开支付页再试一次。",
+    "cancelled_title": "支付已取消",
+    "cancelled_desc": "支付完成前你已关闭结账页。你可以重新打开后继续支付。",
     "language_lock_title": "请在支付前确认报告语言",
     "language_lock_body": "最终报告正文会以当前选择的 {{language}} 生成。支付完成后，切换站点语言只会改变界面，不会重新翻译报告正文。",
     "language_lock_confirm": "我已确认最终报告会按当前语言生成"

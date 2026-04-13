@@ -88,6 +88,12 @@
     "timeout_title": "Chưa xác nhận thanh toán",
     "timeout_desc": "Chúng tôi chưa phát hiện thanh toán hoàn tất. Nếu bạn đã thanh toán, hãy thử kiểm tra lại sau ít phút.",
     "check_again": "Kiểm tra lại",
+    "retry_payment": "Thanh toán lại",
+    "retry_failed": "Hiện chưa thể mở lại trang thanh toán. Vui lòng thử lại sau.",
+    "failed_title": "Thanh toán thất bại",
+    "failed_desc": "Lần thanh toán này chưa hoàn tất thành công. Bạn có thể mở lại checkout và thử lại.",
+    "cancelled_title": "Thanh toán đã bị hủy",
+    "cancelled_desc": "Bạn đã đóng trang checkout trước khi thanh toán hoàn tất. Có thể mở lại để thử tiếp.",
     "language_lock_title": "Xác nhận ngôn ngữ báo cáo trước khi thanh toán",
     "language_lock_body": "Nội dung chính của báo cáo cuối cùng sẽ được tạo bằng {{language}}. Sau khi thanh toán, việc đổi ngôn ngữ trang chỉ thay đổi giao diện, không dịch lại nội dung báo cáo.",
     "language_lock_confirm": "Tôi hiểu rằng báo cáo cuối cùng sẽ được tạo bằng ngôn ngữ hiện tại"

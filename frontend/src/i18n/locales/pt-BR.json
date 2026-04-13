@@ -88,6 +88,12 @@
     "timeout_title": "Pagamento ainda não confirmado",
     "timeout_desc": "Ainda não detectamos a conclusão do pagamento. Se você já pagou, aguarde um momento e verifique novamente.",
     "check_again": "Verificar novamente",
+    "retry_payment": "Tentar pagar novamente",
+    "retry_failed": "Não foi possível reabrir a página de pagamento. Tente novamente em instantes.",
+    "failed_title": "O pagamento falhou",
+    "failed_desc": "Esta tentativa de pagamento não foi concluída com sucesso. Você pode reabrir o checkout e tentar de novo.",
+    "cancelled_title": "O pagamento foi cancelado",
+    "cancelled_desc": "O checkout foi fechado antes da conclusão do pagamento. Você pode abri-lo novamente e tentar de novo.",
     "language_lock_title": "Confirme o idioma do relatório antes do pagamento",
     "language_lock_body": "O conteúdo final do relatório será gerado em {{language}}. Depois do pagamento, mudar o idioma do site altera apenas a interface, não retraduz o relatório.",
     "language_lock_confirm": "Entendo que o relatório final será gerado no idioma atual"

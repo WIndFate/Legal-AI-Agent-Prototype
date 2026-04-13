@@ -74,6 +74,9 @@ class FakeSession:
     async def refresh(self, obj):
         pass
 
+    async def get(self, model, key):
+        return self._query_result
+
     async def execute(self, stmt):
         return _FakeResult(self._query_result)
 
@@ -424,6 +427,82 @@ async def test_create_payment_missing_fields_returns_422():
                 json={"email": "user@example.com"},
             )
         assert resp.status_code == 422
+    finally:
+        app.dependency_overrides.pop(get_db, None)
+
+
+@pytest.mark.asyncio
+async def test_retry_payment_reopens_checkout_for_terminal_order():
+    """Existing terminal unpaid orders should get a fresh checkout session without creating a new order."""
+    order = FakeOrder(payment_status="cancelled", price_jpy=480)
+    session = FakeSession(query_result=order)
+
+    app.dependency_overrides[get_db] = _override_db(session)
+    try:
+        with patch(
+            "backend.routers.payment.create_payment_session",
+            new_callable=AsyncMock,
+            return_value="https://komoju.com/sessions/retry-123",
+        ):
+            transport = ASGITransport(app=app)
+            async with AsyncClient(transport=transport, base_url="http://test") as client:
+                resp = await client.post(f"/api/payment/{order.id}/retry")
+        assert resp.status_code == 200
+        body = resp.json()
+        assert body["order_id"] == str(order.id)
+        assert body["komoju_session_url"] == "https://komoju.com/sessions/retry-123"
+        assert body["price_jpy"] == 480
+        assert order.payment_status == "pending"
+        assert session.commit_count == 1
+    finally:
+        app.dependency_overrides.pop(get_db, None)
+
+
+@pytest.mark.asyncio
+async def test_retry_payment_rejects_paid_order():
+    """Paid orders must not reopen checkout."""
+    order = FakeOrder(payment_status="paid")
+    session = FakeSession(query_result=order)
+
+    app.dependency_overrides[get_db] = _override_db(session)
+    try:
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            resp = await client.post(f"/api/payment/{order.id}/retry")
+        assert resp.status_code == 409
+        assert resp.json()["detail"] == "Payment already completed"
+    finally:
+        app.dependency_overrides.pop(get_db, None)
+
+
+@pytest.mark.asyncio
+async def test_retry_payment_rejects_unsupported_status():
+    """Retry should be unavailable for orders outside pending/failed/cancelled."""
+    order = FakeOrder(payment_status="refunded")
+    session = FakeSession(query_result=order)
+
+    app.dependency_overrides[get_db] = _override_db(session)
+    try:
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            resp = await client.post(f"/api/payment/{order.id}/retry")
+        assert resp.status_code == 409
+        assert resp.json()["detail"] == "Payment retry is not available for this order"
+    finally:
+        app.dependency_overrides.pop(get_db, None)
+
+
+@pytest.mark.asyncio
+async def test_retry_payment_missing_order_returns_404():
+    """Retrying a missing order should return 404."""
+    session = FakeSession(query_result=None)
+
+    app.dependency_overrides[get_db] = _override_db(session)
+    try:
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            resp = await client.post(f"/api/payment/{uuid.uuid4()}/retry")
+        assert resp.status_code == 404
     finally:
         app.dependency_overrides.pop(get_db, None)
 

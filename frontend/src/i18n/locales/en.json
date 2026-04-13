@@ -88,6 +88,12 @@
     "timeout_title": "Payment not confirmed",
     "timeout_desc": "We have not detected a completed payment yet. If you already paid, check again in a moment.",
     "check_again": "Check again",
+    "retry_payment": "Retry payment",
+    "retry_failed": "We could not reopen the payment page. Please try again.",
+    "failed_title": "Payment failed",
+    "failed_desc": "The payment attempt did not complete successfully. You can reopen checkout and try again.",
+    "cancelled_title": "Payment was cancelled",
+    "cancelled_desc": "The checkout was closed before payment completed. You can reopen it and try again.",
     "language_lock_title": "Confirm the report language before payment",
     "language_lock_body": "The final report body will be generated in {{language}}. After payment, changing the site language will only update the interface, not retranslate the report itself.",
     "language_lock_confirm": "I understand the final report will be generated in the current language"

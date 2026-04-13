@@ -88,6 +88,12 @@
     "timeout_title": "付款尚未確認",
     "timeout_desc": "目前尚未偵測到付款完成。如果你已完成付款，請稍後再重新檢查。",
     "check_again": "重新檢查",
+    "retry_payment": "重新付款",
+    "retry_failed": "目前無法重新打開付款頁，請稍後再試。",
+    "failed_title": "付款失敗",
+    "failed_desc": "這次付款尚未成功完成。你可以重新打開結帳頁再試一次。",
+    "cancelled_title": "付款已取消",
+    "cancelled_desc": "你在付款完成前關閉了結帳頁。可以重新打開後繼續付款。",
     "language_lock_title": "請在付款前確認報告語言",
     "language_lock_body": "最終報告正文會以目前選擇的 {{language}} 生成。付款完成後，切換站點語言只會改變介面，不會重新翻譯報告正文。",
     "language_lock_confirm": "我已確認最終報告會以目前語言生成"

@@ -11,7 +11,7 @@ from backend.models.order import Order
 from backend.models.referral import Referral
 from backend.dependencies import get_redis
 from backend.routers._helpers import parse_order_id
-from backend.schemas.payment import PaymentCreateRequest, PaymentCreateResponse
+from backend.schemas.payment import PaymentCreateRequest, PaymentCreateResponse, PaymentRetryResponse
 from backend.services.order_cost_estimate import build_order_cost_estimate_snapshot, upsert_order_cost_estimate
 from backend.services.payment import (
     create_payment_session,
@@ -186,6 +186,53 @@ async def create_payment(
         komoju_session_url=session_url,
         price_jpy=final_price,
         discount_applied=discount_jpy,
+    )
+
+
+@router.post("/api/payment/{order_id}/retry", response_model=PaymentRetryResponse)
+async def retry_payment(
+    order_id: str,
+    raw_request: Request,
+    db: AsyncSession = Depends(get_db),
+):
+    """Create a fresh KOMOJU checkout session for an existing unpaid order."""
+    order_uuid = parse_order_id(order_id)
+    order = await db.get(Order, order_uuid)
+    if order is None:
+        raise HTTPException(status_code=404, detail="Order not found")
+    if order.payment_status == "paid":
+        raise HTTPException(status_code=409, detail="Payment already completed")
+    if order.payment_status not in {"pending", "failed", "cancelled"}:
+        raise HTTPException(status_code=409, detail="Payment retry is not available for this order")
+
+    frontend_base_url = resolve_frontend_base_url(
+        origin_header=raw_request.headers.get("origin"),
+        referer_header=raw_request.headers.get("referer"),
+        forwarded_proto=raw_request.headers.get("x-forwarded-proto"),
+        forwarded_host=raw_request.headers.get("x-forwarded-host"),
+        host_header=raw_request.headers.get("host"),
+    )
+    session_url = await create_payment_session(
+        order_id=str(order.id),
+        amount_jpy=order.price_jpy,
+        email=order.email,
+        frontend_base_url=frontend_base_url,
+    )
+    previous_status = order.payment_status
+    if order.payment_status in {"failed", "cancelled"}:
+        order.payment_status = "pending"
+        await db.commit()
+
+    logger.info("Payment session retried: order_id=%s session_url=%s", order.id, session_url)
+    posthog_capture(
+        order.email or str(order.id),
+        "payment_session_retried",
+        {"order_id": str(order.id), "price_jpy": order.price_jpy, "previous_status": previous_status},
+    )
+    return PaymentRetryResponse(
+        order_id=str(order.id),
+        komoju_session_url=session_url,
+        price_jpy=order.price_jpy,
     )
 
 
