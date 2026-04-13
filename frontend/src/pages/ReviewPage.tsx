@@ -52,6 +52,7 @@ export default function ReviewPage() {
   const [analysisStartedAtMs, setAnalysisStartedAtMs] = useState<number | null>(null);
   const [totalClauses, setTotalClauses] = useState<number | null>(null);
   const [analyzedClauses, setAnalyzedClauses] = useState(0);
+  const [analysisFinishedAtMs, setAnalysisFinishedAtMs] = useState<number | null>(null);
   const [transitioning, setTransitioning] = useState(false);
 
   const started = useRef(false);
@@ -161,10 +162,20 @@ export default function ReviewPage() {
       setCurrentStep(status.current_step);
     }
     if (status.started_at) {
-      const parsed = Date.parse(status.started_at);
-      if (!Number.isNaN(parsed)) {
-        setAnalysisStartedAtMs(parsed);
-        setElapsedSeconds(Math.max(0, Math.floor((Date.now() - parsed) / 1000)));
+      const parsedStart = Date.parse(status.started_at);
+      if (!Number.isNaN(parsedStart)) {
+        setAnalysisStartedAtMs(parsedStart);
+        // Use finished_at to cap elapsed time so reopened pages don't
+        // keep counting wall-clock time past analysis completion.
+        if (status.finished_at) {
+          const parsedEnd = Date.parse(status.finished_at);
+          if (!Number.isNaN(parsedEnd)) {
+            setAnalysisFinishedAtMs(parsedEnd);
+            setElapsedSeconds(Math.max(0, Math.floor((parsedEnd - parsedStart) / 1000)));
+            return;
+          }
+        }
+        setElapsedSeconds(Math.max(0, Math.floor((Date.now() - parsedStart) / 1000)));
       }
     }
   }, []);
@@ -206,6 +217,10 @@ export default function ReviewPage() {
         break;
       case 'complete':
         setAnalysisStatus('completed');
+        if (evt.created_at) {
+          const parsedEnd = Date.parse(evt.created_at);
+          if (!Number.isNaN(parsedEnd)) setAnalysisFinishedAtMs(parsedEnd);
+        }
         pushActivityEvent(evt);
         if (orderId) {
           completeTimeoutRef.current = window.setTimeout(() => {
@@ -326,6 +341,7 @@ export default function ReviewPage() {
     setActivityEvents([]);
     setElapsedSeconds(0);
     setAnalysisStartedAtMs(null);
+    setAnalysisFinishedAtMs(null);
     setTotalClauses(null);
     setAnalyzedClauses(0);
     previousStepRef.current = 'parsing';
@@ -399,6 +415,13 @@ export default function ReviewPage() {
   useEffect(() => {
     if (!loading) return;
 
+    // When the analysis has a known end time, freeze the elapsed display
+    // so it reflects actual analysis duration, not wall-clock since start.
+    if (analysisFinishedAtMs != null && analysisStartedAtMs != null) {
+      setElapsedSeconds(Math.max(0, Math.floor((analysisFinishedAtMs - analysisStartedAtMs) / 1000)));
+      return;
+    }
+
     const timer = window.setInterval(() => {
       if (analysisStartedAtMs != null) {
         setElapsedSeconds(Math.max(0, Math.floor((Date.now() - analysisStartedAtMs) / 1000)));
@@ -408,7 +431,7 @@ export default function ReviewPage() {
     }, 1000);
 
     return () => window.clearInterval(timer);
-  }, [analysisStartedAtMs, loading]);
+  }, [analysisStartedAtMs, analysisFinishedAtMs, loading]);
 
   useEffect(() => {
     if (previousStepRef.current === currentStep) {
