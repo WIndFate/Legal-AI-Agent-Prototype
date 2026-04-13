@@ -242,7 +242,7 @@ frontend/
       HomePage.tsx          # Homepage container composing hero/flow/upload sections
       ExamplesPage.tsx      # Dedicated examples gallery / report sample page
       LookupPage.tsx        # Order-ID based result lookup page
-      PaymentPage.tsx       # Payment polling + timeout fallback + retry checkout + order reminder prompt
+      PaymentPage.tsx       # Payment polling + timeout fallback + same-order retry checkout + recovery exits
       ReviewPage.tsx        # Snapshot + replayed events + quantified clause progress + in-card failure prompt
       ReportPage.tsx        # Saved report page + custom share sheet
       PrivacyPage.tsx       # Privacy policy (i18n summary + JP legal text)
@@ -317,6 +317,7 @@ Embeddings are generated via OpenAI API (httpx direct call, not langchain).
 - The current runtime policy is `¥75 / 1000 tokens` with a `¥200` minimum charge. Internally, page estimates remain only as a guardrail for upload limits and OCR planning.
 - Exact quote uploads now emit a `quote_token`; Redis caches the resulting clause preview and `prepayment_snapshot` by normalized `content_hash`, so repeated uploads of the same contract reuse that preview instead of re-running the preview LLM call.
 - `/api/payment/create` now validates that exact-quote `quote_token` context still exists, still matches the uploaded contract hash, and was not flagged as `is_contract == false` before creating an order.
+- `/api/payment/{order_id}/retry` now rejects retries when the order's contract payload is no longer recoverable (no `contract_text` and no staged upload file), so users are asked to re-upload before paying again instead of discovering the failure only after another checkout attempt.
 - The upload flow applies separate per-IP rate limits to raw upload requests and preview generation, preventing the exact-quote preview endpoint from being abused to generate unlimited anonymous LLM cost.
 - Each paid order now also stores a payment-time estimate snapshot keyed by `COST_ESTIMATE_VERSION` and `pricing_policy_version`, including predicted clause counts, step-level estimated costs, quoted margin, and the planned model mix (`ocr/parse/analyze/suggestion/translation/embedding`).
 - When an exact quote generated a pre-payment clause preview, that preview cost is persisted as `prepayment_snapshot` and merged into both the predicted and actual total cost snapshots.

@@ -49,6 +49,7 @@
 - Fly / Vercel / KOMOJU / Resend / Sentry 的大部分生产密钥已经配置完成，包括 KOMOJU test keys、webhook secret、`FRONTEND_URL` 和后端观测配置
 - 支付状态现在采用双层防御来兜底用户中断 KOMOJU 支付页的场景：前端在 5 分钟后退出无限轮询，切到带“复制订单号 / 前往 lookup”出口的“支付未确认”可恢复状态；后端也会把 `payment.failed` / `payment.cancelled` / `payment.expired` webhook 映射为终态支付状态
 - 失败或取消的支付现在还能通过 `POST /api/payment/{order_id}/retry` 在同一个订单上重新拉起 KOMOJU checkout，不会新建重复订单，也不会打断 lookup / review / report 的订单语义
+- 同一个 retry 端点现在还会在支付前检查合同数据是否仍可恢复：如果订单文本已空且 staged upload 文件也已被清理，会直接要求用户重新上传，避免“重新付款后才发现无法分析”
 - `.env` / Fly secrets 还应配置 `EMAIL_FROM_ADDRESS`、`EMAIL_FROM_NAME`、`EMAIL_REPLY_TO`，让报告链接邮件走已验证的 Resend 子域，同时把用户回复导入 Google Workspace 客服邮箱
 - Supabase 全新数据库上的启动迁移问题已在代码中修复：asyncpg + SSL DSN 兼容已补齐，startup migration 也会为新库预创建 / 扩容 `alembic_version.version_num` 到 255
 - 创建 KOMOJU checkout session 时现在不再发送 `payment_types`；结账页直接展示当前 merchant 账号已审核通过的支付方式，而 `backend/data/komoju_payment_methods.json` 仅保留为区域上线参考文档
