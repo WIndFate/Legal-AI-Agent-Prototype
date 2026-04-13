@@ -248,13 +248,13 @@ export default function PaymentPage() {
               <button className="btn-primary" onClick={handleRetryPayment} disabled={retryingPayment}>
                 {retryingPayment ? t('payment.processing') : t('payment.retry_payment')}
               </button>
-              <button className="btn-share" onClick={() => { setRetryError(''); setStatus('checking'); setPollNonce((value) => value + 1); }}>
-                {t('payment.check_again')}
+              <button className="btn-share" onClick={() => navigate('/')}>
+                {t('nav.home')}
               </button>
             </div>
             <div className="payment-meta-links">
-              <button className="payment-link-button" onClick={() => navigate('/lookup')}>
-                {t('nav.lookup')}
+              <button className="payment-link-button" onClick={() => { setRetryError(''); setStatus('checking'); setPollNonce((value) => value + 1); }}>
+                {t('payment.check_again')}
               </button>
             </div>
             {retryError && <p className="error-message">{retryError}</p>}
@@ -298,10 +298,8 @@ export default function PaymentPage() {
               <button className="btn-primary" onClick={handleRetryPayment} disabled={retryingPayment}>
                 {retryingPayment ? t('payment.processing') : t('payment.retry_payment')}
               </button>
-            </div>
-            <div className="payment-meta-links">
-              <button className="payment-link-button" onClick={() => navigate('/lookup')}>
-                {t('nav.lookup')}
+              <button className="btn-share" onClick={() => navigate('/')}>
+                {t('nav.home')}
               </button>
             </div>
             {retryError && <p className="error-message">{retryError}</p>}
