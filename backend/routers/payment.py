@@ -21,6 +21,8 @@ from backend.services.payment import (
 )
 from backend.services.analytics import capture as posthog_capture
 from backend.services.analytics import capture_message as sentry_capture_message
+from backend.services.analytics import capture_exception as sentry_capture_exception
+from backend.services.email import send_payment_confirmation_email
 from backend.services.quote_guard import build_contract_content_hash, load_quote_context
 from backend.services.token_estimator import estimate_page_count_from_tokens
 
@@ -135,6 +137,14 @@ async def create_payment(
             "payment_marked_paid_in_dev",
             {"order_id": str(order.id), "price_jpy": final_price},
         )
+        # Non-blocking payment confirmation email (dev path)
+        try:
+            await send_payment_confirmation_email(
+                request.email, str(order.id), request.target_language, final_price,
+            )
+        except Exception as e:
+            logger.error("Payment confirmation email failed (dev): order_id=%s error=%s", order.id, e)
+            sentry_capture_exception(e, tags={"component": "payment_dev_bypass", "order_id": str(order.id)})
 
     frontend_base_url = resolve_frontend_base_url(
         origin_header=raw_request.headers.get("origin"),
@@ -233,6 +243,14 @@ async def payment_webhook(
                     "payment_captured",
                     {"order_id": order_id, "price_jpy": order.price_jpy},
                 )
+                # Non-blocking payment confirmation email
+                try:
+                    await send_payment_confirmation_email(
+                        order.email, order_id, order.target_language, order.price_jpy,
+                    )
+                except Exception as e:
+                    logger.error("Payment confirmation email failed: order_id=%s error=%s", order_id, e)
+                    sentry_capture_exception(e, tags={"component": "payment_webhook", "order_id": order_id})
             elif order and order.payment_status == "paid":
                 logger.info("Payment webhook ignored: order_id=%s reason=already_paid", order_id)
                 posthog_capture(
