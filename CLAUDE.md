@@ -242,7 +242,7 @@ frontend/
       HomePage.tsx          # Homepage container composing hero/flow/upload sections
       ExamplesPage.tsx      # Dedicated examples gallery / report sample page
       LookupPage.tsx        # Order-ID based result lookup page
-      PaymentPage.tsx       # Payment polling + order reminder prompt
+      PaymentPage.tsx       # Payment polling + timeout fallback + order reminder prompt
       ReviewPage.tsx        # Snapshot + replayed events + quantified clause progress + in-card failure prompt
       ReportPage.tsx        # Saved report page + custom share sheet
       PrivacyPage.tsx       # Privacy policy (i18n summary + JP legal text)
