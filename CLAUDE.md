@@ -186,7 +186,7 @@ backend/
     _helpers.py   # Shared router helpers (parse_order_id UUID validator → 404)
     health.py     # GET /api/health
     upload.py     # POST /api/upload (image/PDF/text + OCR + PII + pricing)
-    payment.py    # POST /api/payment/create + /api/payment/webhook (server-side exact quote validation)
+    payment.py    # POST /api/payment/create + POST /api/payment/{order_id}/retry + /api/payment/webhook (exact quote validation + retry checkout)
     analysis.py   # POST /api/analysis/start + GET status/events/stream (error_code + error_message)
     report.py     # GET /api/report/{order_id} + /api/report/{order_id}/pdf
     referral.py   # POST /api/referral/generate + GET /api/referral/{code}
@@ -242,7 +242,7 @@ frontend/
       HomePage.tsx          # Homepage container composing hero/flow/upload sections
       ExamplesPage.tsx      # Dedicated examples gallery / report sample page
       LookupPage.tsx        # Order-ID based result lookup page
-      PaymentPage.tsx       # Payment polling + timeout fallback + order reminder prompt
+      PaymentPage.tsx       # Payment polling + timeout fallback + retry checkout + order reminder prompt
       ReviewPage.tsx        # Snapshot + replayed events + quantified clause progress + in-card failure prompt
       ReportPage.tsx        # Saved report page + custom share sheet
       PrivacyPage.tsx       # Privacy policy (i18n summary + JP legal text)

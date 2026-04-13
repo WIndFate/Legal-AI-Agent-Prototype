@@ -48,6 +48,7 @@
 - 本番メール経路も分離済みです。Google Workspace が `support@contractguard.jp` の有人返信を受け、Resend は `noreply@mail.contractguard.jp` からシステムメールを送信しつつ `Reply-To: support@contractguard.jp` を付与します
 - Fly / Vercel / KOMOJU / Resend / Sentry の主要シークレットも概ね設定済みで、KOMOJU テストキー、webhook secret、`FRONTEND_URL`、観測系設定まで入りました
 - 決済状態には二段構えの保護を追加しました。KOMOJU checkout を途中で閉じても、フロントエンドは 5 分後に無限ポーリングを抜けて「支払い未確認」状態へ遷移し、注文 ID コピーや `/lookup` への退避導線を出し、バックエンド側も `payment.failed` / `payment.cancelled` / `payment.expired` webhook を終端ステータスへ反映します
+- 失敗 / キャンセル済みの決済は `POST /api/payment/{order_id}/retry` で同じ注文 ID のまま KOMOJU checkout を再生成できるようになり、再決済のたびに重複注文を増やさずに済みます
 - `.env` / Fly secrets には `EMAIL_FROM_ADDRESS`、`EMAIL_FROM_NAME`、`EMAIL_REPLY_TO` も設定し、レポートリンクメールを検証済み Resend サブドメインから送りつつ返信先を Google Workspace の support inbox に統一します
 - Supabase fresh database 向けの起動 migration 問題もコード上で解消済みです。asyncpg + SSL DSN 互換を補い、新規 DB では `alembic_version.version_num` を 255 で事前作成 / 拡張するようにしています
 - KOMOJU checkout session 作成時には `payment_types` を送らない構成に変更し、checkout に表示される決済手段は merchant アカウント側で承認済みのものに一本化しました。`backend/data/komoju_payment_methods.json` は地域別の導入計画を残すための参考資料としてのみ保持しています
