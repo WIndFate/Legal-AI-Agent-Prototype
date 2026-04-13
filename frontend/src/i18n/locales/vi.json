@@ -91,6 +91,8 @@
     "retry_payment": "Thanh toán lại",
     "retry_failed": "Hiện chưa thể mở lại trang thanh toán. Vui lòng thử lại sau.",
     "retry_contract_missing": "Hợp đồng này không còn sẵn sàng để phân tích. Vui lòng tải lên lại trước khi thanh toán.",
+    "retry_already_completed": "Đơn hàng này đã được thanh toán. Vui lòng kiểm tra trạng thái mới nhất.",
+    "retry_unavailable": "Không thể mở lại checkout cho đơn hàng này nữa. Vui lòng kiểm tra trạng thái mới nhất.",
     "failed_title": "Thanh toán thất bại",
     "failed_desc": "Lần thanh toán này chưa hoàn tất thành công. Bạn có thể mở lại checkout và thử lại.",
     "cancelled_title": "Thanh toán đã bị hủy",

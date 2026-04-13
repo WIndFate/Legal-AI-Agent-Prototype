@@ -91,6 +91,8 @@
     "retry_payment": "다시 결제하기",
     "retry_failed": "결제 페이지를 다시 열 수 없습니다. 잠시 후 다시 시도해 주세요.",
     "retry_contract_missing": "이 계약은 더 이상 분석에 사용할 수 없습니다. 다시 업로드한 뒤 결제해 주세요.",
+    "retry_already_completed": "이 주문은 이미 결제가 완료되었습니다. 최신 주문 상태를 확인해 주세요.",
+    "retry_unavailable": "이 주문은 더 이상 checkout을 다시 열 수 없습니다. 최신 주문 상태를 확인해 주세요.",
     "failed_title": "결제에 실패했습니다",
     "failed_desc": "이번 결제 시도가 완료되지 않았습니다. checkout을 다시 열어 재시도할 수 있습니다.",
     "cancelled_title": "결제가 취소되었습니다",

@@ -61,6 +61,12 @@ export default function PaymentPage() {
         if (res.status === 410) {
           throw new Error(t('payment.retry_contract_missing'));
         }
+        if (res.status === 409) {
+          if (detail === 'Payment already completed') {
+            throw new Error(t('payment.retry_already_completed'));
+          }
+          throw new Error(t('payment.retry_unavailable'));
+        }
         throw new Error(detail || t('payment.retry_failed'));
       }
       const data = await res.json();

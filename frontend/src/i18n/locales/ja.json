@@ -91,6 +91,8 @@
     "retry_payment": "再度支払う",
     "retry_failed": "決済ページを再度開けませんでした。しばらくしてからもう一度お試しください。",
     "retry_contract_missing": "この契約データは分析に使えなくなっています。支払い前にもう一度アップロードしてください。",
+    "retry_already_completed": "この注文はすでに支払い済みです。最新の状態を確認してください。",
+    "retry_unavailable": "この注文では checkout を再度開けません。最新の注文状態をご確認ください。",
     "failed_title": "お支払いに失敗しました",
     "failed_desc": "決済処理は完了していません。checkout を開き直して再試行できます。",
     "cancelled_title": "お支払いはキャンセルされました",

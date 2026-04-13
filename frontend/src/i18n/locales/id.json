@@ -91,6 +91,8 @@
     "retry_payment": "Coba bayar lagi",
     "retry_failed": "Kami tidak dapat membuka ulang halaman pembayaran. Coba lagi sebentar lagi.",
     "retry_contract_missing": "Kontrak ini sudah tidak tersedia untuk dianalisis. Unggah ulang sebelum membayar.",
+    "retry_already_completed": "Pesanan ini sudah dibayar. Silakan cek status pesanan terbaru.",
+    "retry_unavailable": "Checkout tidak bisa dibuka lagi untuk pesanan ini. Silakan cek status pesanan terbaru.",
     "failed_title": "Pembayaran gagal",
     "failed_desc": "Percobaan pembayaran ini belum selesai dengan sukses. Anda dapat membuka checkout lagi dan mencoba ulang.",
     "cancelled_title": "Pembayaran dibatalkan",

@@ -91,6 +91,8 @@
     "retry_payment": "重新付款",
     "retry_failed": "目前無法重新打開付款頁，請稍後再試。",
     "retry_contract_missing": "這份合約已無法再用於分析，請重新上傳後再付款。",
+    "retry_already_completed": "這筆訂單已完成付款，請查看最新訂單狀態。",
+    "retry_unavailable": "這筆訂單目前無法重新打開付款頁，請查看最新訂單狀態。",
     "failed_title": "付款失敗",
     "failed_desc": "這次付款尚未成功完成。你可以重新打開結帳頁再試一次。",
     "cancelled_title": "付款已取消",
