@@ -57,9 +57,10 @@ class _FakeResult:
 class FakeSession:
     """Async session mock that stores added objects and fakes queries."""
 
-    def __init__(self, query_result=None):
+    def __init__(self, query_result=None, get_result=None, execute_result=None):
         self._added = []
-        self._query_result = query_result
+        self._get_result = query_result if get_result is None else get_result
+        self._execute_result = query_result if execute_result is None else execute_result
         self.commit_count = 0
 
     def add(self, obj):
@@ -75,10 +76,10 @@ class FakeSession:
         pass
 
     async def get(self, model, key):
-        return self._query_result
+        return self._get_result
 
     async def execute(self, stmt):
-        return _FakeResult(self._query_result)
+        return _FakeResult(self._execute_result)
 
 
 def _override_db(session: FakeSession):
@@ -459,10 +460,46 @@ async def test_retry_payment_reopens_checkout_for_terminal_order():
 
 
 @pytest.mark.asyncio
+async def test_retry_payment_rejects_missing_contract_data():
+    """Retry should fail fast when neither contract_text nor staged upload is available anymore."""
+    order = FakeOrder(contract_text=None, temp_upload_token=None, payment_status="cancelled")
+    session = FakeSession(get_result=order)
+
+    app.dependency_overrides[get_db] = _override_db(session)
+    try:
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            resp = await client.post(f"/api/payment/{order.id}/retry")
+        assert resp.status_code == 410
+        assert "uploaded contract is no longer available" in resp.json()["detail"]
+    finally:
+        app.dependency_overrides.pop(get_db, None)
+
+
+@pytest.mark.asyncio
+async def test_retry_payment_rejects_missing_staged_file():
+    """Retry should fail before payment when staged OCR input has already been cleaned up."""
+    order = FakeOrder(contract_text=None, temp_upload_token="staged-upload.pdf", payment_status="pending")
+    session = FakeSession(get_result=order)
+
+    app.dependency_overrides[get_db] = _override_db(session)
+    try:
+        with patch("backend.routers.payment.get_temp_upload_path") as temp_path_mock:
+            temp_path_mock.return_value.exists.return_value = False
+            transport = ASGITransport(app=app)
+            async with AsyncClient(transport=transport, base_url="http://test") as client:
+                resp = await client.post(f"/api/payment/{order.id}/retry")
+        assert resp.status_code == 410
+        assert "uploaded contract is no longer available" in resp.json()["detail"]
+    finally:
+        app.dependency_overrides.pop(get_db, None)
+
+
+@pytest.mark.asyncio
 async def test_retry_payment_rejects_paid_order():
     """Paid orders must not reopen checkout."""
     order = FakeOrder(payment_status="paid")
-    session = FakeSession(query_result=order)
+    session = FakeSession(get_result=order)
 
     app.dependency_overrides[get_db] = _override_db(session)
     try:
@@ -479,7 +516,7 @@ async def test_retry_payment_rejects_paid_order():
 async def test_retry_payment_rejects_unsupported_status():
     """Retry should be unavailable for orders outside pending/failed/cancelled."""
     order = FakeOrder(payment_status="refunded")
-    session = FakeSession(query_result=order)
+    session = FakeSession(get_result=order)
 
     app.dependency_overrides[get_db] = _override_db(session)
     try:
@@ -495,7 +532,7 @@ async def test_retry_payment_rejects_unsupported_status():
 @pytest.mark.asyncio
 async def test_retry_payment_missing_order_returns_404():
     """Retrying a missing order should return 404."""
-    session = FakeSession(query_result=None)
+    session = FakeSession(get_result=None)
 
     app.dependency_overrides[get_db] = _override_db(session)
     try:

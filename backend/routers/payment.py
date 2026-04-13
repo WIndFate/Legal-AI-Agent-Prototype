@@ -24,6 +24,7 @@ from backend.services.analytics import capture_message as sentry_capture_message
 from backend.services.analytics import capture_exception as sentry_capture_exception
 from backend.services.email import send_payment_confirmation_email
 from backend.services.quote_guard import build_contract_content_hash, load_quote_context
+from backend.services.temp_uploads import get_temp_upload_path
 from backend.services.token_estimator import estimate_page_count_from_tokens
 
 logger = logging.getLogger(__name__)
@@ -59,6 +60,20 @@ def _validate_exact_quote_context(request: PaymentCreateRequest, quote_context: 
             status_code=409,
             detail="The uploaded content was identified as non-contract material. Please upload a contract before payment.",
         )
+
+
+def _ensure_retryable_contract_data(order: Order) -> None:
+    contract_text = order.contract_text or ""
+    if contract_text.strip():
+        return
+
+    if order.temp_upload_token and get_temp_upload_path(order.temp_upload_token).exists():
+        return
+
+    raise HTTPException(
+        status_code=410,
+        detail="This order can no longer be analyzed because the uploaded contract is no longer available. Please upload it again.",
+    )
 
 
 @router.post("/api/payment/create", response_model=PaymentCreateResponse)
@@ -204,6 +219,7 @@ async def retry_payment(
         raise HTTPException(status_code=409, detail="Payment already completed")
     if order.payment_status not in {"pending", "failed", "cancelled"}:
         raise HTTPException(status_code=409, detail="Payment retry is not available for this order")
+    _ensure_retryable_contract_data(order)
 
     frontend_base_url = resolve_frontend_base_url(
         origin_header=raw_request.headers.get("origin"),

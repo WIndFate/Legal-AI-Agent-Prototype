@@ -90,6 +90,7 @@
     "check_again": "Check again",
     "retry_payment": "Retry payment",
     "retry_failed": "We could not reopen the payment page. Please try again.",
+    "retry_contract_missing": "This contract is no longer available for analysis. Please upload it again before paying.",
     "failed_title": "Payment failed",
     "failed_desc": "The payment attempt did not complete successfully. You can reopen checkout and try again.",
     "cancelled_title": "Payment was cancelled",

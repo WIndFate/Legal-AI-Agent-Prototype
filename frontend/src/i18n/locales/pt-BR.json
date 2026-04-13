@@ -90,6 +90,7 @@
     "check_again": "Verificar novamente",
     "retry_payment": "Tentar pagar novamente",
     "retry_failed": "Não foi possível reabrir a página de pagamento. Tente novamente em instantes.",
+    "retry_contract_missing": "Este contrato não está mais disponível para análise. Envie-o novamente antes de pagar.",
     "failed_title": "O pagamento falhou",
     "failed_desc": "Esta tentativa de pagamento não foi concluída com sucesso. Você pode reabrir o checkout e tentar de novo.",
     "cancelled_title": "O pagamento foi cancelado",

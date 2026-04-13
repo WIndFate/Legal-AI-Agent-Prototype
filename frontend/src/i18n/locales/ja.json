@@ -90,6 +90,7 @@
     "check_again": "もう一度確認",
     "retry_payment": "再度支払う",
     "retry_failed": "決済ページを再度開けませんでした。しばらくしてからもう一度お試しください。",
+    "retry_contract_missing": "この契約データは分析に使えなくなっています。支払い前にもう一度アップロードしてください。",
     "failed_title": "お支払いに失敗しました",
     "failed_desc": "決済処理は完了していません。checkout を開き直して再試行できます。",
     "cancelled_title": "お支払いはキャンセルされました",

@@ -90,6 +90,7 @@
     "check_again": "重新检查",
     "retry_payment": "重新支付",
     "retry_failed": "暂时无法重新打开支付页，请稍后再试。",
+    "retry_contract_missing": "这份合同已无法继续用于分析，请重新上传后再支付。",
     "failed_title": "支付失败",
     "failed_desc": "本次支付尝试没有成功完成。你可以重新打开支付页再试一次。",
     "cancelled_title": "支付已取消",

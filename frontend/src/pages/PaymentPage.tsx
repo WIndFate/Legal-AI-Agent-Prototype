@@ -49,7 +49,19 @@ export default function PaymentPage() {
         retryDelayMs: 700,
       });
       if (!res.ok) {
-        throw new Error(`Retry payment failed: ${res.status}`);
+        let detail = '';
+        try {
+          const body = await res.json();
+          if (typeof body.detail === 'string') {
+            detail = body.detail;
+          }
+        } catch {
+          detail = '';
+        }
+        if (res.status === 410) {
+          throw new Error(t('payment.retry_contract_missing'));
+        }
+        throw new Error(detail || t('payment.retry_failed'));
       }
       const data = await res.json();
       if (data.komoju_session_url) {
@@ -58,8 +70,12 @@ export default function PaymentPage() {
       }
       setStatus('checking');
       setPollNonce((value) => value + 1);
-    } catch {
-      setRetryError(t('payment.retry_failed'));
+    } catch (error) {
+      if (error instanceof Error && error.message) {
+        setRetryError(error.message);
+      } else {
+        setRetryError(t('payment.retry_failed'));
+      }
     } finally {
       setRetryingPayment(false);
     }
@@ -201,22 +217,21 @@ export default function PaymentPage() {
               <span>{t('order.order_id')}</span>
               <strong>{orderId}</strong>
               <p>{t('order.screenshot_hint')}</p>
-            </div>
-            <div className="payment-timeout-actions">
-              <button className="btn-share" onClick={handleCopyOrderId}>
+              <button className="payment-link-button" onClick={handleCopyOrderId}>
                 {copied ? t('order.copied') : t('order.copy_id')}
               </button>
+            </div>
+            <div className="payment-timeout-actions">
               <button className="btn-primary" onClick={handleRetryPayment} disabled={retryingPayment}>
                 {retryingPayment ? t('payment.processing') : t('payment.retry_payment')}
               </button>
               <button className="btn-share" onClick={() => { setRetryError(''); setStatus('checking'); setPollNonce((value) => value + 1); }}>
                 {t('payment.check_again')}
               </button>
-              <button className="btn-share" onClick={() => navigate('/lookup')}>
+            </div>
+            <div className="payment-meta-links">
+              <button className="payment-link-button" onClick={() => navigate('/lookup')}>
                 {t('nav.lookup')}
-              </button>
-              <button className="payment-link-button" onClick={() => navigate('/')}>
-                {t('nav.home')}
               </button>
             </div>
             {retryError && <p className="error-message">{retryError}</p>}
@@ -252,19 +267,18 @@ export default function PaymentPage() {
               <span>{t('order.order_id')}</span>
               <strong>{orderId}</strong>
               <p>{t('order.screenshot_hint')}</p>
-            </div>
-            <div className="payment-timeout-actions">
-              <button className="btn-share" onClick={handleCopyOrderId}>
+              <button className="payment-link-button" onClick={handleCopyOrderId}>
                 {copied ? t('order.copied') : t('order.copy_id')}
               </button>
+            </div>
+            <div className="payment-timeout-actions">
               <button className="btn-primary" onClick={handleRetryPayment} disabled={retryingPayment}>
                 {retryingPayment ? t('payment.processing') : t('payment.retry_payment')}
               </button>
-              <button className="btn-share" onClick={() => navigate('/lookup')}>
+            </div>
+            <div className="payment-meta-links">
+              <button className="payment-link-button" onClick={() => navigate('/lookup')}>
                 {t('nav.lookup')}
-              </button>
-              <button className="payment-link-button" onClick={() => navigate('/')}>
-                {t('nav.home')}
               </button>
             </div>
             {retryError && <p className="error-message">{retryError}</p>}
