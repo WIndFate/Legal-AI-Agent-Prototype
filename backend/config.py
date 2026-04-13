@@ -51,6 +51,9 @@ class Settings(BaseSettings):
 
     # Resend Email
     RESEND_API_KEY: str = ""
+    EMAIL_FROM_ADDRESS: str = "noreply@mail.contractguard.jp"
+    EMAIL_FROM_NAME: str = "ContractGuard"
+    EMAIL_REPLY_TO: str = "support@contractguard.jp"
 
     # Sentry
     SENTRY_DSN: str = ""

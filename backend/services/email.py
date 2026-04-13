@@ -59,8 +59,9 @@ async def send_report_email(email: str, order_id: str, language: str) -> bool:
                 "https://api.resend.com/emails",
                 headers={"Authorization": f"Bearer {settings.RESEND_API_KEY}"},
                 json={
-                    "from": "Contract Checker <noreply@contract-checker.com>",
+                    "from": f"{settings.EMAIL_FROM_NAME} <{settings.EMAIL_FROM_ADDRESS}>",
                     "to": [email],
+                    "reply_to": settings.EMAIL_REPLY_TO,
                     "subject": subject,
                     "html": (
                         f'<p><a href="{report_url}">{subject}</a></p>'
