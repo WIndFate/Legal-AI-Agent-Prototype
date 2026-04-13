@@ -73,6 +73,13 @@ def _wrap_email_shell(html_body: str, language: str) -> str:
     )
 
 
+def _build_frontend_email_url(path: str, language: str) -> str:
+    """Build a frontend deep link with a one-visit language hint."""
+    settings = get_settings()
+    normalized_path = path if path.startswith("/") else f"/{path}"
+    return f"{settings.FRONTEND_URL.rstrip('/')}{normalized_path}?{urlencode({'lang': language})}"
+
+
 async def _send_email(
     email: str,
     order_id: str,
@@ -252,8 +259,7 @@ async def send_payment_confirmation_email(
     amount_jpy: int,
 ) -> bool:
     """Send payment confirmation with review progress link."""
-    settings = get_settings()
-    review_url = f"{settings.FRONTEND_URL}/review/{order_id}?{urlencode({'lang': language})}"
+    review_url = _build_frontend_email_url(f"/review/{order_id}", language)
 
     subject = _PAYMENT_SUBJECTS.get(language, _PAYMENT_SUBJECTS["ja"])
     intro, track_label, cta_text, save_note = _PAYMENT_BODIES.get(language, _PAYMENT_BODIES["ja"])
@@ -378,7 +384,7 @@ _REPORT_ORDER_ID_LABELS = {
 async def send_report_email(email: str, order_id: str, language: str) -> bool:
     """Send report-ready notification with prominent expiration warning."""
     settings = get_settings()
-    report_url = f"{settings.FRONTEND_URL}/report/{order_id}?{urlencode({'lang': language})}"
+    report_url = _build_frontend_email_url(f"/report/{order_id}", language)
     ttl = settings.REPORT_TTL_HOURS
 
     subject = _REPORT_SUBJECTS.get(language, _REPORT_SUBJECTS["ja"])
