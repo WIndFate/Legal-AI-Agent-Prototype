@@ -296,6 +296,7 @@ async def test_create_payment_dev_bypass():
                 return_value="http://localhost:5173/review/test?dev_payment=true",
             ),
             patch("backend.routers.payment.is_dev_payment_mode", return_value=True),
+            patch("backend.routers.payment.send_payment_confirmation_email", new_callable=AsyncMock) as send_email_mock,
         ):
             transport = ASGITransport(app=app)
             async with AsyncClient(transport=transport, base_url="http://test") as client:
@@ -315,6 +316,10 @@ async def test_create_payment_dev_bypass():
         assert "order_id" in body
         # In dev bypass, commit is called multiple times (order save + payment mark)
         assert session.commit_count >= 2
+        send_email_mock.assert_awaited_once()
+        assert send_email_mock.await_args.args[0] == "dev@example.com"
+        assert send_email_mock.await_args.args[2] == "ja"
+        assert send_email_mock.await_args.args[3] == 299
     finally:
         app.dependency_overrides.pop(get_db, None)
 
@@ -446,10 +451,13 @@ async def test_webhook_payment_captured_marks_order_paid():
 
     app.dependency_overrides[get_db] = _override_db(session)
     try:
-        with patch(
-            "backend.routers.payment.verify_webhook",
-            new_callable=AsyncMock,
-            return_value=webhook_body,
+        with (
+            patch(
+                "backend.routers.payment.verify_webhook",
+                new_callable=AsyncMock,
+                return_value=webhook_body,
+            ),
+            patch("backend.routers.payment.send_payment_confirmation_email", new_callable=AsyncMock) as send_email_mock,
         ):
             transport = ASGITransport(app=app)
             async with AsyncClient(transport=transport, base_url="http://test") as client:
@@ -462,6 +470,7 @@ async def test_webhook_payment_captured_marks_order_paid():
         assert resp.json() == {"ok": True}
         assert order.payment_status == "paid"
         assert order.paid_at is not None
+        send_email_mock.assert_awaited_once_with(order.email, order_id, order.target_language, order.price_jpy)
     finally:
         app.dependency_overrides.pop(get_db, None)
 
@@ -506,10 +515,13 @@ async def test_webhook_already_paid_order_is_ignored():
 
     app.dependency_overrides[get_db] = _override_db(session)
     try:
-        with patch(
-            "backend.routers.payment.verify_webhook",
-            new_callable=AsyncMock,
-            return_value=webhook_body,
+        with (
+            patch(
+                "backend.routers.payment.verify_webhook",
+                new_callable=AsyncMock,
+                return_value=webhook_body,
+            ),
+            patch("backend.routers.payment.send_payment_confirmation_email", new_callable=AsyncMock) as send_email_mock,
         ):
             transport = ASGITransport(app=app)
             async with AsyncClient(transport=transport, base_url="http://test") as client:
@@ -521,6 +533,7 @@ async def test_webhook_already_paid_order_is_ignored():
         assert resp.status_code == 200
         # commit should not have been called because order was already paid
         assert session.commit_count == 0
+        send_email_mock.assert_not_awaited()
     finally:
         app.dependency_overrides.pop(get_db, None)
 

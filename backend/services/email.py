@@ -153,6 +153,18 @@ _PAYMENT_BODIES = {
     ),
 }
 
+_PAYMENT_META_LABELS = {
+    "ja": ("注文ID", "お支払い金額"),
+    "en": ("Order ID", "Amount"),
+    "zh-CN": ("订单号", "支付金额"),
+    "zh-TW": ("訂單號", "支付金額"),
+    "ko": ("주문 ID", "결제 금액"),
+    "vi": ("Mã đơn hàng", "Số tiền thanh toán"),
+    "pt-BR": ("ID do pedido", "Valor pago"),
+    "id": ("ID pesanan", "Jumlah pembayaran"),
+    "ne": ("अर्डर ID", "भुक्तानी रकम"),
+}
+
 
 async def send_payment_confirmation_email(
     email: str,
@@ -166,12 +178,13 @@ async def send_payment_confirmation_email(
 
     subject = _PAYMENT_SUBJECTS.get(language, _PAYMENT_SUBJECTS["ja"])
     intro, track_label, cta_text, save_note = _PAYMENT_BODIES.get(language, _PAYMENT_BODIES["ja"])
+    order_id_label, amount_label = _PAYMENT_META_LABELS.get(language, _PAYMENT_META_LABELS["ja"])
 
     html_body = (
         f'<p style="font-size:16px;font-weight:600;margin:0 0 16px;">{subject}</p>'
         f"<p>{intro}</p>"
-        f'<p style="margin:8px 0;"><strong>Order ID:</strong> <code style="background:#f5f5f5;padding:2px 6px;border-radius:3px;">{order_id}</code></p>'
-        f'<p style="margin:8px 0;"><strong>Amount:</strong> ¥{amount_jpy:,}</p>'
+        f'<p style="margin:8px 0;"><strong>{order_id_label}:</strong> <code style="background:#f5f5f5;padding:2px 6px;border-radius:3px;">{order_id}</code></p>'
+        f'<p style="margin:8px 0;"><strong>{amount_label}:</strong> ¥{amount_jpy:,}</p>'
         f"<p>{track_label}</p>"
         f'<p style="margin:16px 0;">'
         f'<a href="{review_url}" style="display:inline-block;background:#2563eb;color:#fff;'
@@ -259,6 +272,18 @@ _REPORT_EXPIRY_WARNINGS = {
     "ne": "कृपया {hours} घण्टाभित्र रिपोर्ट हेर्नुहोस् र बचत गर्नुहोस्। त्यसपछि पहुँच सम्भव हुनेछैन।",
 }
 
+_REPORT_ORDER_ID_LABELS = {
+    "ja": "注文ID",
+    "en": "Order ID",
+    "zh-CN": "订单号",
+    "zh-TW": "訂單號",
+    "ko": "주문 ID",
+    "vi": "Mã đơn hàng",
+    "pt-BR": "ID do pedido",
+    "id": "ID pesanan",
+    "ne": "अर्डर ID",
+}
+
 
 async def send_report_email(email: str, order_id: str, language: str) -> bool:
     """Send report-ready notification with prominent expiration warning."""
@@ -269,6 +294,7 @@ async def send_report_email(email: str, order_id: str, language: str) -> bool:
     subject = _REPORT_SUBJECTS.get(language, _REPORT_SUBJECTS["ja"])
     intro, cta_text, pdf_note = _REPORT_BODIES.get(language, _REPORT_BODIES["ja"])
     expiry_warning = _REPORT_EXPIRY_WARNINGS.get(language, _REPORT_EXPIRY_WARNINGS["ja"]).format(hours=ttl)
+    order_id_label = _REPORT_ORDER_ID_LABELS.get(language, _REPORT_ORDER_ID_LABELS["ja"])
 
     html_body = (
         f'<p style="font-size:16px;font-weight:600;margin:0 0 16px;">{subject}</p>'
@@ -282,7 +308,7 @@ async def send_report_email(email: str, order_id: str, language: str) -> bool:
         f'<p style="margin:0;font-weight:600;color:#92400e;">⏱ {expiry_warning}</p>'
         f"</div>"
         f'<p style="font-size:13px;color:#666;">{pdf_note}</p>'
-        f'<p style="font-size:13px;color:#666;">Order ID: '
+        f'<p style="font-size:13px;color:#666;">{order_id_label}: '
         f'<code style="background:#f5f5f5;padding:2px 6px;border-radius:3px;">{order_id}</code></p>'
     )
 
