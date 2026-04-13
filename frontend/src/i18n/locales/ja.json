@@ -81,9 +81,13 @@
     "referral_placeholder": "紹介コードを入力",
     "pay_button": "¥{{price}} で支払う",
     "processing": "処理中…",
+    "cancel_waiting": "待機をやめる",
     "secure_note": "SSL暗号化で安全にお支払い",
     "waiting_note": "決済処理中です。このページを閉じないでください。",
     "success_note": "お支払い完了。まもなく分析を開始します。",
+    "timeout_title": "支払いを確認できませんでした",
+    "timeout_desc": "まだ支払い完了を検知できていません。すでに支払い済みの場合は、少し待ってからもう一度確認してください。",
+    "check_again": "もう一度確認",
     "language_lock_title": "決済前にレポート言語をご確認ください",
     "language_lock_body": "最終レポート本文は現在選択中の {{language}} で生成されます。決済後にサイト言語を切り替えても、インターフェースだけが変わり、レポート本文は再翻訳されません。",
     "language_lock_confirm": "最終レポートが現在の言語で生成されることを確認しました"

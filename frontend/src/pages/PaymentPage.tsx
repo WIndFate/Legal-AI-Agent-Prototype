@@ -1,26 +1,49 @@
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 
 import OrderReminderDialog from '../components/common/OrderReminderDialog';
 import { fetchWithRetry } from '../lib/fetchWithRetry';
 
-type PaymentStatus = 'checking' | 'success' | 'failed' | 'pending';
+type PaymentStatus = 'checking' | 'success' | 'failed' | 'pending' | 'timeout';
+
+const PAYMENT_POLL_INTERVAL_MS = 3_000;
+const PAYMENT_POLL_TIMEOUT_MS = 5 * 60 * 1_000;
 
 export default function PaymentPage() {
   const { orderId } = useParams<{ orderId: string }>();
-  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { t } = useTranslation();
   const [status, setStatus] = useState<PaymentStatus>('checking');
   const [showOrderPrompt, setShowOrderPrompt] = useState(false);
   const [nextRoute, setNextRoute] = useState<string | null>(null);
+  const [pollNonce, setPollNonce] = useState(0);
+  const [copied, setCopied] = useState(false);
+
+  const handleCopyOrderId = async () => {
+    if (!orderId) return;
+    try {
+      await navigator.clipboard.writeText(orderId);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1800);
+    } catch {
+      setCopied(false);
+    }
+  };
 
   useEffect(() => {
     if (!orderId) return;
     let cancelled = false;
+    let pollTimer: number | undefined;
+    const pollDeadline = Date.now() + PAYMENT_POLL_TIMEOUT_MS;
 
     const checkStatus = async () => {
+      if (cancelled) return;
+      if (Date.now() >= pollDeadline) {
+        setStatus('timeout');
+        return;
+      }
+
       try {
         const statusRes = await fetchWithRetry(`/api/orders/${orderId}/status`, undefined, {
           timeoutMs: 10_000,
@@ -57,26 +80,31 @@ export default function PaymentPage() {
         // Still waiting for payment confirmation.
         setStatus('pending');
         if (!cancelled) {
-          setTimeout(checkStatus, 3000);
+          pollTimer = window.setTimeout(checkStatus, PAYMENT_POLL_INTERVAL_MS);
         }
       } catch {
-        // Retry on network error
+        if (Date.now() >= pollDeadline) {
+          setStatus('timeout');
+          return;
+        }
+
+        // Retry on transient network error until timeout.
         if (!cancelled) {
           setStatus('pending');
-          setTimeout(checkStatus, 3000);
+          pollTimer = window.setTimeout(checkStatus, PAYMENT_POLL_INTERVAL_MS);
         }
       }
     };
 
-    // KOMOJU redirects back with session_id or we arrive via direct navigation
-    const sessionId = searchParams.get('session_id');
-    if (sessionId || true) {
-      // Always check status regardless
-      checkStatus();
-    }
+    checkStatus();
 
-    return () => { cancelled = true; };
-  }, [orderId, searchParams, navigate]);
+    return () => {
+      cancelled = true;
+      if (pollTimer) {
+        window.clearTimeout(pollTimer);
+      }
+    };
+  }, [orderId, pollNonce]);
 
   return (
     <div className="page payment-page">
@@ -119,6 +147,32 @@ export default function PaymentPage() {
             <div className="spinner" />
             <p className="status-text">{t('payment.processing')}</p>
             <p className="status-subtext">{t('payment.waiting_note')}</p>
+            <button className="btn-share" onClick={() => navigate('/')}>
+              {t('payment.cancel_waiting')}
+            </button>
+          </div>
+        )}
+
+        {status === 'timeout' && (
+          <div className="error-state">
+            <p className="status-text">{t('payment.timeout_title')}</p>
+            <p className="status-subtext">{t('payment.timeout_desc')}</p>
+            <div className="order-inline-card payment-timeout-order-card">
+              <span>{t('order.order_id')}</span>
+              <strong>{orderId}</strong>
+              <p>{t('order.screenshot_hint')}</p>
+            </div>
+            <div className="payment-timeout-actions">
+              <button className="btn-share" onClick={handleCopyOrderId}>
+                {copied ? t('order.copied') : t('order.copy_id')}
+              </button>
+              <button className="btn-primary" onClick={() => { setStatus('checking'); setPollNonce((value) => value + 1); }}>
+                {t('payment.check_again')}
+              </button>
+              <button className="payment-link-button" onClick={() => navigate('/')}>
+                {t('nav.home')}
+              </button>
+            </div>
           </div>
         )}
 

@@ -412,6 +412,26 @@
   background: rgba(255, 255, 255, 0.66);
 }
 
+.payment-timeout-order-card {
+  width: 100%;
+}
+
+.payment-timeout-actions {
+  width: 100%;
+  display: grid;
+  gap: 12px;
+}
+
+.payment-link-button {
+  border: none;
+  background: transparent;
+  color: var(--brand);
+  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
+  font-size: 0.86rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
 .reconnecting-banner {
   display: inline-flex;
   align-items: center;

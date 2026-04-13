@@ -81,9 +81,13 @@
     "referral_placeholder": "請輸入推薦碼",
     "pay_button": "支付 ¥{{price}}",
     "processing": "處理中…",
+    "cancel_waiting": "取消等待",
     "secure_note": "SSL加密安全付款",
     "waiting_note": "正在處理付款，請勿關閉此頁面。",
     "success_note": "付款成功，即將開始分析。",
+    "timeout_title": "付款尚未確認",
+    "timeout_desc": "目前尚未偵測到付款完成。如果你已完成付款，請稍後再重新檢查。",
+    "check_again": "重新檢查",
     "language_lock_title": "請在付款前確認報告語言",
     "language_lock_body": "最終報告正文會以目前選擇的 {{language}} 生成。付款完成後，切換站點語言只會改變介面，不會重新翻譯報告正文。",
     "language_lock_confirm": "我已確認最終報告會以目前語言生成"

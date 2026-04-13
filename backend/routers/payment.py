@@ -30,6 +30,12 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
+WEBHOOK_PAYMENT_STATUS_MAP = {
+    "payment.failed": "failed",
+    "payment.cancelled": "cancelled",
+    "payment.expired": "cancelled",
+}
+
 
 def _validate_exact_quote_context(request: PaymentCreateRequest, quote_context: dict | None) -> None:
     if request.quote_mode != "exact":
@@ -257,6 +263,47 @@ async def payment_webhook(
                     order.email or order_id,
                     "payment_webhook_ignored",
                     {"order_id": order_id, "reason": "already_paid"},
+                )
+        else:
+            logger.warning("Payment webhook missing order_id in metadata")
+            posthog_capture("anonymous", "payment_webhook_missing_order_id", {"event_type": event_type})
+    elif event_type in WEBHOOK_PAYMENT_STATUS_MAP:
+        payment_data = event.get("data", {})
+        order_id = payment_data.get("metadata", {}).get("order_id")
+        if order_id:
+            try:
+                order_uuid = UUID(order_id)
+            except ValueError:
+                logger.warning("Payment webhook malformed order_id: order_id=%s", order_id)
+                posthog_capture("anonymous", "payment_webhook_malformed_order_id", {"order_id": order_id})
+                return {"ok": True}
+
+            result = await db.execute(select(Order).where(Order.id == order_uuid))
+            order = result.scalar_one_or_none()
+            if order is None:
+                logger.warning("Payment webhook order missing: order_id=%s", order_id)
+                posthog_capture("anonymous", "payment_webhook_order_missing", {"order_id": order_id})
+                return {"ok": True}
+
+            if order.payment_status == "paid":
+                logger.info("Payment webhook ignored: order_id=%s reason=already_paid event=%s", order_id, event_type)
+                posthog_capture(
+                    order.email or order_id,
+                    "payment_webhook_ignored",
+                    {"order_id": order_id, "reason": "already_paid", "event_type": event_type},
+                )
+                return {"ok": True}
+
+            next_status = WEBHOOK_PAYMENT_STATUS_MAP[event_type]
+            if order.payment_status != next_status:
+                order.payment_status = next_status
+                order.komoju_session_id = payment_data.get("id", "") or order.komoju_session_id
+                await db.commit()
+                logger.info("Order %s marked as %s via %s", order_id, next_status, event_type)
+                posthog_capture(
+                    order.email or order_id,
+                    "payment_status_updated",
+                    {"order_id": order_id, "status": next_status, "event_type": event_type},
                 )
         else:
             logger.warning("Payment webhook missing order_id in metadata")

@@ -538,6 +538,88 @@ async def test_webhook_already_paid_order_is_ignored():
         app.dependency_overrides.pop(get_db, None)
 
 
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("event_type", "expected_status"),
+    [
+        ("payment.failed", "failed"),
+        ("payment.cancelled", "cancelled"),
+        ("payment.expired", "cancelled"),
+    ],
+)
+async def test_webhook_terminal_events_update_payment_status(event_type: str, expected_status: str):
+    """Terminal KOMOJU payment events should map into the persisted order payment status."""
+    order = FakeOrder(payment_status="pending")
+    order_id = str(order.id)
+    session = FakeSession(query_result=order)
+
+    webhook_body = {
+        "type": event_type,
+        "data": {
+            "id": f"komoju-{event_type}",
+            "metadata": {"order_id": order_id},
+        },
+    }
+
+    app.dependency_overrides[get_db] = _override_db(session)
+    try:
+        with patch(
+            "backend.routers.payment.verify_webhook",
+            new_callable=AsyncMock,
+            return_value=webhook_body,
+        ):
+            transport = ASGITransport(app=app)
+            async with AsyncClient(transport=transport, base_url="http://test") as client:
+                resp = await client.post(
+                    "/api/payment/webhook",
+                    content=json.dumps(webhook_body).encode(),
+                    headers={"x-komoju-signature": "test-sig"},
+                )
+        assert resp.status_code == 200
+        assert order.payment_status == expected_status
+        assert order.komoju_session_id == f"komoju-{event_type}"
+        assert session.commit_count == 1
+    finally:
+        app.dependency_overrides.pop(get_db, None)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("event_type", ["payment.failed", "payment.cancelled", "payment.expired"])
+async def test_webhook_terminal_events_do_not_downgrade_paid_order(event_type: str):
+    """Once paid, later terminal webhook events should be ignored."""
+    order = FakeOrder(payment_status="paid")
+    order_id = str(order.id)
+    session = FakeSession(query_result=order)
+
+    webhook_body = {
+        "type": event_type,
+        "data": {
+            "id": f"komoju-{event_type}",
+            "metadata": {"order_id": order_id},
+        },
+    }
+
+    app.dependency_overrides[get_db] = _override_db(session)
+    try:
+        with patch(
+            "backend.routers.payment.verify_webhook",
+            new_callable=AsyncMock,
+            return_value=webhook_body,
+        ):
+            transport = ASGITransport(app=app)
+            async with AsyncClient(transport=transport, base_url="http://test") as client:
+                resp = await client.post(
+                    "/api/payment/webhook",
+                    content=json.dumps(webhook_body).encode(),
+                    headers={"x-komoju-signature": "test-sig"},
+                )
+        assert resp.status_code == 200
+        assert order.payment_status == "paid"
+        assert session.commit_count == 0
+    finally:
+        app.dependency_overrides.pop(get_db, None)
+
+
 # ---------------------------------------------------------------------------
 # GET /api/payment/status/{order_id}
 # ---------------------------------------------------------------------------

@@ -81,9 +81,13 @@
     "referral_placeholder": "请输入推荐码",
     "pay_button": "支付 ¥{{price}}",
     "processing": "处理中…",
+    "cancel_waiting": "取消等待",
     "secure_note": "SSL加密安全支付",
     "waiting_note": "正在处理支付，请勿关闭此页面。",
     "success_note": "支付成功，即将开始分析。",
+    "timeout_title": "支付未确认",
+    "timeout_desc": "暂未检测到支付完成。如果你已经完成支付，请稍后重新检查。",
+    "check_again": "重新检查",
     "language_lock_title": "请在支付前确认报告语言",
     "language_lock_body": "最终报告正文会以当前选择的 {{language}} 生成。支付完成后，切换站点语言只会改变界面，不会重新翻译报告正文。",
     "language_lock_confirm": "我已确认最终报告会按当前语言生成"
