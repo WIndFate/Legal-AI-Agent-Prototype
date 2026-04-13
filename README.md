@@ -51,7 +51,9 @@ As of 2026-04-12, the local MVP flow is working in Docker, and the production se
 - Database indexes on commonly queried columns (email, payment_status, expires_at, analysis_status)
 - CSS partially migrated to CSS Modules: layout, home, examples, legal components use scoped modules with `clsx`; report/review remain global due to cross-page sharing
 - Production infra progress: Supabase project has been created, `pgvector` is enabled, Upstash Redis is provisioned, the frontend is live at `https://contractguard.jp`, the backend API is live at `https://api.contractguard.jp`, and both frontend/backend `/api/health` checks now return 200 in the production path
+- Production email routing is now split cleanly: Google Workspace receives human replies at `support@contractguard.jp`, while Resend sends system emails from `noreply@mail.contractguard.jp` with `Reply-To: support@contractguard.jp`
 - Production secrets are now mostly configured in Fly/Vercel/KOMOJU/Resend/Sentry, including KOMOJU test keys, a webhook secret, `FRONTEND_URL`, and backend observability
+- `.env` / Fly secrets should also define `EMAIL_FROM_ADDRESS`, `EMAIL_FROM_NAME`, and `EMAIL_REPLY_TO` so report-link emails use the verified Resend subdomain and route user replies into Google Workspace support
 - Fresh-database startup migration issues on Supabase have been fixed in code: asyncpg-compatible SSL DSN handling is in place, and startup migrations now pre-create / widen `alembic_version.version_num` to 255 for new databases
 - KOMOJU checkout no longer sends a `payment_types` list when creating sessions; the checkout page now shows whatever payment methods are approved on the active merchant account, while `backend/data/komoju_payment_methods.json` is kept only as an internal reference for regional launch planning
 
