@@ -44,7 +44,7 @@
 - 不要コードのクリーンアップ完了（未使用の `analyze_risks_streaming` を削除）
 - よく使うクエリパスにデータベースインデックスを追加（email, payment_status, expires_at, analysis_status）
 - CSS を部分的に CSS Modules へ移行: layout / home / examples / legal はスコープ付きモジュール + `clsx`、report / review はページ間共有のためグローバル維持
-- 本番インフラの進捗として、Supabase プロジェクト作成と `pgvector` 有効化、Upstash Redis 作成、フロントエンドの `https://contractguard-app.vercel.app` へのデプロイまでは完了しており、本番経路の frontend / backend `/api/health` も 200 を返す状態です
+- 本番インフラの進捗として、Supabase プロジェクト作成と `pgvector` 有効化、Upstash Redis 作成、フロントエンド正式ドメイン `https://contractguard.jp` とバックエンド API 正式ドメイン `https://api.contractguard.jp` への切り替えまで完了しており、本番経路の frontend / backend `/api/health` も 200 を返す状態です
 - Fly / Vercel / KOMOJU / Resend / Sentry の主要シークレットも概ね設定済みで、KOMOJU テストキー、webhook secret、`FRONTEND_URL`、観測系設定まで入りました
 - Supabase fresh database 向けの起動 migration 問題もコード上で解消済みです。asyncpg + SSL DSN 互換を補い、新規 DB では `alembic_version.version_num` を 255 で事前作成 / 拡張するようにしています
 - KOMOJU checkout session 作成時には `payment_types` を送らない構成に変更し、checkout に表示される決済手段は merchant アカウント側で承認済みのものに一本化しました。`backend/data/komoju_payment_methods.json` は地域別の導入計画を残すための参考資料としてのみ保持しています

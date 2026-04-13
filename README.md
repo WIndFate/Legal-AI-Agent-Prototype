@@ -50,7 +50,7 @@ As of 2026-04-12, the local MVP flow is working in Docker, and the production se
 - Dead code cleanup completed (removed unused `analyze_risks_streaming`)
 - Database indexes on commonly queried columns (email, payment_status, expires_at, analysis_status)
 - CSS partially migrated to CSS Modules: layout, home, examples, legal components use scoped modules with `clsx`; report/review remain global due to cross-page sharing
-- Production infra progress: Supabase project has been created, `pgvector` is enabled, Upstash Redis is provisioned, the frontend is deployed at `https://contractguard-app.vercel.app`, and both frontend/backend `/api/health` checks now return 200 in the production path
+- Production infra progress: Supabase project has been created, `pgvector` is enabled, Upstash Redis is provisioned, the frontend is live at `https://contractguard.jp`, the backend API is live at `https://api.contractguard.jp`, and both frontend/backend `/api/health` checks now return 200 in the production path
 - Production secrets are now mostly configured in Fly/Vercel/KOMOJU/Resend/Sentry, including KOMOJU test keys, a webhook secret, `FRONTEND_URL`, and backend observability
 - Fresh-database startup migration issues on Supabase have been fixed in code: asyncpg-compatible SSL DSN handling is in place, and startup migrations now pre-create / widen `alembic_version.version_num` to 255 for new databases
 - KOMOJU checkout no longer sends a `payment_types` list when creating sessions; the checkout page now shows whatever payment methods are approved on the active merchant account, while `backend/data/komoju_payment_methods.json` is kept only as an internal reference for regional launch planning

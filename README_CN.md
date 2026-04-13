@@ -44,7 +44,7 @@
 - 死代码已清理（移除未使用的 `analyze_risks_streaming`）
 - 数据库已为常用查询路径添加索引（email、payment_status、expires_at、analysis_status）
 - CSS 部分迁移到 CSS Modules：layout、home、examples、legal 组件使用作用域模块 + `clsx`；report/review 因跨页面共享保持全局
-- 生产基础设施已有进展：Supabase 项目已创建并启用 `pgvector`，Upstash Redis 已创建，前端已部署到 `https://contractguard-app.vercel.app`，且生产链路上的前后端 `/api/health` 现在都已返回 200
+- 生产基础设施已有进展：Supabase 项目已创建并启用 `pgvector`，Upstash Redis 已创建，前端正式域名已切到 `https://contractguard.jp`，后端 API 正式域名已切到 `https://api.contractguard.jp`，且生产链路上的前后端 `/api/health` 现在都已返回 200
 - Fly / Vercel / KOMOJU / Resend / Sentry 的大部分生产密钥已经配置完成，包括 KOMOJU test keys、webhook secret、`FRONTEND_URL` 和后端观测配置
 - Supabase 全新数据库上的启动迁移问题已在代码中修复：asyncpg + SSL DSN 兼容已补齐，startup migration 也会为新库预创建 / 扩容 `alembic_version.version_num` 到 255
 - 创建 KOMOJU checkout session 时现在不再发送 `payment_types`；结账页直接展示当前 merchant 账号已审核通过的支付方式，而 `backend/data/komoju_payment_methods.json` 仅保留为区域上线参考文档
