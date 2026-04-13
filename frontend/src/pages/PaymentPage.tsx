@@ -169,6 +169,9 @@ export default function PaymentPage() {
               <button className="btn-primary" onClick={() => { setStatus('checking'); setPollNonce((value) => value + 1); }}>
                 {t('payment.check_again')}
               </button>
+              <button className="btn-share" onClick={() => navigate('/lookup')}>
+                {t('nav.lookup')}
+              </button>
               <button className="payment-link-button" onClick={() => navigate('/')}>
                 {t('nav.home')}
               </button>
@@ -196,9 +199,22 @@ export default function PaymentPage() {
         {status === 'failed' && (
           <div className="error-state">
             <p className="error-message">{t('errors.payment_failed')}</p>
-            <button className="btn-primary" onClick={() => navigate('/')}>
-              {t('nav.home')}
-            </button>
+            <div className="order-inline-card payment-timeout-order-card">
+              <span>{t('order.order_id')}</span>
+              <strong>{orderId}</strong>
+              <p>{t('order.screenshot_hint')}</p>
+            </div>
+            <div className="payment-timeout-actions">
+              <button className="btn-share" onClick={handleCopyOrderId}>
+                {copied ? t('order.copied') : t('order.copy_id')}
+              </button>
+              <button className="btn-share" onClick={() => navigate('/lookup')}>
+                {t('nav.lookup')}
+              </button>
+              <button className="btn-primary" onClick={() => navigate('/')}>
+                {t('nav.home')}
+              </button>
+            </div>
           </div>
         )}
       </div>

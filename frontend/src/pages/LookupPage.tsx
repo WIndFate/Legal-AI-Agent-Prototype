@@ -88,6 +88,12 @@ export default function LookupPage() {
         return;
       }
 
+      if (data.payment_status === 'failed' || data.payment_status === 'cancelled') {
+        setStatusText(t('order.lookup_found_payment'));
+        navigate(`/payment/${trimmed}`);
+        return;
+      }
+
       setError(t('order.lookup_not_found'));
       setErrorKind('not_found');
       setStatusText('');
