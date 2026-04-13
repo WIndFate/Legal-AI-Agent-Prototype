@@ -45,7 +45,7 @@ As of 2026-04-12, the local MVP flow is working in Docker, and the production se
 - Persistent analysis tasks now back the review flow, with status snapshots plus replayable event history before subscribing to incremental updates
 - `docker compose` now includes health checks for PostgreSQL, Redis, and the backend API so the frontend does not race a half-started backend during local boot
 - Report, payment, and lookup pages now use a lightweight timeout-aware retry wrapper for brief startup-time proxy failures and weak-network fetch errors
-- Payment status handling now has two defenses against abandoned KOMOJU checkouts: the frontend exits spinner-only polling after 5 minutes into a recoverable "payment not confirmed" state, and the backend now maps `payment.failed` / `payment.cancelled` / `payment.expired` webhooks into terminal order statuses
+- Payment status handling now has two defenses against abandoned KOMOJU checkouts: the frontend exits spinner-only polling after 5 minutes into a recoverable "payment not confirmed" state with copy-ID / lookup exits, and the backend now maps `payment.failed` / `payment.cancelled` / `payment.expired` webhooks into terminal order statuses
 - Homepage split into focused section components (Hero, Flow, Upload), and examples moved into a dedicated `/examples` gallery page
 - RAG embedding batching for reduced API calls
 - Dead code cleanup completed (removed unused `analyze_risks_streaming`)
