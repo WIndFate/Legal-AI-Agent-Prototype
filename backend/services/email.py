@@ -8,12 +8,67 @@ from backend.services.analytics import capture_exception as sentry_capture_excep
 
 logger = logging.getLogger(__name__)
 
-# Shared Japanese legal disclaimer (required on all outgoing emails)
-_DISCLAIMER_HTML = (
-    '<hr style="border:none;border-top:1px solid #e0e0e0;margin:24px 0 12px;">'
-    '<p style="font-size:12px;color:#888;line-height:1.5;">'
-    "本サービスは法律相談ではありません。具体的な法的判断は弁護士にご相談ください。</p>"
-)
+# ---------------------------------------------------------------------------
+# Shared template components
+# ---------------------------------------------------------------------------
+
+# Japanese legal disclaimer (required on all outgoing emails)
+_DISCLAIMER_JA = "本サービスは法律相談ではありません。具体的な法的判断は弁護士にご相談ください。"
+
+# Localized disclaimer translations so non-Japanese users understand the notice
+_DISCLAIMER_TRANSLATIONS = {
+    "ja": None,
+    "en": "This service does not constitute legal advice. Please consult a licensed attorney for specific legal decisions.",
+    "zh-CN": "本服务不构成法律咨询。具体法律判断请咨询律师。",
+    "zh-TW": "本服務不構成法律諮詢。具體法律判斷請諮詢律師。",
+    "ko": "본 서비스는 법률 상담이 아닙니다. 구체적인 법적 판단은 변호사와 상담하세요.",
+    "vi": "Dịch vụ này không phải là tư vấn pháp lý. Vui lòng tham khảo ý kiến luật sư.",
+    "pt-BR": "Este serviço não constitui aconselhamento jurídico. Consulte um advogado para decisões legais específicas.",
+    "id": "Layanan ini bukan merupakan nasihat hukum. Silakan konsultasikan keputusan hukum kepada pengacara.",
+    "ne": "यो सेवा कानूनी सल्लाह होइन। विशेष कानूनी निर्णयको लागि वकिलसँग परामर्श गर्नुहोस्।",
+}
+
+
+def _build_disclaimer_html(language: str) -> str:
+    """Build bilingual disclaimer: user language + Japanese original."""
+    localized = _DISCLAIMER_TRANSLATIONS.get(language)
+    lines = []
+    if localized:
+        lines.append(localized)
+    lines.append(_DISCLAIMER_JA)
+    return "<br>".join(lines)
+
+
+def _wrap_email_shell(html_body: str, language: str) -> str:
+    """Wrap email body in branded card layout with disclaimer footer."""
+    disclaimer = _build_disclaimer_html(language)
+    return (
+        # Gray background container
+        '<div style="background:#f7f7f8;padding:32px 16px;font-family:-apple-system,BlinkMacSystemFont,'
+        "'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;\">"
+        # White card with blue top border
+        '<div style="max-width:560px;margin:0 auto;background:#ffffff;'
+        'border-radius:8px;border-top:4px solid #2563eb;overflow:hidden;">'
+        # Brand header
+        '<div style="padding:24px 32px 0;">'
+        '<p style="margin:0;font-size:20px;font-weight:700;color:#2563eb;">'
+        "\U0001f6e1 ContractGuard</p>"
+        "</div>"
+        # Body content
+        '<div style="padding:16px 32px 24px;color:#222;font-size:15px;line-height:1.6;">'
+        f"{html_body}"
+        "</div>"
+        # Disclaimer footer inside card
+        '<div style="padding:16px 32px 20px;border-top:1px solid #e5e7eb;'
+        'font-size:12px;color:#888;line-height:1.5;">'
+        f"{disclaimer}"
+        "</div>"
+        "</div>"
+        # Copyright outside card
+        '<p style="text-align:center;font-size:11px;color:#aaa;margin:16px 0 0;">'
+        "\u00a9 2026 ContractGuard</p>"
+        "</div>"
+    )
 
 
 async def _send_email(
@@ -37,12 +92,7 @@ async def _send_email(
         )
         return False
 
-    full_html = (
-        '<div style="font-family:sans-serif;max-width:560px;margin:0 auto;color:#222;">'
-        f"{html_body}"
-        f"{_DISCLAIMER_HTML}"
-        "</div>"
-    )
+    full_html = _wrap_email_shell(html_body, language)
 
     try:
         logger.info("Sending %s: order_id=%s email=%s language=%s", event_prefix, order_id, email, language)
@@ -78,6 +128,20 @@ async def _send_email(
             tags={"component": "email", "event": event_prefix, "order_id": order_id, "language": language},
         )
         return False
+
+
+# ---------------------------------------------------------------------------
+# Shared HTML helpers
+# ---------------------------------------------------------------------------
+
+_META_CARD_STYLE = (
+    "background:#f9fafb;border:1px solid #e5e7eb;border-radius:6px;padding:12px 16px;margin:16px 0;"
+)
+
+_CTA_BUTTON_STYLE = (
+    "display:inline-block;background:#2563eb;color:#ffffff;"
+    "padding:12px 28px;border-radius:6px;text-decoration:none;font-weight:600;font-size:15px;"
+)
 
 
 # ---------------------------------------------------------------------------
@@ -165,6 +229,19 @@ _PAYMENT_META_LABELS = {
     "ne": ("अर्डर ID", "भुक्तानी रकम"),
 }
 
+# Expectation-setting note: "analysis completes in minutes, report email follows"
+_PAYMENT_FOLLOWUP_NOTES = {
+    "ja": "分析は通常数分で完了します。完了後に報告書メールをお送りします。",
+    "en": "Analysis usually completes within minutes. We'll send another email when your report is ready.",
+    "zh-CN": "分析通常在几分钟内完成，完成后将发送报告邮件通知。",
+    "zh-TW": "分析通常在幾分鐘內完成，完成後將發送報告郵件通知。",
+    "ko": "분석은 보통 몇 분 내에 완료됩니다. 보고서가 준비되면 별도 이메일을 보내드립니다.",
+    "vi": "Phân tích thường hoàn tất trong vài phút. Chúng tôi sẽ gửi email khác khi báo cáo sẵn sàng.",
+    "pt-BR": "A análise geralmente é concluída em minutos. Enviaremos outro e-mail quando o relatório estiver pronto.",
+    "id": "Analisis biasanya selesai dalam beberapa menit. Kami akan mengirim email lagi saat laporan siap.",
+    "ne": "विश्लेषण सामान्यतया केही मिनेटमा पूरा हुन्छ। रिपोर्ट तयार भएपछि अर्को इमेल पठाइनेछ।",
+}
+
 
 async def send_payment_confirmation_email(
     email: str,
@@ -174,23 +251,34 @@ async def send_payment_confirmation_email(
 ) -> bool:
     """Send payment confirmation with review progress link."""
     settings = get_settings()
-    review_url = f"{settings.FRONTEND_URL}/review/{order_id}"
+    review_url = f"{settings.FRONTEND_URL}/review/{order_id}?lang={language}"
 
     subject = _PAYMENT_SUBJECTS.get(language, _PAYMENT_SUBJECTS["ja"])
     intro, track_label, cta_text, save_note = _PAYMENT_BODIES.get(language, _PAYMENT_BODIES["ja"])
     order_id_label, amount_label = _PAYMENT_META_LABELS.get(language, _PAYMENT_META_LABELS["ja"])
+    followup_note = _PAYMENT_FOLLOWUP_NOTES.get(language, _PAYMENT_FOLLOWUP_NOTES["ja"])
 
     html_body = (
-        f'<p style="font-size:16px;font-weight:600;margin:0 0 16px;">{subject}</p>'
+        # Title
+        f'<p style="font-size:17px;font-weight:600;margin:0 0 12px;color:#111;">{subject}</p>'
         f"<p>{intro}</p>"
-        f'<p style="margin:8px 0;"><strong>{order_id_label}:</strong> <code style="background:#f5f5f5;padding:2px 6px;border-radius:3px;">{order_id}</code></p>'
-        f'<p style="margin:8px 0;"><strong>{amount_label}:</strong> ¥{amount_jpy:,}</p>'
+        # Order info card
+        f'<div style="{_META_CARD_STYLE}">'
+        f'<p style="margin:0 0 6px;"><strong>{order_id_label}:</strong> '
+        f'<code style="background:#eef2ff;padding:2px 6px;border-radius:3px;font-size:13px;">{order_id}</code></p>'
+        f'<p style="margin:0;"><strong>{amount_label}:</strong> \u00a5{amount_jpy:,}</p>'
+        f"</div>"
+        # Track label + CTA
         f"<p>{track_label}</p>"
         f'<p style="margin:16px 0;">'
-        f'<a href="{review_url}" style="display:inline-block;background:#2563eb;color:#fff;'
-        f'padding:10px 24px;border-radius:6px;text-decoration:none;font-weight:600;">'
+        f'<a href="{review_url}" style="{_CTA_BUTTON_STYLE}">'
         f"{cta_text}</a></p>"
-        f'<p style="font-size:13px;color:#666;">{save_note}</p>'
+        # Followup expectation note
+        f'<p style="font-size:13px;color:#666;margin:12px 0 4px;">'
+        f"\u2139\ufe0f {followup_note}</p>"
+        # Save reminder
+        f'<p style="font-size:13px;color:#666;">'
+        f"\U0001f4be {save_note}</p>"
     )
 
     return await _send_email(email, order_id, language, subject, html_body, event_prefix="payment_confirmation_email")
@@ -288,7 +376,7 @@ _REPORT_ORDER_ID_LABELS = {
 async def send_report_email(email: str, order_id: str, language: str) -> bool:
     """Send report-ready notification with prominent expiration warning."""
     settings = get_settings()
-    report_url = f"{settings.FRONTEND_URL}/report/{order_id}"
+    report_url = f"{settings.FRONTEND_URL}/report/{order_id}?lang={language}"
     ttl = settings.REPORT_TTL_HOURS
 
     subject = _REPORT_SUBJECTS.get(language, _REPORT_SUBJECTS["ja"])
@@ -297,19 +385,25 @@ async def send_report_email(email: str, order_id: str, language: str) -> bool:
     order_id_label = _REPORT_ORDER_ID_LABELS.get(language, _REPORT_ORDER_ID_LABELS["ja"])
 
     html_body = (
-        f'<p style="font-size:16px;font-weight:600;margin:0 0 16px;">{subject}</p>'
+        # Title
+        f'<p style="font-size:17px;font-weight:600;margin:0 0 12px;color:#111;">{subject}</p>'
         f"<p>{intro}</p>"
-        f'<p style="margin:16px 0;">'
-        f'<a href="{report_url}" style="display:inline-block;background:#2563eb;color:#fff;'
-        f'padding:10px 24px;border-radius:6px;text-decoration:none;font-weight:600;">'
-        f"{cta_text}</a></p>"
-        f'<div style="background:#fef3c7;border-left:4px solid #f59e0b;padding:10px 14px;'
+        # Expiry warning BEFORE CTA — urgency first, then action
+        f'<div style="background:#fef3c7;border-left:4px solid #f59e0b;padding:12px 14px;'
         f'border-radius:4px;margin:16px 0;">'
-        f'<p style="margin:0;font-weight:600;color:#92400e;">⏱ {expiry_warning}</p>'
+        f'<p style="margin:0;font-weight:600;color:#78350f;">\u23f1 {expiry_warning}</p>'
         f"</div>"
+        # CTA button
+        f'<p style="margin:16px 0;">'
+        f'<a href="{report_url}" style="{_CTA_BUTTON_STYLE}">'
+        f"{cta_text}</a></p>"
+        # PDF note
         f'<p style="font-size:13px;color:#666;">{pdf_note}</p>'
-        f'<p style="font-size:13px;color:#666;">{order_id_label}: '
-        f'<code style="background:#f5f5f5;padding:2px 6px;border-radius:3px;">{order_id}</code></p>'
+        # Order ID card
+        f'<div style="{_META_CARD_STYLE}">'
+        f'<p style="margin:0;font-size:13px;"><strong>{order_id_label}:</strong> '
+        f'<code style="background:#eef2ff;padding:2px 6px;border-radius:3px;font-size:13px;">{order_id}</code></p>'
+        f"</div>"
     )
 
     return await _send_email(email, order_id, language, subject, html_body, event_prefix="report_email")
