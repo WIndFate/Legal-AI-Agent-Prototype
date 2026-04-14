@@ -12,7 +12,7 @@ As of 2026-04-12, the local MVP flow is working in Docker, and the production se
 - Text and text-layer PDFs are quoted before payment from extracted text; image/scanned PDF uploads now also run Vision OCR during `/api/upload`, so all successful uploads share the same exact-quote path.
 - Exact text / text-layer PDF quotes now also return a lightweight clause-structure preview so users can confirm we parsed the contract before paying
 - Exact quote previews now generate a `quote_token`, cache the clause preview by normalized content hash, and reuse that cached preview/cost snapshot when the same contract is uploaded again
-- All exact quotes now also return `is_contract`; if the upload is judged to be non-contract material, the homepage blocks payment UI and `/api/payment/create` rejects the payment request server-side before any order is created.
+- All exact quotes now also return `is_contract`; this contract check runs for any non-empty extracted text, while clause previews are returned only when the text is long enough to infer structure. If the upload is judged to be non-contract material, the homepage blocks payment UI and `/api/payment/create` rejects the payment request server-side before any order is created.
 - Uploads and preview generation now both have Redis-backed per-IP rate limits so repeated anonymous/scripted requests cannot burn unbounded preview cost
 - `pgvector` RAG is running in PostgreSQL with 331+ law articles across 10 legal categories (rental, labor, part-time, business outsourcing, sales, etc.)
 - 9-language frontend with professional branding (ContractGuard), privacy/terms pages, and a dedicated examples gallery with report-style samples

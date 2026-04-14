@@ -73,7 +73,7 @@ Current status as of 2026-04-12:
 - Text/text-layer PDFs and image/scanned PDFs now all converge on one exact-quote flow; image/scanned uploads run Vision OCR during `/api/upload` instead of deferring formal OCR until after payment.
 - Exact text and text-layer PDF quotes now also include a lightweight clause-preview extraction so users can confirm the contract structure before they pay.
 - Exact quote previews now generate a `quote_token`, cache clause previews by normalized content hash, and reuse those cached previews/cost snapshots when the same contract is uploaded again.
-- All exact uploads now also return `is_contract`. Homepage payment UI is blocked when `is_contract == false`, and `/api/payment/create` enforces the exact-quote check via `quote_token` + content-hash validation before any order is created.
+- All exact uploads now also return `is_contract`. That contract check now runs for any non-empty extracted text, even when the text is too short to produce a clause preview. Homepage payment UI is blocked when `is_contract == false`, and `/api/payment/create` enforces the exact-quote check via `quote_token` + content-hash validation before any order is created.
 - Upload and preview generation are now both protected by Redis-backed per-IP rate limits so anonymous/scripted traffic cannot burn unbounded pre-payment preview cost.
 - Deployment configs ready: `fly.toml` (Fly app `contractguard-prod`, NRT, force_https) + `vercel.json` (API proxy, security headers) + Alembic migration chain through `009`.
 - `frontend/index.html` now includes static OG / Twitter metadata, and `frontend/public/og-image.svg` provides a lightweight branded social preview image.
