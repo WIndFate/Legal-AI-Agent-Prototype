@@ -11,8 +11,8 @@ def _fake_order(**overrides):
     payload = {
         "id": "order-123",
         "input_type": "pdf",
-        "quote_mode": "estimated_pre_ocr",
-        "estimate_source": "local_ocr",
+        "quote_mode": "exact",
+        "estimate_source": "vision_ocr",
         "target_language": "zh-CN",
         "estimated_tokens": 8000,
         "page_estimate": 6,
@@ -35,7 +35,7 @@ def test_build_order_cost_estimate_snapshot_includes_model_plan_and_breakdown():
     assert snapshot["predicted_total_cost_jpy"] > 0
     assert snapshot["predicted_clause_count"] > 0
     assert snapshot["model_plan"]["analysis_model"]
-    assert "ocr_formal" in snapshot["predicted_cost_breakdown"]
+    assert "ocr_formal" not in snapshot["predicted_cost_breakdown"]
     assert snapshot["predicted_cost_breakdown"]["analyze_clause"]["calls"] == snapshot["predicted_clause_count"]
 
 
@@ -46,6 +46,12 @@ def test_build_order_cost_estimate_snapshot_includes_prepayment_preview_cost():
         order,
         prepayment_quote={
             "prepayment_snapshot": {
+                "ocr_model": "gpt-4o",
+                "ocr_input_tokens": 2400,
+                "ocr_output_tokens": 900,
+                "ocr_cost_usd": 0.00625,
+                "ocr_cost_jpy": 0.938,
+                "ocr_succeeded": True,
                 "preview_model": "gpt-4o-mini",
                 "preview_input_tokens": 1200,
                 "preview_output_tokens": 180,
@@ -59,6 +65,7 @@ def test_build_order_cost_estimate_snapshot_includes_prepayment_preview_cost():
     )
 
     assert snapshot["prepayment_snapshot"]["content_hash"] == "hash-123"
+    assert snapshot["predicted_cost_breakdown"]["ocr_quote"]["estimated_cost_jpy"] == 0.938
     assert snapshot["predicted_cost_breakdown"]["parse_contract_preview"]["estimated_cost_jpy"] == 0.043
     assert snapshot["predicted_total_cost_jpy"] > snapshot["predicted_runtime_cost_jpy"]
 
@@ -115,6 +122,12 @@ def test_build_actual_and_comparison_snapshots_capture_model_breakdown():
         order,
         prepayment_quote={
             "prepayment_snapshot": {
+                "ocr_model": "gpt-4o",
+                "ocr_input_tokens": 2400,
+                "ocr_output_tokens": 900,
+                "ocr_cost_usd": 0.00625,
+                "ocr_cost_jpy": 0.938,
+                "ocr_succeeded": True,
                 "preview_model": "gpt-4o-mini",
                 "preview_input_tokens": 1200,
                 "preview_output_tokens": 180,
@@ -128,8 +141,9 @@ def test_build_actual_and_comparison_snapshots_capture_model_breakdown():
     comparison_snapshot = build_order_cost_comparison_snapshot(estimate_snapshot, actual_snapshot)
 
     assert actual_snapshot is not None
-    assert actual_snapshot["actual_model_breakdown"]["gpt-4o"]["calls"] == 3
+    assert actual_snapshot["actual_model_breakdown"]["gpt-4o"]["calls"] == 4
     assert actual_snapshot["actual_model_breakdown"]["gpt-4o-mini"]["calls"] == 3
+    assert actual_snapshot["actual_cost_breakdown"]["ocr_quote"]["cost_jpy"] == 0.938
     assert actual_snapshot["actual_cost_breakdown"]["parse_contract_preview"]["cost_jpy"] == 0.043
     assert actual_snapshot["actual_total_cost_jpy"] > actual_snapshot["actual_runtime_cost_jpy"]
     assert actual_snapshot["model_plan"]["analysis_model"] == "gpt-4o"

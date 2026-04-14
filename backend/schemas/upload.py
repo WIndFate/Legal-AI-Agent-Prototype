@@ -20,9 +20,6 @@ class UploadResponse(BaseModel):
     quote_mode: str = "exact"
     estimate_source: str = "raw_text"
     quote_token: str | None = None
-    ocr_required: bool = False
-    ocr_confidence: str | None = None
-    ocr_warnings: list[str] = []
     clause_preview: list[ClausePreviewItem] | None = None
     clause_count: int | None = None
     is_contract: bool | None = None

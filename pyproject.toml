@@ -34,10 +34,6 @@ dev = [
     "pytest>=8.0.0",
     "pytest-asyncio>=0.24.0",
 ]
-local-ocr = [
-    "paddleocr>=2.8.1",
-    "paddlepaddle>=2.6.1",
-]
 
 [build-system]
 requires = ["setuptools>=68.0"]

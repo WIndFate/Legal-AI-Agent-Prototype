@@ -128,6 +128,12 @@ async def test_create_payment_happy_path():
                 return_value="https://komoju.com/sessions/test123",
             ),
             patch("backend.routers.payment.is_dev_payment_mode", return_value=False),
+            patch(
+                "backend.routers.payment.load_quote_context",
+                new_callable=AsyncMock,
+                return_value={"content_hash": "hash-text-123", "is_contract": True},
+            ),
+            patch("backend.routers.payment.build_contract_content_hash", return_value="hash-text-123"),
         ):
             transport = ASGITransport(app=app)
             async with AsyncClient(transport=transport, base_url="http://test") as client:
@@ -139,8 +145,8 @@ async def test_create_payment_happy_path():
                         "input_type": "text",
                         "estimated_tokens": 50,
                         "price_jpy": 299,
-                        "quote_mode": "estimated_pre_ocr",
-                        "upload_token": "tok-image-upload",
+                        "quote_mode": "exact",
+                        "quote_token": "quote-test-token",
                         "target_language": "zh-CN",
                     },
                 )
@@ -172,8 +178,13 @@ async def test_create_payment_includes_quote_context_in_estimate_snapshot():
             patch(
                 "backend.routers.payment.load_quote_context",
                 new_callable=AsyncMock,
-                return_value={"prepayment_snapshot": {"preview_cost_jpy": 0.043}},
+                return_value={
+                    "content_hash": "hash-text-234",
+                    "is_contract": True,
+                    "prepayment_snapshot": {"preview_cost_jpy": 0.043},
+                },
             ),
+            patch("backend.routers.payment.build_contract_content_hash", return_value="hash-text-234"),
             patch("backend.routers.payment.build_order_cost_estimate_snapshot") as build_snapshot,
         ):
             build_snapshot.return_value = {"estimate_version": "v1"}
@@ -289,8 +300,8 @@ async def test_create_payment_rejects_non_contract_exact_quote():
 
 
 @pytest.mark.asyncio
-async def test_create_payment_rejects_non_contract_pre_ocr_upload():
-    """High-confidence pre-OCR uploads flagged as non-contract must be blocked even without quote_token."""
+async def test_create_payment_rejects_non_contract_image_exact_quote():
+    """Image uploads OCR'd at upload time must still be blocked server-side when flagged non-contract."""
     session = FakeSession()
 
     app.dependency_overrides[get_db] = _override_db(session)
@@ -303,10 +314,15 @@ async def test_create_payment_rejects_non_contract_pre_ocr_upload():
             ),
             patch("backend.routers.payment.is_dev_payment_mode", return_value=False),
             patch(
-                "backend.routers.payment.load_upload_quote_context",
+                "backend.routers.payment.load_quote_context",
                 new_callable=AsyncMock,
-                return_value={"is_contract": False, "source": "local_ocr_preview"},
+                return_value={
+                    "content_hash": "hash-image-123",
+                    "is_contract": False,
+                    "prepayment_snapshot": {"ocr_cost_jpy": 0.75},
+                },
             ),
+            patch("backend.routers.payment.build_contract_content_hash", return_value="hash-image-123"),
         ):
             transport = ASGITransport(app=app)
             async with AsyncClient(transport=transport, base_url="http://test") as client:
@@ -314,13 +330,13 @@ async def test_create_payment_rejects_non_contract_pre_ocr_upload():
                     "/api/payment/create",
                     json={
                         "email": "user@example.com",
-                        "contract_text": "",
+                        "contract_text": "これは会議メモです。",
                         "input_type": "image",
                         "estimated_tokens": 50,
                         "price_jpy": 299,
                         "target_language": "zh-CN",
-                        "quote_mode": "estimated_pre_ocr",
-                        "upload_token": "tok-image-upload",
+                        "quote_mode": "exact",
+                        "quote_token": "quote-test-token",
                     },
                 )
         assert resp.status_code == 409
@@ -331,8 +347,8 @@ async def test_create_payment_rejects_non_contract_pre_ocr_upload():
 
 
 @pytest.mark.asyncio
-async def test_create_payment_allows_pre_ocr_upload_without_preview_context():
-    """Low-confidence or rate-limited staged uploads should still be allowed through to post-payment OCR."""
+async def test_create_payment_allows_image_exact_quote_with_contract_context():
+    """Image uploads that passed upload-time OCR should create payments like any other exact quote."""
     session = FakeSession()
 
     app.dependency_overrides[get_db] = _override_db(session)
@@ -344,6 +360,16 @@ async def test_create_payment_allows_pre_ocr_upload_without_preview_context():
                 return_value="https://komoju.com/sessions/test123",
             ),
             patch("backend.routers.payment.is_dev_payment_mode", return_value=False),
+            patch(
+                "backend.routers.payment.load_quote_context",
+                new_callable=AsyncMock,
+                return_value={
+                    "content_hash": "hash-image-456",
+                    "is_contract": True,
+                    "prepayment_snapshot": {"ocr_cost_jpy": 0.75},
+                },
+            ),
+            patch("backend.routers.payment.build_contract_content_hash", return_value="hash-image-456"),
         ):
             transport = ASGITransport(app=app)
             async with AsyncClient(transport=transport, base_url="http://test") as client:
@@ -351,13 +377,13 @@ async def test_create_payment_allows_pre_ocr_upload_without_preview_context():
                     "/api/payment/create",
                     json={
                         "email": "user@example.com",
-                        "contract_text": "",
+                        "contract_text": "第1条 テスト契約",
                         "input_type": "image",
                         "estimated_tokens": 50,
                         "price_jpy": 299,
                         "target_language": "zh-CN",
-                        "quote_mode": "estimated_pre_ocr",
-                        "upload_token": "tok-image-upload",
+                        "quote_mode": "exact",
+                        "quote_token": "quote-test-token",
                     },
                 )
         assert resp.status_code == 200
@@ -380,6 +406,12 @@ async def test_create_payment_dev_bypass():
                 return_value="http://localhost:5173/review/test?dev_payment=true",
             ),
             patch("backend.routers.payment.is_dev_payment_mode", return_value=True),
+            patch(
+                "backend.routers.payment.load_quote_context",
+                new_callable=AsyncMock,
+                return_value={"content_hash": "hash-dev-123", "is_contract": True},
+            ),
+            patch("backend.routers.payment.build_contract_content_hash", return_value="hash-dev-123"),
             patch("backend.routers.payment.send_payment_confirmation_email", new_callable=AsyncMock) as send_email_mock,
         ):
             transport = ASGITransport(app=app)
@@ -392,8 +424,8 @@ async def test_create_payment_dev_bypass():
                         "input_type": "text",
                         "estimated_tokens": 10,
                         "price_jpy": 299,
-                        "quote_mode": "estimated_pre_ocr",
-                        "upload_token": "tok-dev-upload",
+                        "quote_mode": "exact",
+                        "quote_token": "quote-dev-token",
                     },
                 )
         assert resp.status_code == 200
@@ -420,6 +452,12 @@ async def test_create_payment_prefers_request_origin_for_frontend_base_url():
         with (
             patch("backend.routers.payment.create_payment_session", new=create_session_mock),
             patch("backend.routers.payment.is_dev_payment_mode", return_value=True),
+            patch(
+                "backend.routers.payment.load_quote_context",
+                new_callable=AsyncMock,
+                return_value={"content_hash": "hash-dev-234", "is_contract": True},
+            ),
+            patch("backend.routers.payment.build_contract_content_hash", return_value="hash-dev-234"),
         ):
             transport = ASGITransport(app=app)
             async with AsyncClient(transport=transport, base_url="http://test") as client:
@@ -432,8 +470,8 @@ async def test_create_payment_prefers_request_origin_for_frontend_base_url():
                         "input_type": "text",
                         "estimated_tokens": 10,
                         "price_jpy": 299,
-                        "quote_mode": "estimated_pre_ocr",
-                        "upload_token": "tok-lan-upload",
+                        "quote_mode": "exact",
+                        "quote_token": "quote-lan-token",
                     },
                 )
         assert resp.status_code == 200
@@ -453,6 +491,12 @@ async def test_create_payment_ignores_internal_backend_host_for_frontend_base_ur
         with (
             patch("backend.routers.payment.create_payment_session", new=create_session_mock),
             patch("backend.routers.payment.is_dev_payment_mode", return_value=True),
+            patch(
+                "backend.routers.payment.load_quote_context",
+                new_callable=AsyncMock,
+                return_value={"content_hash": "hash-dev-345", "is_contract": True},
+            ),
+            patch("backend.routers.payment.build_contract_content_hash", return_value="hash-dev-345"),
         ):
             transport = ASGITransport(app=app)
             async with AsyncClient(transport=transport, base_url="http://test") as client:
@@ -465,8 +509,8 @@ async def test_create_payment_ignores_internal_backend_host_for_frontend_base_ur
                         "input_type": "text",
                         "estimated_tokens": 10,
                         "price_jpy": 299,
-                        "quote_mode": "estimated_pre_ocr",
-                        "upload_token": "tok-backend-upload",
+                        "quote_mode": "exact",
+                        "quote_token": "quote-backend-token",
                     },
                 )
         assert resp.status_code == 200

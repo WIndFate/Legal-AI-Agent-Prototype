@@ -8,7 +8,6 @@ from httpx import ASGITransport, AsyncClient
 from fastapi import FastAPI
 
 from backend.routers.upload import router
-from backend.services.local_ocr import LocalOcrEstimate
 
 app = FastAPI()
 app.include_router(router)
@@ -73,7 +72,6 @@ async def test_upload_text_returns_pricing():
     body = resp.json()
     assert body["quote_mode"] == "exact"
     assert body["estimate_source"] == "raw_text"
-    assert body["ocr_required"] is False
     assert body["estimated_tokens"] > 0
     assert body["price_jpy"] > 0
     # Contract text should be echoed back for exact-mode quotes
@@ -154,19 +152,27 @@ async def test_upload_text_detects_pii():
     assert any(w["type"] == "phone" for w in body["pii_warnings"])
 
 
-# -- Image upload path (mocked staging) --------------------------------------
+# -- Image upload path (Vision OCR) -----------------------------------------
 
 
 @pytest.mark.asyncio
-async def test_upload_image_stages_file_and_requires_ocr():
-    """Image upload should stage the file and return ocr_required=True."""
+async def test_upload_image_uses_vision_ocr_and_returns_exact_quote():
+    """Image upload should use Vision OCR to extract text and return exact quote."""
     fake_image_bytes = b"\x89PNG\r\n\x1a\n" + b"\x00" * 100
+    ocr_text = "第1条（目的）本契約は業務委託について定める。第2条 委託料は月額10万円とする。"
 
     with (
-        patch("backend.routers.upload.stage_temp_upload", return_value="tok-abc123"),
         patch(
-            "backend.routers.upload.estimate_text_with_local_ocr",
-            return_value=LocalOcrEstimate(text="", provider="disabled"),
+            "backend.routers.upload.extract_text_from_image_with_snapshot",
+            new_callable=AsyncMock,
+            return_value=(
+                ocr_text,
+                {"ocr_model": "gpt-4o", "ocr_input_tokens": 1200, "ocr_output_tokens": 400, "ocr_cost_jpy": 0.75, "ocr_cost_usd": 0.005, "ocr_succeeded": True},
+            ),
+        ),
+        patch(
+            "backend.routers.upload._extract_clause_preview",
+            return_value=([{"number": "第1条", "title": "目的"}], 1, {"preview_succeeded": True}, True),
         ),
     ):
         transport = ASGITransport(app=app)
@@ -178,11 +184,70 @@ async def test_upload_image_stages_file_and_requires_ocr():
             )
     assert resp.status_code == 200
     body = resp.json()
-    assert body["ocr_required"] is True
-    assert body["ocr_confidence"] is None
-    assert body["ocr_warnings"] == ["upload.ocr_post_payment_notice"]
-    assert body["quote_mode"] == "estimated_pre_ocr"
-    assert body["upload_token"] == "tok-abc123"
+    assert body["quote_mode"] == "exact"
+    assert body["estimate_source"] == "vision_ocr"
+    assert body["estimated_tokens"] > 0
+    assert body["price_jpy"] > 0
+    assert body["contract_text"] == ocr_text
+    assert body["is_contract"] is True
+    assert body["clause_preview"][0]["number"] == "第1条"
+    assert body["quote_token"] == "quote-test-token"
+
+
+@pytest.mark.asyncio
+async def test_upload_image_non_contract_sets_is_contract_false():
+    """Non-contract images should be detected before payment."""
+    fake_image_bytes = b"\x89PNG\r\n\x1a\n" + b"\x00" * 100
+
+    with (
+        patch(
+            "backend.routers.upload.extract_text_from_image_with_snapshot",
+            new_callable=AsyncMock,
+            return_value=(
+                "これは会議メモです。契約条件は含まれていません。",
+                {"ocr_model": "gpt-4o", "ocr_input_tokens": 900, "ocr_output_tokens": 120, "ocr_cost_jpy": 0.42, "ocr_cost_usd": 0.0028, "ocr_succeeded": True},
+            ),
+        ),
+        patch(
+            "backend.routers.upload._extract_clause_preview",
+            return_value=(None, None, {"preview_succeeded": True}, False),
+        ),
+    ):
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            resp = await client.post(
+                "/api/upload",
+                data={"input_type": "image"},
+                files={"file": ("memo.png", io.BytesIO(fake_image_bytes), "image/png")},
+            )
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["quote_mode"] == "exact"
+    assert body["is_contract"] is False
+    assert body["price_jpy"] > 0
+
+
+@pytest.mark.asyncio
+async def test_upload_image_empty_ocr_returns_zero_price():
+    """Image that yields no OCR text should return zero-price response."""
+    fake_image_bytes = b"\x89PNG\r\n\x1a\n" + b"\x00" * 100
+
+    with patch(
+        "backend.routers.upload.extract_text_from_image_with_snapshot",
+        new_callable=AsyncMock,
+        return_value=("", {"ocr_model": "gpt-4o", "ocr_input_tokens": 500, "ocr_output_tokens": 0, "ocr_cost_jpy": 0.15, "ocr_cost_usd": 0.001, "ocr_succeeded": True}),
+    ):
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            resp = await client.post(
+                "/api/upload",
+                data={"input_type": "image"},
+                files={"file": ("blank.png", io.BytesIO(fake_image_bytes), "image/png")},
+            )
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["price_jpy"] == 0
+    assert body["estimated_tokens"] == 0
 
 
 # -- PDF text-layer extraction path ------------------------------------------
@@ -216,15 +281,15 @@ async def test_upload_pdf_with_text_layer_uses_exact_quote():
     body = resp.json()
     assert body["quote_mode"] == "exact"
     assert body["estimate_source"] == "pdf_text_layer"
-    assert body["ocr_required"] is False
     assert body["estimated_tokens"] > 0
     assert body["quote_token"] == "quote-test-token"
 
 
 @pytest.mark.asyncio
-async def test_upload_pdf_scanned_stages_for_ocr():
-    """Scanned PDF without text layer should stage for OCR."""
+async def test_upload_scanned_pdf_uses_vision_ocr():
+    """Scanned PDF without text layer should use Vision OCR and return exact quote."""
     fake_pdf = b"%PDF-1.4 scanned"
+    ocr_text = "第1条 テスト契約 第2条 契約期間は1年とする。"
     page_count = 3
 
     with (
@@ -236,10 +301,13 @@ async def test_upload_pdf_scanned_stages_for_ocr():
             "backend.routers.upload.pdf_text_layer_is_sufficient",
             return_value=False,
         ),
-        patch("backend.routers.upload.stage_temp_upload", return_value="tok-pdf456"),
         patch(
-            "backend.routers.upload.estimate_text_with_local_ocr",
-            return_value=LocalOcrEstimate(text="", provider="disabled"),
+            "backend.routers.upload.extract_text_from_pdf_with_snapshot",
+            new_callable=AsyncMock,
+            return_value=(
+                ocr_text,
+                {"ocr_model": "gpt-4o", "ocr_input_tokens": 1800, "ocr_output_tokens": 700, "ocr_cost_jpy": 1.12, "ocr_cost_usd": 0.0075, "ocr_succeeded": True},
+            ),
         ),
     ):
         transport = ASGITransport(app=app)
@@ -251,153 +319,15 @@ async def test_upload_pdf_scanned_stages_for_ocr():
             )
     assert resp.status_code == 200
     body = resp.json()
-    assert body["ocr_required"] is True
-    assert body["ocr_confidence"] is None
-    assert body["ocr_warnings"] == ["upload.ocr_post_payment_notice"]
-    assert body["quote_mode"] == "estimated_pre_ocr"
-    assert body["upload_token"] == "tok-pdf456"
-    assert body["quote_token"] is None
-
-
-@pytest.mark.asyncio
-async def test_upload_image_with_low_quality_local_ocr_returns_warning():
-    """Low-density OCR text should surface a low-confidence warning."""
-    fake_image_bytes = b"\x89PNG\r\n\x1a\n" + b"\x00" * 100
-
-    with (
-        patch("backend.routers.upload.stage_temp_upload", return_value="tok-lowocr"),
-        patch(
-            "backend.routers.upload.estimate_text_with_local_ocr",
-            return_value=LocalOcrEstimate(text="abc 123", provider="paddleocr"),
-        ),
-    ):
-        transport = ASGITransport(app=app)
-        async with AsyncClient(transport=transport, base_url="http://test") as client:
-            resp = await client.post(
-                "/api/upload",
-                data={"input_type": "image"},
-                files={"file": ("contract.png", io.BytesIO(fake_image_bytes), "image/png")},
-            )
-
-    assert resp.status_code == 200
-    body = resp.json()
-    assert body["ocr_confidence"] == "low"
-    assert body["ocr_warnings"] == ["upload.ocr_low_quality"]
-
-
-@pytest.mark.asyncio
-async def test_upload_image_keeps_clause_preview_unavailable():
-    """Image uploads should not return a clause preview before formal OCR."""
-    fake_image_bytes = b"\x89PNG\r\n\x1a\n" + b"\x00" * 100
-
-    with (
-        patch("backend.routers.upload.stage_temp_upload", return_value="tok-imagepreview"),
-        patch(
-            "backend.routers.upload.estimate_text_with_local_ocr",
-            return_value=LocalOcrEstimate(text="", provider="disabled"),
-        ),
-    ):
-        transport = ASGITransport(app=app)
-        async with AsyncClient(transport=transport, base_url="http://test") as client:
-            resp = await client.post(
-                "/api/upload",
-                data={"input_type": "image"},
-                files={"file": ("contract.png", io.BytesIO(fake_image_bytes), "image/png")},
-            )
-
-    assert resp.status_code == 200
-    body = resp.json()
-    assert body["clause_preview"] is None
-    assert body["clause_count"] is None
-    assert body["quote_token"] is None
-
-
-@pytest.mark.asyncio
-async def test_upload_image_high_confidence_non_contract_sets_is_contract_false():
-    """High-confidence local OCR should pre-screen non-contract images before payment."""
-    fake_image_bytes = b"\x89PNG\r\n\x1a\n" + b"\x00" * 100
-
-    with (
-        patch("backend.routers.upload.stage_temp_upload", return_value="tok-imagepreview"),
-        patch(
-            "backend.routers.upload._estimate_with_local_ocr",
-            return_value=("これは会議メモです。契約条件は含まれていません。", 42, "high", []),
-        ),
-        patch(
-            "backend.routers.upload._extract_clause_preview",
-            return_value=(None, None, {"preview_succeeded": True}, False),
-        ),
-    ):
-        transport = ASGITransport(app=app)
-        async with AsyncClient(transport=transport, base_url="http://test") as client:
-            resp = await client.post(
-                "/api/upload",
-                data={"input_type": "image"},
-                files={"file": ("memo.png", io.BytesIO(fake_image_bytes), "image/png")},
-            )
-
-    assert resp.status_code == 200
-    body = resp.json()
-    assert body["quote_mode"] == "estimated_pre_ocr"
-    assert body["ocr_confidence"] == "high"
-    assert body["is_contract"] is False
+    assert body["quote_mode"] == "exact"
+    assert body["estimate_source"] == "vision_ocr"
+    assert body["estimated_tokens"] > 0
+    assert body["price_jpy"] > 0
+    assert body["contract_text"] == ocr_text
     assert body["quote_token"] == "quote-test-token"
 
 
-@pytest.mark.asyncio
-async def test_upload_image_low_confidence_skips_contract_prescreen():
-    """Low-confidence local OCR should not run contract prescreening or issue a quote token."""
-    fake_image_bytes = b"\x89PNG\r\n\x1a\n" + b"\x00" * 100
-
-    with (
-        patch("backend.routers.upload.stage_temp_upload", return_value="tok-imagepreview"),
-        patch(
-            "backend.routers.upload._estimate_with_local_ocr",
-            return_value=("ぼやけた文字列", 42, "low", ["upload.ocr_low_quality"]),
-        ),
-    ):
-        transport = ASGITransport(app=app)
-        async with AsyncClient(transport=transport, base_url="http://test") as client:
-            resp = await client.post(
-                "/api/upload",
-                data={"input_type": "image"},
-                files={"file": ("blurred.png", io.BytesIO(fake_image_bytes), "image/png")},
-            )
-
-    assert resp.status_code == 200
-    body = resp.json()
-    assert body["quote_mode"] == "estimated_pre_ocr"
-    assert body["ocr_confidence"] == "low"
-    assert body["is_contract"] is None
-    assert body["quote_token"] is None
-
-
-@pytest.mark.asyncio
-async def test_upload_image_preview_rate_limit_skips_contract_prescreen():
-    """Rate-limited preview generation should not block staged image uploads."""
-    fake_image_bytes = b"\x89PNG\r\n\x1a\n" + b"\x00" * 100
-
-    with (
-        patch("backend.routers.upload.stage_temp_upload", return_value="tok-imagepreview"),
-        patch(
-            "backend.routers.upload._estimate_with_local_ocr",
-            return_value=("第1条 本契約は売買条件を定める。", 42, "high", []),
-        ),
-        patch("backend.routers.upload.allow_preview_generation", new_callable=AsyncMock, return_value=False),
-    ):
-        transport = ASGITransport(app=app)
-        async with AsyncClient(transport=transport, base_url="http://test") as client:
-            resp = await client.post(
-                "/api/upload",
-                data={"input_type": "image"},
-                files={"file": ("contract.png", io.BytesIO(fake_image_bytes), "image/png")},
-            )
-
-    assert resp.status_code == 200
-    body = resp.json()
-    assert body["ocr_confidence"] == "high"
-    assert body["is_contract"] is None
-    assert body["quote_token"] is None
+# -- Clause preview edge cases -----------------------------------------------
 
 
 @pytest.mark.asyncio
@@ -451,7 +381,6 @@ async def test_upload_text_exceeding_max_tokens_returns_413():
         settings = mock_settings.return_value
         settings.MAX_UPLOAD_PAGES = 30
         settings.MAX_CONTRACT_TOKENS = 100  # very low limit for testing
-        settings.ENABLE_LOCAL_OCR_ESTIMATE = False
         settings.PRICING_POLICY_FILE = "backend/data/pricing_policy.json"
 
         transport = ASGITransport(app=app)

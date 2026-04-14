@@ -51,8 +51,8 @@ def test_build_cost_pricing_report_groups_by_pricing_model_and_input_type():
         {
             "order_id": "b",
             "input_type": "pdf",
-            "quote_mode": "estimated_pre_ocr",
-            "estimate_source": "local_ocr",
+            "quote_mode": "exact",
+            "estimate_source": "vision_ocr",
             "pricing_model": "token_linear",
             "paid_price_band": "400-599",
             "paid_price_jpy": 499.0,
@@ -76,7 +76,7 @@ def test_build_cost_pricing_report_groups_by_pricing_model_and_input_type():
     assert report["target_margin_rate"] == 0.75
     assert report["by_input_type"]["text"]["avg"] == 1.4
     assert report["by_input_type"]["pdf"]["avg"] == 12.0
-    assert report["by_quote_mode"]["estimated_pre_ocr"]["avg"] == 12.0
+    assert report["by_quote_mode"]["exact"]["avg"] == pytest.approx((1.4 + 12.0) / 2, rel=0, abs=0.001)
     assert report["by_pricing_model"]["token_linear"]["sample_count"] == 2
     assert report["by_paid_price_band"]["200-399"]["sample_count"] == 1
     assert report["by_pricing_recommendation"][0]["pricing_model"] == "token_linear"

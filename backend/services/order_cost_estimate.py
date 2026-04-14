@@ -69,20 +69,33 @@ def build_order_cost_estimate_snapshot(order: Order, prepayment_quote: dict[str,
         }
 
     prepayment_snapshot = prepayment_quote.get("prepayment_snapshot") or {}
-    prepayment_cost_usd = float(prepayment_snapshot.get("preview_cost_usd", 0.0) or 0.0)
-    prepayment_cost_jpy = float(prepayment_snapshot.get("preview_cost_jpy", 0.0) or 0.0)
+    prepayment_costs = _extract_prepayment_costs(prepayment_snapshot)
+    prepayment_cost_usd = prepayment_costs["total_cost_usd"]
+    prepayment_cost_jpy = prepayment_costs["total_cost_jpy"]
     if prepayment_snapshot:
-        predicted_cost_breakdown["parse_contract_preview"] = {
-            "model": prepayment_snapshot.get("preview_model"),
-            "input_tokens": int(prepayment_snapshot.get("preview_input_tokens", 0) or 0),
-            "output_tokens": int(prepayment_snapshot.get("preview_output_tokens", 0) or 0),
-            "cached_input_tokens": 0,
-            "calls": 1 if prepayment_snapshot.get("preview_succeeded") else 0,
-            "estimated_cost_usd": round(prepayment_cost_usd, 6),
-            "estimated_cost_jpy": round(prepayment_cost_jpy, 3),
-            "cache_hit": bool(prepayment_snapshot.get("cache_hit")),
-            "content_hash": prepayment_snapshot.get("content_hash"),
-        }
+        if prepayment_snapshot.get("ocr_model"):
+            predicted_cost_breakdown["ocr_quote"] = {
+                "model": prepayment_snapshot.get("ocr_model"),
+                "input_tokens": int(prepayment_snapshot.get("ocr_input_tokens", 0) or 0),
+                "output_tokens": int(prepayment_snapshot.get("ocr_output_tokens", 0) or 0),
+                "cached_input_tokens": int(prepayment_snapshot.get("ocr_cached_input_tokens", 0) or 0),
+                "calls": 1 if prepayment_snapshot.get("ocr_succeeded") else 0,
+                "estimated_cost_usd": round(float(prepayment_snapshot.get("ocr_cost_usd", 0.0) or 0.0), 6),
+                "estimated_cost_jpy": round(float(prepayment_snapshot.get("ocr_cost_jpy", 0.0) or 0.0), 3),
+                "content_hash": prepayment_snapshot.get("content_hash"),
+            }
+        if prepayment_snapshot.get("preview_model") or prepayment_snapshot.get("preview_cost_jpy"):
+            predicted_cost_breakdown["parse_contract_preview"] = {
+                "model": prepayment_snapshot.get("preview_model"),
+                "input_tokens": int(prepayment_snapshot.get("preview_input_tokens", 0) or 0),
+                "output_tokens": int(prepayment_snapshot.get("preview_output_tokens", 0) or 0),
+                "cached_input_tokens": int(prepayment_snapshot.get("preview_cached_input_tokens", 0) or 0),
+                "calls": 1 if prepayment_snapshot.get("preview_succeeded") else 0,
+                "estimated_cost_usd": round(float(prepayment_snapshot.get("preview_cost_usd", 0.0) or 0.0), 6),
+                "estimated_cost_jpy": round(float(prepayment_snapshot.get("preview_cost_jpy", 0.0) or 0.0), 3),
+                "cache_hit": bool(prepayment_snapshot.get("cache_hit")),
+                "content_hash": prepayment_snapshot.get("content_hash"),
+            }
     runtime_cost_usd = total_cost_usd
     runtime_cost_jpy = total_cost_jpy
     total_cost_usd += prepayment_cost_usd
@@ -137,8 +150,9 @@ def build_order_cost_actual_snapshot(
     prepayment_snapshot = (estimate_snapshot or {}).get("prepayment_snapshot") or {}
     runtime_cost_jpy = float(cost_summary.get("total_cost_jpy", 0.0) or 0.0)
     runtime_cost_usd = float(cost_summary.get("total_cost_usd", 0.0) or 0.0)
-    prepayment_cost_jpy = float(prepayment_snapshot.get("preview_cost_jpy", 0.0) or 0.0)
-    prepayment_cost_usd = float(prepayment_snapshot.get("preview_cost_usd", 0.0) or 0.0)
+    prepayment_costs = _extract_prepayment_costs(prepayment_snapshot)
+    prepayment_cost_jpy = prepayment_costs["total_cost_jpy"]
+    prepayment_cost_usd = prepayment_costs["total_cost_usd"]
     actual_total_cost_jpy = runtime_cost_jpy + prepayment_cost_jpy
     actual_total_cost_usd = runtime_cost_usd + prepayment_cost_usd
     actual_margin_jpy = round(order.price_jpy - actual_total_cost_jpy, 3)
@@ -155,27 +169,56 @@ def build_order_cost_actual_snapshot(
             "models": step_data.get("models", {}),
         }
     actual_model_breakdown = dict(cost_summary.get("models", {}) or {})
-    if prepayment_snapshot:
-        step_cost_breakdown["parse_contract_preview"] = {
-            "calls": 1 if prepayment_snapshot.get("preview_succeeded") else 0,
-            "cost_usd": round(prepayment_cost_usd, 6),
-            "cost_jpy": round(prepayment_cost_jpy, 3),
-            "input_tokens": int(prepayment_snapshot.get("preview_input_tokens", 0) or 0),
-            "output_tokens": int(prepayment_snapshot.get("preview_output_tokens", 0) or 0),
-            "cached_input_tokens": 0,
+    if prepayment_snapshot.get("ocr_model"):
+        ocr_cost_usd = float(prepayment_snapshot.get("ocr_cost_usd", 0.0) or 0.0)
+        ocr_cost_jpy = float(prepayment_snapshot.get("ocr_cost_jpy", 0.0) or 0.0)
+        step_cost_breakdown["ocr_quote"] = {
+            "calls": 1 if prepayment_snapshot.get("ocr_succeeded") else 0,
+            "cost_usd": round(ocr_cost_usd, 6),
+            "cost_jpy": round(ocr_cost_jpy, 3),
+            "input_tokens": int(prepayment_snapshot.get("ocr_input_tokens", 0) or 0),
+            "output_tokens": int(prepayment_snapshot.get("ocr_output_tokens", 0) or 0),
+            "cached_input_tokens": int(prepayment_snapshot.get("ocr_cached_input_tokens", 0) or 0),
             "models": {
-                str(prepayment_snapshot.get("preview_model") or "unknown"): {
-                    "calls": 1 if prepayment_snapshot.get("preview_succeeded") else 0,
-                    "cost_usd": round(prepayment_cost_usd, 6),
-                    "cost_jpy": round(prepayment_cost_jpy, 3),
+                str(prepayment_snapshot.get("ocr_model") or "unknown"): {
+                    "calls": 1 if prepayment_snapshot.get("ocr_succeeded") else 0,
+                    "cost_usd": round(ocr_cost_usd, 6),
+                    "cost_jpy": round(ocr_cost_jpy, 3),
                 }
             },
         }
-        preview_model = str(prepayment_snapshot.get("preview_model") or "unknown")
-        model_totals = actual_model_breakdown.setdefault(preview_model, {"calls": 0, "cost_usd": 0.0, "cost_jpy": 0.0})
-        model_totals["calls"] += 1 if prepayment_snapshot.get("preview_succeeded") else 0
-        model_totals["cost_usd"] = round(float(model_totals.get("cost_usd", 0.0) or 0.0) + prepayment_cost_usd, 6)
-        model_totals["cost_jpy"] = round(float(model_totals.get("cost_jpy", 0.0) or 0.0) + prepayment_cost_jpy, 3)
+        _merge_model_breakdown(
+            actual_model_breakdown,
+            str(prepayment_snapshot.get("ocr_model") or "unknown"),
+            calls=1 if prepayment_snapshot.get("ocr_succeeded") else 0,
+            cost_usd=ocr_cost_usd,
+            cost_jpy=ocr_cost_jpy,
+        )
+    if prepayment_snapshot.get("preview_model") or prepayment_snapshot.get("preview_cost_jpy"):
+        preview_cost_usd = float(prepayment_snapshot.get("preview_cost_usd", 0.0) or 0.0)
+        preview_cost_jpy = float(prepayment_snapshot.get("preview_cost_jpy", 0.0) or 0.0)
+        step_cost_breakdown["parse_contract_preview"] = {
+            "calls": 1 if prepayment_snapshot.get("preview_succeeded") else 0,
+            "cost_usd": round(preview_cost_usd, 6),
+            "cost_jpy": round(preview_cost_jpy, 3),
+            "input_tokens": int(prepayment_snapshot.get("preview_input_tokens", 0) or 0),
+            "output_tokens": int(prepayment_snapshot.get("preview_output_tokens", 0) or 0),
+            "cached_input_tokens": int(prepayment_snapshot.get("preview_cached_input_tokens", 0) or 0),
+            "models": {
+                str(prepayment_snapshot.get("preview_model") or "unknown"): {
+                    "calls": 1 if prepayment_snapshot.get("preview_succeeded") else 0,
+                    "cost_usd": round(preview_cost_usd, 6),
+                    "cost_jpy": round(preview_cost_jpy, 3),
+                }
+            },
+        }
+        _merge_model_breakdown(
+            actual_model_breakdown,
+            str(prepayment_snapshot.get("preview_model") or "unknown"),
+            calls=1 if prepayment_snapshot.get("preview_succeeded") else 0,
+            cost_usd=preview_cost_usd,
+            cost_jpy=preview_cost_jpy,
+        )
 
     return {
         "completed_at": datetime.now(timezone.utc).isoformat(),
@@ -340,15 +383,6 @@ def _build_predicted_step_usage(order: Order, clause_count: int, suggestion_call
         },
     }
 
-    if order.input_type in {"image", "pdf"} and order.quote_mode == "estimated_pre_ocr":
-        usage["ocr_formal"] = {
-            "model": model_plan["ocr_model"],
-            "input_tokens": max(1200, order.page_estimate * 1200),
-            "output_tokens": max(500, int(order.estimated_tokens * 0.85)),
-            "cached_input_tokens": 0,
-            "calls": max(1, order.page_estimate),
-        }
-
     return usage
 
 
@@ -364,10 +398,6 @@ def _risk_rates_for_order(order: Order) -> dict[str, float]:
         medium_rate += 0.03
     if order.page_estimate >= 10:
         high_rate += 0.02
-        medium_rate += 0.03
-
-    if order.input_type in {"image", "pdf"} and order.quote_mode == "estimated_pre_ocr":
-        high_rate += 0.01
         medium_rate += 0.03
 
     return {
@@ -398,3 +428,26 @@ def _pick_primary_model(models: dict[str, Any] | None) -> str:
             int(item[1].get("calls", 0) or 0),
         ),
     )[0]
+
+
+def _extract_prepayment_costs(snapshot: dict[str, Any]) -> dict[str, float]:
+    return {
+        "total_cost_usd": float(snapshot.get("preview_cost_usd", 0.0) or 0.0)
+        + float(snapshot.get("ocr_cost_usd", 0.0) or 0.0),
+        "total_cost_jpy": float(snapshot.get("preview_cost_jpy", 0.0) or 0.0)
+        + float(snapshot.get("ocr_cost_jpy", 0.0) or 0.0),
+    }
+
+
+def _merge_model_breakdown(
+    breakdown: dict[str, Any],
+    model_name: str,
+    *,
+    calls: int,
+    cost_usd: float,
+    cost_jpy: float,
+) -> None:
+    model_totals = breakdown.setdefault(model_name, {"calls": 0, "cost_usd": 0.0, "cost_jpy": 0.0})
+    model_totals["calls"] += calls
+    model_totals["cost_usd"] = round(float(model_totals.get("cost_usd", 0.0) or 0.0) + cost_usd, 6)
+    model_totals["cost_jpy"] = round(float(model_totals.get("cost_jpy", 0.0) or 0.0) + cost_jpy, 3)

@@ -3,7 +3,7 @@ import logging
 
 from pypdf import PdfReader
 
-from backend.services.ocr import extract_text_from_image
+from backend.services.ocr import extract_text_from_pdf as extract_text_from_pdf_with_vision
 
 logger = logging.getLogger(__name__)
 
@@ -33,8 +33,7 @@ async def extract_text_from_pdf(pdf_bytes: bytes) -> str:
     """Extract text from PDF. Falls back to OCR for scanned PDFs."""
     total_text, page_count = extract_text_from_pdf_text_layer(pdf_bytes)
     if not pdf_text_layer_is_sufficient(total_text, page_count):
-        # Scanned PDF - fall back to OCR (page by page would be ideal but costly)
-        logger.info("PDF text extraction yielded too few characters, falling back to OCR")
-        return await extract_text_from_image(pdf_bytes, "application/pdf")
+        logger.info("PDF text extraction yielded too few characters, falling back to Vision PDF OCR")
+        return await extract_text_from_pdf_with_vision(pdf_bytes)
 
     return total_text

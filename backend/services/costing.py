@@ -39,20 +39,25 @@ def extract_usage(response: Any) -> dict[str, int]:
     usage_metadata = getattr(response, "usage_metadata", None) or {}
     response_metadata = getattr(response, "response_metadata", None) or {}
     token_usage = response_metadata.get("token_usage", {}) if isinstance(response_metadata, dict) else {}
+    responses_api_usage = getattr(response, "usage", None)
+    responses_input_details = getattr(responses_api_usage, "input_tokens_details", None)
 
     input_tokens = int(
         usage_metadata.get("input_tokens")
         or token_usage.get("prompt_tokens")
+        or getattr(responses_api_usage, "input_tokens", 0)
         or 0
     )
     output_tokens = int(
         usage_metadata.get("output_tokens")
         or token_usage.get("completion_tokens")
+        or getattr(responses_api_usage, "output_tokens", 0)
         or 0
     )
     cached_input_tokens = int(
         usage_metadata.get("input_token_details", {}).get("cache_read")
         or token_usage.get("prompt_tokens_details", {}).get("cached_tokens")
+        or getattr(responses_input_details, "cached_tokens", 0)
         or 0
     )
 
@@ -134,28 +139,6 @@ def log_embedding_usage(
     _record_order_cost(payload)
     logger.info("Embedding usage: %s", payload)
 
-
-def log_local_ocr_estimate(
-    *,
-    provider: str,
-    page_estimate: int,
-    estimated_tokens: int,
-    duration_ms: int,
-    used_fallback: bool,
-    **extra: Any,
-) -> None:
-    """Emit logs for pre-payment local OCR estimate runs."""
-    payload = {
-        "order_id": get_cost_order_context(),
-        "step_name": "ocr_estimate_local",
-        "provider": provider,
-        "page_estimate": page_estimate,
-        "estimated_tokens": estimated_tokens,
-        "duration_ms": duration_ms,
-        "used_fallback": used_fallback,
-        **extra,
-    }
-    logger.info("Local OCR estimate: %s", payload)
 
 
 def get_order_cost_summary(order_id: str) -> dict[str, Any] | None:

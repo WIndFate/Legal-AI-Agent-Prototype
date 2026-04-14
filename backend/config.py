@@ -73,7 +73,6 @@ class Settings(BaseSettings):
     PREVIEW_RATE_LIMIT_COUNT: int = 8
     PREVIEW_RATE_LIMIT_WINDOW_SECONDS: int = 600
     QUOTE_CACHE_TTL_SECONDS: int = 21600
-    ENABLE_LOCAL_OCR_ESTIMATE: bool = True
     PRICING_POLICY_FILE: str = "backend/data/pricing_policy.json"
     COST_SAMPLE_SEED_FILE: str = "backend/data/cost_samples_seed.json"
     COST_SAMPLE_MINIMUM: int = 10

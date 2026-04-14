@@ -53,10 +53,6 @@ export default function HomeUploadSection({
   const fileInputId = useId();
   const [previewExpanded, setPreviewExpanded] = useState(false);
   const [languageConfirmed, setLanguageConfirmed] = useState(false);
-  const hasOcrNotice = Boolean(uploadResult?.ocr_warnings?.length);
-  const isLowOcrConfidence = uploadResult?.ocr_confidence === 'low';
-  const isMediumOcrConfidence =
-    uploadResult?.ocr_confidence === 'medium' || (uploadResult?.ocr_confidence == null && hasOcrNotice);
   const previewItems = uploadResult?.clause_preview ?? [];
   const visiblePreviewItems = previewExpanded ? previewItems : previewItems.slice(0, 5);
   const resolvedLanguage = i18n.resolvedLanguage ?? i18n.language;
@@ -254,30 +250,11 @@ export default function HomeUploadSection({
                 <p className={styles.priceAmount}>¥{uploadResult.price_jpy.toLocaleString()}</p>
               </div>
             </div>
-            {hasOcrNotice && (
-              <div
-                className={clsx(
-                  styles.ocrNotice,
-                  isLowOcrConfidence ? styles.ocrNoticeWarning : styles.ocrNoticeInfo,
-                )}
-                role="status"
-              >
-                <strong>{t(isLowOcrConfidence ? 'upload.ocr_notice_title' : 'upload.ocr_notice_info_title')}</strong>
-                <ul>
-                  {uploadResult.ocr_warnings.map((warning) => (
-                    <li key={warning}>{t(warning)}</li>
-                  ))}
-                </ul>
-                {isMediumOcrConfidence && uploadResult.ocr_confidence === 'medium' && (
-                  <p>{t('upload.ocr_post_payment_notice')}</p>
-                )}
-              </div>
-            )}
             <div className={styles.pricingQuoteMeta}>
               <p>{t('pricing.length_based_desc')}</p>
               <span>{t('pricing.minimum_price', { price: 200 })}</span>
             </div>
-            {uploadResult.quote_mode === 'exact' && previewItems.length > 0 && (
+            {previewItems.length > 0 && (
               <div className={styles.clausePreviewCard}>
                 <div className={styles.clausePreviewHeader}>
                   <strong>{t('upload.clause_preview_title', { count: uploadResult.clause_count ?? previewItems.length })}</strong>
@@ -301,12 +278,6 @@ export default function HomeUploadSection({
                     </li>
                   ))}
                 </ul>
-              </div>
-            )}
-            {uploadResult.quote_mode === 'estimated_pre_ocr' && (
-              <div className={clsx(styles.clausePreviewCard, styles.clausePreviewPending)}>
-                <strong>{t('upload.clause_preview_pending_title')}</strong>
-                <p>{t('upload.clause_preview_unavailable')}</p>
               </div>
             )}
             <div className={styles.pricingHighlights} aria-label={t('payment.title')}>

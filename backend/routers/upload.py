@@ -1,6 +1,5 @@
 import logging
 import json
-import time
 from typing import Optional
 
 from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile
@@ -16,9 +15,8 @@ from backend.services.costing import (
     estimate_cost_jpy,
     estimate_cost_usd,
     extract_usage,
-    log_local_ocr_estimate,
 )
-from backend.services.local_ocr import assess_ocr_confidence, estimate_text_with_local_ocr
+from backend.services.ocr import extract_text_from_image_with_snapshot, extract_text_from_pdf_with_snapshot
 from backend.services.pdf_extractor import extract_text_from_pdf_text_layer, pdf_text_layer_is_sufficient
 from backend.services.pii_detector import detect_pii
 from backend.services.quote_guard import (
@@ -30,8 +28,7 @@ from backend.services.quote_guard import (
     load_cached_quote,
     store_cached_quote,
 )
-from backend.services.temp_uploads import delete_temp_upload, get_temp_upload_path, stage_temp_upload
-from backend.services.token_estimator import estimate_price_from_page_count, estimate_tokens_and_price
+from backend.services.token_estimator import estimate_tokens_and_price
 from backend.services.costing import log_model_usage
 
 logger = logging.getLogger(__name__)
@@ -46,34 +43,6 @@ def _enforce_upload_limits(page_estimate: int, estimated_tokens: int) -> None:
         raise HTTPException(status_code=413, detail="Contract exceeds maximum supported page count")
     if estimated_tokens > settings.MAX_CONTRACT_TOKENS:
         raise HTTPException(status_code=413, detail="Contract exceeds maximum supported length")
-
-
-def _estimate_with_local_ocr(upload_token: str, page_estimate: int) -> tuple[str, int, str | None, list[str]]:
-    settings = get_settings()
-    if not settings.ENABLE_LOCAL_OCR_ESTIMATE:
-        log_local_ocr_estimate(
-            provider="disabled",
-            page_estimate=page_estimate,
-            estimated_tokens=0,
-            duration_ms=0,
-            used_fallback=True,
-        )
-        return "", 0, None, ["upload.ocr_post_payment_notice"]
-
-    started = time.perf_counter()
-    local_ocr_result = estimate_text_with_local_ocr(str(get_temp_upload_path(upload_token)))
-    duration_ms = int((time.perf_counter() - started) * 1000)
-    local_ocr_text = local_ocr_result.text
-    estimated_tokens = estimate_tokens_and_price(local_ocr_text)["estimated_tokens"] if local_ocr_text.strip() else 0
-    log_local_ocr_estimate(
-        provider=local_ocr_result.provider if local_ocr_result.provider == "paddleocr" else "fallback",
-        page_estimate=page_estimate,
-        estimated_tokens=estimated_tokens,
-        duration_ms=duration_ms,
-        used_fallback=not local_ocr_text.strip(),
-    )
-    confidence, warnings = assess_ocr_confidence(local_ocr_text, page_estimate, local_ocr_result.provider)
-    return local_ocr_text, estimated_tokens, confidence, warnings
 
 
 def _extract_clause_preview(
@@ -155,6 +124,28 @@ def _extract_clause_preview(
         return None, None, None, None
 
 
+def _merge_prepayment_snapshot(
+    *,
+    ocr_snapshot: dict | None = None,
+    preview_snapshot: dict | None = None,
+    content_hash: str | None = None,
+    cache_hit: bool = False,
+) -> dict | None:
+    if not ocr_snapshot and not preview_snapshot:
+        return None
+
+    merged: dict[str, object] = {
+        "cache_hit": cache_hit,
+    }
+    if content_hash:
+        merged["content_hash"] = content_hash
+    if ocr_snapshot:
+        merged.update(ocr_snapshot)
+    if preview_snapshot:
+        merged.update(preview_snapshot)
+    return merged
+
+
 @router.post("/api/upload", response_model=UploadResponse)
 async def upload_contract(
     raw_request: Request,
@@ -171,10 +162,6 @@ async def upload_contract(
     quote_mode = "exact"
     estimate_source = "raw_text"
     quote_token: str | None = None
-    ocr_required = False
-    ocr_confidence: str | None = None
-    ocr_warnings: list[str] = []
-    local_ocr_text = ""
     upload_token: str | None = None
     upload_name: str | None = None
     upload_mime_type: str | None = None
@@ -183,6 +170,7 @@ async def upload_contract(
     clause_count: int | None = None
     is_contract: bool | None = None
     preview_snapshot: dict | None = None
+    ocr_snapshot: dict | None = None
     estimation = {
         "estimated_tokens": 0,
         "page_estimate": 0,
@@ -203,64 +191,25 @@ async def upload_contract(
             estimation = estimate_tokens_and_price(contract_text)
             pii_warnings = detect_pii(contract_text)
         else:
-            upload_token = stage_temp_upload(pdf_bytes, file.filename)
-            upload_name = file.filename
-            upload_mime_type = file.content_type or "application/pdf"
-            quote_mode = "estimated_pre_ocr"
-            estimate_source = "page_count_fallback"
-            ocr_required = True
-            local_ocr_text, _, ocr_confidence, ocr_warnings = _estimate_with_local_ocr(upload_token, page_count)
-            if local_ocr_text.strip():
-                estimation = estimate_tokens_and_price(local_ocr_text)
-                estimation["page_estimate"] = max(estimation["page_estimate"], page_count)
-                estimate_source = "local_ocr"
-                pii_warnings = detect_pii(local_ocr_text)
-            else:
-                estimation = estimate_price_from_page_count(page_count)
+            # Scanned PDF — use Vision OCR to extract text
+            contract_text, ocr_snapshot = await extract_text_from_pdf_with_snapshot(pdf_bytes)
+            estimate_source = "vision_ocr"
+            if contract_text.strip():
+                estimation = estimate_tokens_and_price(contract_text)
+                pii_warnings = detect_pii(contract_text)
     elif input_type == "image" and file:
         image_bytes = await file.read()
-        upload_token = stage_temp_upload(image_bytes, file.filename)
-        upload_name = file.filename
-        upload_mime_type = file.content_type or "image/jpeg"
-        quote_mode = "estimated_pre_ocr"
-        estimate_source = "page_count_fallback"
-        ocr_required = True
-        local_ocr_text, _, ocr_confidence, ocr_warnings = _estimate_with_local_ocr(upload_token, 1)
-        if local_ocr_text.strip():
-            estimation = estimate_tokens_and_price(local_ocr_text)
-            estimate_source = "local_ocr"
-            pii_warnings = detect_pii(local_ocr_text)
-        else:
-            estimation = estimate_price_from_page_count(1)
+        mime = file.content_type or "image/jpeg"
+        contract_text, ocr_snapshot = await extract_text_from_image_with_snapshot(image_bytes, mime)
+        estimate_source = "vision_ocr"
+        if contract_text.strip():
+            estimation = estimate_tokens_and_price(contract_text)
+            pii_warnings = detect_pii(contract_text)
     else:
         contract_text = text or ""
         if contract_text.strip():
             estimation = estimate_tokens_and_price(contract_text)
             pii_warnings = detect_pii(contract_text)
-
-    # Contract validation for pre-OCR uploads with sufficient local OCR quality
-    if quote_mode == "estimated_pre_ocr" and local_ocr_text.strip() and ocr_confidence in ("high", "medium"):
-        preview_allowed = await allow_preview_generation(redis, client_ip)
-        if preview_allowed:
-            clause_preview, clause_count, preview_snapshot, is_contract = _extract_clause_preview(local_ocr_text)
-        if is_contract is not None:
-            content_hash = build_contract_content_hash(local_ocr_text)
-            quote_token = build_quote_token()
-            await store_cached_quote(
-                redis,
-                content_hash=content_hash,
-                quote_token=quote_token,
-                upload_token=upload_token,
-                payload={
-                    "quote_token": quote_token,
-                    "content_hash": content_hash,
-                    "clause_preview": clause_preview,
-                    "clause_count": clause_count,
-                    "is_contract": is_contract,
-                    "prepayment_snapshot": preview_snapshot,
-                    "source": "local_ocr_preview",
-                },
-            )
 
     if quote_mode == "exact" and contract_text.strip():
         content_hash = build_contract_content_hash(contract_text)
@@ -286,20 +235,25 @@ async def upload_contract(
                     "preview_succeeded": False,
                     "blocked_by_rate_limit": not preview_allowed,
                 }
-            preview_snapshot["content_hash"] = content_hash
-            preview_snapshot["cache_hit"] = False
+            prepayment_snapshot = _merge_prepayment_snapshot(
+                ocr_snapshot=ocr_snapshot,
+                preview_snapshot=preview_snapshot,
+                content_hash=content_hash,
+                cache_hit=False,
+            )
             quote_token = build_quote_token()
             await store_cached_quote(
                 redis,
                 content_hash=content_hash,
                 quote_token=quote_token,
+                upload_token=upload_token,
                 payload={
                     "quote_token": quote_token,
                     "content_hash": content_hash,
                     "clause_preview": clause_preview,
                     "clause_count": clause_count,
                     "is_contract": is_contract,
-                    "prepayment_snapshot": preview_snapshot,
+                    "prepayment_snapshot": prepayment_snapshot,
                 },
             )
 
@@ -311,9 +265,6 @@ async def upload_contract(
             quote_mode=quote_mode,
             estimate_source=estimate_source,
             quote_token=quote_token,
-            ocr_required=ocr_required,
-            ocr_confidence=ocr_confidence,
-            ocr_warnings=ocr_warnings,
             clause_preview=clause_preview,
             clause_count=clause_count,
             is_contract=is_contract,
@@ -323,11 +274,7 @@ async def upload_contract(
             pii_warnings=[],
         )
 
-    try:
-        _enforce_upload_limits(estimation["page_estimate"], estimation["estimated_tokens"])
-    except HTTPException:
-        delete_temp_upload(upload_token)
-        raise
+    _enforce_upload_limits(estimation["page_estimate"], estimation["estimated_tokens"])
 
     posthog_capture(
         "anonymous",
@@ -353,9 +300,6 @@ async def upload_contract(
         quote_mode=quote_mode,
         estimate_source=estimate_source,
         quote_token=quote_token,
-        ocr_required=ocr_required,
-        ocr_confidence=ocr_confidence,
-        ocr_warnings=ocr_warnings,
         clause_preview=clause_preview,
         clause_count=clause_count,
         is_contract=is_contract,
