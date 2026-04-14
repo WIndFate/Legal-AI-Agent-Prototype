@@ -13,7 +13,7 @@
 - 画像とスキャン PDF の見積もりでは、支払い前に OCR 品質ヒント（`low` / `medium` / 支払い後の正式認識案内）を返します
 - テキスト入力とテキスト抽出可能な PDF の見積もりでは、支払い前に軽量な条項構造プレビューも返し、契約構造を読み取れたことを示します
 - exact 見積もりでは `quote_token` も生成され、正規化した契約本文ハッシュ単位で条項プレビューを Redis にキャッシュするため、同じ契約を再アップロードしてもプレビューと事前コストを再利用できます
-- テキスト入力 / テキスト抽出可能 PDF の exact 見積もりでは `is_contract` も返し、契約書ではないと判定された場合はホームで支払い UI を止め、`/api/payment/create` でもサーバー側で exact 決済リクエストを拒否します
+- テキスト入力 / テキスト抽出可能 PDF の exact 見積もりでは `is_contract` も返します。さらに、高品質なローカル OCR が得られた画像 / スキャン PDF の事前見積もりでも同じ契約判定を行い、契約書ではないと判断した場合はホームで支払い UI を止め、`/api/payment/create` でもサーバー側で決済リクエストを拒否します。
 - アップロードと条項プレビュー生成には Redis ベースの IP 単位レート制限も入り、匿名スクリプトによるプレビューコストの連打を抑えます
 - `pgvector` RAG は PostgreSQL 上で稼働し、10 法令カテゴリ・331 件超の法条（賃貸借・労働・パート・業務委託・売買等）を収録
 - フロントエンドの 9 言語 UI は実装済み。ブランド（ContractGuard）、プライバシーポリシー/利用規約ページ、独立した事例ギャラリーとレポート見本表示を含みます
@@ -171,6 +171,7 @@ docker compose up -d backend postgres redis
 - `GET /api/eval/costs` は `reports.cost_summary` を集計し、実データが不足している間は `backend/data/cost_samples_seed.json` で 10 サンプル基準まで補完します。
 - 各支払い済み注文では、これとは別に `order_cost_estimates` レコードも保存され、支払い時点の `estimate_snapshot`、分析完了または失敗後の `actual_snapshot`、そして差分用の `comparison_snapshot` が残ります。
 - exact 見積もり時に条項プレビューを生成した場合、その支払い前コストも `prepayment_snapshot` として `order_cost_estimates` に保存され、予測総コスト / 実総コストへ合算されます。
+- staged image / scanned PDF で高品質ローカル OCR がすでに `is_contract == false` を返した場合、サーバーは `upload_token` に紐づく事前判定コンテキストでも支払いを拒否します。つまり、クライアントが `quote_token` を落としても回避できません。OCR 低品質・OCR 失敗・プレビューのレート制限時だけ、支払い後の正式 OCR 判定にフォールバックします。
 - これらのスナップショットには、計画上のモデル構成と実際に使われたモデル構成（`ocr / parse / analyze / suggestion / translation / embedding`）の両方が含まれるため、将来モデルを入れ替えた際の粗利影響を追跡できます。
 - `GET /api/eval/costs` は estimate-vs-actual の差分を `estimate_version` とモデルシグネチャ別にも集計するようになり、価格ロジック更新やモデル変更の効果を後から比較できます。
 - `GET /api/eval/operations` は seed サンプルを混ぜない読み取り専用の運用 API で、売上・実コスト・実粗利・見積もり偏差・最近の注文一覧に加えて、価格モデル / 支払価格帯 / 入力種別 / 見積もり方式 / 言語 / estimate version / モデルシグネチャ別の集計を返します。
