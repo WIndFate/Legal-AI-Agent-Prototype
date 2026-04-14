@@ -7,7 +7,7 @@ import pytest
 from httpx import ASGITransport, AsyncClient
 from fastapi import FastAPI
 
-from backend.routers.upload import router
+from backend.routers.upload import _extract_clause_preview, preview_llm, router
 
 app = FastAPI()
 app.include_router(router)
@@ -225,6 +225,52 @@ async def test_upload_image_non_contract_sets_is_contract_false():
     assert body["quote_mode"] == "exact"
     assert body["is_contract"] is False
     assert body["price_jpy"] > 0
+
+
+def test_extract_clause_preview_short_non_contract_still_sets_is_contract_false():
+    """Short OCR fragments should still be classified as non-contract material."""
+
+    class _FakeResponse:
+        content = '{"is_contract": false, "clauses": []}'
+
+    with (
+        patch.object(type(preview_llm), "invoke", return_value=_FakeResponse()),
+        patch("backend.routers.upload.log_model_usage"),
+        patch(
+            "backend.routers.upload.extract_usage",
+            return_value={"input_tokens": 32, "output_tokens": 8, "cached_input_tokens": 0},
+        ),
+    ):
+        preview, clause_count, snapshot, is_contract = _extract_clause_preview("Leon S. Kennedy Ada Wong")
+
+    assert preview is None
+    assert clause_count is None
+    assert snapshot is not None
+    assert snapshot["preview_succeeded"] is True
+    assert is_contract is False
+
+
+def test_extract_clause_preview_short_contract_sets_is_contract_without_preview():
+    """Short contract snippets should still surface contract detection even without preview clauses."""
+
+    class _FakeResponse:
+        content = '{"is_contract": true, "clauses": []}'
+
+    with (
+        patch.object(type(preview_llm), "invoke", return_value=_FakeResponse()),
+        patch("backend.routers.upload.log_model_usage"),
+        patch(
+            "backend.routers.upload.extract_usage",
+            return_value={"input_tokens": 40, "output_tokens": 10, "cached_input_tokens": 0},
+        ),
+    ):
+        preview, clause_count, snapshot, is_contract = _extract_clause_preview("業務委託契約書 契約期間 1年")
+
+    assert preview is None
+    assert clause_count is None
+    assert snapshot is not None
+    assert snapshot["preview_succeeded"] is True
+    assert is_contract is True
 
 
 @pytest.mark.asyncio

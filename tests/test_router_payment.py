@@ -203,7 +203,11 @@ async def test_create_payment_includes_quote_context_in_estimate_snapshot():
                     },
                 )
         assert resp.status_code == 200
-        assert build_snapshot.call_args.kwargs["prepayment_quote"] == {"prepayment_snapshot": {"preview_cost_jpy": 0.043}}
+        assert build_snapshot.call_args.kwargs["prepayment_quote"] == {
+            "content_hash": "hash-text-234",
+            "is_contract": True,
+            "prepayment_snapshot": {"preview_cost_jpy": 0.043},
+        }
     finally:
         app.dependency_overrides.pop(get_db, None)
 

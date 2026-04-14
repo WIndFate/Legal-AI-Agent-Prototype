@@ -48,14 +48,17 @@ def _enforce_upload_limits(page_estimate: int, estimated_tokens: int) -> None:
 def _extract_clause_preview(
     contract_text: str,
 ) -> tuple[list[dict[str, str]] | None, int | None, dict | None, bool | None]:
-    if len(contract_text.strip()) < 100:
+    text = contract_text.strip()
+    if not text:
         return None, None, None, None
+    text_is_short = len(text) < 100
 
     messages = [
         SystemMessage(
             content=(
                 "あなたは日本語契約書の構造を短く整理するアシスタントです。"
                 "まず文書が契約書かどうかを判定し、契約書であれば条項番号と短い見出しを抽出してください。"
+                "文書が短すぎて条項抽出に向かない場合でも、契約書かどうかの判定は必ず行ってください。"
             )
         ),
         HumanMessage(
@@ -66,8 +69,10 @@ def _extract_clause_preview(
                 "判定ルール:\n"
                 "- 契約書・合意書・利用規約・覚書・申込契約など、当事者間の権利義務を定める文書なら is_contract=true\n"
                 "- メール、案内文、ニュース記事、説明文、履歴書、メモ、請求書なら is_contract=false\n"
+                "- 氏名だけ、キャプションだけ、ポスターやゲーム画面の文字断片だけのように契約本文として成立しないものは is_contract=false\n"
                 "- is_contract=false の場合、clauses は空配列にしてください\n"
                 "- 条項番号が不明でも、見出しが推定できる場合は短く付けてください\n"
+                "- 文書が短すぎる場合や条項構造が見えない場合は、is_contract を返したうえで clauses は空配列にしてください\n"
                 "- 本文全文は返さないでください\n\n"
                 f"文書:\n{contract_text}"
             )
@@ -116,7 +121,7 @@ def _extract_clause_preview(
                 continue
             preview.append({"number": number or "条項", "title": title or "内容"})
 
-        if not preview:
+        if text_is_short or not preview:
             return None, None, preview_snapshot, is_contract
         return preview, len(preview), preview_snapshot, is_contract
     except Exception as exc:
