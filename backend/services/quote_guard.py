@@ -71,7 +71,14 @@ async def load_cached_quote(redis: Redis | None, content_hash: str) -> dict | No
         return None
 
 
-async def store_cached_quote(redis: Redis | None, *, content_hash: str, quote_token: str, payload: dict) -> None:
+async def store_cached_quote(
+    redis: Redis | None,
+    *,
+    content_hash: str,
+    quote_token: str,
+    payload: dict,
+    upload_token: str | None = None,
+) -> None:
     if redis is None:
         return
     ttl = get_settings().QUOTE_CACHE_TTL_SECONDS
@@ -79,6 +86,8 @@ async def store_cached_quote(redis: Redis | None, *, content_hash: str, quote_to
     try:
         await redis.set(_content_cache_key(content_hash), encoded, ex=ttl)
         await redis.set(_token_cache_key(quote_token), encoded, ex=ttl)
+        if upload_token:
+            await redis.set(_upload_cache_key(upload_token), encoded, ex=ttl)
     except RedisError as exc:
         logger.warning("Quote cache store failed: %s", exc)
 
@@ -90,6 +99,22 @@ async def load_quote_context(redis: Redis | None, quote_token: str | None) -> di
         payload = await redis.get(_token_cache_key(quote_token))
     except RedisError as exc:
         logger.warning("Quote token cache lookup failed: %s", exc)
+        return None
+    if not payload:
+        return None
+    try:
+        return json.loads(payload)
+    except json.JSONDecodeError:
+        return None
+
+
+async def load_upload_quote_context(redis: Redis | None, upload_token: str | None) -> dict | None:
+    if redis is None or not upload_token:
+        return None
+    try:
+        payload = await redis.get(_upload_cache_key(upload_token))
+    except RedisError as exc:
+        logger.warning("Upload quote cache lookup failed: %s", exc)
         return None
     if not payload:
         return None
@@ -118,3 +143,7 @@ def _content_cache_key(content_hash: str) -> str:
 
 def _token_cache_key(quote_token: str) -> str:
     return f"quote-cache:{QUOTE_CACHE_VERSION}:token:{quote_token}"
+
+
+def _upload_cache_key(upload_token: str) -> str:
+    return f"quote-cache:{QUOTE_CACHE_VERSION}:upload:{upload_token}"

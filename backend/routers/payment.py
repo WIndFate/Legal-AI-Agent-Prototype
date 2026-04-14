@@ -23,7 +23,7 @@ from backend.services.analytics import capture as posthog_capture
 from backend.services.analytics import capture_message as sentry_capture_message
 from backend.services.analytics import capture_exception as sentry_capture_exception
 from backend.services.email import send_payment_confirmation_email
-from backend.services.quote_guard import build_contract_content_hash, load_quote_context
+from backend.services.quote_guard import build_contract_content_hash, load_quote_context, load_upload_quote_context
 from backend.services.temp_uploads import get_temp_upload_path
 from backend.services.token_estimator import estimate_page_count_from_tokens
 
@@ -38,8 +38,23 @@ WEBHOOK_PAYMENT_STATUS_MAP = {
 }
 
 
-def _validate_exact_quote_context(request: PaymentCreateRequest, quote_context: dict | None) -> None:
+def _validate_quote_context(
+    request: PaymentCreateRequest,
+    quote_context: dict | None,
+    upload_quote_context: dict | None,
+) -> None:
     if request.quote_mode != "exact":
+        if not request.upload_token:
+            raise HTTPException(
+                status_code=409,
+                detail="Staged upload context missing. Please upload the contract again before payment.",
+            )
+        effective_context = upload_quote_context or quote_context
+        if effective_context is not None and effective_context.get("is_contract") is False:
+            raise HTTPException(
+                status_code=409,
+                detail="The uploaded content was identified as non-contract material. Please upload a contract before payment.",
+            )
         return
     if not request.quote_token or quote_context is None:
         raise HTTPException(
@@ -93,7 +108,8 @@ async def create_payment(
     )
     redis = await get_redis()
     quote_context = await load_quote_context(redis, request.quote_token)
-    _validate_exact_quote_context(request, quote_context)
+    upload_quote_context = await load_upload_quote_context(redis, request.upload_token)
+    _validate_quote_context(request, quote_context, upload_quote_context)
 
     # Validate and apply referral discount
     discount_jpy = 0

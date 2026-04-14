@@ -174,6 +174,7 @@ async def upload_contract(
     ocr_required = False
     ocr_confidence: str | None = None
     ocr_warnings: list[str] = []
+    local_ocr_text = ""
     upload_token: str | None = None
     upload_name: str | None = None
     upload_mime_type: str | None = None
@@ -236,6 +237,30 @@ async def upload_contract(
         if contract_text.strip():
             estimation = estimate_tokens_and_price(contract_text)
             pii_warnings = detect_pii(contract_text)
+
+    # Contract validation for pre-OCR uploads with sufficient local OCR quality
+    if quote_mode == "estimated_pre_ocr" and local_ocr_text.strip() and ocr_confidence in ("high", "medium"):
+        preview_allowed = await allow_preview_generation(redis, client_ip)
+        if preview_allowed:
+            clause_preview, clause_count, preview_snapshot, is_contract = _extract_clause_preview(local_ocr_text)
+        if is_contract is not None:
+            content_hash = build_contract_content_hash(local_ocr_text)
+            quote_token = build_quote_token()
+            await store_cached_quote(
+                redis,
+                content_hash=content_hash,
+                quote_token=quote_token,
+                upload_token=upload_token,
+                payload={
+                    "quote_token": quote_token,
+                    "content_hash": content_hash,
+                    "clause_preview": clause_preview,
+                    "clause_count": clause_count,
+                    "is_contract": is_contract,
+                    "prepayment_snapshot": preview_snapshot,
+                    "source": "local_ocr_preview",
+                },
+            )
 
     if quote_mode == "exact" and contract_text.strip():
         content_hash = build_contract_content_hash(contract_text)

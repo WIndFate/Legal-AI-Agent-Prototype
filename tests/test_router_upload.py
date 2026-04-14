@@ -313,6 +313,94 @@ async def test_upload_image_keeps_clause_preview_unavailable():
 
 
 @pytest.mark.asyncio
+async def test_upload_image_high_confidence_non_contract_sets_is_contract_false():
+    """High-confidence local OCR should pre-screen non-contract images before payment."""
+    fake_image_bytes = b"\x89PNG\r\n\x1a\n" + b"\x00" * 100
+
+    with (
+        patch("backend.routers.upload.stage_temp_upload", return_value="tok-imagepreview"),
+        patch(
+            "backend.routers.upload._estimate_with_local_ocr",
+            return_value=("これは会議メモです。契約条件は含まれていません。", 42, "high", []),
+        ),
+        patch(
+            "backend.routers.upload._extract_clause_preview",
+            return_value=(None, None, {"preview_succeeded": True}, False),
+        ),
+    ):
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            resp = await client.post(
+                "/api/upload",
+                data={"input_type": "image"},
+                files={"file": ("memo.png", io.BytesIO(fake_image_bytes), "image/png")},
+            )
+
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["quote_mode"] == "estimated_pre_ocr"
+    assert body["ocr_confidence"] == "high"
+    assert body["is_contract"] is False
+    assert body["quote_token"] == "quote-test-token"
+
+
+@pytest.mark.asyncio
+async def test_upload_image_low_confidence_skips_contract_prescreen():
+    """Low-confidence local OCR should not run contract prescreening or issue a quote token."""
+    fake_image_bytes = b"\x89PNG\r\n\x1a\n" + b"\x00" * 100
+
+    with (
+        patch("backend.routers.upload.stage_temp_upload", return_value="tok-imagepreview"),
+        patch(
+            "backend.routers.upload._estimate_with_local_ocr",
+            return_value=("ぼやけた文字列", 42, "low", ["upload.ocr_low_quality"]),
+        ),
+    ):
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            resp = await client.post(
+                "/api/upload",
+                data={"input_type": "image"},
+                files={"file": ("blurred.png", io.BytesIO(fake_image_bytes), "image/png")},
+            )
+
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["quote_mode"] == "estimated_pre_ocr"
+    assert body["ocr_confidence"] == "low"
+    assert body["is_contract"] is None
+    assert body["quote_token"] is None
+
+
+@pytest.mark.asyncio
+async def test_upload_image_preview_rate_limit_skips_contract_prescreen():
+    """Rate-limited preview generation should not block staged image uploads."""
+    fake_image_bytes = b"\x89PNG\r\n\x1a\n" + b"\x00" * 100
+
+    with (
+        patch("backend.routers.upload.stage_temp_upload", return_value="tok-imagepreview"),
+        patch(
+            "backend.routers.upload._estimate_with_local_ocr",
+            return_value=("第1条 本契約は売買条件を定める。", 42, "high", []),
+        ),
+        patch("backend.routers.upload.allow_preview_generation", new_callable=AsyncMock, return_value=False),
+    ):
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            resp = await client.post(
+                "/api/upload",
+                data={"input_type": "image"},
+                files={"file": ("contract.png", io.BytesIO(fake_image_bytes), "image/png")},
+            )
+
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["ocr_confidence"] == "high"
+    assert body["is_contract"] is None
+    assert body["quote_token"] is None
+
+
+@pytest.mark.asyncio
 async def test_upload_short_text_skips_clause_preview():
     """Very short exact-text uploads should not trigger preview extraction."""
     transport = ASGITransport(app=app)

@@ -104,6 +104,7 @@ def _mock_quote_context():
     with (
         patch("backend.routers.payment.get_redis", new_callable=AsyncMock, return_value=None),
         patch("backend.routers.payment.load_quote_context", new_callable=AsyncMock, return_value=None),
+        patch("backend.routers.payment.load_upload_quote_context", new_callable=AsyncMock, return_value=None),
     ):
         yield
 
@@ -139,6 +140,7 @@ async def test_create_payment_happy_path():
                         "estimated_tokens": 50,
                         "price_jpy": 299,
                         "quote_mode": "estimated_pre_ocr",
+                        "upload_token": "tok-image-upload",
                         "target_language": "zh-CN",
                     },
                 )
@@ -287,6 +289,84 @@ async def test_create_payment_rejects_non_contract_exact_quote():
 
 
 @pytest.mark.asyncio
+async def test_create_payment_rejects_non_contract_pre_ocr_upload():
+    """High-confidence pre-OCR uploads flagged as non-contract must be blocked even without quote_token."""
+    session = FakeSession()
+
+    app.dependency_overrides[get_db] = _override_db(session)
+    try:
+        with (
+            patch(
+                "backend.routers.payment.create_payment_session",
+                new_callable=AsyncMock,
+                return_value="https://komoju.com/sessions/test123",
+            ),
+            patch("backend.routers.payment.is_dev_payment_mode", return_value=False),
+            patch(
+                "backend.routers.payment.load_upload_quote_context",
+                new_callable=AsyncMock,
+                return_value={"is_contract": False, "source": "local_ocr_preview"},
+            ),
+        ):
+            transport = ASGITransport(app=app)
+            async with AsyncClient(transport=transport, base_url="http://test") as client:
+                resp = await client.post(
+                    "/api/payment/create",
+                    json={
+                        "email": "user@example.com",
+                        "contract_text": "",
+                        "input_type": "image",
+                        "estimated_tokens": 50,
+                        "price_jpy": 299,
+                        "target_language": "zh-CN",
+                        "quote_mode": "estimated_pre_ocr",
+                        "upload_token": "tok-image-upload",
+                    },
+                )
+        assert resp.status_code == 409
+        assert "non-contract material" in resp.json()["detail"]
+        assert session.commit_count == 0
+    finally:
+        app.dependency_overrides.pop(get_db, None)
+
+
+@pytest.mark.asyncio
+async def test_create_payment_allows_pre_ocr_upload_without_preview_context():
+    """Low-confidence or rate-limited staged uploads should still be allowed through to post-payment OCR."""
+    session = FakeSession()
+
+    app.dependency_overrides[get_db] = _override_db(session)
+    try:
+        with (
+            patch(
+                "backend.routers.payment.create_payment_session",
+                new_callable=AsyncMock,
+                return_value="https://komoju.com/sessions/test123",
+            ),
+            patch("backend.routers.payment.is_dev_payment_mode", return_value=False),
+        ):
+            transport = ASGITransport(app=app)
+            async with AsyncClient(transport=transport, base_url="http://test") as client:
+                resp = await client.post(
+                    "/api/payment/create",
+                    json={
+                        "email": "user@example.com",
+                        "contract_text": "",
+                        "input_type": "image",
+                        "estimated_tokens": 50,
+                        "price_jpy": 299,
+                        "target_language": "zh-CN",
+                        "quote_mode": "estimated_pre_ocr",
+                        "upload_token": "tok-image-upload",
+                    },
+                )
+        assert resp.status_code == 200
+        assert session.commit_count >= 1
+    finally:
+        app.dependency_overrides.pop(get_db, None)
+
+
+@pytest.mark.asyncio
 async def test_create_payment_dev_bypass():
     """In dev mode with no KOMOJU key, payment should be auto-marked paid."""
     session = FakeSession()
@@ -313,6 +393,7 @@ async def test_create_payment_dev_bypass():
                         "estimated_tokens": 10,
                         "price_jpy": 299,
                         "quote_mode": "estimated_pre_ocr",
+                        "upload_token": "tok-dev-upload",
                     },
                 )
         assert resp.status_code == 200
@@ -352,6 +433,7 @@ async def test_create_payment_prefers_request_origin_for_frontend_base_url():
                         "estimated_tokens": 10,
                         "price_jpy": 299,
                         "quote_mode": "estimated_pre_ocr",
+                        "upload_token": "tok-lan-upload",
                     },
                 )
         assert resp.status_code == 200
@@ -384,6 +466,7 @@ async def test_create_payment_ignores_internal_backend_host_for_frontend_base_ur
                         "estimated_tokens": 10,
                         "price_jpy": 299,
                         "quote_mode": "estimated_pre_ocr",
+                        "upload_token": "tok-backend-upload",
                     },
                 )
         assert resp.status_code == 200
