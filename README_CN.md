@@ -9,11 +9,10 @@
 截至 2026-04-12，本地 Docker MVP 流程已经跑通，生产环境也已完成一部分配置：
 
 - `upload -> payment/create -> analysis/start -> orders/{id}/status + events/stream -> report -> 合同文本删除`
-- 文本和可提取文本 PDF 会在付款前直接按文本估价；图片 / 扫描 PDF 现在走”双层 OCR”路径：先临时暂存并预估，付款后再做正式 OCR
-- 图片和扫描 PDF 的报价现在会在支付前返回 OCR 质量提示（`low` / `medium` / 支付后正式识别提示）
+- 文本和可提取文本 PDF 会在付款前直接按文本估价；图片 / 扫描 PDF 现在也会在 `/api/upload` 阶段直接运行 Vision OCR，因此所有成功识别的上传都会统一走 exact 报价
 - 文本和可提取文本 PDF 的报价现在还会返回轻量级条款结构预览，让用户在付款前先确认系统确实读懂了合同结构
 - exact 报价现在还会生成 `quote_token`，并按标准化后的合同内容哈希缓存条款预览；同一份合同重复上传时会直接复用上次的预览和付款前成本快照
-- 文本和可提取文本 PDF 的 exact 报价现在还会返回 `is_contract`；高质量本地 OCR 的图片 / 扫描 PDF 预估也会做同样的合同预检。如果预览判断内容不是合同，首页会直接阻断支付区，`/api/payment/create` 也会在服务端拒绝这类支付请求，避免先付款后才发现不是合同。
+- 所有 exact 报价现在都会返回 `is_contract`；如果上传内容被判断为非合同，首页会直接阻断支付区，`/api/payment/create` 也会在服务端拒绝这类支付请求，避免先付款后才发现不是合同。
 - 上传请求和条款预览生成现在都带有 Redis 的按 IP 速率限制，避免匿名脚本反复刷 clause preview 成本
 - `pgvector` RAG 已运行在 PostgreSQL 中，覆盖 10 个法律类别共 331+ 条法律条文（租赁、劳动、兼职、业务委托、买卖等）
 - 前端 9 语言界面已实现，包含品牌标识（ContractGuard）、隐私政策/服务条款页面、独立案例画廊与报告样张展示
@@ -116,7 +115,7 @@ Docker 说明：
 
 - 本地进入已启动服务时优先使用 `docker compose exec`，不要默认使用 `docker compose run`。
 - `docker compose run` 容易留下 `*-run-*` 临时容器，导致 `docker compose down` 时 network 无法释放。
-- 本地 OCR 依赖通过 `INSTALL_LOCAL_OCR=true` 的 Docker build 参数显式开启；默认后端镜像不会自动安装这些较重依赖。
+- 图片与扫描 PDF 现在会在 `/api/upload` 阶段直接调用 GPT-4o Vision OCR，因此只要识别成功，付款前就会返回 exact 报价。
 - Compose 现已基于健康检查编排启动顺序：`backend` 等待健康的 `postgres` / `redis`，`frontend` 等待健康的 `backend`。
 
 访问地址：
@@ -170,8 +169,8 @@ docker compose up -d backend postgres redis
 - 如果分析中途失败，失败前已经发生的 AI 成本也会落到 `analysis_jobs.cost_summary`，后续排查失败单时不再只能看日志。
 - `GET /api/eval/costs` 现在会基于 `reports.cost_summary` 聚合真实样本成本；当真实样本还不够时，会自动从 `backend/data/cost_samples_seed.json` 补足到 10 条基线样本。
 - 每笔已支付订单现在还会单独写入一条 `order_cost_estimates`：先保存支付时的 `estimate_snapshot`，分析完成或失败后再补齐 `actual_snapshot` 和 `comparison_snapshot`。
-- 如果 exact 报价阶段生成了条款预览，这笔付款前成本也会作为 `prepayment_snapshot` 写进 `order_cost_estimates`，并合并到最终的预测/实际总成本中。
-- 对 staged image / scanned PDF，若高质量本地 OCR 已经判断 `is_contract == false`，服务端现在会通过 `upload_token` 绑定的预检上下文拒绝支付；即使客户端故意不传 `quote_token` 也不能绕过。只有 OCR 质量低、OCR 失败或预览被限流时，才继续依赖付费后的正式 OCR 检测兜底。
+- 上传期的 Vision OCR 与 exact 报价阶段的条款预览成本都会作为 `prepayment_snapshot` 写进 `order_cost_estimates`，并合并到最终的预测/实际总成本中。
+- `/api/payment/create` 现在统一依赖 exact `quote_token` + `content_hash` 做服务端校验；如果上传已被判断为 `is_contract == false`，后端会在创建订单前直接拒绝支付。
 - 这些快照会同时记录模型计划和实际模型使用情况（`ocr / parse / analyze / suggestion / translation / embedding`），这样后续切换模型时，就能直接比较对毛利的影响，而不只是看总成本。
 - `GET /api/eval/costs` 现在还会按 `estimate_version` 和模型签名聚合 estimate-vs-actual 偏差，方便长期追踪定价模型和模型更换后的经营表现。
 - `GET /api/eval/operations` 是一个只读运营接口，只统计真实订单，不混入 seed 样本；它会输出收入、实际成本、实际毛利、估算偏差、最近订单，以及按定价模型、已支付价格带、输入类型、报价模式、语言、估算版本、模型签名的聚合结果。

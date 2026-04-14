@@ -9,11 +9,10 @@ AI-powered Japanese contract risk analysis for foreign residents in Japan. Users
 As of 2026-04-12, the local MVP flow is working in Docker, and the production setup is partially in place:
 
 - `upload -> payment/create -> analysis/start -> orders/{id}/status + events/stream -> report retrieval -> contract deletion`
-- Text and text-layer PDFs are quoted before payment from extracted text; image/scanned PDF uploads now use a dual-OCR path with temporary staging plus post-payment formal OCR
-- Image and scanned-PDF quotes now return OCR quality hints (`low` / `medium` / post-payment notice) before the user pays
+- Text and text-layer PDFs are quoted before payment from extracted text; image/scanned PDF uploads now also run Vision OCR during `/api/upload`, so all successful uploads share the same exact-quote path.
 - Exact text / text-layer PDF quotes now also return a lightweight clause-structure preview so users can confirm we parsed the contract before paying
 - Exact quote previews now generate a `quote_token`, cache the clause preview by normalized content hash, and reuse that cached preview/cost snapshot when the same contract is uploaded again
-- Exact text / text-layer PDF quotes now also return `is_contract`; high-confidence local OCR previews for image/scanned PDF uploads do the same. If the preview judges the upload is not a contract, the homepage blocks payment UI and `/api/payment/create` rejects the payment request server-side before any order is created.
+- All exact quotes now also return `is_contract`; if the upload is judged to be non-contract material, the homepage blocks payment UI and `/api/payment/create` rejects the payment request server-side before any order is created.
 - Uploads and preview generation now both have Redis-backed per-IP rate limits so repeated anonymous/scripted requests cannot burn unbounded preview cost
 - `pgvector` RAG is running in PostgreSQL with 331+ law articles across 10 legal categories (rental, labor, part-time, business outsourcing, sales, etc.)
 - 9-language frontend with professional branding (ContractGuard), privacy/terms pages, and a dedicated examples gallery with report-style samples
@@ -122,7 +121,7 @@ Docker note:
 
 - Prefer `docker compose exec` over `docker compose run` for local commands inside running services.
 - `docker compose run` can leave temporary `*-run-*` containers behind and block `docker compose down`.
-- Local OCR dependencies are gated behind `INSTALL_LOCAL_OCR=true` at Docker build time; the default backend image keeps them off for a lighter, safer baseline build.
+- Image and scanned-PDF uploads now run GPT-4o Vision OCR during `/api/upload`, so all successful uploads return an exact quote before payment.
 - Compose startup now relies on service health checks: `backend` waits for healthy `postgres` and `redis`, and `frontend` waits for a healthy `backend`.
 
 Endpoints:
@@ -180,9 +179,9 @@ docker compose up -d backend postgres redis
 - If analysis fails midway, the partial cost summary accumulated up to that point is now persisted to `analysis_jobs.cost_summary` so failed orders can still be audited later.
 - `GET /api/eval/costs` now aggregates persisted `reports.cost_summary` samples and, when live data is still sparse, backfills to a 10-sample baseline from `backend/data/cost_samples_seed.json`.
 - Each paid order now also writes a persisted `order_cost_estimates` row: payment-time `estimate_snapshot`, later `actual_snapshot`, and finally `comparison_snapshot`.
-- Payment-time estimate snapshots now also include a `prepayment_snapshot` when an exact quote generated a clause preview, so pre-payment preview cost is audited separately and then merged into total predicted/actual cost.
+- Payment-time estimate snapshots now also include a `prepayment_snapshot` for upload-time OCR and clause-preview work, so pre-payment OCR/preview cost is audited separately and then merged into total predicted/actual cost.
 - Exact-quote payments now validate the cached preview context on the server before order creation: the request must include a live `quote_token`, the normalized content hash must still match the uploaded contract text, and `is_contract=false` previews are rejected before any order is created.
-- Staged image / scanned-PDF payments now also consult upload-token-bound preview context when high-confidence local OCR already judged the upload to be non-contract material, so dropping `quote_token` on the client no longer bypasses that pre-payment rejection. Low-confidence OCR, OCR failure, or preview rate limits still fall back to the post-payment formal OCR check.
+- Exact-quote payments now validate the cached pre-payment context on the server before order creation: the request must include a live `quote_token`, the normalized content hash must still match the uploaded contract text, and `is_contract=false` uploads are rejected before any order is created.
 - Those snapshots record both the planned model mix and the actual model usage (`ocr / parse / analyze / suggestion / translation / embedding`) so future model upgrades can be compared by margin impact, not just total spend.
 - `GET /api/eval/costs` now also groups estimate-vs-actual deltas by `estimate_version` and by model signature, making pricing-model revisions and model swaps auditable over time.
 - `GET /api/eval/operations` is a read-only operations endpoint built on real orders only; it surfaces revenue, actual cost, actual margin, estimate-vs-actual deltas, recent orders, and groupings by pricing model, paid-price band, input type, quote mode, language, estimate version, and model signature.

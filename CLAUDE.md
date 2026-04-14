@@ -57,10 +57,10 @@ All five docs must stay consistent with the actual codebase. Do not commit code-
 
 Built with LangGraph (agentic loop), PostgreSQL pgvector (RAG), FastAPI (REST + SSE), React/Vite (frontend), Redis, and FastMCP (MCP server).
 
-**Current implemented local MVP pipeline:** `upload_contract → (exact text quote | staged pre-OCR quote) → payment → recognize_text → parse_contract → analyze_risks → generate_report → persist_report`
+**Current implemented local MVP pipeline:** `upload_contract → exact quote → payment → recognize_text → parse_contract → analyze_risks → generate_report → persist_report`
 
-- `upload_contract`: accepts text / image / PDF, estimates price, detects PII, and stages image/scanned PDF uploads for dual-OCR flow
-- `recognize_text`: image OCR with GPT-4o Vision, PDF extraction with OCR fallback, but only after payment for staged OCR uploads
+- `upload_contract`: accepts text / image / PDF, estimates price, detects PII, and now runs Vision OCR for image/scanned PDF uploads before payment
+- `recognize_text`: primarily normalizes already-uploaded contract text; image OCR and scanned-PDF OCR are front-loaded into `/api/upload`
 - `analyze_risks`: clause-by-clause analysis; each clause runs internal RAG lookup first, then a compact LLM judgment, and only high/medium risks trigger `generate_suggestion`
 - `generate_report`: aggregates results and translates to target language
 - `persist_report`: stores report, caches it, emails link, and deletes contract text
@@ -70,11 +70,10 @@ Built with LangGraph (agentic loop), PostgreSQL pgvector (RAG), FastAPI (REST + 
 Current status as of 2026-04-12:
 - Local Docker end-to-end flow is verified through upload, payment creation, persistent analysis-task start, status/event restoration, replayable event streaming, report retrieval, and contract deletion.
 - `APP_ENV=development` enables local-only conveniences such as auto table bootstrap and dev payment bypass.
-- Dual-OCR groundwork is now in code: text/text-layer PDFs are quoted before payment, while image/scanned PDFs can be staged for local pre-estimation and formal OCR after payment.
-- Pre-payment image and scanned-PDF quotes now return OCR quality hints so users can correct blurry captures before paying.
+- Text/text-layer PDFs and image/scanned PDFs now all converge on one exact-quote flow; image/scanned uploads run Vision OCR during `/api/upload` instead of deferring formal OCR until after payment.
 - Exact text and text-layer PDF quotes now also include a lightweight clause-preview extraction so users can confirm the contract structure before they pay.
 - Exact quote previews now generate a `quote_token`, cache clause previews by normalized content hash, and reuse those cached previews/cost snapshots when the same contract is uploaded again.
-- Exact text / text-layer PDF uploads now also return `is_contract`; high-confidence local OCR previews for staged image / scanned-PDF uploads can do the same. Homepage payment UI is blocked when `is_contract == false`, and `/api/payment/create` now enforces both the exact-quote check via `quote_token` + content-hash validation and the staged-upload check via `upload_token`-bound preview context.
+- All exact uploads now also return `is_contract`. Homepage payment UI is blocked when `is_contract == false`, and `/api/payment/create` enforces the exact-quote check via `quote_token` + content-hash validation before any order is created.
 - Upload and preview generation are now both protected by Redis-backed per-IP rate limits so anonymous/scripted traffic cannot burn unbounded pre-payment preview cost.
 - Deployment configs ready: `fly.toml` (Fly app `contractguard-prod`, NRT, force_https) + `vercel.json` (API proxy, security headers) + Alembic migration chain through `009`.
 - `frontend/index.html` now includes static OG / Twitter metadata, and `frontend/public/og-image.svg` provides a lightweight branded social preview image.
@@ -199,10 +198,9 @@ backend/
     quote_guard.py    # Exact-quote cache tokens + content-hash reuse + per-IP preview/upload rate limits
     report_pdf.py     # Build downloadable PDF reports from saved report payloads
     event_bus.py      # In-process pub/sub for incremental analysis events
-    local_ocr.py      # Optional PaddleOCR-based pre-payment quote estimation
-    ocr.py            # GPT-4o Vision OCR
-    pdf_extractor.py  # pypdf + OCR fallback
-    temp_uploads.py   # Temporary upload staging for pre-payment OCR flows
+    ocr.py            # GPT-4o Vision OCR for image + PDF uploads
+    pdf_extractor.py  # pypdf text-layer extraction + Vision PDF OCR fallback
+    temp_uploads.py   # Legacy staged-upload helpers kept only for retry compatibility
     token_estimator.py # tiktoken + linear token pricing (`¥75 / 1k`, minimum `¥200`) + internal page-count fallback
     pii_detector.py   # Regex PII detection (phone, email, mynumber, address, postal)
     payment.py        # KOMOJU API client + HMAC webhook verification
@@ -299,7 +297,7 @@ Embeddings are generated via OpenAI API (httpx direct call, not langchain).
 ### Payment + Report flow
 1. User uploads contract → gets pricing → creates order + KOMOJU session
 2. KOMOJU webhook marks order as `paid`
-3. If the order came from staged image/scanned PDF upload, formal OCR runs only after payment and before persistent analysis starts
+3. Uploaded contract text is already finalized before payment, so analysis starts directly from the exact-quote text without a second OCR pass
 4. `/review/:orderId` starts or resumes the persistent analysis task, restores saved event history, and subscribes to incremental updates
 5. Contract text nullified immediately after analysis (privacy)
 6. Redis cache expires in 72h; APScheduler cleans DB hourly
@@ -317,7 +315,7 @@ Embeddings are generated via OpenAI API (httpx direct call, not langchain).
 - The current runtime policy is `¥75 / 1000 tokens` with a `¥200` minimum charge. Internally, page estimates remain only as a guardrail for upload limits and OCR planning.
 - Exact quote uploads now emit a `quote_token`; Redis caches the resulting clause preview and `prepayment_snapshot` by normalized `content_hash`, so repeated uploads of the same contract reuse that preview instead of re-running the preview LLM call.
 - `/api/payment/create` now validates that exact-quote `quote_token` context still exists, still matches the uploaded contract hash, and was not flagged as `is_contract == false` before creating an order.
-- For staged image / scanned-PDF payments, the same endpoint now also checks any `upload_token`-bound high-confidence local-OCR preview context and blocks payment if that pre-screen already determined the upload is not contract material; low-confidence OCR and preview rate-limit cases still fall back to post-payment formal OCR.
+- The same endpoint now also validates the exact-quote `content_hash` and rejects uploads whose pre-payment `is_contract` verdict is already `false`.
 - `/api/payment/{order_id}/retry` now rejects retries when the order's contract payload is no longer recoverable (no `contract_text` and no staged upload file), so users are asked to re-upload before paying again instead of discovering the failure only after another checkout attempt.
 - The upload flow applies separate per-IP rate limits to raw upload requests and preview generation, preventing the exact-quote preview endpoint from being abused to generate unlimited anonymous LLM cost.
 - Each paid order now also stores a payment-time estimate snapshot keyed by `COST_ESTIMATE_VERSION` and `pricing_policy_version`, including predicted clause counts, step-level estimated costs, quoted margin, and the planned model mix (`ocr/parse/analyze/suggestion/translation/embedding`).
