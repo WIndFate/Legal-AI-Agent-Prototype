@@ -33,3 +33,4 @@ class Order(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
     contract_deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    client_ip: Mapped[str | None] = mapped_column(String(64), nullable=True)
