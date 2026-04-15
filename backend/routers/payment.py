@@ -56,6 +56,7 @@ def _validate_quote_context(
                 status_code=409,
                 detail="The uploaded content was identified as non-contract material. Please upload a contract before payment.",
             )
+        _assert_client_price_matches_quote(request, effective_context)
         return
     if not request.quote_token or quote_context is None:
         raise HTTPException(
@@ -75,6 +76,37 @@ def _validate_quote_context(
         raise HTTPException(
             status_code=409,
             detail="The uploaded content was identified as non-contract material. Please upload a contract before payment.",
+        )
+
+    _assert_client_price_matches_quote(request, quote_context)
+
+
+def _assert_client_price_matches_quote(
+    request: PaymentCreateRequest,
+    context: dict | None,
+) -> None:
+    """Reject client-tampered price / token counts.
+
+    The quote cache stores the server-computed price_jpy and estimated_tokens
+    keyed by quote_token / upload_token. If the client forges a smaller price
+    in the payment body, the order would be created (and KOMOJU billed) at the
+    forged amount. We re-validate both fields against the authoritative cached
+    values and 409 on any mismatch. Missing values in the cache (legacy entries)
+    are tolerated to avoid breaking in-flight quotes at deploy time.
+    """
+    if context is None:
+        return
+    expected_price = context.get("price_jpy")
+    if isinstance(expected_price, int) and request.price_jpy != expected_price:
+        raise HTTPException(
+            status_code=409,
+            detail="Quoted price no longer matches server records. Please upload the contract again before payment.",
+        )
+    expected_tokens = context.get("estimated_tokens")
+    if isinstance(expected_tokens, int) and request.estimated_tokens != expected_tokens:
+        raise HTTPException(
+            status_code=409,
+            detail="Quoted token estimate no longer matches server records. Please upload the contract again before payment.",
         )
 
 
