@@ -10,6 +10,11 @@ from backend.agent.nodes import parse_model
 from backend.config import get_settings
 from backend.dependencies import get_redis
 from backend.schemas.upload import UploadResponse
+from backend.services.abuse_guard import (
+    check_ocr_allowed,
+    record_ocr_upload,
+    rollback_ocr_upload,
+)
 from backend.services.analytics import capture as posthog_capture
 from backend.services.costing import (
     estimate_cost_jpy,
@@ -17,18 +22,26 @@ from backend.services.costing import (
     extract_usage,
 )
 from backend.services.ocr import extract_text_from_image_with_snapshot, extract_text_from_pdf_with_snapshot
-from backend.services.pdf_extractor import extract_text_from_pdf_text_layer, pdf_text_layer_is_sufficient
+from backend.services.pdf_extractor import (
+    extract_text_from_pdf_text_layer,
+    pdf_text_layer_is_sufficient,
+    precheck_pdf_pages,
+)
 from backend.services.pii_detector import detect_pii
 from backend.services.quote_guard import (
     allow_preview_generation,
     build_contract_content_hash,
+    build_file_hash,
     build_quote_token,
     enforce_upload_rate_limit,
     extract_client_ip,
     load_cached_quote,
+    load_ocr_result_cache,
     store_cached_quote,
+    store_ocr_result_cache,
 )
 from backend.services.token_estimator import estimate_tokens_and_price
+from backend.services.upload_validation import check_upload_file_size, detect_and_validate_mime
 from backend.services.costing import log_model_usage
 
 logger = logging.getLogger(__name__)
@@ -40,9 +53,9 @@ preview_llm = ChatOpenAI(model=parse_model, temperature=0, timeout=10)
 def _enforce_upload_limits(page_estimate: int, estimated_tokens: int) -> None:
     settings = get_settings()
     if page_estimate > settings.MAX_UPLOAD_PAGES:
-        raise HTTPException(status_code=413, detail="Contract exceeds maximum supported page count")
+        raise HTTPException(status_code=413, detail="upload_too_many_pages")
     if estimated_tokens > settings.MAX_CONTRACT_TOKENS:
-        raise HTTPException(status_code=413, detail="Contract exceeds maximum supported length")
+        raise HTTPException(status_code=413, detail="upload_text_too_long")
 
 
 def _extract_clause_preview(
@@ -159,6 +172,7 @@ async def upload_contract(
     input_type: str = Form("text"),
 ):
     """Upload a contract via image, PDF, or text. Returns token estimate, pricing, and PII warnings."""
+    settings = get_settings()
     redis = await get_redis()
     client_ip = extract_client_ip(raw_request)
     await enforce_upload_rate_limit(redis, client_ip)
@@ -184,11 +198,28 @@ async def upload_contract(
     }
 
     if input_type == "text" and text:
+        # Text char limit check (pre-payment cost is negligible for text)
+        if len(text) > settings.MAX_UPLOAD_TEXT_CHARS:
+            raise HTTPException(status_code=413, detail="upload_text_too_long")
         contract_text = text
         estimation = estimate_tokens_and_price(contract_text)
         pii_warnings = detect_pii(contract_text)
+
     elif input_type == "pdf" and file:
         pdf_bytes = await file.read()
+
+        # MIME validation (P0-5): detect real type from magic bytes
+        actual_mime = detect_and_validate_mime(pdf_bytes)
+
+        # File size check (P0-1)
+        check_upload_file_size(pdf_bytes, actual_mime, settings)
+
+        # Page count precheck BEFORE any OCR (P0-1)
+        precheck_pdf_pages(pdf_bytes)
+
+        upload_mime_type = actual_mime
+
+        # Try text layer first (free — pypdf, no abuse guard needed)
         extracted_text, page_count = extract_text_from_pdf_text_layer(pdf_bytes)
         if pdf_text_layer_is_sufficient(extracted_text, page_count):
             contract_text = extracted_text
@@ -196,20 +227,63 @@ async def upload_contract(
             estimation = estimate_tokens_and_price(contract_text)
             pii_warnings = detect_pii(contract_text)
         else:
-            # Scanned PDF — use Vision OCR to extract text
-            contract_text, ocr_snapshot = await extract_text_from_pdf_with_snapshot(pdf_bytes)
+            # Scanned PDF needs Vision OCR — apply abuse guard
+            file_hash = build_file_hash(pdf_bytes)
+            cached_ocr = await load_ocr_result_cache(redis, file_hash)
+            if cached_ocr:
+                contract_text = cached_ocr["text"]
+                ocr_snapshot = cached_ocr.get("snapshot")
+            else:
+                if not await check_ocr_allowed(redis, client_ip):
+                    raise HTTPException(status_code=429, detail="upload_banned")
+                await record_ocr_upload(redis, client_ip)
+                try:
+                    contract_text, ocr_snapshot = await extract_text_from_pdf_with_snapshot(pdf_bytes)
+                    await store_ocr_result_cache(redis, file_hash, contract_text, ocr_snapshot)
+                except Exception:
+                    await rollback_ocr_upload(redis, client_ip)
+                    raise
             estimate_source = "vision_ocr"
             if contract_text.strip():
                 estimation = estimate_tokens_and_price(contract_text)
                 pii_warnings = detect_pii(contract_text)
+
     elif input_type == "image" and file:
         image_bytes = await file.read()
-        mime = file.content_type or "image/jpeg"
-        contract_text, ocr_snapshot = await extract_text_from_image_with_snapshot(image_bytes, mime)
+
+        # MIME validation (P0-5)
+        actual_mime = detect_and_validate_mime(image_bytes)
+
+        # File size check (P0-1)
+        check_upload_file_size(image_bytes, actual_mime, settings)
+
+        upload_mime_type = actual_mime
+
+        # OCR cache check by raw file hash — same file = no new OCR cost, no waste recorded
+        file_hash = build_file_hash(image_bytes)
+        cached_ocr = await load_ocr_result_cache(redis, file_hash)
+        if cached_ocr:
+            contract_text = cached_ocr["text"]
+            ocr_snapshot = cached_ocr.get("snapshot")
+        else:
+            # New file — apply abuse guard before Vision OCR
+            if not await check_ocr_allowed(redis, client_ip):
+                raise HTTPException(status_code=429, detail="upload_banned")
+            await record_ocr_upload(redis, client_ip)
+            try:
+                contract_text, ocr_snapshot = await extract_text_from_image_with_snapshot(
+                    image_bytes, actual_mime
+                )
+                await store_ocr_result_cache(redis, file_hash, contract_text, ocr_snapshot)
+            except Exception:
+                await rollback_ocr_upload(redis, client_ip)
+                raise
+
         estimate_source = "vision_ocr"
         if contract_text.strip():
             estimation = estimate_tokens_and_price(contract_text)
             pii_warnings = detect_pii(contract_text)
+
     else:
         contract_text = text or ""
         if contract_text.strip():
