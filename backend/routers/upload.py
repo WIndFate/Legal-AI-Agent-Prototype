@@ -239,7 +239,11 @@ async def upload_contract(
                 await record_ocr_upload(redis, client_ip)
                 try:
                     contract_text, ocr_snapshot = await extract_text_from_pdf_with_snapshot(pdf_bytes)
-                    await store_ocr_result_cache(redis, file_hash, contract_text, ocr_snapshot)
+                    # Only cache non-empty OCR results: an empty result indicates a
+                    # blank/unreadable scan, and caching it would permanently serve
+                    # zero-price responses for anyone uploading the same file.
+                    if contract_text.strip():
+                        await store_ocr_result_cache(redis, file_hash, contract_text, ocr_snapshot)
                 except Exception:
                     await rollback_ocr_upload(redis, client_ip)
                     raise
@@ -274,7 +278,9 @@ async def upload_contract(
                 contract_text, ocr_snapshot = await extract_text_from_image_with_snapshot(
                     image_bytes, actual_mime
                 )
-                await store_ocr_result_cache(redis, file_hash, contract_text, ocr_snapshot)
+                # Skip caching empty OCR results — see PDF branch rationale above.
+                if contract_text.strip():
+                    await store_ocr_result_cache(redis, file_hash, contract_text, ocr_snapshot)
             except Exception:
                 await rollback_ocr_upload(redis, client_ip)
                 raise
