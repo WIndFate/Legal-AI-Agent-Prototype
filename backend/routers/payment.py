@@ -315,8 +315,7 @@ async def payment_webhook(
                 order.payment_status = "paid"
                 order.paid_at = datetime.now(timezone.utc)
                 order.komoju_session_id = payment_data.get("id", "")
-                # Reduce OCR waste counter for this IP so future uploads aren't blocked
-                await abuse_record_payment(redis, order.client_ip)
+                paid_ip = order.client_ip
 
                 if order.referral_code_used:
                     referral_result = await db.execute(
@@ -327,6 +326,10 @@ async def payment_webhook(
                         referral.uses_count += 1
 
                 await db.commit()
+                # Only decrement abuse waste AFTER the DB commit succeeds, otherwise a
+                # commit failure would leave Redis with an inflated paid counter that
+                # can never be undone (reducing effective waste and granting extra quota).
+                await abuse_record_payment(redis, paid_ip)
                 logger.info("Order %s marked as paid", order_id)
                 posthog_capture(
                     order.email or order_id,
