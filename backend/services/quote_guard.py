@@ -28,6 +28,10 @@ def extract_client_ip(request: Request) -> str:
          historically used here, which let an attacker spoof any source IP
          and bypass the per-IP OCR abuse counter by adding their own header.
       3. `request.client.host` — direct socket peer.
+
+    Dev note: behind the Vite dev proxy the rightmost XFF entry resolves to
+    the container bridge IP, so all local developers share one abuse counter.
+    This is expected and does not affect production, which is fronted by Fly.
     """
     fly_client = request.headers.get("fly-client-ip", "").strip()
     if fly_client:

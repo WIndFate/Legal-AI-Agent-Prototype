@@ -51,7 +51,15 @@ def _validate_quote_context(
                 detail="Staged upload context missing. Please upload the contract again before payment.",
             )
         effective_context = upload_quote_context or quote_context
-        if effective_context is not None and effective_context.get("is_contract") is False:
+        # Reject non-exact payments whose cached context has expired / is missing.
+        # Without a server-side context we cannot verify the submitted price_jpy
+        # or estimated_tokens, so a forged ¥1 body would otherwise reach KOMOJU.
+        if effective_context is None:
+            raise HTTPException(
+                status_code=409,
+                detail="Staged upload context expired. Please upload the contract again before payment.",
+            )
+        if effective_context.get("is_contract") is False:
             raise HTTPException(
                 status_code=409,
                 detail="The uploaded content was identified as non-contract material. Please upload a contract before payment.",
@@ -94,8 +102,14 @@ def _assert_client_price_matches_quote(
     values and 409 on any mismatch. Missing values in the cache (legacy entries)
     are tolerated to avoid breaking in-flight quotes at deploy time.
     """
+    # Defense-in-depth: callers must not pass None here (a missing context means
+    # we cannot verify the quote at all and must 409 upstream), but assert it
+    # explicitly so a future caller can't silently regress into fail-open.
     if context is None:
-        return
+        raise HTTPException(
+            status_code=409,
+            detail="Quote context missing. Please upload the contract again before payment.",
+        )
     expected_price = context.get("price_jpy")
     if isinstance(expected_price, int) and request.price_jpy != expected_price:
         raise HTTPException(
