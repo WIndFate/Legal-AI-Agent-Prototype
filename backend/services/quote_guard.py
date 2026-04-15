@@ -52,12 +52,18 @@ async def enforce_upload_rate_limit(redis: Redis | None, client_ip: str) -> None
 
 
 async def allow_preview_generation(redis: Redis | None, client_ip: str) -> bool:
+    """Return True if clause preview (pre-payment LLM call) may run.
+
+    Fail-closed: Redis unavailable or errors out -> deny preview, since the
+    preview path calls a pre-payment LLM that could be abused if unbounded.
+    """
     settings = get_settings()
     limited = await _consume_rate_limit(
         redis,
         key=f"preview-rate:{client_ip}",
         limit=settings.PREVIEW_RATE_LIMIT_COUNT,
         window_seconds=settings.PREVIEW_RATE_LIMIT_WINDOW_SECONDS,
+        fail_closed=True,
     )
     return not limited
 
@@ -131,17 +137,31 @@ async def load_upload_quote_context(redis: Redis | None, upload_token: str | Non
         return None
 
 
-async def _consume_rate_limit(redis: Redis | None, *, key: str, limit: int, window_seconds: int) -> bool:
+async def _consume_rate_limit(
+    redis: Redis | None,
+    *,
+    key: str,
+    limit: int,
+    window_seconds: int,
+    fail_closed: bool = False,
+) -> bool:
+    """Increment a per-IP counter and return True when over limit.
+
+    - `fail_closed=False` (default, for generic upload rate limit): treat Redis
+      outages as "not limited" so a broken cache doesn't break the service.
+    - `fail_closed=True` (for LLM/OCR pre-payment paths): treat Redis outages
+      as "over limit" so untracked cost cannot accumulate.
+    """
     if redis is None:
-        return False
+        return True if fail_closed else False
     try:
         current = await redis.incr(key)
         if current == 1:
             await redis.expire(key, window_seconds)
         return int(current) > limit
     except RedisError as exc:
-        logger.warning("Rate limit check failed for %s: %s", key, exc)
-        return False
+        logger.warning("Rate limit check failed for %s: %s (fail_closed=%s)", key, exc, fail_closed)
+        return True if fail_closed else False
 
 
 async def load_ocr_result_cache(redis: Redis | None, file_hash: str) -> dict | None:
