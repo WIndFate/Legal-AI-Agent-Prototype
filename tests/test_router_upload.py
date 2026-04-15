@@ -1,11 +1,12 @@
 """Integration tests for POST /api/upload endpoint."""
 
 import io
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from httpx import ASGITransport, AsyncClient
 from fastapi import FastAPI
+from redis.exceptions import RedisError
 
 from backend.routers.upload import _extract_clause_preview, preview_llm, router
 
@@ -36,6 +37,12 @@ def _mock_quote_guard():
         patch("backend.routers.upload.load_cached_quote", new_callable=AsyncMock, return_value=None),
         patch("backend.routers.upload.store_cached_quote", new_callable=AsyncMock, return_value=None),
         patch("backend.routers.upload.build_quote_token", return_value="quote-test-token"),
+        # Abuse guard defaults: allow OCR, silent record/rollback (redis=None would fail-closed otherwise)
+        patch("backend.routers.upload.check_ocr_allowed", new_callable=AsyncMock, return_value=True),
+        patch("backend.routers.upload.record_ocr_upload", new_callable=AsyncMock, return_value=None),
+        patch("backend.routers.upload.rollback_ocr_upload", new_callable=AsyncMock, return_value=None),
+        patch("backend.routers.upload.load_ocr_result_cache", new_callable=AsyncMock, return_value=None),
+        patch("backend.routers.upload.store_ocr_result_cache", new_callable=AsyncMock, return_value=None),
     ):
         yield
 
@@ -427,6 +434,9 @@ async def test_upload_text_exceeding_max_tokens_returns_413():
         settings = mock_settings.return_value
         settings.MAX_UPLOAD_PAGES = 30
         settings.MAX_CONTRACT_TOKENS = 100  # very low limit for testing
+        settings.MAX_UPLOAD_TEXT_CHARS = 1_000_000  # high enough to not trigger text char limit
+        settings.MAX_UPLOAD_IMAGE_MB = 25
+        settings.MAX_UPLOAD_PDF_MB = 30
         settings.PRICING_POLICY_FILE = "backend/data/pricing_policy.json"
 
         transport = ASGITransport(app=app)
@@ -436,3 +446,211 @@ async def test_upload_text_exceeding_max_tokens_returns_413():
                 data={"input_type": "text", "text": huge_text},
             )
     assert resp.status_code == 413
+
+
+# -- P0-1: file size limits --------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_upload_rejects_oversized_image():
+    """Image files over 25 MB should be rejected with 413 before OCR is called."""
+    oversized_bytes = b"\xff\xd8\xff\xe0" + b"\x00" * (26 * 1024 * 1024)  # JPEG magic + 26 MB
+
+    with patch("backend.routers.upload.extract_text_from_image_with_snapshot") as mock_ocr:
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            resp = await client.post(
+                "/api/upload",
+                data={"input_type": "image"},
+                files={"file": ("big.jpg", io.BytesIO(oversized_bytes), "image/jpeg")},
+            )
+    assert resp.status_code == 413
+    assert resp.json()["detail"] == "upload_too_large"
+    mock_ocr.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_upload_rejects_oversized_pdf():
+    """PDF files over 30 MB should be rejected with 413 before OCR is called."""
+    oversized_bytes = b"%PDF-1.4" + b"\x00" * (31 * 1024 * 1024)  # PDF magic + 31 MB
+
+    with (
+        patch("backend.routers.upload.extract_text_from_pdf_with_snapshot") as mock_ocr,
+        patch("backend.routers.upload.extract_text_from_pdf_text_layer", return_value=("", 1)),
+        patch("backend.routers.upload.pdf_text_layer_is_sufficient", return_value=False),
+        patch("backend.routers.upload.precheck_pdf_pages", return_value=1),
+    ):
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            resp = await client.post(
+                "/api/upload",
+                data={"input_type": "pdf"},
+                files={"file": ("big.pdf", io.BytesIO(oversized_bytes), "application/pdf")},
+            )
+    assert resp.status_code == 413
+    assert resp.json()["detail"] == "upload_too_large"
+    mock_ocr.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_upload_rejects_pdf_over_page_cap():
+    """PDF with more than MAX_UPLOAD_PAGES pages should be rejected before OCR is called."""
+    fake_pdf = b"%PDF-1.4" + b"\x00" * 100
+
+    with (
+        patch("backend.routers.upload.extract_text_from_pdf_with_snapshot") as mock_vision_ocr,
+        patch("backend.routers.upload.precheck_pdf_pages", side_effect=Exception("upload_too_many_pages")),
+    ):
+        from fastapi import HTTPException as FastAPIHTTPException
+        with patch(
+            "backend.routers.upload.precheck_pdf_pages",
+            side_effect=FastAPIHTTPException(status_code=413, detail="upload_too_many_pages"),
+        ):
+            transport = ASGITransport(app=app)
+            async with AsyncClient(transport=transport, base_url="http://test") as client:
+                resp = await client.post(
+                    "/api/upload",
+                    data={"input_type": "pdf"},
+                    files={"file": ("many_pages.pdf", io.BytesIO(fake_pdf), "application/pdf")},
+                )
+    assert resp.status_code == 413
+    assert resp.json()["detail"] == "upload_too_many_pages"
+    mock_vision_ocr.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_upload_rejects_mime_mismatch():
+    """Files whose magic bytes do not match a supported MIME type should be rejected with 415."""
+    exe_bytes = b"MZ\x90\x00" + b"\x00" * 100  # PE/EXE magic bytes
+
+    with patch("backend.routers.upload.extract_text_from_image_with_snapshot") as mock_ocr:
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            resp = await client.post(
+                "/api/upload",
+                data={"input_type": "image"},
+                files={"file": ("evil.exe", io.BytesIO(exe_bytes), "image/png")},
+            )
+    assert resp.status_code == 415
+    assert resp.json()["detail"] == "upload_unsupported_type"
+    mock_ocr.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_upload_text_too_long():
+    """Text input over MAX_UPLOAD_TEXT_CHARS (80000) should be rejected with 413."""
+    long_text = "第1条 " * 30000  # well over 80000 chars
+
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        resp = await client.post(
+            "/api/upload",
+            data={"input_type": "text", "text": long_text},
+        )
+    assert resp.status_code == 413
+    assert resp.json()["detail"] == "upload_text_too_long"
+
+
+# -- P0-1: OCR abuse guard ---------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_abuse_guard_blocks_fourth_unpaid_upload():
+    """After 3 unpaid OCR uploads, the 4th should return 429 before OCR is called."""
+    fake_image = b"\x89PNG\r\n\x1a\n" + b"\x00" * 50
+
+    with (
+        patch("backend.routers.upload.load_ocr_result_cache", new_callable=AsyncMock, return_value=None),
+        patch("backend.routers.upload.check_ocr_allowed", new_callable=AsyncMock, return_value=False),
+        patch("backend.routers.upload.extract_text_from_image_with_snapshot") as mock_ocr,
+    ):
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            resp = await client.post(
+                "/api/upload",
+                data={"input_type": "image"},
+                files={"file": ("contract4.png", io.BytesIO(fake_image), "image/png")},
+            )
+    assert resp.status_code == 429
+    assert resp.json()["detail"] == "upload_banned"
+    mock_ocr.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_abuse_guard_same_hash_does_not_count():
+    """Uploading the same image (same file hash) hits OCR cache and skips abuse guard."""
+    fake_image = b"\x89PNG\r\n\x1a\n" + b"\x00" * 50
+    cached_result = {"text": "第1条 業務委託", "snapshot": {"ocr_succeeded": True}}
+
+    with (
+        patch("backend.routers.upload.load_ocr_result_cache", new_callable=AsyncMock, return_value=cached_result),
+        patch("backend.routers.upload.check_ocr_allowed", new_callable=AsyncMock) as mock_check,
+        patch("backend.routers.upload.record_ocr_upload", new_callable=AsyncMock) as mock_record,
+        patch("backend.routers.upload.extract_text_from_image_with_snapshot") as mock_ocr,
+    ):
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            resp = await client.post(
+                "/api/upload",
+                data={"input_type": "image"},
+                files={"file": ("same.png", io.BytesIO(fake_image), "image/png")},
+            )
+    assert resp.status_code == 200
+    # Abuse guard should not be consulted or incremented for cache hits
+    mock_check.assert_not_called()
+    mock_record.assert_not_called()
+    mock_ocr.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_abuse_guard_rollback_on_ocr_failure():
+    """If Vision OCR raises an exception, record_ocr_upload should be rolled back."""
+    fake_image = b"\x89PNG\r\n\x1a\n" + b"\x00" * 50
+
+    with (
+        patch("backend.routers.upload.load_ocr_result_cache", new_callable=AsyncMock, return_value=None),
+        patch("backend.routers.upload.check_ocr_allowed", new_callable=AsyncMock, return_value=True),
+        patch("backend.routers.upload.record_ocr_upload", new_callable=AsyncMock) as mock_record,
+        patch("backend.routers.upload.rollback_ocr_upload", new_callable=AsyncMock) as mock_rollback,
+        patch(
+            "backend.routers.upload.extract_text_from_image_with_snapshot",
+            new_callable=AsyncMock,
+            side_effect=RuntimeError("Vision API timeout"),
+        ),
+    ):
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            with pytest.raises(RuntimeError, match="Vision API timeout"):
+                await client.post(
+                    "/api/upload",
+                    data={"input_type": "image"},
+                    files={"file": ("contract.png", io.BytesIO(fake_image), "image/png")},
+                )
+    # Verify rollback was called even though OCR raised
+    mock_record.assert_called_once()
+    mock_rollback.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_abuse_guard_redis_down_fail_closed():
+    """When Redis is unavailable, check_ocr_allowed should fail-closed and return 429."""
+    fake_image = b"\x89PNG\r\n\x1a\n" + b"\x00" * 50
+
+    with (
+        patch("backend.routers.upload.load_ocr_result_cache", new_callable=AsyncMock, return_value=None),
+        patch(
+            "backend.routers.upload.check_ocr_allowed",
+            new_callable=AsyncMock,
+            return_value=False,  # fail-closed: Redis down → deny
+        ),
+        patch("backend.routers.upload.extract_text_from_image_with_snapshot") as mock_ocr,
+    ):
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            resp = await client.post(
+                "/api/upload",
+                data={"input_type": "image"},
+                files={"file": ("contract.png", io.BytesIO(fake_image), "image/png")},
+            )
+    assert resp.status_code == 429
+    mock_ocr.assert_not_called()

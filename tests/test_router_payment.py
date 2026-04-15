@@ -44,6 +44,7 @@ class FakeOrder:
         self.paid_at = kwargs.get("paid_at", None)
         self.komoju_session_id = kwargs.get("komoju_session_id", None)
         self.analysis_status = kwargs.get("analysis_status", "waiting")
+        self.client_ip = kwargs.get("client_ip", "127.0.0.1")
 
 
 class _FakeResult:
@@ -105,6 +106,7 @@ def _mock_quote_context():
         patch("backend.routers.payment.get_redis", new_callable=AsyncMock, return_value=None),
         patch("backend.routers.payment.load_quote_context", new_callable=AsyncMock, return_value=None),
         patch("backend.routers.payment.load_upload_quote_context", new_callable=AsyncMock, return_value=None),
+        patch("backend.routers.payment.abuse_record_payment", new_callable=AsyncMock, return_value=None),
     ):
         yield
 
