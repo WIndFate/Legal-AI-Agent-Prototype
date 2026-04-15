@@ -296,6 +296,11 @@ async def upload_contract(
             estimation = estimate_tokens_and_price(contract_text)
             pii_warnings = detect_pii(contract_text)
 
+    # Enforce token / page limits BEFORE the preview LLM runs so that oversize
+    # contracts don't pay preview cost on top of the OCR cost already incurred.
+    if contract_text.strip():
+        _enforce_upload_limits(estimation["page_estimate"], estimation["estimated_tokens"])
+
     if quote_mode == "exact" and contract_text.strip():
         content_hash = build_contract_content_hash(contract_text)
         cached_quote = await load_cached_quote(redis, content_hash)
@@ -339,6 +344,10 @@ async def upload_contract(
                     "clause_count": clause_count,
                     "is_contract": is_contract,
                     "prepayment_snapshot": prepayment_snapshot,
+                    # Authoritative price / token count. Payment endpoint
+                    # verifies the client-submitted price_jpy against these.
+                    "price_jpy": estimation["price_jpy"],
+                    "estimated_tokens": estimation["estimated_tokens"],
                 },
             )
 
@@ -358,8 +367,6 @@ async def upload_contract(
             upload_mime_type=upload_mime_type,
             pii_warnings=[],
         )
-
-    _enforce_upload_limits(estimation["page_estimate"], estimation["estimated_tokens"])
 
     posthog_capture(
         "anonymous",
