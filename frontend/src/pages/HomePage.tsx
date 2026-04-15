@@ -36,6 +36,20 @@ export default function HomePage() {
   const [paying, setPaying] = useState(false);
 
   const handleUpload = async () => {
+    // Pre-flight file size check (before network round-trip)
+    if (inputMode === 'file' && file) {
+      const maxMB = (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) ? 30 : 25;
+      if (file.size > maxMB * 1024 * 1024) {
+        setError(t('errors.upload_too_large', { max: maxMB }));
+        return;
+      }
+    }
+    // Pre-flight text length check
+    if (inputMode === 'text' && textInput.length > 80_000) {
+      setError(t('errors.upload_text_too_long'));
+      return;
+    }
+
     setLoading(true);
     setError('');
     setUploadResult(null);
@@ -51,7 +65,19 @@ export default function HomePage() {
       }
 
       const res = await fetch('/api/upload', { method: 'POST', body: formData });
-      if (!res.ok) throw new Error(`Upload failed: ${res.status}`);
+      if (!res.ok) {
+        const body = await res.json().catch(() => null);
+        const code: string = body?.detail ?? '';
+        const errorKey =
+          code === 'upload_too_large' ? 'errors.upload_too_large' :
+          code === 'upload_too_many_pages' ? 'errors.upload_too_many_pages' :
+          code === 'upload_unsupported_type' ? 'errors.upload_unsupported_type' :
+          code === 'upload_text_too_long' ? 'errors.upload_text_too_long' :
+          code === 'upload_banned' ? 'errors.upload_banned' :
+          'errors.upload_failed';
+        setError(t(errorKey, { max: 25 }));
+        return;
+      }
 
       const data: UploadResult = await res.json();
       setUploadResult(data);

@@ -137,17 +137,26 @@ export default function HomeUploadSection({
 
       <div className={styles.uploadArea}>
         {inputMode === 'text' ? (
-          <textarea
-            value={textInput}
-            onChange={(e) => setTextInput(e.target.value)}
-            placeholder={t('upload.placeholder')}
-            rows={12}
-            enterKeyHint="done"
-          />
+          <div className={styles.textInputWrapper}>
+            <textarea
+              value={textInput}
+              onChange={(e) => setTextInput(e.target.value)}
+              placeholder={t('upload.placeholder')}
+              rows={12}
+              enterKeyHint="done"
+            />
+            <p className={clsx(
+              styles.charCounter,
+              textInput.length > 80_000 && styles.charCounterOver,
+            )}>
+              {t('upload.char_count', { count: textInput.length.toLocaleString() })}
+            </p>
+          </div>
         ) : (
           <div className={styles.fileUpload}>
             <p className={styles.fileUploadTitle}>{t('upload.file')}</p>
             <p className={styles.fileUploadHint}>{t('upload.file_hint')}</p>
+            <p className={styles.fileUploadLimits}>{t('upload.file_limits')}</p>
             <div className={styles.fileUploadActions}>
               <label htmlFor={fileInputId} className={styles.filePickerButton}>
                 {t('upload.file')}
@@ -158,7 +167,7 @@ export default function HomeUploadSection({
               id={fileInputId}
               className={styles.fileInput}
               type="file"
-              accept="image/*,.pdf,application/pdf"
+              accept=".jpg,.jpeg,.png,.webp,.pdf,application/pdf,image/jpeg,image/png,image/webp"
               onChange={(e) => setFile(e.target.files?.[0] || null)}
             />
             <div className={styles.formatPills}>
