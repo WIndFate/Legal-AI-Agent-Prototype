@@ -66,8 +66,13 @@ class Settings(BaseSettings):
     FRONTEND_URL: str = "http://localhost:5173"
     REPORT_TTL_HOURS: int = 72
     UPLOAD_STAGING_DIR: str = "/tmp/contract_checker_uploads"
-    MAX_UPLOAD_PAGES: int = 30
+    MAX_UPLOAD_PAGES: int = 20
+    MAX_UPLOAD_IMAGE_MB: int = 25
+    MAX_UPLOAD_PDF_MB: int = 30
+    MAX_UPLOAD_TEXT_CHARS: int = 80_000
     MAX_CONTRACT_TOKENS: int = 60000
+    OCR_WASTE_DAILY_LIMIT: int = 3
+    OCR_WASTE_WINDOW_SECONDS: int = 86_400
     UPLOAD_RATE_LIMIT_COUNT: int = 30
     UPLOAD_RATE_LIMIT_WINDOW_SECONDS: int = 600
     PREVIEW_RATE_LIMIT_COUNT: int = 8
