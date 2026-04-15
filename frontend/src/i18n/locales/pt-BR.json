@@ -51,7 +51,9 @@
     "clause_preview_unavailable": "Após o pagamento, vamos reconhecer a estrutura do contrato e mostrar os títulos detalhados das cláusulas.",
     "not_contract_title": "Não reconhecido como contrato",
     "not_contract_desc": "O conteúdo enviado não parece ser um contrato, portanto a análise não pode ser realizada. Envie o texto, imagem ou PDF de um contrato.",
-    "not_contract_retry": "Enviar outro arquivo"
+    "not_contract_retry": "Enviar outro arquivo",
+    "file_limits": "Imagem: máx. 25 MB; PDF: máx. 30 MB e 20 páginas",
+    "char_count": "{{count}} / 80.000 caracteres"
   },
   "pii": {
     "warning": "Informações pessoais detectadas. Verifique antes de enviar.",
@@ -214,7 +216,12 @@
     "review_failed": "Ocorreu um erro durante a análise. Tente novamente.",
     "non_contract_document": "O conteúdo enviado não parece ser um contrato, então a análise foi interrompida. Volte para a página inicial e envie o texto do contrato, uma imagem ou um PDF.",
     "report_expired": "Este relatório expirou.",
-    "not_found": "Página não encontrada."
+    "not_found": "Página não encontrada.",
+    "upload_too_large": "O arquivo excede o tamanho permitido（imagem: máx. 25 MB; PDF: máx. 30 MB）.",
+    "upload_too_many_pages": "O PDF excede o limite de páginas（máx. 20 páginas）.",
+    "upload_unsupported_type": "Formato de arquivo não suportado. Envie JPG, PNG ou PDF.",
+    "upload_text_too_long": "O texto é muito longo（máx. 80.000 caracteres）.",
+    "upload_banned": "Você atingiu o limite de uploads do dia. Tente novamente após 24 horas ou cole o texto do contrato para continuar. Em caso de dúvidas, entre em contato pelo support@contractguard.jp."
   },
   "footer": {
     "disclaimer": "Este serviço não constitui assessoria jurídica. Consulte um advogado para decisões legais específicas.",

@@ -51,7 +51,9 @@
     "clause_preview_unavailable": "We will recognize the contract structure after payment and then show detailed clause titles.",
     "not_contract_title": "This does not appear to be a contract",
     "not_contract_desc": "The uploaded content does not look like a contract, so analysis cannot proceed. Please upload a contract document (text, image, or PDF).",
-    "not_contract_retry": "Upload a different file"
+    "not_contract_retry": "Upload a different file",
+    "file_limits": "Images up to 25 MB · PDFs up to 30 MB and 20 pages",
+    "char_count": "{{count}} / 80,000 characters"
   },
   "pii": {
     "warning": "Personal information detected. Please review before submitting.",
@@ -210,6 +212,11 @@
   },
   "errors": {
     "upload_failed": "Upload failed. Please try again.",
+    "upload_too_large": "File is too large (max 25 MB for images, 30 MB for PDFs).",
+    "upload_too_many_pages": "PDF has too many pages (max 20 pages).",
+    "upload_unsupported_type": "Unsupported file type. Please upload a JPG, PNG, or PDF.",
+    "upload_text_too_long": "Text is too long (max 80,000 characters).",
+    "upload_banned": "You've reached today's upload limit. Please try again in 24 hours, or paste contract text instead. For help, contact support@contractguard.jp.",
     "payment_failed": "Payment failed. Please try again.",
     "review_failed": "An error occurred during analysis. Please try again.",
     "non_contract_document": "The uploaded content does not appear to be a contract, so the analysis was stopped. Return home and upload contract text, an image, or a PDF.",

@@ -51,7 +51,9 @@
     "clause_preview_unavailable": "Setelah pembayaran kami akan mengenali struktur kontrak secara resmi dan menampilkan judul klausul yang lebih rinci.",
     "not_contract_title": "Tidak dikenali sebagai kontrak",
     "not_contract_desc": "Konten yang diunggah tampaknya bukan kontrak sehingga tidak dapat dianalisis. Silakan unggah dokumen kontrak (teks, gambar, atau PDF).",
-    "not_contract_retry": "Unggah file lain"
+    "not_contract_retry": "Unggah file lain",
+    "file_limits": "Gambar maks. 25 MB, PDF maks. 30 MB·20 halaman",
+    "char_count": "{{count}} / 80.000 karakter"
   },
   "pii": {
     "warning": "Informasi pribadi terdeteksi. Harap periksa sebelum mengirim.",
@@ -214,7 +216,12 @@
     "review_failed": "Terjadi kesalahan saat analisis. Silakan coba lagi.",
     "non_contract_document": "Konten yang diunggah tampaknya bukan kontrak, sehingga analisis dihentikan. Kembali ke beranda dan unggah teks kontrak, gambar, atau PDF.",
     "report_expired": "Laporan ini sudah kedaluwarsa.",
-    "not_found": "Halaman tidak ditemukan."
+    "not_found": "Halaman tidak ditemukan.",
+    "upload_too_large": "Ukuran file melebihi batas yang diizinkan（gambar maks. 25 MB, PDF maks. 30 MB）.",
+    "upload_too_many_pages": "PDF melebihi batas halaman（maks. 20 halaman）.",
+    "upload_unsupported_type": "Format file tidak didukung. Unggah JPG, PNG, atau PDF.",
+    "upload_text_too_long": "Teks terlalu panjang（maks. 80.000 karakter）.",
+    "upload_banned": "Anda telah mencapai batas unggah hari ini. Coba lagi setelah 24 jam atau tempel teks kontrak untuk melanjutkan. Hubungi support@contractguard.jp jika ada pertanyaan."
   },
   "footer": {
     "disclaimer": "Layanan ini bukan konsultasi hukum. Silakan berkonsultasi dengan pengacara untuk keputusan hukum tertentu.",

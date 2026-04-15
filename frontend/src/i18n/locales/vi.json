@@ -51,7 +51,9 @@
     "clause_preview_unavailable": "Sau khi thanh toán, chúng tôi sẽ nhận dạng chính thức cấu trúc hợp đồng và hiển thị tiêu đề điều khoản chi tiết.",
     "not_contract_title": "Không nhận dạng được là hợp đồng",
     "not_contract_desc": "Nội dung tải lên có vẻ không phải là hợp đồng nên không thể phân tích. Vui lòng tải lên văn bản, hình ảnh hoặc PDF hợp đồng.",
-    "not_contract_retry": "Tải lên tệp khác"
+    "not_contract_retry": "Tải lên tệp khác",
+    "file_limits": "Ảnh tối đa 25 MB, PDF tối đa 30 MB·20 trang",
+    "char_count": "{{count}} / 80.000 ký tự"
   },
   "pii": {
     "warning": "Phát hiện thông tin cá nhân. Vui lòng kiểm tra trước khi gửi.",
@@ -214,7 +216,12 @@
     "review_failed": "Đã xảy ra lỗi trong quá trình phân tích. Vui lòng thử lại.",
     "non_contract_document": "Nội dung được tải lên có vẻ không phải là hợp đồng nên quá trình phân tích đã dừng lại. Hãy quay về trang chủ và tải lên văn bản hợp đồng, ảnh hoặc PDF.",
     "report_expired": "Báo cáo này đã hết hạn.",
-    "not_found": "Không tìm thấy trang."
+    "not_found": "Không tìm thấy trang.",
+    "upload_too_large": "Tệp vượt kích thước cho phép（ảnh tối đa 25 MB, PDF tối đa 30 MB）.",
+    "upload_too_many_pages": "PDF vượt quá giới hạn số trang（tối đa 20 trang）.",
+    "upload_unsupported_type": "Định dạng tệp không được hỗ trợ. Vui lòng tải lên JPG, PNG hoặc PDF.",
+    "upload_text_too_long": "Văn bản quá dài（tối đa 80.000 ký tự）.",
+    "upload_banned": "Bạn đã đạt giới hạn tải lên trong ngày. Vui lòng thử lại sau 24 giờ hoặc dán văn bản hợp đồng để tiếp tục. Liên hệ support@contractguard.jp nếu cần hỗ trợ."
   },
   "footer": {
     "disclaimer": "Dịch vụ này không phải là tư vấn pháp lý. Vui lòng tham khảo ý kiến luật sư cho các quyết định pháp lý cụ thể.",

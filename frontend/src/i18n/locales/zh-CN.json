@@ -51,7 +51,9 @@
     "clause_preview_unavailable": "支付后会正式识别合同结构，并展示详细条款标题。",
     "not_contract_title": "未识别为合同文件",
     "not_contract_desc": "上传的内容可能不是合同，无法进行分析。请上传合同的正文、图片或PDF文件。",
-    "not_contract_retry": "上传其他文件"
+    "not_contract_retry": "上传其他文件",
+    "file_limits": "图片最大 25 MB · PDF 最大 30 MB，最多 20 页",
+    "char_count": "{{count}} / 80,000 字符"
   },
   "pii": {
     "warning": "检测到个人信息，请在提交前确认。",
@@ -210,6 +212,11 @@
   },
   "errors": {
     "upload_failed": "上传失败，请重试。",
+    "upload_too_large": "文件过大（图片最大 25 MB，PDF 最大 30 MB）。",
+    "upload_too_many_pages": "PDF 页数过多（最多 20 页）。",
+    "upload_unsupported_type": "不支持的文件格式，请上传 JPG、PNG 或 PDF。",
+    "upload_text_too_long": "文本过长（最多 80,000 字符）。",
+    "upload_banned": "您今日的上传次数已达上限，请 24 小时后再试，或直接粘贴合同文本继续使用。如有疑问请联系 support@contractguard.jp。",
     "payment_failed": "支付失败，请重试。",
     "review_failed": "分析过程中出现错误，请重试。",
     "non_contract_document": "上传的内容看起来不是合同，系统已停止分析。请返回首页并上传合同文本、图片或 PDF。",
