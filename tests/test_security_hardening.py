@@ -82,6 +82,93 @@ async def test_record_ocr_upload_raises_503_when_redis_none():
 
 
 @pytest.mark.asyncio
+async def test_create_payment_rejects_non_exact_with_missing_context():
+    """Non-exact payments must not bypass price validation when no quote is cached."""
+    from backend.db.session import get_db
+    from tests.test_router_payment import FakeSession, _override_db
+
+    session = FakeSession()
+    app.dependency_overrides[get_db] = _override_db(session)
+    try:
+        with (
+            patch(
+                "backend.routers.payment.load_quote_context",
+                new_callable=AsyncMock,
+                return_value=None,
+            ),
+            patch(
+                "backend.routers.payment.load_upload_quote_context",
+                new_callable=AsyncMock,
+                return_value=None,
+            ),
+        ):
+            transport = ASGITransport(app=app)
+            async with AsyncClient(transport=transport, base_url="http://test") as client:
+                resp = await client.post(
+                    "/api/payment/create",
+                    json={
+                        "email": "user@example.com",
+                        "contract_text": "第1条 テスト",
+                        "input_type": "pdf",
+                        "estimated_tokens": 8000,
+                        "price_jpy": 1,
+                        "quote_mode": "staged",
+                        "upload_token": "tok-expired",
+                        "target_language": "ja",
+                    },
+                )
+        assert resp.status_code == 409
+    finally:
+        app.dependency_overrides.pop(get_db, None)
+
+
+@pytest.mark.asyncio
+async def test_create_payment_rejects_non_exact_with_tampered_price():
+    """Non-exact payments must reject forged price when upload context is cached."""
+    from backend.db.session import get_db
+    from tests.test_router_payment import FakeSession, _override_db
+
+    session = FakeSession()
+    app.dependency_overrides[get_db] = _override_db(session)
+    try:
+        with (
+            patch(
+                "backend.routers.payment.load_quote_context",
+                new_callable=AsyncMock,
+                return_value=None,
+            ),
+            patch(
+                "backend.routers.payment.load_upload_quote_context",
+                new_callable=AsyncMock,
+                return_value={
+                    "is_contract": True,
+                    "price_jpy": 1500,
+                    "estimated_tokens": 8000,
+                },
+            ),
+        ):
+            transport = ASGITransport(app=app)
+            async with AsyncClient(transport=transport, base_url="http://test") as client:
+                resp = await client.post(
+                    "/api/payment/create",
+                    json={
+                        "email": "user@example.com",
+                        "contract_text": "第1条 テスト",
+                        "input_type": "pdf",
+                        "estimated_tokens": 8000,
+                        "price_jpy": 1,
+                        "quote_mode": "staged",
+                        "upload_token": "tok-valid",
+                        "target_language": "ja",
+                    },
+                )
+        assert resp.status_code == 409
+        assert "price" in resp.json()["detail"].lower()
+    finally:
+        app.dependency_overrides.pop(get_db, None)
+
+
+@pytest.mark.asyncio
 async def test_create_payment_rejects_tampered_price():
     """Client cannot forge a lower price_jpy than the server-signed quote."""
     from backend.db.session import get_db
