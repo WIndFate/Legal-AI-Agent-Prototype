@@ -27,6 +27,18 @@ logger = logging.getLogger(__name__)
 # asyncio.TimeoutError is NOT a subclass of RedisError, so it must be listed explicitly.
 _REDIS_FAILURE_EXCEPTIONS = (RedisError, asyncio.TimeoutError, ConnectionError)
 
+# Atomic safe-decrement: only decrement when the current value is > 0.
+# Protects against a race where the uploads key expired between INCR and DECR
+# (rollback) — a bare DECR would create the key at -1 with no TTL, permanently
+# granting an extra free OCR slot for that IP.
+_SAFE_DECR_SCRIPT = """
+local v = redis.call('GET', KEYS[1])
+if v and tonumber(v) > 0 then
+  return redis.call('DECR', KEYS[1])
+end
+return 0
+"""
+
 
 def _uploads_key(ip: str) -> str:
     return f"abuse:uploads:{ip}"
@@ -87,7 +99,7 @@ async def rollback_ocr_upload(redis: Redis | None, ip: str) -> None:
     if redis is None:
         return
     try:
-        await redis.decr(_uploads_key(ip))
+        await redis.eval(_SAFE_DECR_SCRIPT, 1, _uploads_key(ip))
     except _REDIS_FAILURE_EXCEPTIONS as exc:
         logger.warning("abuse_guard rollback_ocr_upload redis error ip=%s: %s", ip, exc)
 
