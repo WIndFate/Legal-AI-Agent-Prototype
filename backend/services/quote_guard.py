@@ -19,9 +19,22 @@ QUOTE_CACHE_VERSION = "v1"
 
 
 def extract_client_ip(request: Request) -> str:
+    """Return the client IP, preferring proxy-authoritative headers.
+
+    Order of trust:
+      1. `Fly-Client-IP` — set by Fly.io edge and not client-settable upstream.
+      2. Rightmost entry of `X-Forwarded-For` — this is the IP inserted by the
+         closest trusted proxy. The leftmost entry is client-controlled and was
+         historically used here, which let an attacker spoof any source IP
+         and bypass the per-IP OCR abuse counter by adding their own header.
+      3. `request.client.host` — direct socket peer.
+    """
+    fly_client = request.headers.get("fly-client-ip", "").strip()
+    if fly_client:
+        return fly_client
     forwarded_for = request.headers.get("x-forwarded-for", "")
     if forwarded_for:
-        return forwarded_for.split(",")[0].strip()
+        return forwarded_for.split(",")[-1].strip()
     return request.client.host if request.client else "unknown"
 
 
@@ -48,7 +61,7 @@ async def enforce_upload_rate_limit(redis: Redis | None, client_ip: str) -> None
         window_seconds=settings.UPLOAD_RATE_LIMIT_WINDOW_SECONDS,
     )
     if limited:
-        raise HTTPException(status_code=429, detail="Too many upload requests. Please try again later.")
+        raise HTTPException(status_code=429, detail="upload_rate_limited")
 
 
 async def allow_preview_generation(redis: Redis | None, client_ip: str) -> bool:
