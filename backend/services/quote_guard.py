@@ -5,6 +5,8 @@ import json
 import logging
 from uuid import uuid4
 
+OCR_CACHE_VERSION = "v1"
+
 from fastapi import HTTPException, Request
 from redis.asyncio import Redis
 from redis.exceptions import RedisError
@@ -26,6 +28,11 @@ def extract_client_ip(request: Request) -> str:
 def build_contract_content_hash(contract_text: str) -> str:
     normalized = "\n".join(line.strip() for line in contract_text.strip().splitlines() if line.strip())
     return hashlib.sha256(normalized.encode("utf-8")).hexdigest()
+
+
+def build_file_hash(data: bytes) -> str:
+    """SHA-256 of raw file bytes. Used to detect repeated uploads before OCR."""
+    return hashlib.sha256(data).hexdigest()
 
 
 def build_quote_token() -> str:
@@ -135,6 +142,40 @@ async def _consume_rate_limit(redis: Redis | None, *, key: str, limit: int, wind
     except RedisError as exc:
         logger.warning("Rate limit check failed for %s: %s", key, exc)
         return False
+
+
+async def load_ocr_result_cache(redis: Redis | None, file_hash: str) -> dict | None:
+    """Return cached OCR result for raw file bytes (keyed by file hash), or None."""
+    if redis is None:
+        return None
+    try:
+        payload = await redis.get(f"ocr-cache:{OCR_CACHE_VERSION}:{file_hash}")
+    except RedisError as exc:
+        logger.warning("OCR result cache lookup failed: %s", exc)
+        return None
+    if not payload:
+        return None
+    try:
+        return json.loads(payload)
+    except json.JSONDecodeError:
+        return None
+
+
+async def store_ocr_result_cache(
+    redis: Redis | None,
+    file_hash: str,
+    contract_text: str,
+    ocr_snapshot: dict | None,
+) -> None:
+    """Cache OCR result keyed by raw file hash. Same TTL as quote cache."""
+    if redis is None:
+        return
+    ttl = get_settings().QUOTE_CACHE_TTL_SECONDS
+    payload = json.dumps({"text": contract_text, "snapshot": ocr_snapshot}, ensure_ascii=False)
+    try:
+        await redis.set(f"ocr-cache:{OCR_CACHE_VERSION}:{file_hash}", payload, ex=ttl)
+    except RedisError as exc:
+        logger.warning("OCR result cache store failed: %s", exc)
 
 
 def _content_cache_key(content_hash: str) -> str:
