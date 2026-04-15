@@ -223,7 +223,8 @@
     "upload_encrypted_pdf": "비밀번호로 보호된 PDF는 처리할 수 없습니다. 보호를 해제한 뒤 다시 업로드해 주세요.",
     "upload_corrupt_pdf": "PDF 파일을 읽을 수 없습니다. 파일이 손상되지 않았는지 확인해 주세요.",
     "upload_text_too_long": "텍스트가 너무 깁니다（최대 80,000자）.",
-    "upload_banned": "오늘의 업로드 한도에 도달했습니다. 24시간 후에 다시 시도하거나 텍스트를 붙여넣어 이용해 주세요. 문의 사항은 support@contractguard.jp로 연락해 주세요."
+    "upload_banned": "오늘의 업로드 한도에 도달했습니다. 24시간 후에 다시 시도하거나 텍스트를 붙여넣어 이용해 주세요. 문의 사항은 support@contractguard.jp로 연락해 주세요.",
+    "upload_rate_limited": "짧은 시간에 업로드 요청이 너무 많습니다. 잠시 후 다시 시도해 주세요."
   },
   "footer": {
     "disclaimer": "본 서비스는 법률 상담이 아닙니다. 구체적인 법적 판단은 변호사에게 상담해 주세요.",

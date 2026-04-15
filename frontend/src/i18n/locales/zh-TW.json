@@ -219,6 +219,7 @@
     "upload_corrupt_pdf": "無法讀取此 PDF 檔案，請確認檔案未損毀。",
     "upload_text_too_long": "文字過長（最多 80,000 字元）。",
     "upload_banned": "您今日的上傳次數已達上限，請 24 小時後再試，或直接貼上合約文字繼續使用。如有疑問請聯繫 support@contractguard.jp。",
+    "upload_rate_limited": "上傳請求過於頻繁，請稍候再試。",
     "payment_failed": "付款失敗，請重試。",
     "review_failed": "分析過程中發生錯誤，請重試。",
     "non_contract_document": "上傳的內容看起來不是合約，系統已停止分析。請返回首頁並上傳合約文字、圖片或 PDF。",

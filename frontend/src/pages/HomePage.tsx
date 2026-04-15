@@ -76,6 +76,7 @@ export default function HomePage() {
           code === 'upload_corrupt_pdf' ? 'errors.upload_corrupt_pdf' :
           code === 'upload_text_too_long' ? 'errors.upload_text_too_long' :
           code === 'upload_banned' ? 'errors.upload_banned' :
+          code === 'upload_rate_limited' ? 'errors.upload_rate_limited' :
           'errors.upload_failed';
         // Pick the correct max size based on the actual file type being uploaded
         const isPdf = file

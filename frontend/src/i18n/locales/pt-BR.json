@@ -223,7 +223,8 @@
     "upload_encrypted_pdf": "Não é possível processar PDFs protegidos por senha. Remova a senha e envie novamente.",
     "upload_corrupt_pdf": "Não foi possível ler o arquivo PDF. Verifique se o arquivo não está corrompido.",
     "upload_text_too_long": "O texto é muito longo（máx. 80.000 caracteres）.",
-    "upload_banned": "Você atingiu o limite de uploads do dia. Tente novamente após 24 horas ou cole o texto do contrato para continuar. Em caso de dúvidas, entre em contato pelo support@contractguard.jp."
+    "upload_banned": "Você atingiu o limite de uploads do dia. Tente novamente após 24 horas ou cole o texto do contrato para continuar. Em caso de dúvidas, entre em contato pelo support@contractguard.jp.",
+    "upload_rate_limited": "Muitas requisições de upload em pouco tempo. Aguarde um instante e tente novamente."
   },
   "footer": {
     "disclaimer": "Este serviço não constitui assessoria jurídica. Consulte um advogado para decisões legais específicas.",

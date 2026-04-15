@@ -219,6 +219,7 @@
     "upload_corrupt_pdf": "We couldn't read the PDF file. Please make sure the file is not corrupted.",
     "upload_text_too_long": "Text is too long (max 80,000 characters).",
     "upload_banned": "You've reached today's upload limit. Please try again in 24 hours, or paste contract text instead. For help, contact support@contractguard.jp.",
+    "upload_rate_limited": "Too many upload requests right now. Please wait a moment and try again.",
     "payment_failed": "Payment failed. Please try again.",
     "review_failed": "An error occurred during analysis. Please try again.",
     "non_contract_document": "The uploaded content does not appear to be a contract, so the analysis was stopped. Return home and upload contract text, an image, or a PDF.",

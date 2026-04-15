@@ -223,7 +223,8 @@
     "upload_encrypted_pdf": "PDF yang dilindungi kata sandi tidak dapat diproses. Hapus kata sandi lalu unggah ulang.",
     "upload_corrupt_pdf": "Tidak dapat membaca file PDF. Pastikan file tidak rusak.",
     "upload_text_too_long": "Teks terlalu panjang（maks. 80.000 karakter）.",
-    "upload_banned": "Anda telah mencapai batas unggah hari ini. Coba lagi setelah 24 jam atau tempel teks kontrak untuk melanjutkan. Hubungi support@contractguard.jp jika ada pertanyaan."
+    "upload_banned": "Anda telah mencapai batas unggah hari ini. Coba lagi setelah 24 jam atau tempel teks kontrak untuk melanjutkan. Hubungi support@contractguard.jp jika ada pertanyaan.",
+    "upload_rate_limited": "Terlalu banyak permintaan unggah dalam waktu singkat. Tunggu sebentar dan coba lagi."
   },
   "footer": {
     "disclaimer": "Layanan ini bukan konsultasi hukum. Silakan berkonsultasi dengan pengacara untuk keputusan hukum tertentu.",

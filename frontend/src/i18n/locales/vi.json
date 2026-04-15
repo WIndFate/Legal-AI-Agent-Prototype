@@ -223,7 +223,8 @@
     "upload_encrypted_pdf": "Không thể xử lý PDF được bảo vệ bằng mật khẩu. Vui lòng gỡ mật khẩu rồi tải lên lại.",
     "upload_corrupt_pdf": "Không thể đọc tệp PDF. Vui lòng kiểm tra xem tệp có bị hỏng không.",
     "upload_text_too_long": "Văn bản quá dài（tối đa 80.000 ký tự）.",
-    "upload_banned": "Bạn đã đạt giới hạn tải lên trong ngày. Vui lòng thử lại sau 24 giờ hoặc dán văn bản hợp đồng để tiếp tục. Liên hệ support@contractguard.jp nếu cần hỗ trợ."
+    "upload_banned": "Bạn đã đạt giới hạn tải lên trong ngày. Vui lòng thử lại sau 24 giờ hoặc dán văn bản hợp đồng để tiếp tục. Liên hệ support@contractguard.jp nếu cần hỗ trợ.",
+    "upload_rate_limited": "Có quá nhiều yêu cầu tải lên trong thời gian ngắn. Vui lòng đợi một lát rồi thử lại."
   },
   "footer": {
     "disclaimer": "Dịch vụ này không phải là tư vấn pháp lý. Vui lòng tham khảo ý kiến luật sư cho các quyết định pháp lý cụ thể.",
