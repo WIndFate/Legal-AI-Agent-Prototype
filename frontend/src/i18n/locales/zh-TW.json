@@ -215,6 +215,8 @@
     "upload_too_large": "檔案過大（圖片最大 25 MB，PDF 最大 30 MB）。",
     "upload_too_many_pages": "PDF 頁數過多（最多 20 頁）。",
     "upload_unsupported_type": "不支援的檔案格式，請上傳 JPG、PNG 或 PDF。",
+    "upload_encrypted_pdf": "無法處理有密碼保護的 PDF，請移除密碼後重新上傳。",
+    "upload_corrupt_pdf": "無法讀取此 PDF 檔案，請確認檔案未損毀。",
     "upload_text_too_long": "文字過長（最多 80,000 字元）。",
     "upload_banned": "您今日的上傳次數已達上限，請 24 小時後再試，或直接貼上合約文字繼續使用。如有疑問請聯繫 support@contractguard.jp。",
     "payment_failed": "付款失敗，請重試。",

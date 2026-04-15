@@ -220,6 +220,8 @@
     "upload_too_large": "파일 크기가 제한을 초과합니다（이미지 최대 25 MB, PDF 최대 30 MB）。",
     "upload_too_many_pages": "PDF 페이지 수가 제한（20페이지）을 초과합니다.",
     "upload_unsupported_type": "지원하지 않는 파일 형식입니다. JPG·PNG·PDF를 업로드해 주세요.",
+    "upload_encrypted_pdf": "비밀번호로 보호된 PDF는 처리할 수 없습니다. 보호를 해제한 뒤 다시 업로드해 주세요.",
+    "upload_corrupt_pdf": "PDF 파일을 읽을 수 없습니다. 파일이 손상되지 않았는지 확인해 주세요.",
     "upload_text_too_long": "텍스트가 너무 깁니다（최대 80,000자）.",
     "upload_banned": "오늘의 업로드 한도에 도달했습니다. 24시간 후에 다시 시도하거나 텍스트를 붙여넣어 이용해 주세요. 문의 사항은 support@contractguard.jp로 연락해 주세요."
   },

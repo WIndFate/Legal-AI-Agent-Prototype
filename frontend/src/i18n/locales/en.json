@@ -215,6 +215,8 @@
     "upload_too_large": "File is too large (max 25 MB for images, 30 MB for PDFs).",
     "upload_too_many_pages": "PDF has too many pages (max 20 pages).",
     "upload_unsupported_type": "Unsupported file type. Please upload a JPG, PNG, or PDF.",
+    "upload_encrypted_pdf": "Password-protected PDFs cannot be processed. Please remove the password and upload again.",
+    "upload_corrupt_pdf": "We couldn't read the PDF file. Please make sure the file is not corrupted.",
     "upload_text_too_long": "Text is too long (max 80,000 characters).",
     "upload_banned": "You've reached today's upload limit. Please try again in 24 hours, or paste contract text instead. For help, contact support@contractguard.jp.",
     "payment_failed": "Payment failed. Please try again.",

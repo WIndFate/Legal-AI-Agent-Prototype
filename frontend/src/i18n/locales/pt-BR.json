@@ -220,6 +220,8 @@
     "upload_too_large": "O arquivo excede o tamanho permitido（imagem: máx. 25 MB; PDF: máx. 30 MB）.",
     "upload_too_many_pages": "O PDF excede o limite de páginas（máx. 20 páginas）.",
     "upload_unsupported_type": "Formato de arquivo não suportado. Envie JPG, PNG ou PDF.",
+    "upload_encrypted_pdf": "Não é possível processar PDFs protegidos por senha. Remova a senha e envie novamente.",
+    "upload_corrupt_pdf": "Não foi possível ler o arquivo PDF. Verifique se o arquivo não está corrompido.",
     "upload_text_too_long": "O texto é muito longo（máx. 80.000 caracteres）.",
     "upload_banned": "Você atingiu o limite de uploads do dia. Tente novamente após 24 horas ou cole o texto do contrato para continuar. Em caso de dúvidas, entre em contato pelo support@contractguard.jp."
   },

@@ -72,10 +72,17 @@ export default function HomePage() {
           code === 'upload_too_large' ? 'errors.upload_too_large' :
           code === 'upload_too_many_pages' ? 'errors.upload_too_many_pages' :
           code === 'upload_unsupported_type' ? 'errors.upload_unsupported_type' :
+          code === 'upload_encrypted_pdf' ? 'errors.upload_encrypted_pdf' :
+          code === 'upload_corrupt_pdf' ? 'errors.upload_corrupt_pdf' :
           code === 'upload_text_too_long' ? 'errors.upload_text_too_long' :
           code === 'upload_banned' ? 'errors.upload_banned' :
           'errors.upload_failed';
-        setError(t(errorKey, { max: 25 }));
+        // Pick the correct max size based on the actual file type being uploaded
+        const isPdf = file
+          ? file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')
+          : false;
+        const maxMB = isPdf ? 30 : 25;
+        setError(t(errorKey, { max: maxMB }));
         return;
       }
 

@@ -220,6 +220,8 @@
     "upload_too_large": "Tệp vượt kích thước cho phép（ảnh tối đa 25 MB, PDF tối đa 30 MB）.",
     "upload_too_many_pages": "PDF vượt quá giới hạn số trang（tối đa 20 trang）.",
     "upload_unsupported_type": "Định dạng tệp không được hỗ trợ. Vui lòng tải lên JPG, PNG hoặc PDF.",
+    "upload_encrypted_pdf": "Không thể xử lý PDF được bảo vệ bằng mật khẩu. Vui lòng gỡ mật khẩu rồi tải lên lại.",
+    "upload_corrupt_pdf": "Không thể đọc tệp PDF. Vui lòng kiểm tra xem tệp có bị hỏng không.",
     "upload_text_too_long": "Văn bản quá dài（tối đa 80.000 ký tự）.",
     "upload_banned": "Bạn đã đạt giới hạn tải lên trong ngày. Vui lòng thử lại sau 24 giờ hoặc dán văn bản hợp đồng để tiếp tục. Liên hệ support@contractguard.jp nếu cần hỗ trợ."
   },

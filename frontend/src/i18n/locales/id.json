@@ -220,6 +220,8 @@
     "upload_too_large": "Ukuran file melebihi batas yang diizinkan（gambar maks. 25 MB, PDF maks. 30 MB）.",
     "upload_too_many_pages": "PDF melebihi batas halaman（maks. 20 halaman）.",
     "upload_unsupported_type": "Format file tidak didukung. Unggah JPG, PNG, atau PDF.",
+    "upload_encrypted_pdf": "PDF yang dilindungi kata sandi tidak dapat diproses. Hapus kata sandi lalu unggah ulang.",
+    "upload_corrupt_pdf": "Tidak dapat membaca file PDF. Pastikan file tidak rusak.",
     "upload_text_too_long": "Teks terlalu panjang（maks. 80.000 karakter）.",
     "upload_banned": "Anda telah mencapai batas unggah hari ini. Coba lagi setelah 24 jam atau tempel teks kontrak untuk melanjutkan. Hubungi support@contractguard.jp jika ada pertanyaan."
   },
