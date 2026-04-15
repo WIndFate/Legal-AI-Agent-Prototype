@@ -23,7 +23,8 @@ from backend.services.analytics import capture as posthog_capture
 from backend.services.analytics import capture_message as sentry_capture_message
 from backend.services.analytics import capture_exception as sentry_capture_exception
 from backend.services.email import send_payment_confirmation_email
-from backend.services.quote_guard import build_contract_content_hash, load_quote_context, load_upload_quote_context
+from backend.services.abuse_guard import record_payment as abuse_record_payment
+from backend.services.quote_guard import build_contract_content_hash, extract_client_ip, load_quote_context, load_upload_quote_context
 from backend.services.temp_uploads import get_temp_upload_path
 from backend.services.token_estimator import estimate_page_count_from_tokens
 
@@ -149,6 +150,7 @@ async def create_payment(
         temp_upload_mime_type=request.upload_mime_type,
         target_language=request.target_language,
         referral_code_used=request.referral_code,
+        client_ip=extract_client_ip(raw_request),
     )
     db.add(order)
     await db.commit()
@@ -272,6 +274,7 @@ async def retry_payment(
 async def payment_webhook(
     request: Request,
     db: AsyncSession = Depends(get_db),
+    redis=Depends(get_redis),
 ):
     """Handle KOMOJU payment webhook."""
     body = await request.body()
@@ -312,6 +315,8 @@ async def payment_webhook(
                 order.payment_status = "paid"
                 order.paid_at = datetime.now(timezone.utc)
                 order.komoju_session_id = payment_data.get("id", "")
+                # Reduce OCR waste counter for this IP so future uploads aren't blocked
+                await abuse_record_payment(redis, order.client_ip)
 
                 if order.referral_code_used:
                     referral_result = await db.execute(
