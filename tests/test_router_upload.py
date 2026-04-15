@@ -314,6 +314,7 @@ async def test_upload_pdf_with_text_layer_uses_exact_quote():
     page_count = 2
 
     with (
+        patch("backend.routers.upload.precheck_pdf_pages", return_value=page_count),
         patch(
             "backend.routers.upload.extract_text_from_pdf_text_layer",
             return_value=(extracted_text, page_count),
@@ -346,6 +347,7 @@ async def test_upload_scanned_pdf_uses_vision_ocr():
     page_count = 3
 
     with (
+        patch("backend.routers.upload.precheck_pdf_pages", return_value=page_count),
         patch(
             "backend.routers.upload.extract_text_from_pdf_text_layer",
             return_value=("", page_count),
