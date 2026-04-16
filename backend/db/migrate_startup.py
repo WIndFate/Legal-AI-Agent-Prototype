@@ -156,6 +156,40 @@ def run_alembic(*args: str) -> None:
     subprocess.run(command, check=True)
 
 
+async def enforce_rls_on_public_tables(conn: asyncpg.Connection) -> None:
+    """Defense-in-depth: ENABLE + FORCE row-level security on every public table.
+
+    Supabase exposes the public schema to PostgREST / GraphQL via the anon JWT
+    by default. We already close that door at the Supabase project level
+    (public removed from Exposed schemas, pg_graphql disabled, legacy JWT
+    keys revoked), but a single misconfiguration could re-open it. Keeping
+    RLS forced on every table is the fourth line of defense so a newly added
+    table without an explicit policy cannot be read by anon/authenticated
+    even if the upstream API surface is accidentally re-enabled.
+
+    Idempotent — safe to run on every boot. Skips alembic_version since it is
+    migration metadata, not user data, and alembic needs unrestricted access
+    to it. Background: docs/PRE_LAUNCH_AUDIT.md appendix D, INC-2026-04-13.
+    """
+    await conn.execute(
+        """
+        DO $$
+        DECLARE r record;
+        BEGIN
+          FOR r IN
+            SELECT schemaname, tablename
+            FROM pg_tables
+            WHERE schemaname = 'public'
+              AND tablename  <> 'alembic_version'
+          LOOP
+            EXECUTE format('ALTER TABLE %I.%I ENABLE ROW LEVEL SECURITY;', r.schemaname, r.tablename);
+            EXECUTE format('ALTER TABLE %I.%I FORCE  ROW LEVEL SECURITY;', r.schemaname, r.tablename);
+          END LOOP;
+        END $$;
+        """
+    )
+
+
 async def run_startup_migrations() -> None:
     settings = get_settings()
     dsn, ssl_value = to_asyncpg_dsn(settings.DATABASE_URL)
@@ -184,6 +218,15 @@ async def run_startup_migrations() -> None:
             run_alembic("stamp", detected_revision)
 
         run_alembic("upgrade", "head")
+
+        # Defense-in-depth: force RLS on every public table after migrations.
+        # Failure here must not block startup — primary protection is at the
+        # Supabase project level (public not exposed, pg_graphql off).
+        try:
+            await enforce_rls_on_public_tables(conn)
+            logger.info("RLS forced on all public tables (post-migration hook).")
+        except Exception as exc:
+            logger.warning("RLS enforcement hook failed: %s", exc)
     finally:
         try:
             await release_migration_lock(conn, settings.MIGRATION_LOCK_ID)
