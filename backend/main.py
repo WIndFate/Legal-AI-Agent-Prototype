@@ -1,4 +1,6 @@
+import base64
 import logging
+import os
 from contextlib import asynccontextmanager
 
 from dotenv import load_dotenv
@@ -18,10 +20,25 @@ from backend.routers import analysis, health, upload, payment, report, referral,
 logger = logging.getLogger(__name__)
 
 
+def _configure_google_credentials(settings) -> None:
+    encoded = (settings.GOOGLE_APPLICATION_CREDENTIALS_JSON or "").strip()
+    if not encoded:
+        return
+
+    decoded = base64.b64decode(encoded)
+    credentials_path = "/tmp/gcp-sa.json"
+    with open(credentials_path, "wb") as fp:
+        fp.write(decoded)
+    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = credentials_path
+    if settings.GOOGLE_VISION_PROJECT_ID:
+        os.environ["GOOGLE_CLOUD_PROJECT"] = settings.GOOGLE_VISION_PROJECT_ID
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     settings = get_settings()
     settings.validate_runtime()
+    _configure_google_credentials(settings)
 
     if settings.is_production and not settings.SENTRY_DSN:
         logger.warning("APP_ENV=production but SENTRY_DSN is not configured.")

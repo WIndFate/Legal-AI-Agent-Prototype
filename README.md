@@ -6,10 +6,11 @@ AI-powered Japanese contract risk analysis for foreign residents in Japan. Users
 
 ## Status
 
-As of 2026-04-12, the local MVP flow is working in Docker, and the production setup is partially in place:
+As of 2026-04-17, the local MVP flow is working in Docker, and the production setup is partially in place:
 
 - `upload -> payment/create -> analysis/start -> orders/{id}/status + events/stream -> report retrieval -> contract deletion`
-- Text and text-layer PDFs are quoted before payment from extracted text; image/scanned PDF uploads now also run Vision OCR during `/api/upload`, so all successful uploads share the same exact-quote path.
+- Text and text-layer PDFs are quoted before payment from extracted text; image/scanned PDF uploads now also run Google Cloud Vision OCR during `/api/upload`, so all successful uploads share the same exact-quote path.
+- OCR is now backed by Google Cloud Vision `DOCUMENT_TEXT_DETECTION`, with a Redis-backed daily OCR budget guard so pre-payment image/PDF cost is capped even under abuse.
 - Exact text / text-layer PDF quotes now also return a lightweight clause-structure preview so users can confirm we parsed the contract before paying
 - Exact quote previews now generate a `quote_token`, cache the clause preview by normalized content hash, and reuse that cached preview/cost snapshot when the same contract is uploaded again
 - All exact quotes now also return `is_contract`; this contract check runs for any non-empty extracted text, while clause previews are returned only when the text is long enough to infer structure. If the upload is judged to be non-contract material, the homepage blocks payment UI and `/api/payment/create` rejects the payment request server-side before any order is created.
@@ -96,6 +97,7 @@ Integrations:
 
 - Backend: FastAPI, SQLAlchemy async, Alembic, Redis, APScheduler
 - Agent: LangGraph, clause-level analysis pipeline
+- OCR: Google Cloud Vision `DOCUMENT_TEXT_DETECTION`, `pdf2image`, `poppler-utils`
 - RAG: PostgreSQL `pgvector`, `text-embedding-3-small`
 - Frontend: React, Vite, TypeScript, React Router, i18next
 - Infra: Docker Compose, Fly.io config, Vercel config
@@ -106,6 +108,7 @@ Prerequisites:
 
 - Docker Desktop / Docker Engine
 - OpenAI API key
+- Google Cloud Vision service-account JSON (base64 in `GOOGLE_APPLICATION_CREDENTIALS_JSON`) for image/scanned-PDF OCR
 
 Setup:
 
@@ -121,7 +124,7 @@ Docker note:
 
 - Prefer `docker compose exec` over `docker compose run` for local commands inside running services.
 - `docker compose run` can leave temporary `*-run-*` containers behind and block `docker compose down`.
-- Image and scanned-PDF uploads now run GPT-4o Vision OCR during `/api/upload`, so all successful uploads return an exact quote before payment.
+- Image and scanned-PDF uploads now run Google Cloud Vision OCR during `/api/upload`, so all successful uploads return an exact quote before payment.
 - Compose startup now relies on service health checks: `backend` waits for healthy `postgres` and `redis`, and `frontend` waits for a healthy `backend`.
 
 Endpoints:
@@ -189,7 +192,7 @@ docker compose up -d backend postgres redis
 - KOMOJU session creation no longer sends `payment_types`; approved payment methods are now controlled entirely by the merchant account, so newly approved methods appear automatically in checkout without a code change.
 - The orders schema now stores the active billing strategy in `orders.pricing_model`; the old `price_tier` column has been retired and startup migrations reconcile older Docker volumes automatically.
 - `/api/eval/costs` now reports both a cost-floor recommendation and a target-margin recommendation (`target_margin_rate`, default `0.75`) so pricing reviews can distinguish “minimum safe price” from “commercial target price”.
-- `PARSE_MODEL` and `SUGGESTION_MODEL` are now configurable and default to `gpt-4o-mini`, while formal OCR and per-clause risk classification remain on `gpt-4o` by default.
+- `PARSE_MODEL` and `SUGGESTION_MODEL` are now configurable and default to `gpt-4o-mini`, while OCR is now handled by Google Cloud Vision and per-clause risk classification remains on `gpt-4o`.
 - `analyze_risks` now runs clause by clause instead of maintaining one growing multi-round tool-calling conversation, which materially reduces prompt growth and per-order cost.
 - `analyze_clause_risk` now returns a compact RAG summary instead of replaying long source chunks back into the classifier prompt.
 - `generate_suggestion` now adjusts verbosity by risk level: medium-risk clauses get shorter suggestions, while high-risk clauses can return more detailed rewrite guidance.

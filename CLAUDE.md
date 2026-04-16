@@ -81,6 +81,8 @@ scripts/run_backend_pytests.sh   # 后端 pytest
 8. **失败终止 vs 继续分析**：`parse_contract` 判定非合同时立刻以 `error_code = non_contract_document` 终止，**不要**继续走 risk review。ReviewPage 用 `error_code` 而非本地化 `error_message` 判断失败类型。
 9. **KOMOJU session 不发送 `payment_types`**：方法由商户账号审核控制；不要在代码里列支付方式白名单。
 10. **订单 UUID 路径统一走 `routers/_helpers.parse_order_id`**：非法 UUID 返回 404，不要暴露 SQL DataError 500。
+11. **OCR 供应商固定为 Google Cloud Vision**：图片和扫描 PDF 统一走 `DOCUMENT_TEXT_DETECTION`，**不要**换回 GPT-4o Vision，也不要恢复“付款前低成本 OCR / 付款后正式 OCR”双层路径。
+12. **高成本预付费路径必须 fail-closed**：OCR / preview 的 Redis 或预算守卫异常必须直接拒绝请求，**不要**在高成本匿名入口上做 fail-open。
 
 ---
 
@@ -100,7 +102,7 @@ scripts/run_backend_pytests.sh   # 后端 pytest
 ## 环境与安全
 
 - `APP_ENV ∈ {development, production}`，默认 `development`。
-- 生产启动必须校验：KOMOJU / Resend 凭据齐全、`FRONTEND_URL` 非 localhost、CORS 仅允许 `FRONTEND_URL`。
+- 生产启动必须校验：KOMOJU / Resend / Google Vision 凭据齐全、`FRONTEND_URL` 非 localhost、CORS 仅允许 `FRONTEND_URL`。
 - 生产下 RAG 加载失败 = 启动失败（硬错误）。
 - Dev payment bypass 仅在 `development` 且 KOMOJU 未配置时允许。
 

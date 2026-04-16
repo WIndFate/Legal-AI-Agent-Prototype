@@ -221,6 +221,7 @@
     "upload_banned": "You've reached today's upload limit. Please try again in 24 hours, or paste contract text instead. For help, contact support@contractguard.jp.",
     "upload_rate_limited": "Too many upload requests right now. Please wait a moment and try again.",
     "payment_failed": "Payment failed. Please try again.",
+    "daily_budget_exhausted": "Today's processing quota is exhausted. Please try again tomorrow.",
     "review_failed": "An error occurred during analysis. Please try again.",
     "non_contract_document": "The uploaded content does not appear to be a contract, so the analysis was stopped. Return home and upload contract text, an image, or a PDF.",
     "report_expired": "This report has expired.",

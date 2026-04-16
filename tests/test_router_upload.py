@@ -34,6 +34,8 @@ def _mock_quote_guard():
         patch("backend.routers.upload.get_redis", new_callable=AsyncMock, return_value=None),
         patch("backend.routers.upload.enforce_upload_rate_limit", new_callable=AsyncMock, return_value=None),
         patch("backend.routers.upload.allow_preview_generation", new_callable=AsyncMock, return_value=True),
+        patch("backend.routers.upload.check_budget_allowed", new_callable=AsyncMock, return_value=True),
+        patch("backend.routers.upload.record_cost", new_callable=AsyncMock, return_value=None),
         patch("backend.routers.upload.load_cached_quote", new_callable=AsyncMock, return_value=None),
         patch("backend.routers.upload.store_cached_quote", new_callable=AsyncMock, return_value=None),
         patch("backend.routers.upload.build_quote_token", return_value="quote-test-token"),
@@ -174,7 +176,7 @@ async def test_upload_image_uses_vision_ocr_and_returns_exact_quote():
             new_callable=AsyncMock,
             return_value=(
                 ocr_text,
-                {"ocr_model": "gpt-4o", "ocr_input_tokens": 1200, "ocr_output_tokens": 400, "ocr_cost_jpy": 0.75, "ocr_cost_usd": 0.005, "ocr_succeeded": True},
+                {"ocr_model": "google-vision-document-text", "ocr_input_tokens": 1, "ocr_output_tokens": 400, "ocr_cost_jpy": 0.225, "ocr_cost_usd": 0.0015, "ocr_succeeded": True},
             ),
         ),
         patch(
@@ -212,7 +214,7 @@ async def test_upload_image_non_contract_sets_is_contract_false():
             new_callable=AsyncMock,
             return_value=(
                 "これは会議メモです。契約条件は含まれていません。",
-                {"ocr_model": "gpt-4o", "ocr_input_tokens": 900, "ocr_output_tokens": 120, "ocr_cost_jpy": 0.42, "ocr_cost_usd": 0.0028, "ocr_succeeded": True},
+                {"ocr_model": "google-vision-document-text", "ocr_input_tokens": 1, "ocr_output_tokens": 120, "ocr_cost_jpy": 0.225, "ocr_cost_usd": 0.0015, "ocr_succeeded": True},
             ),
         ),
         patch(
@@ -288,7 +290,7 @@ async def test_upload_image_empty_ocr_returns_zero_price():
     with patch(
         "backend.routers.upload.extract_text_from_image_with_snapshot",
         new_callable=AsyncMock,
-        return_value=("", {"ocr_model": "gpt-4o", "ocr_input_tokens": 500, "ocr_output_tokens": 0, "ocr_cost_jpy": 0.15, "ocr_cost_usd": 0.001, "ocr_succeeded": True}),
+        return_value=("", {"ocr_model": "google-vision-document-text", "ocr_input_tokens": 1, "ocr_output_tokens": 0, "ocr_cost_jpy": 0.225, "ocr_cost_usd": 0.0015, "ocr_succeeded": True}),
     ):
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
@@ -361,7 +363,7 @@ async def test_upload_scanned_pdf_uses_vision_ocr():
             new_callable=AsyncMock,
             return_value=(
                 ocr_text,
-                {"ocr_model": "gpt-4o", "ocr_input_tokens": 1800, "ocr_output_tokens": 700, "ocr_cost_jpy": 1.12, "ocr_cost_usd": 0.0075, "ocr_succeeded": True},
+                {"ocr_model": "google-vision-document-text", "ocr_input_tokens": 3, "ocr_output_tokens": 700, "ocr_cost_jpy": 0.675, "ocr_cost_usd": 0.0045, "ocr_succeeded": True},
             ),
         ),
     ):
@@ -518,6 +520,27 @@ async def test_upload_rejects_pdf_over_page_cap():
     assert resp.status_code == 413
     assert resp.json()["detail"] == "upload_too_many_pages"
     mock_vision_ocr.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_upload_image_returns_503_when_daily_budget_exhausted():
+    fake_image_bytes = b"\x89PNG\r\n\x1a\n" + b"\x00" * 100
+
+    with patch(
+        "backend.routers.upload.check_budget_allowed",
+        new_callable=AsyncMock,
+        return_value=False,
+    ):
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            resp = await client.post(
+                "/api/upload",
+                data={"input_type": "image"},
+                files={"file": ("contract.png", io.BytesIO(fake_image_bytes), "image/png")},
+            )
+
+    assert resp.status_code == 503
+    assert resp.json()["detail"] == "daily_budget_exhausted"
 
 
 @pytest.mark.asyncio

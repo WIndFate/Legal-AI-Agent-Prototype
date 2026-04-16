@@ -24,13 +24,17 @@ class Settings(BaseSettings):
 
     # OpenAI
     OPENAI_API_KEY: str
-    OCR_MODEL: str = "gpt-4o"
+    OCR_MODEL: str = "google-vision-document-text"
     ANALYSIS_MODEL: str = "gpt-4o"
     PARSE_MODEL: str = "gpt-4o-mini"
     SUGGESTION_MODEL: str = "gpt-4o-mini"
     TRANSLATION_MODEL: str = "gpt-4o-mini"
     EMBEDDING_MODEL: str = "text-embedding-3-small"
     COST_ESTIMATE_VERSION: str = "2026-03-28-v1"
+    GOOGLE_APPLICATION_CREDENTIALS_JSON: str = ""
+    GOOGLE_VISION_PROJECT_ID: str = ""
+    DAILY_COST_BUDGET_JPY: float = 500.0
+    GOOGLE_VISION_COST_PER_PAGE_JPY: float = 0.225
 
     # Environment
     APP_ENV: Literal["development", "production"] = "development"
@@ -71,7 +75,7 @@ class Settings(BaseSettings):
     MAX_UPLOAD_PDF_MB: int = 30
     MAX_UPLOAD_TEXT_CHARS: int = 80_000
     MAX_CONTRACT_TOKENS: int = 60000
-    OCR_WASTE_DAILY_LIMIT: int = 3
+    OCR_WASTE_DAILY_LIMIT: int = 10
     OCR_WASTE_WINDOW_SECONDS: int = 86_400
     UPLOAD_RATE_LIMIT_COUNT: int = 30
     UPLOAD_RATE_LIMIT_WINDOW_SECONDS: int = 600
@@ -130,6 +134,7 @@ class Settings(BaseSettings):
             "KOMOJU_PUBLISHABLE_KEY": self.KOMOJU_PUBLISHABLE_KEY,
             "KOMOJU_WEBHOOK_SECRET": self.KOMOJU_WEBHOOK_SECRET,
             "RESEND_API_KEY": self.RESEND_API_KEY,
+            "GOOGLE_APPLICATION_CREDENTIALS_JSON": self.GOOGLE_APPLICATION_CREDENTIALS_JSON,
         }
         for field_name, value in required_fields.items():
             if not value:

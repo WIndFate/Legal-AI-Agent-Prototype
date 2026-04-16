@@ -7,11 +7,13 @@ def test_default_model_settings(monkeypatch):
 
     settings = get_settings()
 
-    assert settings.OCR_MODEL == "gpt-4o"
+    assert settings.OCR_MODEL == "google-vision-document-text"
     assert settings.ANALYSIS_MODEL == "gpt-4o"
     assert settings.PARSE_MODEL == "gpt-4o-mini"
     assert settings.SUGGESTION_MODEL == "gpt-4o-mini"
     assert settings.TRANSLATION_MODEL == "gpt-4o-mini"
+    assert settings.DAILY_COST_BUDGET_JPY == 500.0
+    assert settings.OCR_WASTE_DAILY_LIMIT == 10
 
     get_settings.cache_clear()
 

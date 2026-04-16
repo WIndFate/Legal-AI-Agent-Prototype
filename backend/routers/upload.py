@@ -16,6 +16,7 @@ from backend.services.abuse_guard import (
     rollback_ocr_upload,
 )
 from backend.services.analytics import capture as posthog_capture
+from backend.services.cost_guard import check_budget_allowed, record_cost
 from backend.services.costing import (
     estimate_cost_jpy,
     estimate_cost_usd,
@@ -215,7 +216,7 @@ async def upload_contract(
         check_upload_file_size(pdf_bytes, actual_mime, settings)
 
         # Page count precheck BEFORE any OCR (P0-1)
-        precheck_pdf_pages(pdf_bytes)
+        page_count = precheck_pdf_pages(pdf_bytes)
 
         upload_mime_type = actual_mime
 
@@ -238,7 +239,15 @@ async def upload_contract(
                     raise HTTPException(status_code=429, detail="upload_banned")
                 await record_ocr_upload(redis, client_ip)
                 try:
+                    budget_allowed = await check_budget_allowed(
+                        redis,
+                        float(page_count) * float(settings.GOOGLE_VISION_COST_PER_PAGE_JPY),
+                    )
+                    if not budget_allowed:
+                        await rollback_ocr_upload(redis, client_ip)
+                        raise HTTPException(status_code=503, detail="daily_budget_exhausted")
                     contract_text, ocr_snapshot = await extract_text_from_pdf_with_snapshot(pdf_bytes)
+                    await record_cost(redis, float((ocr_snapshot or {}).get("ocr_cost_jpy", 0.0)))
                     # Only cache non-empty OCR results: an empty result indicates a
                     # blank/unreadable scan, and caching it would permanently serve
                     # zero-price responses for anyone uploading the same file.
@@ -275,9 +284,17 @@ async def upload_contract(
                 raise HTTPException(status_code=429, detail="upload_banned")
             await record_ocr_upload(redis, client_ip)
             try:
+                budget_allowed = await check_budget_allowed(
+                    redis,
+                    float(settings.GOOGLE_VISION_COST_PER_PAGE_JPY),
+                )
+                if not budget_allowed:
+                    await rollback_ocr_upload(redis, client_ip)
+                    raise HTTPException(status_code=503, detail="daily_budget_exhausted")
                 contract_text, ocr_snapshot = await extract_text_from_image_with_snapshot(
                     image_bytes, actual_mime
                 )
+                await record_cost(redis, float((ocr_snapshot or {}).get("ocr_cost_jpy", 0.0)))
                 # Skip caching empty OCR results — see PDF branch rationale above.
                 if contract_text.strip():
                     await store_ocr_result_cache(redis, file_hash, contract_text, ocr_snapshot)

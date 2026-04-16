@@ -213,6 +213,7 @@
   "errors": {
     "upload_failed": "Gagal mengunggah. Silakan coba lagi.",
     "payment_failed": "Pembayaran gagal. Silakan coba lagi.",
+    "daily_budget_exhausted": "Kuota pemrosesan hari ini sudah habis. Silakan coba lagi besok.",
     "review_failed": "Terjadi kesalahan saat analisis. Silakan coba lagi.",
     "non_contract_document": "Konten yang diunggah tampaknya bukan kontrak, sehingga analisis dihentikan. Kembali ke beranda dan unggah teks kontrak, gambar, atau PDF.",
     "report_expired": "Laporan ini sudah kedaluwarsa.",

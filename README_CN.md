@@ -6,10 +6,11 @@
 
 ## 当前状态
 
-截至 2026-04-12，本地 Docker MVP 流程已经跑通，生产环境也已完成一部分配置：
+截至 2026-04-17，本地 Docker MVP 流程已经跑通，生产环境也已完成一部分配置：
 
 - `upload -> payment/create -> analysis/start -> orders/{id}/status + events/stream -> report -> 合同文本删除`
-- 文本和可提取文本 PDF 会在付款前直接按文本估价；图片 / 扫描 PDF 现在也会在 `/api/upload` 阶段直接运行 Vision OCR，因此所有成功识别的上传都会统一走 exact 报价
+- 文本和可提取文本 PDF 会在付款前直接按文本估价；图片 / 扫描 PDF 现在也会在 `/api/upload` 阶段直接运行 Google Cloud Vision OCR，因此所有成功识别的上传都会统一走 exact 报价
+- OCR 现已切到 Google Cloud Vision `DOCUMENT_TEXT_DETECTION`，并增加 Redis 驱动的每日 OCR 预算熔断，防止匿名图片/PDF 上传把预付费成本刷穿
 - 文本和可提取文本 PDF 的报价现在还会返回轻量级条款结构预览，让用户在付款前先确认系统确实读懂了合同结构
 - exact 报价现在还会生成 `quote_token`，并按标准化后的合同内容哈希缓存条款预览；同一份合同重复上传时会直接复用上次的预览和付款前成本快照
 - 所有 exact 报价现在都会返回 `is_contract`；只要提取到了非空文本，就会先做合同判定，而 clause preview 仅在文本足够长、能够推断结构时才返回。如果上传内容被判断为非合同，首页会直接阻断支付区，`/api/payment/create` 也会在服务端拒绝这类支付请求，避免先付款后才发现不是合同。
@@ -90,6 +91,7 @@ RAG：
 
 - 后端：FastAPI、SQLAlchemy async、Alembic、Redis、APScheduler
 - Agent：LangGraph、按条款逐条分析的审查流水线
+- OCR：Google Cloud Vision `DOCUMENT_TEXT_DETECTION`、`pdf2image`、`poppler-utils`
 - RAG：PostgreSQL `pgvector`、`text-embedding-3-small`
 - 前端：React、Vite、TypeScript、React Router、i18next
 - 基础设施：Docker Compose、Fly.io 配置、Vercel 配置
@@ -100,6 +102,7 @@ RAG：
 
 - Docker Desktop / Docker Engine
 - OpenAI API Key
+- Google Cloud Vision 服务账号 JSON（base64 写入 `GOOGLE_APPLICATION_CREDENTIALS_JSON`，用于图片/扫描 PDF OCR）
 
 启动：
 
@@ -115,7 +118,7 @@ Docker 说明：
 
 - 本地进入已启动服务时优先使用 `docker compose exec`，不要默认使用 `docker compose run`。
 - `docker compose run` 容易留下 `*-run-*` 临时容器，导致 `docker compose down` 时 network 无法释放。
-- 图片与扫描 PDF 现在会在 `/api/upload` 阶段直接调用 GPT-4o Vision OCR，因此只要识别成功，付款前就会返回 exact 报价。
+- 图片与扫描 PDF 现在会在 `/api/upload` 阶段直接调用 Google Cloud Vision OCR，因此只要识别成功，付款前就会返回 exact 报价。
 - Compose 现已基于健康检查编排启动顺序：`backend` 等待健康的 `postgres` / `redis`，`frontend` 等待健康的 `backend`。
 
 访问地址：
@@ -178,7 +181,7 @@ docker compose up -d backend postgres redis
 - KOMOJU session 创建时不再发送 `payment_types`；支付方式现在完全由 merchant 账号当前已开通的能力决定，因此某个新方式审核通过后会自动出现在 checkout 页面，无需改代码。
 - 订单表现在通过 `orders.pricing_model` 保存当前定价策略；旧的 `price_tier` 字段已经退役，容器启动时的自动迁移会兼容并升级旧 Docker volume。
 - `/api/eval/costs` 现在会同时返回“成本底线建议价”和“目标毛利建议价”，默认目标毛利率 `target_margin_rate=0.75`，方便区分“不能低于多少”和“商业上该卖多少”。
-- `PARSE_MODEL` 和 `SUGGESTION_MODEL` 现在已经可配置，默认切到 `gpt-4o-mini`；正式 OCR 和逐条风险判断默认仍保持 `gpt-4o`。
+- `PARSE_MODEL` 和 `SUGGESTION_MODEL` 现在已经可配置，默认切到 `gpt-4o-mini`；OCR 已切到 Google Cloud Vision，逐条风险判断默认仍保持 `gpt-4o`。
 - `analyze_risks` 已改为按条款逐条分析，不再维护一段不断膨胀的整合同多轮 tool-calling 会话，因此单单成本和上下文压力都明显下降。
 - `analyze_clause_risk` 现在返回的是压缩后的 RAG 审查摘要，而不是把长篇知识片段原样塞回分类 prompt。
 - `generate_suggestion` 现在会根据风险级别控制长度：中风险建议更短，高风险建议允许更具体。

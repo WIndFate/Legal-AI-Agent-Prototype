@@ -6,10 +6,11 @@
 
 ## 現在の状況
 
-2026-04-12 時点で、ローカル Docker 上の MVP フローは動作確認済みで、本番環境の下準備も一部完了しています。
+2026-04-17 時点で、ローカル Docker 上の MVP フローは動作確認済みで、本番環境の下準備も一部完了しています。
 
 - `upload -> payment/create -> analysis/start -> orders/{id}/status + events/stream -> report -> 契約本文削除`
-- テキスト入力とテキスト抽出可能な PDF は支払い前にそのまま見積もりし、画像 / スキャン PDF も `/api/upload` 時点で Vision OCR を実行するため、認識成功時はすべて exact 見積もりに統一されています
+- テキスト入力とテキスト抽出可能な PDF は支払い前にそのまま見積もりし、画像 / スキャン PDF も `/api/upload` 時点で Google Cloud Vision OCR を実行するため、認識成功時はすべて exact 見積もりに統一されています
+- OCR は Google Cloud Vision `DOCUMENT_TEXT_DETECTION` へ移行済みで、Redis ベースの日次予算ガードにより、支払い前の画像/PDF OCR コストが一日単位で上限管理されます
 - テキスト入力とテキスト抽出可能な PDF の見積もりでは、支払い前に軽量な条項構造プレビューも返し、契約構造を読み取れたことを示します
 - exact 見積もりでは `quote_token` も生成され、正規化した契約本文ハッシュ単位で条項プレビューを Redis にキャッシュするため、同じ契約を再アップロードしてもプレビューと事前コストを再利用できます
 - exact 見積もりでは `is_contract` も返します。空でない抽出テキストがあれば先に契約判定を行い、clause preview は条項構造を推定できるだけの長さがある場合にのみ返します。アップロードが契約書ではないと判断された場合はホームで支払い UI を止め、`/api/payment/create` でもサーバー側で決済リクエストを拒否します。
@@ -90,6 +91,7 @@ RAG:
 
 - バックエンド: FastAPI, SQLAlchemy async, Alembic, Redis, APScheduler
 - Agent: LangGraph, 条項単位の審査パイプライン
+- OCR: Google Cloud Vision `DOCUMENT_TEXT_DETECTION`, `pdf2image`, `poppler-utils`
 - RAG: PostgreSQL `pgvector`, `text-embedding-3-small`
 - フロントエンド: React, Vite, TypeScript, React Router, i18next
 - インフラ: Docker Compose, Fly.io 設定, Vercel 設定
@@ -100,6 +102,7 @@ RAG:
 
 - Docker Desktop / Docker Engine
 - OpenAI API Key
+- 画像 / スキャン PDF OCR 用の Google Cloud Vision サービスアカウント JSON（base64 を `GOOGLE_APPLICATION_CREDENTIALS_JSON` に設定）
 
 起動:
 
@@ -115,7 +118,7 @@ Docker メモ:
 
 - 起動中サービスの中でコマンドを実行する場合は、`docker compose run` ではなく `docker compose exec` を優先してください。
 - `docker compose run` は一時的な `*-run-*` コンテナを残し、`docker compose down` 時に network 解放を妨げることがあります。
-- 画像とスキャン PDF は `/api/upload` 時点で GPT-4o Vision OCR を実行するため、OCR に成功したアップロードは支払い前に exact 見積もりを返します。
+- 画像とスキャン PDF は `/api/upload` 時点で Google Cloud Vision OCR を実行するため、OCR に成功したアップロードは支払い前に exact 見積もりを返します。
 - Compose の起動順も healthcheck ベースに変更され、`backend` は healthy な `postgres` / `redis` を待ち、`frontend` は healthy な `backend` を待つ構成です。
 
 エンドポイント:
@@ -177,7 +180,7 @@ docker compose up -d backend postgres redis
 - 実行時の価格設定は Python の固定値ではなく `backend/data/pricing_policy.json` から読み込まれます。現在の運用ポリシーは線形課金で、`1000 tokens あたり ¥75`、最低料金は `¥200` です。
 - 注文テーブルでは現在の課金方式を `orders.pricing_model` に保持し、旧 `price_tier` カラムは廃止されました。コンテナ起動時の自動 migration は古い Docker volume もこの形へ安全に前進させます。
 - `/api/eval/costs` は「コスト下限の推奨価格」と「目標粗利込みの推奨価格」を両方返します。既定の `target_margin_rate` は `0.75` です。
-- `PARSE_MODEL` と `SUGGESTION_MODEL` は設定可能になり、デフォルトでは `gpt-4o-mini` を使います。正式 OCR と条項ごとのリスク判定は引き続きデフォルトで `gpt-4o` のままです。
+- `PARSE_MODEL` と `SUGGESTION_MODEL` は設定可能になり、デフォルトでは `gpt-4o-mini` を使います。OCR は Google Cloud Vision に移行済みで、条項ごとのリスク判定は引き続きデフォルトで `gpt-4o` のままです。
 - `analyze_risks` は、膨張し続ける全契約の多段 tool-calling 会話ではなく、条項ごとの分析に変更されました。これによりコストとコンテキスト圧迫が大きく下がります。
 - `analyze_clause_risk` は、長い法令断片をそのまま返す代わりに、圧縮した RAG 要約を返します。
 - `generate_suggestion` はリスクレベルに応じて長さを変え、中リスクは短く、高リスクはより具体的に出力します。

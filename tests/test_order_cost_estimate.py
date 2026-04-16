@@ -46,10 +46,10 @@ def test_build_order_cost_estimate_snapshot_includes_prepayment_preview_cost():
         order,
         prepayment_quote={
             "prepayment_snapshot": {
-                "ocr_model": "gpt-4o",
-                "ocr_input_tokens": 2400,
+                "ocr_model": "google-vision-document-text",
+                "ocr_input_tokens": 3,
                 "ocr_output_tokens": 900,
-                "ocr_cost_usd": 0.00625,
+                "ocr_cost_usd": 0.006,
                 "ocr_cost_jpy": 0.938,
                 "ocr_succeeded": True,
                 "preview_model": "gpt-4o-mini",
@@ -122,10 +122,10 @@ def test_build_actual_and_comparison_snapshots_capture_model_breakdown():
         order,
         prepayment_quote={
             "prepayment_snapshot": {
-                "ocr_model": "gpt-4o",
-                "ocr_input_tokens": 2400,
+                "ocr_model": "google-vision-document-text",
+                "ocr_input_tokens": 3,
                 "ocr_output_tokens": 900,
-                "ocr_cost_usd": 0.00625,
+                "ocr_cost_usd": 0.006,
                 "ocr_cost_jpy": 0.938,
                 "ocr_succeeded": True,
                 "preview_model": "gpt-4o-mini",
@@ -141,7 +141,8 @@ def test_build_actual_and_comparison_snapshots_capture_model_breakdown():
     comparison_snapshot = build_order_cost_comparison_snapshot(estimate_snapshot, actual_snapshot)
 
     assert actual_snapshot is not None
-    assert actual_snapshot["actual_model_breakdown"]["gpt-4o"]["calls"] == 4
+    assert actual_snapshot["actual_model_breakdown"]["google-vision-document-text"]["calls"] == 1
+    assert actual_snapshot["actual_model_breakdown"]["gpt-4o"]["calls"] == 3
     assert actual_snapshot["actual_model_breakdown"]["gpt-4o-mini"]["calls"] == 3
     assert actual_snapshot["actual_cost_breakdown"]["ocr_quote"]["cost_jpy"] == 0.938
     assert actual_snapshot["actual_cost_breakdown"]["parse_contract_preview"]["cost_jpy"] == 0.043

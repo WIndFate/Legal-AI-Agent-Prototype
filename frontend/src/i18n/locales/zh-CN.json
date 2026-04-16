@@ -221,6 +221,7 @@
     "upload_banned": "您今日的上传次数已达上限，请 24 小时后再试，或直接粘贴合同文本继续使用。如有疑问请联系 support@contractguard.jp。",
     "upload_rate_limited": "上传请求过于频繁，请稍候再试。",
     "payment_failed": "支付失败，请重试。",
+    "daily_budget_exhausted": "今日处理配额已达上限，请明天再试。",
     "review_failed": "分析过程中出现错误，请重试。",
     "non_contract_document": "上传的内容看起来不是合同，系统已停止分析。请返回首页并上传合同文本、图片或 PDF。",
     "report_expired": "该报告已过期。",

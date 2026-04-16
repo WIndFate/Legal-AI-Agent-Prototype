@@ -213,6 +213,7 @@
   "errors": {
     "upload_failed": "Tải lên thất bại. Vui lòng thử lại.",
     "payment_failed": "Thanh toán thất bại. Vui lòng thử lại.",
+    "daily_budget_exhausted": "Hạn mức xử lý hôm nay đã hết. Vui lòng thử lại vào ngày mai.",
     "review_failed": "Đã xảy ra lỗi trong quá trình phân tích. Vui lòng thử lại.",
     "non_contract_document": "Nội dung được tải lên có vẻ không phải là hợp đồng nên quá trình phân tích đã dừng lại. Hãy quay về trang chủ và tải lên văn bản hợp đồng, ảnh hoặc PDF.",
     "report_expired": "Báo cáo này đã hết hạn.",
