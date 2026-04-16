@@ -53,7 +53,7 @@
     "not_contract_desc": "O conteúdo enviado não parece ser um contrato, portanto a análise não pode ser realizada. Envie o texto, imagem ou PDF de um contrato.",
     "not_contract_retry": "Enviar outro arquivo",
     "file_limits": "Imagem: máx. 25 MB; PDF: máx. 30 MB e 20 páginas",
-    "char_count": "{{count}} / 80.000 caracteres"
+    "char_count": "{{value}} / 80.000 caracteres"
   },
   "pii": {
     "warning": "Informações pessoais detectadas. Verifique antes de enviar.",

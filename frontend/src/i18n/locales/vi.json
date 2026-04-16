@@ -53,7 +53,7 @@
     "not_contract_desc": "Nội dung tải lên có vẻ không phải là hợp đồng nên không thể phân tích. Vui lòng tải lên văn bản, hình ảnh hoặc PDF hợp đồng.",
     "not_contract_retry": "Tải lên tệp khác",
     "file_limits": "Ảnh tối đa 25 MB, PDF tối đa 30 MB·20 trang",
-    "char_count": "{{count}} / 80.000 ký tự"
+    "char_count": "{{value}} / 80.000 ký tự"
   },
   "pii": {
     "warning": "Phát hiện thông tin cá nhân. Vui lòng kiểm tra trước khi gửi.",

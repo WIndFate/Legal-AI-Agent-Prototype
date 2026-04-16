@@ -53,7 +53,7 @@
     "not_contract_desc": "업로드된 내용이 계약서가 아닌 것으로 보여 분석을 진행할 수 없습니다. 계약서 본문, 이미지 또는 PDF를 업로드해 주세요.",
     "not_contract_retry": "다른 파일 업로드",
     "file_limits": "이미지 최대 25 MB, PDF 최대 30 MB·20페이지",
-    "char_count": "{{count}} / 80,000자"
+    "char_count": "{{value}} / 80,000자"
   },
   "pii": {
     "warning": "개인정보가 감지되었습니다. 제출 전에 확인해 주세요.",

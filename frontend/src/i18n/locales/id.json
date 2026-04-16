@@ -53,7 +53,7 @@
     "not_contract_desc": "Konten yang diunggah tampaknya bukan kontrak sehingga tidak dapat dianalisis. Silakan unggah dokumen kontrak (teks, gambar, atau PDF).",
     "not_contract_retry": "Unggah file lain",
     "file_limits": "Gambar maks. 25 MB, PDF maks. 30 MB·20 halaman",
-    "char_count": "{{count}} / 80.000 karakter"
+    "char_count": "{{value}} / 80.000 karakter"
   },
   "pii": {
     "warning": "Informasi pribadi terdeteksi. Harap periksa sebelum mengirim.",

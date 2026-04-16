@@ -53,7 +53,7 @@
     "not_contract_desc": "上传的内容可能不是合同，无法进行分析。请上传合同的正文、图片或PDF文件。",
     "not_contract_retry": "上传其他文件",
     "file_limits": "图片最大 25 MB · PDF 最大 30 MB，最多 20 页",
-    "char_count": "{{count}} / 80,000 字符"
+    "char_count": "{{value}} / 80,000 字符"
   },
   "pii": {
     "warning": "检测到个人信息，请在提交前确认。",

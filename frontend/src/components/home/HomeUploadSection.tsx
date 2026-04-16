@@ -149,7 +149,7 @@ export default function HomeUploadSection({
               styles.charCounter,
               textInput.length > 80_000 && styles.charCounterOver,
             )}>
-              {t('upload.char_count', { count: textInput.length.toLocaleString() })}
+              {t('upload.char_count', { value: textInput.length.toLocaleString() })}
             </p>
           </div>
         ) : (

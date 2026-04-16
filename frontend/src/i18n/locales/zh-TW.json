@@ -53,7 +53,7 @@
     "not_contract_desc": "上傳的內容可能不是合約，無法進行分析。請上傳合約的正文、圖片或PDF文件。",
     "not_contract_retry": "上傳其他文件",
     "file_limits": "圖片最大 25 MB · PDF 最大 30 MB，最多 20 頁",
-    "char_count": "{{count}} / 80,000 字元"
+    "char_count": "{{value}} / 80,000 字元"
   },
   "pii": {
     "warning": "偵測到個人資料，請在提交前確認。",

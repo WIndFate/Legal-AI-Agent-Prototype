@@ -53,7 +53,7 @@
     "not_contract_desc": "The uploaded content does not look like a contract, so analysis cannot proceed. Please upload a contract document (text, image, or PDF).",
     "not_contract_retry": "Upload a different file",
     "file_limits": "Images up to 25 MB · PDFs up to 30 MB and 20 pages",
-    "char_count": "{{count}} / 80,000 characters"
+    "char_count": "{{value}} / 80,000 characters"
   },
   "pii": {
     "warning": "Personal information detected. Please review before submitting.",
