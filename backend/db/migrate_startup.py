@@ -224,7 +224,9 @@ async def run_startup_migrations() -> None:
         # Supabase project level (public not exposed, pg_graphql off).
         try:
             await enforce_rls_on_public_tables(conn)
-            logger.info("RLS forced on all public tables (post-migration hook).")
+            # Emit at WARNING so it surfaces in default log config — this hook is
+            # a security control, we want every boot's audit trail to show it ran.
+            logger.warning("RLS forced on all public tables (post-migration hook).")
         except Exception as exc:
             logger.warning("RLS enforcement hook failed: %s", exc)
     finally:
