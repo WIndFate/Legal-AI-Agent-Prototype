@@ -11,6 +11,7 @@ from httpx import ASGITransport, AsyncClient
 from backend.main import app
 from backend.services.abuse_guard import (
     _uploads_key,
+    check_ocr_allowed,
     record_ocr_upload,
     rollback_ocr_upload,
 )
@@ -78,6 +79,13 @@ async def test_rollback_never_drives_counter_below_zero(monkeypatch):
 async def test_record_ocr_upload_raises_503_when_redis_none():
     with pytest.raises(HTTPException) as excinfo:
         await record_ocr_upload(None, "198.51.100.1")
+    assert excinfo.value.status_code == 503
+
+
+@pytest.mark.asyncio
+async def test_check_ocr_allowed_raises_503_when_redis_none():
+    with pytest.raises(HTTPException) as excinfo:
+        await check_ocr_allowed(None, "198.51.100.1")
     assert excinfo.value.status_code == 503
 
 

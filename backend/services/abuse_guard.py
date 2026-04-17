@@ -52,20 +52,22 @@ async def check_ocr_allowed(redis: Redis | None, ip: str) -> bool:
     """Return False if this IP has exceeded the OCR waste limit.
 
     Fail-closed: if Redis is unavailable or raises any transient error,
-    OCR is blocked to prevent untracked cost.
+    OCR is blocked to prevent untracked cost. Operational failures surface as
+    HTTP 503 so callers can distinguish service degradation from a real abuse
+    limit hit.
     """
     settings = get_settings()
     if redis is None:
-        logger.warning("abuse_guard redis unavailable, fail-closed ip=%s", ip)
-        return False
+        logger.error("abuse_guard redis unavailable, fail-closed ip=%s", ip)
+        raise HTTPException(status_code=503, detail="service_unavailable")
     try:
         uploads = int(await redis.get(_uploads_key(ip)) or 0)
         paid = int(await redis.get(_paid_key(ip)) or 0)
         waste = uploads - paid
         return waste < settings.OCR_WASTE_DAILY_LIMIT
     except _REDIS_FAILURE_EXCEPTIONS as exc:
-        logger.warning("abuse_guard check_ocr_allowed redis error ip=%s: %s", ip, exc)
-        return False  # fail-closed
+        logger.error("abuse_guard check_ocr_allowed redis error ip=%s: %s", ip, exc)
+        raise HTTPException(status_code=503, detail="service_unavailable") from exc
 
 
 async def record_ocr_upload(redis: Redis | None, ip: str) -> None:

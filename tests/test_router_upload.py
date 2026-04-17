@@ -659,8 +659,8 @@ async def test_abuse_guard_rollback_on_ocr_failure():
 
 
 @pytest.mark.asyncio
-async def test_abuse_guard_redis_down_fail_closed():
-    """When Redis is unavailable, check_ocr_allowed should fail-closed and return 429."""
+async def test_abuse_guard_redis_down_fail_closed_with_503():
+    """When Redis is unavailable, OCR should fail-closed with 503."""
     fake_image = b"\x89PNG\r\n\x1a\n" + b"\x00" * 50
 
     with (
@@ -668,7 +668,7 @@ async def test_abuse_guard_redis_down_fail_closed():
         patch(
             "backend.routers.upload.check_ocr_allowed",
             new_callable=AsyncMock,
-            return_value=False,  # fail-closed: Redis down → deny
+            side_effect=HTTPException(status_code=503, detail="service_unavailable"),
         ),
         patch("backend.routers.upload.extract_text_from_image_with_snapshot") as mock_ocr,
     ):
@@ -679,5 +679,6 @@ async def test_abuse_guard_redis_down_fail_closed():
                 data={"input_type": "image"},
                 files={"file": ("contract.png", io.BytesIO(fake_image), "image/png")},
             )
-    assert resp.status_code == 429
+    assert resp.status_code == 503
+    assert resp.json()["detail"] == "service_unavailable"
     mock_ocr.assert_not_called()

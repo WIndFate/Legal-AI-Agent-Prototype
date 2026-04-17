@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import logging
 from datetime import datetime
 from zoneinfo import ZoneInfo
@@ -12,6 +13,7 @@ from backend.services.analytics import capture_message
 
 logger = logging.getLogger(__name__)
 _JST = ZoneInfo("Asia/Tokyo")
+_REDIS_FAILURE_EXCEPTIONS = (RedisError, asyncio.TimeoutError, ConnectionError, RuntimeError)
 
 
 def _daily_cost_key() -> str:
@@ -34,7 +36,7 @@ async def check_budget_allowed(redis: Redis | None, estimated_jpy: float) -> boo
     settings = get_settings()
     try:
         current = float(await redis.get(_daily_cost_key()) or 0.0)
-    except (RedisError, RuntimeError) as exc:
+    except _REDIS_FAILURE_EXCEPTIONS as exc:
         logger.error("cost_guard budget check failed: %s", exc)
         capture_message("cost_guard_unavailable", level="error")
         return False
@@ -58,7 +60,7 @@ async def record_cost(redis: Redis | None, actual_jpy: float) -> None:
         total = await redis.incrbyfloat(key, float(actual_jpy))
         if float(total) == float(actual_jpy):
             await redis.expire(key, 86_400)
-    except (RedisError, RuntimeError) as exc:
+    except _REDIS_FAILURE_EXCEPTIONS as exc:
         logger.error("cost_guard record_cost failed: %s", exc)
         capture_message("cost_guard_record_failed", level="error")
 
@@ -68,6 +70,6 @@ async def get_today_spent(redis: Redis | None) -> float:
         return 0.0
     try:
         return float(await redis.get(_daily_cost_key()) or 0.0)
-    except (RedisError, RuntimeError) as exc:
+    except _REDIS_FAILURE_EXCEPTIONS as exc:
         logger.warning("cost_guard get_today_spent failed: %s", exc)
         return 0.0
