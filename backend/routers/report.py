@@ -8,8 +8,9 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.db.session import get_db
+from backend.models.order import Order
 from backend.models.report import Report
-from backend.routers._helpers import parse_order_id
+from backend.routers._helpers import build_order_share_token, parse_order_id, require_order_token
 from backend.services.analytics import capture as posthog_capture
 from backend.services.report_cache import get_cached_report
 from backend.services.report_pdf import renderer as report_pdf_renderer
@@ -52,13 +53,28 @@ async def _load_report_row(order_id: str, db: AsyncSession) -> Report:
     return report
 
 
+async def _load_accessible_order(order_id: str, token: str | None, db: AsyncSession) -> Order:
+    order_uuid = parse_order_id(order_id)
+    order = await db.get(Order, order_uuid)
+    if order is None:
+        raise HTTPException(status_code=404, detail="Not found")
+    require_order_token(
+        provided_token=token,
+        access_token=order.access_token,
+        share_token=order.share_token,
+        allow_share_token=True,
+    )
+    return order
+
+
 @router.get("/api/report/{order_id}")
 async def get_report(
     order_id: str,
+    token: str | None = Query(default=None),
     db: AsyncSession = Depends(get_db),
 ):
     """Get analysis report by order ID. Checks Redis cache first, then DB."""
-    parse_order_id(order_id)
+    await _load_accessible_order(order_id, token, db)
     # Try Redis cache first
     cached = await get_cached_report(order_id)
     if cached and "report" in cached:
@@ -103,9 +119,10 @@ async def get_report(
 async def download_report_pdf(
     order_id: str,
     download: int = Query(default=1),
+    token: str | None = Query(default=None),
     db: AsyncSession = Depends(get_db),
 ):
-    parse_order_id(order_id)
+    await _load_accessible_order(order_id, token, db)
     report = await _load_report_row(order_id, db)
 
     pdf_bytes = report_pdf_renderer.build_pdf(
@@ -135,3 +152,28 @@ async def download_report_pdf(
             "Cache-Control": "no-store",
         },
     )
+
+
+@router.post("/api/report/{order_id}/share-link")
+async def create_report_share_link(
+    order_id: str,
+    token: str | None = Query(default=None),
+    db: AsyncSession = Depends(get_db),
+):
+    order_uuid = parse_order_id(order_id)
+    order = await db.get(Order, order_uuid)
+    if order is None:
+        raise HTTPException(status_code=404, detail="Not found")
+    require_order_token(
+        provided_token=token,
+        access_token=order.access_token,
+        allow_share_token=False,
+    )
+    if not order.share_token:
+        order.share_token = build_order_share_token()
+        await db.commit()
+
+    return {
+        "order_id": str(order.id),
+        "share_token": order.share_token,
+    }

@@ -8,6 +8,7 @@ import HomeHeroSection from '../components/home/HomeHeroSection';
 import HomeUploadSection from '../components/home/HomeUploadSection';
 import type { InputMode, UploadResult } from '../components/home/types';
 import { exampleReports } from '../data/exampleReports';
+import { appendOrderToken, storeOrderAccessToken } from '../lib/orderAccess';
 
 function detectFileInputType(file: File): 'image' | 'pdf' {
   if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
@@ -129,6 +130,7 @@ export default function HomePage() {
       if (!res.ok) throw new Error(`Payment failed: ${res.status}`);
 
       const data = await res.json();
+      storeOrderAccessToken(data.order_id, data.access_token);
       if (data.komoju_session_url) {
         sessionStorage.setItem(`report-language:${data.order_id}`, i18n.language);
         // Redirect to KOMOJU payment page
@@ -136,7 +138,7 @@ export default function HomePage() {
       } else {
         sessionStorage.setItem(`report-language:${data.order_id}`, i18n.language);
         // Dev mode: still show the payment-success handoff so users save the order ID first.
-        navigate(`/payment/${data.order_id}`);
+        navigate(appendOrderToken(`/payment/${data.order_id}`, data.access_token));
       }
     } catch (e) {
       setError(t('errors.payment_failed'));

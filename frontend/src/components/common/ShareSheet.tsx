@@ -16,13 +16,15 @@ interface ShareSheetProps {
   onClose: () => void;
   shareUrl: string;
   orderId: string;
+  accessToken: string | null;
   reportSummary?: ReportSummary;
 }
 
-export default function ShareSheet({ open, onClose, shareUrl, orderId, reportSummary }: ShareSheetProps) {
+export default function ShareSheet({ open, onClose, shareUrl, orderId, accessToken, reportSummary }: ShareSheetProps) {
   const { t } = useTranslation();
   const [copiedLink, setCopiedLink] = useState(false);
   const [referralLoading, setReferralLoading] = useState(false);
+  const [resolvedShareUrl, setResolvedShareUrl] = useState(shareUrl);
   const [referralData, setReferralData] = useState<{
     referral_code: string;
     discount_jpy: number;
@@ -34,15 +36,15 @@ export default function ShareSheet({ open, onClose, shareUrl, orderId, reportSum
   const supportsNativeShare = useMemo(() => typeof navigator !== 'undefined' && !!navigator.share, []);
   const finalShareUrl = useMemo(() => {
     try {
-      const url = new URL(shareUrl, window.location.origin);
+      const url = new URL(resolvedShareUrl, window.location.origin);
       if (referralData?.referral_code) {
         url.searchParams.set('ref', referralData.referral_code);
       }
       return url.toString();
     } catch {
-      return shareUrl;
+      return resolvedShareUrl;
     }
-  }, [referralData?.referral_code, shareUrl]);
+  }, [referralData?.referral_code, resolvedShareUrl]);
 
   useEffect(() => {
     if (!open) return;
@@ -67,6 +69,26 @@ export default function ShareSheet({ open, onClose, shareUrl, orderId, reportSum
     if (!open) return;
 
     setCopiedLink(false);
+    setResolvedShareUrl(shareUrl);
+
+    const loadShareLink = async () => {
+      if (!accessToken) return;
+      try {
+        const res = await fetch(`/api/report/${orderId}/share-link?token=${encodeURIComponent(accessToken)}`, {
+          method: 'POST',
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (typeof data.share_token === 'string' && data.share_token) {
+          const url = new URL(`/report/${orderId}`, window.location.origin);
+          url.searchParams.set('token', data.share_token);
+          setResolvedShareUrl(url.toString());
+        }
+      } catch {
+        setResolvedShareUrl(shareUrl);
+      }
+    };
+    void loadShareLink();
 
     const storageKey = `referral-share:${orderId}`;
     const cached = sessionStorage.getItem(storageKey);
@@ -86,7 +108,7 @@ export default function ShareSheet({ open, onClose, shareUrl, orderId, reportSum
         const res = await fetch('/api/referral/generate', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ order_id: orderId }),
+          body: JSON.stringify({ order_id: orderId, access_token: accessToken }),
         });
         if (!res.ok) {
           throw new Error(`Referral failed: ${res.status}`);
@@ -103,7 +125,7 @@ export default function ShareSheet({ open, onClose, shareUrl, orderId, reportSum
     };
 
     void loadReferral();
-  }, [open, orderId]);
+  }, [accessToken, open, orderId, shareUrl]);
 
   // Generate card preview when referral data + report summary are ready
   useEffect(() => {

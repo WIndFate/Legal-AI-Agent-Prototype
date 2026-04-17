@@ -6,6 +6,7 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from backend.models.base import Base
+from backend.routers._helpers import build_order_access_token
 
 
 class Order(Base):
@@ -27,6 +28,8 @@ class Order(Base):
     analysis_status: Mapped[str] = mapped_column(String(20), nullable=False, default="waiting", index=True)
     target_language: Mapped[str] = mapped_column(String(10), nullable=False, default="ja")
     referral_code_used: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    access_token: Mapped[str] = mapped_column(String(64), nullable=False, default=build_order_access_token)
+    share_token: Mapped[str | None] = mapped_column(String(64), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
     contract_deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)

@@ -39,6 +39,7 @@ async def test_generate_referral(mock_settings, mock_db):
     oid = str(uuid.uuid4())
     order_mock = MagicMock()
     order_mock.payment_status = "paid"
+    order_mock.access_token = "access-token-123"
     existing_referral_result = MagicMock()
     existing_referral_result.scalar_one_or_none.return_value = None
     order_result = MagicMock()
@@ -47,7 +48,10 @@ async def test_generate_referral(mock_settings, mock_db):
 
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
-        resp = await client.post("/api/referral/generate", json={"order_id": oid})
+        resp = await client.post(
+            "/api/referral/generate",
+            json={"order_id": oid, "access_token": "access-token-123"},
+        )
 
     assert resp.status_code == 200
     body = resp.json()

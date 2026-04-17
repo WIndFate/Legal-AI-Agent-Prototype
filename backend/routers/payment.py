@@ -11,6 +11,7 @@ from backend.models.order import Order
 from backend.models.referral import Referral
 from backend.dependencies import get_redis
 from backend.routers._helpers import parse_order_id
+from backend.routers._helpers import build_order_access_token
 from backend.schemas.payment import PaymentCreateRequest, PaymentCreateResponse, PaymentRetryResponse
 from backend.services.order_cost_estimate import build_order_cost_estimate_snapshot, upsert_order_cost_estimate
 from backend.services.payment import (
@@ -167,6 +168,7 @@ async def create_payment(
         target_language=request.target_language,
         referral_code_used=request.referral_code,
         client_ip=extract_client_ip(raw_request),
+        access_token=build_order_access_token(),
     )
     db.add(order)
     await db.commit()
@@ -195,7 +197,7 @@ async def create_payment(
         # Non-blocking payment confirmation email (dev path)
         try:
             await send_payment_confirmation_email(
-                request.email, str(order.id), request.target_language, final_price,
+                request.email, str(order.id), request.target_language, final_price, order.access_token,
             )
         except Exception as e:
             logger.error("Payment confirmation email failed (dev): order_id=%s error=%s", order.id, e)
@@ -215,6 +217,7 @@ async def create_payment(
         amount_jpy=final_price,
         email=request.email,
         frontend_base_url=frontend_base_url,
+        access_token=order.access_token,
     )
     logger.info("Payment session prepared: order_id=%s session_url=%s", order.id, session_url)
 
@@ -232,6 +235,7 @@ async def create_payment(
 
     return PaymentCreateResponse(
         order_id=str(order.id),
+        access_token=order.access_token,
         komoju_session_url=session_url,
         price_jpy=final_price,
         discount_applied=discount_jpy,
@@ -267,6 +271,7 @@ async def retry_payment(
         amount_jpy=order.price_jpy,
         email=order.email,
         frontend_base_url=frontend_base_url,
+        access_token=order.access_token,
     )
     previous_status = order.payment_status
     if order.payment_status in {"failed", "cancelled"}:
@@ -281,6 +286,7 @@ async def retry_payment(
     )
     return PaymentRetryResponse(
         order_id=str(order.id),
+        access_token=order.access_token,
         komoju_session_url=session_url,
         price_jpy=order.price_jpy,
     )
@@ -369,7 +375,7 @@ async def payment_webhook(
                 # Non-blocking payment confirmation email
                 try:
                     await send_payment_confirmation_email(
-                        order.email, order_id, order.target_language, order.price_jpy,
+                        order.email, order_id, order.target_language, order.price_jpy, order.access_token,
                     )
                 except Exception as e:
                     logger.error("Payment confirmation email failed: order_id=%s error=%s", order_id, e)

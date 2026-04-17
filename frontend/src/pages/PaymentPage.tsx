@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 
 import OrderReminderDialog from '../components/common/OrderReminderDialog';
 import { fetchWithRetry } from '../lib/fetchWithRetry';
+import { appendOrderToken, resolveOrderAccessToken, storeOrderAccessToken } from '../lib/orderAccess';
 
 type PaymentStatus = 'checking' | 'success' | 'failed' | 'pending' | 'timeout';
 type TerminalPaymentStatus = 'failed' | 'cancelled' | null;
@@ -14,6 +15,7 @@ const PAYMENT_POLL_TIMEOUT_MS = 5 * 60 * 1_000;
 export default function PaymentPage() {
   const { orderId } = useParams<{ orderId: string }>();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { t } = useTranslation();
   const [status, setStatus] = useState<PaymentStatus>('checking');
   const [showOrderPrompt, setShowOrderPrompt] = useState(false);
@@ -24,6 +26,7 @@ export default function PaymentPage() {
   const [terminalPaymentStatus, setTerminalPaymentStatus] = useState<TerminalPaymentStatus>(null);
   const [retryError, setRetryError] = useState('');
   const [pendingElapsed, setPendingElapsed] = useState(0);
+  const accessToken = resolveOrderAccessToken(orderId ?? null, searchParams);
 
   const PENDING_HINT_DELAY_S = 30;
 
@@ -86,6 +89,7 @@ export default function PaymentPage() {
         throw new Error(detail || t('payment.retry_failed'));
       }
       const data = await res.json();
+      storeOrderAccessToken(data.order_id, data.access_token);
       if (data.komoju_session_url) {
         window.location.href = data.komoju_session_url;
         return;
@@ -118,7 +122,10 @@ export default function PaymentPage() {
       }
 
       try {
-        const statusRes = await fetchWithRetry(`/api/orders/${orderId}/status`, undefined, {
+        const statusPath = accessToken
+          ? appendOrderToken(`/api/orders/${orderId}/status`, accessToken)
+          : `/api/payment/status/${orderId}`;
+        const statusRes = await fetchWithRetry(statusPath, undefined, {
           timeoutMs: 10_000,
           retries: 2,
           retryDelayMs: 700,
@@ -132,10 +139,10 @@ export default function PaymentPage() {
         }
 
         const data = await statusRes.json();
-        if (data.report_ready || data.analysis_status === 'completed') {
+        if (accessToken && (data.report_ready || data.analysis_status === 'completed')) {
           setTerminalPaymentStatus(null);
           setStatus('success');
-          setNextRoute(`/report/${orderId}`);
+          setNextRoute(appendOrderToken(`/report/${orderId}`, accessToken));
           setShowOrderPrompt(true);
           return;
         }
@@ -143,7 +150,7 @@ export default function PaymentPage() {
         if (data.payment_status === 'paid' || data.payment_status === 'captured') {
           setTerminalPaymentStatus(null);
           setStatus('success');
-          setNextRoute(`/review/${orderId}`);
+          setNextRoute(appendOrderToken(`/review/${orderId}`, accessToken));
           setShowOrderPrompt(true);
           return;
         }
@@ -182,7 +189,7 @@ export default function PaymentPage() {
         window.clearTimeout(pollTimer);
       }
     };
-  }, [orderId, pollNonce]);
+  }, [accessToken, orderId, pollNonce]);
 
   return (
     <div className="page payment-page">

@@ -55,6 +55,7 @@ async def test_create_payment_session_omits_payment_types(monkeypatch):
         amount_jpy=200,
         email="user@example.com",
         frontend_base_url="https://contractguard-app.vercel.app",
+        access_token="access-token-123",
     )
 
     assert session_url == "https://komoju.test/session"
@@ -63,6 +64,7 @@ async def test_create_payment_session_omits_payment_types(monkeypatch):
     assert posted["json"]["amount"] == 200
     assert posted["json"]["currency"] == "JPY"
     assert posted["json"]["metadata"] == {"order_id": "test-order-id"}
+    assert posted["json"]["return_url"].endswith("/review/test-order-id?token=access-token-123")
 
 
 @pytest.mark.asyncio

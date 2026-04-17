@@ -353,7 +353,7 @@ async def _run_analysis(job_id: str, order_id: str) -> None:
                     )
             report_payload = await save_report(order_id, persisted_report, target_language, session, cost_summary=cost_summary)
             await cache_report(order_id, report_payload)
-            email_sent = await send_report_email(email, order_id, target_language)
+            email_sent = await send_report_email(email, order_id, target_language, order.access_token)
             await finalize_order(order_id, session)
 
             job.status = "completed"

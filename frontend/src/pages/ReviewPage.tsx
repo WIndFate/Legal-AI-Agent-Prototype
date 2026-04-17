@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { appendOrderToken, resolveOrderAccessToken } from '../lib/orderAccess';
 
 interface AnalysisEventItem {
   seq: number;
@@ -39,7 +40,9 @@ const STEP_DEFS: { key: AnalysisStep }[] = [
 export default function ReviewPage() {
   const { orderId } = useParams<{ orderId: string }>();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { t } = useTranslation();
+  const accessToken = resolveOrderAccessToken(orderId ?? null, searchParams);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -94,16 +97,16 @@ export default function ReviewPage() {
   }, [t]);
 
   const fetchOrderStatus = useCallback(async (): Promise<OrderStatusResponse> => {
-    const res = await fetch(`/api/orders/${orderId}/status`);
+    const res = await fetch(appendOrderToken(`/api/orders/${orderId}/status`, accessToken));
     if (!res.ok) throw new Error(t('errors.review_failed'));
     return res.json();
-  }, [orderId, t]);
+  }, [accessToken, orderId, t]);
 
   const requestAnalysisStart = useCallback(async () => {
     const res = await fetch('/api/analysis/start', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ order_id: orderId }),
+      body: JSON.stringify({ order_id: orderId, access_token: accessToken }),
     });
     if (!res.ok && res.status !== 409) {
       if (res.status === 402) {
@@ -113,7 +116,7 @@ export default function ReviewPage() {
       throw new Error(t('errors.review_failed'));
     }
     return true;
-  }, [navigate, orderId, t]);
+  }, [accessToken, navigate, orderId, t]);
 
   const resolveEventMessage = useCallback((evt: AnalysisEventItem): string | null => {
     if (evt.event_type === 'node_start') {
@@ -224,7 +227,7 @@ export default function ReviewPage() {
         pushActivityEvent(evt);
         if (orderId) {
           completeTimeoutRef.current = window.setTimeout(() => {
-            navigate(`/report/${orderId}`);
+            navigate(appendOrderToken(`/report/${orderId}`, accessToken));
           }, 1200);
         }
         break;
@@ -238,10 +241,10 @@ export default function ReviewPage() {
         setLoading(false);
         break;
     }
-  }, [analysisFinishedAtMs, navigate, orderId, pushActivityEvent, resolveEventMessage, resolveReviewError, t]);
+  }, [accessToken, analysisFinishedAtMs, navigate, orderId, pushActivityEvent, resolveEventMessage, resolveReviewError, t]);
 
   const loadHistory = useCallback(async () => {
-    const res = await fetch(`/api/orders/${orderId}/events?after_seq=0`);
+    const res = await fetch(appendOrderToken(`/api/orders/${orderId}/events?after_seq=0`, accessToken));
     if (!res.ok) throw new Error(t('errors.review_failed'));
     const data = await res.json();
     setActivityEvents([]);
@@ -249,16 +252,19 @@ export default function ReviewPage() {
     for (const evt of data.events as AnalysisEventItem[]) {
       processEvent(evt);
     }
-  }, [orderId, processEvent, t]);
+  }, [accessToken, orderId, processEvent, t]);
 
   const connectStream = useCallback(async (): Promise<'terminal' | 'disconnected'> => {
     const abortController = new AbortController();
     streamAbortRef.current = abortController;
 
     try {
-      const res = await fetch(`/api/orders/${orderId}/stream?after_seq=${lastSeqRef.current}`, {
+      const res = await fetch(
+        appendOrderToken(`/api/orders/${orderId}/stream?after_seq=${lastSeqRef.current}`, accessToken),
+        {
         signal: abortController.signal,
-      });
+        },
+      );
       if (!res.ok) {
         throw new Error(`Stream failed: ${res.status}`);
       }
@@ -305,7 +311,7 @@ export default function ReviewPage() {
       }
       throw errorValue;
     }
-  }, [orderId, processEvent]);
+  }, [accessToken, orderId, processEvent]);
 
   const startStreamLoop = useCallback(async () => {
     reconnectAttempt.current = 0;

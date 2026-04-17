@@ -42,6 +42,8 @@ class FakeOrder:
         self.komoju_session_id = kwargs.get("komoju_session_id", None)
         self.analysis_status = kwargs.get("analysis_status", "waiting")
         self.client_ip = kwargs.get("client_ip", "127.0.0.1")
+        self.access_token = kwargs.get("access_token", "access-token-123")
+        self.share_token = kwargs.get("share_token", None)
 
 
 class _FakeResult:
@@ -152,6 +154,7 @@ async def test_create_payment_happy_path():
         assert resp.status_code == 200
         body = resp.json()
         assert "order_id" in body
+        assert "access_token" in body
         assert body["komoju_session_url"] == "https://komoju.com/sessions/test123"
         assert body["price_jpy"] == 299
         assert body["discount_applied"] == 0
@@ -440,6 +443,7 @@ async def test_create_payment_dev_bypass():
         assert send_email_mock.await_args.args[0] == "dev@example.com"
         assert send_email_mock.await_args.args[2] == "ja"
         assert send_email_mock.await_args.args[3] == 299
+        assert send_email_mock.await_args.args[4]
     finally:
         app.dependency_overrides.pop(get_db, None)
 
@@ -582,6 +586,7 @@ async def test_retry_payment_reopens_checkout_for_terminal_order():
         body = resp.json()
         assert body["order_id"] == str(order.id)
         assert body["komoju_session_url"] == "https://komoju.com/sessions/retry-123"
+        assert body["access_token"] == order.access_token
         assert body["price_jpy"] == 480
         assert order.payment_status == "pending"
         assert session.commit_count == 1
@@ -697,7 +702,13 @@ async def test_webhook_payment_captured_marks_order_paid():
         assert resp.json() == {"ok": True}
         assert order.payment_status == "paid"
         assert order.paid_at is not None
-        send_email_mock.assert_awaited_once_with(order.email, order_id, order.target_language, order.price_jpy)
+        send_email_mock.assert_awaited_once_with(
+            order.email,
+            order_id,
+            order.target_language,
+            order.price_jpy,
+            order.access_token,
+        )
     finally:
         app.dependency_overrides.pop(get_db, None)
 

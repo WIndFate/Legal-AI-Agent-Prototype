@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 
 import ShareSheet, { type ReportSummary } from '../components/common/ShareSheet';
 import { fetchWithRetry } from '../lib/fetchWithRetry';
+import { appendOrderToken, getStoredOrderAccessToken } from '../lib/orderAccess';
 interface ClauseAnalysis {
   clause_number: string;
   risk_level: string;
@@ -74,6 +75,7 @@ export default function ReportPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { t, i18n } = useTranslation();
+  const accessToken = searchParams.get('token') || getStoredOrderAccessToken(orderId ?? null);
 
   const [data, setData] = useState<ReportData | null>(null);
   const [error, setError] = useState('');
@@ -96,7 +98,7 @@ export default function ReportPage() {
 
     try {
       setDownloadingPdf(true);
-      const pdfUrl = `/api/report/${data.order_id}/pdf?download=1`;
+      const pdfUrl = appendOrderToken(`/api/report/${data.order_id}/pdf?download=1`, accessToken);
       const link = document.createElement('a');
       link.href = pdfUrl;
       link.download = `contractguard-report-${data.order_id}.pdf`;
@@ -143,7 +145,7 @@ export default function ReportPage() {
         setError('');
         setExpired(false);
 
-        const res = await fetchWithRetry(`/api/report/${orderId}`, undefined, {
+        const res = await fetchWithRetry(appendOrderToken(`/api/report/${orderId}`, accessToken), undefined, {
           timeoutMs: REPORT_TIMEOUT_MS,
           retries: 2,
           retryDelayMs: 700,
@@ -187,7 +189,7 @@ export default function ReportPage() {
     };
 
     void fetchReport();
-  }, [i18n, orderId, reloadKey]);
+  }, [accessToken, i18n, orderId, reloadKey]);
 
   useEffect(() => {
     if (!data?.expires_at) return;
@@ -354,8 +356,9 @@ export default function ReportPage() {
       <ShareSheet
         open={shareOpen}
         onClose={() => setShareOpen(false)}
-        shareUrl={`${window.location.origin}/report/${data.order_id}`}
+        shareUrl={appendOrderToken(`/report/${data.order_id}`, accessToken)}
         orderId={data.order_id}
+        accessToken={accessToken}
         reportSummary={reportSummary}
       />
       {isOffline && (

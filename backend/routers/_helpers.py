@@ -1,4 +1,5 @@
 import hmac
+import secrets
 from uuid import UUID
 
 from fastapi import Header, HTTPException
@@ -22,3 +23,27 @@ def require_admin(x_admin_token: str | None = Header(default=None)) -> None:
         raise HTTPException(status_code=404, detail="Not found")
     if not hmac.compare_digest(x_admin_token, expected):
         raise HTTPException(status_code=404, detail="Not found")
+
+
+def build_order_access_token() -> str:
+    return secrets.token_urlsafe(32)
+
+
+def build_order_share_token() -> str:
+    return secrets.token_urlsafe(32)
+
+
+def require_order_token(
+    *,
+    provided_token: str | None,
+    access_token: str | None,
+    share_token: str | None = None,
+    allow_share_token: bool = False,
+) -> None:
+    if not provided_token or not access_token:
+        raise HTTPException(status_code=404, detail="Not found")
+    if hmac.compare_digest(provided_token, access_token):
+        return
+    if allow_share_token and share_token and hmac.compare_digest(provided_token, share_token):
+        return
+    raise HTTPException(status_code=404, detail="Not found")

@@ -3,7 +3,7 @@ import hmac
 import json
 import logging
 from datetime import datetime, timedelta, timezone
-from urllib.parse import urlparse
+from urllib.parse import urlencode, urlparse
 
 import httpx
 from redis.asyncio import Redis
@@ -82,14 +82,26 @@ def resolve_frontend_base_url(
     return frontend_origin or "http://localhost:5173"
 
 
-async def create_payment_session(order_id: str, amount_jpy: int, email: str, frontend_base_url: str) -> str:
+def _build_frontend_return_url(frontend_base_url: str, order_id: str, access_token: str) -> str:
+    query = urlencode({"token": access_token})
+    return f"{frontend_base_url}/review/{order_id}?{query}"
+
+
+async def create_payment_session(
+    order_id: str,
+    amount_jpy: int,
+    email: str,
+    frontend_base_url: str,
+    access_token: str,
+) -> str:
     """Create a KOMOJU payment session and return the session URL."""
     settings = get_settings()
+    return_url = _build_frontend_return_url(frontend_base_url, order_id, access_token)
 
     if is_dev_payment_mode():
         # Local development skips the external checkout page.
         logger.warning("KOMOJU_SECRET_KEY not set, returning placeholder payment URL")
-        return f"{frontend_base_url}/review/{order_id}?dev_payment=true"
+        return f"{return_url}&dev_payment=true"
 
     async with httpx.AsyncClient() as client:
         response = await client.post(
@@ -98,7 +110,7 @@ async def create_payment_session(order_id: str, amount_jpy: int, email: str, fro
             json={
                 "amount": amount_jpy,
                 "currency": "JPY",
-                "return_url": f"{frontend_base_url}/review/{order_id}",
+                "return_url": return_url,
                 "default_locale": "ja",
                 "email": email,
                 "metadata": {"order_id": order_id},
