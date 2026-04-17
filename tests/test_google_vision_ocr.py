@@ -10,6 +10,7 @@ from google.api_core import exceptions as google_exceptions
 from backend.services.google_vision_ocr import (
     extract_text_from_image_with_snapshot,
     extract_text_from_pdf_with_snapshot,
+    extract_text_from_pdf_with_snapshot_using_page_count,
 )
 
 
@@ -68,8 +69,12 @@ async def test_extract_text_from_pdf_with_snapshot_converts_each_page():
             return_value=fake_client,
         ),
         patch(
+            "backend.services.google_vision_ocr.PdfReader",
+            return_value=SimpleNamespace(pages=[object(), object()]),
+        ),
+        patch(
             "backend.services.google_vision_ocr.convert_from_bytes",
-            return_value=[FakePage(), FakePage()],
+            side_effect=[[FakePage()], [FakePage()]],
         ),
     ):
         text, snapshot = await extract_text_from_pdf_with_snapshot(b"%PDF")
@@ -77,6 +82,88 @@ async def test_extract_text_from_pdf_with_snapshot_converts_each_page():
     assert "第1条 テスト契約" in text
     assert snapshot["ocr_pages"] == 2
     assert snapshot["ocr_cost_jpy"] == 0.45
+
+
+@pytest.mark.asyncio
+async def test_extract_text_from_pdf_with_snapshot_renders_one_page_at_a_time():
+    fake_settings = SimpleNamespace(
+        OCR_MODEL="google-vision-document-text",
+        GOOGLE_VISION_COST_PER_PAGE_JPY=0.225,
+        GOOGLE_APPLICATION_CREDENTIALS_JSON="encoded-json",
+    )
+    fake_response = SimpleNamespace(
+        full_text_annotation=SimpleNamespace(text="第1条 テスト契約"),
+        error=SimpleNamespace(message=""),
+    )
+    fake_client = SimpleNamespace(document_text_detection=lambda image: fake_response)  # noqa: ARG005
+
+    class FakePage:
+        def save(self, buffer, format):  # noqa: ARG002
+            buffer.write(b"png")
+
+        def close(self):
+            return None
+
+    with (
+        patch("backend.services.google_vision_ocr.get_settings", return_value=fake_settings),
+        patch(
+            "backend.services.google_vision_ocr.vision.ImageAnnotatorClient",
+            return_value=fake_client,
+        ),
+        patch(
+            "backend.services.google_vision_ocr.PdfReader",
+            return_value=SimpleNamespace(pages=[object(), object(), object()]),
+        ),
+        patch(
+            "backend.services.google_vision_ocr.convert_from_bytes",
+            side_effect=[[FakePage()], [FakePage()], [FakePage()]],
+        ) as mock_convert,
+    ):
+        text, snapshot = await extract_text_from_pdf_with_snapshot(b"%PDF")
+
+    assert text.count("第1条 テスト契約") == 3
+    assert snapshot["ocr_pages"] == 3
+    assert [call.kwargs["first_page"] for call in mock_convert.call_args_list] == [1, 2, 3]
+    assert [call.kwargs["last_page"] for call in mock_convert.call_args_list] == [1, 2, 3]
+
+
+@pytest.mark.asyncio
+async def test_extract_text_from_pdf_with_snapshot_reuses_single_cached_client():
+    fake_settings = SimpleNamespace(
+        OCR_MODEL="google-vision-document-text",
+        GOOGLE_VISION_COST_PER_PAGE_JPY=0.225,
+        GOOGLE_APPLICATION_CREDENTIALS_JSON="encoded-json",
+    )
+    fake_response = SimpleNamespace(
+        full_text_annotation=SimpleNamespace(text="第1条 テスト契約"),
+        error=SimpleNamespace(message=""),
+    )
+    fake_client = SimpleNamespace(document_text_detection=lambda image: fake_response)  # noqa: ARG005
+
+    class FakePage:
+        def save(self, buffer, format):  # noqa: ARG002
+            buffer.write(b"png")
+
+        def close(self):
+            return None
+
+    with (
+        patch("backend.services.google_vision_ocr.get_settings", return_value=fake_settings),
+        patch("backend.services.google_vision_ocr._vision_client", None),
+        patch(
+            "backend.services.google_vision_ocr.vision.ImageAnnotatorClient",
+            return_value=fake_client,
+        ) as mock_client_ctor,
+        patch(
+            "backend.services.google_vision_ocr.convert_from_bytes",
+            side_effect=[[FakePage()], [FakePage()], [FakePage()]],
+        ),
+    ):
+        text, snapshot = await extract_text_from_pdf_with_snapshot_using_page_count(b"%PDF", 3)
+
+    assert text.count("第1条 テスト契約") == 3
+    assert snapshot["ocr_pages"] == 3
+    mock_client_ctor.assert_called_once()
 
 
 @pytest.mark.asyncio

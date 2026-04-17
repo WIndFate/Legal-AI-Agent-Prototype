@@ -29,6 +29,7 @@ def _configure_google_credentials(settings) -> None:
     credentials_path = "/tmp/gcp-sa.json"
     with open(credentials_path, "wb") as fp:
         fp.write(decoded)
+    os.chmod(credentials_path, 0o600)
     os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = credentials_path
     if settings.GOOGLE_VISION_PROJECT_ID:
         os.environ["GOOGLE_CLOUD_PROJECT"] = settings.GOOGLE_VISION_PROJECT_ID

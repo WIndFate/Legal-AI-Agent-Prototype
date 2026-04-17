@@ -38,10 +38,13 @@ def _mock_common_dependencies():
 async def test_upload_returns_503_when_budget_rejects_image_ocr():
     fake_image_bytes = b"\x89PNG\r\n\x1a\n" + b"\x00" * 100
 
-    with patch(
-        "backend.routers.upload.check_budget_allowed",
-        new_callable=AsyncMock,
-        return_value=False,
+    with (
+        patch(
+            "backend.routers.upload.check_budget_allowed",
+            new_callable=AsyncMock,
+            return_value=False,
+        ),
+        patch("backend.routers.upload.rollback_ocr_upload", new_callable=AsyncMock) as mock_rollback,
     ):
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
@@ -53,6 +56,44 @@ async def test_upload_returns_503_when_budget_rejects_image_ocr():
 
     assert resp.status_code == 503
     assert resp.json()["detail"] == "daily_budget_exhausted"
+    mock_rollback.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_upload_returns_503_when_budget_rejects_scanned_pdf_ocr():
+    fake_pdf_bytes = b"%PDF-1.4\nfake"
+
+    with (
+        patch("backend.routers.upload.detect_and_validate_mime", return_value="application/pdf"),
+        patch("backend.routers.upload.precheck_pdf_pages", return_value=2),
+        patch(
+            "backend.routers.upload.extract_text_from_pdf_text_layer",
+            return_value=("too short", 2),
+        ),
+        patch("backend.routers.upload.pdf_text_layer_is_sufficient", return_value=False),
+        patch(
+            "backend.routers.upload.check_budget_allowed",
+            new_callable=AsyncMock,
+            return_value=False,
+        ),
+        patch("backend.routers.upload.rollback_ocr_upload", new_callable=AsyncMock) as mock_rollback,
+        patch(
+            "backend.routers.upload.extract_text_from_pdf_with_snapshot_using_page_count",
+            new_callable=AsyncMock,
+        ) as mock_ocr,
+    ):
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            resp = await client.post(
+                "/api/upload",
+                data={"input_type": "pdf"},
+                files={"file": ("contract.pdf", io.BytesIO(fake_pdf_bytes), "application/pdf")},
+            )
+
+    assert resp.status_code == 503
+    assert resp.json()["detail"] == "daily_budget_exhausted"
+    mock_rollback.assert_called_once()
+    mock_ocr.assert_not_called()
 
 
 @pytest.mark.asyncio

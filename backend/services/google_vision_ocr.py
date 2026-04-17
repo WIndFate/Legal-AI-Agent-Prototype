@@ -10,11 +10,13 @@ from google.api_core import exceptions as google_exceptions
 from google.auth.exceptions import DefaultCredentialsError
 from google.cloud import vision
 from pdf2image import convert_from_bytes
+from pypdf import PdfReader
 
 from backend.config import get_settings
 from backend.services.costing import USD_TO_JPY_RATE
 
 logger = logging.getLogger(__name__)
+_vision_client: vision.ImageAnnotatorClient | None = None
 
 
 def _ensure_google_vision_configured() -> None:
@@ -67,13 +69,20 @@ def _build_vision_snapshot(*, pages: int, text: str, mime_type: str) -> dict:
     }
 
 
-def _extract_text_from_image_sync(image_bytes: bytes) -> str:
-    _ensure_google_vision_configured()
-    try:
-        client = vision.ImageAnnotatorClient()
-    except DefaultCredentialsError as exc:
-        _raise_google_vision_http_error(str(exc), cause=exc)
+def _get_vision_client() -> vision.ImageAnnotatorClient:
+    global _vision_client
 
+    _ensure_google_vision_configured()
+    if _vision_client is None:
+        try:
+            _vision_client = vision.ImageAnnotatorClient()
+        except DefaultCredentialsError as exc:
+            _raise_google_vision_http_error(str(exc), cause=exc)
+    return _vision_client
+
+
+def _extract_text_from_image_sync(image_bytes: bytes) -> str:
+    client = _get_vision_client()
     image = vision.Image(content=image_bytes)
     try:
         response = client.document_text_detection(image=image)
@@ -90,23 +99,39 @@ def _extract_text_from_image_sync(image_bytes: bytes) -> str:
 
 
 def _extract_text_from_pdf_sync(pdf_bytes: bytes) -> tuple[str, int]:
-    pages = convert_from_bytes(pdf_bytes, dpi=200, fmt="png")
+    return _extract_text_from_pdf_sync_with_page_count(pdf_bytes)
+
+
+def _extract_text_from_pdf_sync_with_page_count(
+    pdf_bytes: bytes,
+    page_count: int | None = None,
+) -> tuple[str, int]:
+    if page_count is None:
+        page_count = len(PdfReader(io.BytesIO(pdf_bytes)).pages)
     extracted_pages: list[str] = []
-    try:
-        for page in pages:
-            buffer = io.BytesIO()
-            page.save(buffer, format="PNG")
-            extracted_pages.append(_extract_text_from_image_sync(buffer.getvalue()))
-            buffer.close()
-            page.close()
-    finally:
-        for page in pages:
-            try:
+    for page_number in range(1, page_count + 1):
+        pages = convert_from_bytes(
+            pdf_bytes,
+            dpi=200,
+            fmt="png",
+            first_page=page_number,
+            last_page=page_number,
+        )
+        try:
+            for page in pages:
+                buffer = io.BytesIO()
+                page.save(buffer, format="PNG")
+                extracted_pages.append(_extract_text_from_image_sync(buffer.getvalue()))
+                buffer.close()
                 page.close()
-            except Exception:
-                pass
+        finally:
+            for page in pages:
+                try:
+                    page.close()
+                except Exception:
+                    pass
     text = "\n\n".join(chunk for chunk in extracted_pages if chunk.strip()).strip()
-    return text, len(pages)
+    return text, page_count
 
 
 async def extract_text_from_image_with_snapshot(image_bytes: bytes, mime_type: str) -> tuple[str, dict]:
@@ -122,7 +147,7 @@ async def extract_text_from_image(image_bytes: bytes, mime_type: str) -> str:
 
 
 async def extract_text_from_pdf_with_snapshot(pdf_bytes: bytes) -> tuple[str, dict]:
-    text, page_count = await asyncio.to_thread(_extract_text_from_pdf_sync, pdf_bytes)
+    text, page_count = await asyncio.to_thread(_extract_text_from_pdf_sync_with_page_count, pdf_bytes)
     snapshot = _build_vision_snapshot(
         pages=page_count,
         text=text,
@@ -135,3 +160,17 @@ async def extract_text_from_pdf_with_snapshot(pdf_bytes: bytes) -> tuple[str, di
 async def extract_text_from_pdf(pdf_bytes: bytes) -> str:
     text, _ = await extract_text_from_pdf_with_snapshot(pdf_bytes)
     return text
+
+
+async def extract_text_from_pdf_with_snapshot_using_page_count(
+    pdf_bytes: bytes,
+    page_count: int,
+) -> tuple[str, dict]:
+    text, _ = await asyncio.to_thread(_extract_text_from_pdf_sync_with_page_count, pdf_bytes, page_count)
+    snapshot = _build_vision_snapshot(
+        pages=page_count,
+        text=text,
+        mime_type="application/pdf",
+    )
+    logger.info("Google Vision OCR usage: %s", snapshot)
+    return text, snapshot

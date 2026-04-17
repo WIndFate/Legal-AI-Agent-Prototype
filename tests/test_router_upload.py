@@ -359,7 +359,7 @@ async def test_upload_scanned_pdf_uses_vision_ocr():
             return_value=False,
         ),
         patch(
-            "backend.routers.upload.extract_text_from_pdf_with_snapshot",
+            "backend.routers.upload.extract_text_from_pdf_with_snapshot_using_page_count",
             new_callable=AsyncMock,
             return_value=(
                 ocr_text,
@@ -479,7 +479,7 @@ async def test_upload_rejects_oversized_pdf():
     oversized_bytes = b"%PDF-1.4" + b"\x00" * (31 * 1024 * 1024)  # PDF magic + 31 MB
 
     with (
-        patch("backend.routers.upload.extract_text_from_pdf_with_snapshot") as mock_ocr,
+        patch("backend.routers.upload.extract_text_from_pdf_with_snapshot_using_page_count") as mock_ocr,
         patch("backend.routers.upload.extract_text_from_pdf_text_layer", return_value=("", 1)),
         patch("backend.routers.upload.pdf_text_layer_is_sufficient", return_value=False),
         patch("backend.routers.upload.precheck_pdf_pages", return_value=1),
@@ -502,7 +502,9 @@ async def test_upload_rejects_pdf_over_page_cap():
     fake_pdf = b"%PDF-1.4" + b"\x00" * 100
 
     with (
-        patch("backend.routers.upload.extract_text_from_pdf_with_snapshot") as mock_vision_ocr,
+        patch(
+            "backend.routers.upload.extract_text_from_pdf_with_snapshot_using_page_count"
+        ) as mock_vision_ocr,
         patch("backend.routers.upload.precheck_pdf_pages", side_effect=Exception("upload_too_many_pages")),
     ):
         from fastapi import HTTPException as FastAPIHTTPException

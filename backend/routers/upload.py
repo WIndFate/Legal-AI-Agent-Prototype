@@ -22,7 +22,11 @@ from backend.services.costing import (
     estimate_cost_usd,
     extract_usage,
 )
-from backend.services.ocr import extract_text_from_image_with_snapshot, extract_text_from_pdf_with_snapshot
+from backend.services.ocr import (
+    extract_text_from_image_with_snapshot,
+    extract_text_from_pdf_with_snapshot,
+    extract_text_from_pdf_with_snapshot_using_page_count,
+)
 from backend.services.pdf_extractor import (
     extract_text_from_pdf_text_layer,
     pdf_text_layer_is_sufficient,
@@ -244,9 +248,11 @@ async def upload_contract(
                         float(page_count) * float(settings.GOOGLE_VISION_COST_PER_PAGE_JPY),
                     )
                     if not budget_allowed:
-                        await rollback_ocr_upload(redis, client_ip)
                         raise HTTPException(status_code=503, detail="daily_budget_exhausted")
-                    contract_text, ocr_snapshot = await extract_text_from_pdf_with_snapshot(pdf_bytes)
+                    contract_text, ocr_snapshot = await extract_text_from_pdf_with_snapshot_using_page_count(
+                        pdf_bytes,
+                        page_count,
+                    )
                     await record_cost(redis, float((ocr_snapshot or {}).get("ocr_cost_jpy", 0.0)))
                     # Only cache non-empty OCR results: an empty result indicates a
                     # blank/unreadable scan, and caching it would permanently serve
@@ -289,7 +295,6 @@ async def upload_contract(
                     float(settings.GOOGLE_VISION_COST_PER_PAGE_JPY),
                 )
                 if not budget_allowed:
-                    await rollback_ocr_upload(redis, client_ip)
                     raise HTTPException(status_code=503, detail="daily_budget_exhausted")
                 contract_text, ocr_snapshot = await extract_text_from_image_with_snapshot(
                     image_bytes, actual_mime
