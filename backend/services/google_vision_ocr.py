@@ -98,10 +98,6 @@ def _extract_text_from_image_sync(image_bytes: bytes) -> str:
     return (response.full_text_annotation.text or "").strip()
 
 
-def _extract_text_from_pdf_sync(pdf_bytes: bytes) -> tuple[str, int]:
-    return _extract_text_from_pdf_sync_with_page_count(pdf_bytes)
-
-
 def _extract_text_from_pdf_sync_with_page_count(
     pdf_bytes: bytes,
     page_count: int | None = None,
@@ -141,11 +137,6 @@ async def extract_text_from_image_with_snapshot(image_bytes: bytes, mime_type: s
     return text, snapshot
 
 
-async def extract_text_from_image(image_bytes: bytes, mime_type: str) -> str:
-    text, _ = await extract_text_from_image_with_snapshot(image_bytes, mime_type)
-    return text
-
-
 async def extract_text_from_pdf_with_snapshot(pdf_bytes: bytes) -> tuple[str, dict]:
     text, page_count = await asyncio.to_thread(_extract_text_from_pdf_sync_with_page_count, pdf_bytes)
     snapshot = _build_vision_snapshot(
@@ -155,11 +146,6 @@ async def extract_text_from_pdf_with_snapshot(pdf_bytes: bytes) -> tuple[str, di
     )
     logger.info("Google Vision OCR usage: %s", snapshot)
     return text, snapshot
-
-
-async def extract_text_from_pdf(pdf_bytes: bytes) -> str:
-    text, _ = await extract_text_from_pdf_with_snapshot(pdf_bytes)
-    return text
 
 
 async def extract_text_from_pdf_with_snapshot_using_page_count(

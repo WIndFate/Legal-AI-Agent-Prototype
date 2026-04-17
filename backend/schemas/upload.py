@@ -15,6 +15,7 @@ class ClausePreviewItem(BaseModel):
 
 class UploadResponse(BaseModel):
     contract_text: str
+    detected_input_type: str
     estimated_tokens: int
     price_jpy: int
     quote_mode: str = "exact"
@@ -23,7 +24,4 @@ class UploadResponse(BaseModel):
     clause_preview: list[ClausePreviewItem] | None = None
     clause_count: int | None = None
     is_contract: bool | None = None
-    upload_token: str | None = None
-    upload_name: str | None = None
-    upload_mime_type: str | None = None
     pii_warnings: list[PiiWarning]

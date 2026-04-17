@@ -14,6 +14,12 @@ from backend.services.google_vision_ocr import (
 )
 
 
+@pytest.fixture(autouse=True)
+def _reset_cached_vision_client():
+    with patch("backend.services.google_vision_ocr._vision_client", None):
+        yield
+
+
 @pytest.mark.asyncio
 async def test_extract_text_from_image_with_snapshot_uses_google_vision():
     fake_settings = SimpleNamespace(

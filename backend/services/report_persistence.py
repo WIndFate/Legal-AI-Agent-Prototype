@@ -7,9 +7,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from backend.config import get_settings
 from backend.models.order import Order
 from backend.models.report import Report
-from backend.services.ocr import extract_text_from_image
-from backend.services.pdf_extractor import extract_text_from_pdf
-from backend.services.temp_uploads import delete_temp_upload, read_temp_upload
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
@@ -76,42 +73,20 @@ async def finalize_order(order_id: str, db: AsyncSession) -> None:
     order = result.scalar_one_or_none()
     if order is None:
         return
-    temp_upload_token = order.temp_upload_token
     order.analysis_status = "completed"
     order.contract_text = None
     order.contract_deleted_at = datetime.now(timezone.utc)
-    order.temp_upload_token = None
-    order.temp_upload_name = None
-    order.temp_upload_mime_type = None
-    delete_temp_upload(temp_upload_token)
     await db.commit()
     logger.info("Order finalized: order_id=%s contract_text_deleted=true", order_id)
 
 
 async def ensure_contract_text(order: Order, db: AsyncSession) -> None:
-    """Materialize contract text from staged uploads after payment and before analysis."""
-    if order.contract_text or not order.temp_upload_token:
-        return
+    """Confirm the order already has contract_text before analysis.
 
-    try:
-        file_bytes = read_temp_upload(order.temp_upload_token)
-    except FileNotFoundError:
-        logger.warning("Staged upload missing before review: order_id=%s token=%s", order.id, order.temp_upload_token)
-        return
-
-    if order.input_type == "image":
-        contract_text = await extract_text_from_image(file_bytes, order.temp_upload_mime_type or "image/jpeg")
-    elif order.input_type == "pdf":
-        contract_text = await extract_text_from_pdf(file_bytes)
-    else:
-        contract_text = ""
-
-    if contract_text.strip():
-        order.contract_text = contract_text
-        await db.commit()
-        logger.info(
-            "Contract text materialized before review: order_id=%s input_type=%s quote_mode=%s",
-            order.id,
-            order.input_type,
-            order.quote_mode,
-        )
+    Google Vision OCR runs pre-payment, so `contract_text` is always populated
+    by the time the order reaches this function. If it's missing, the caller
+    must fail immediately — there is no longer a staged-upload re-OCR path.
+    """
+    if not order.contract_text:
+        logger.warning("Order missing contract_text before analysis: order_id=%s", order.id)
+        raise RuntimeError("No contract text associated with this order")

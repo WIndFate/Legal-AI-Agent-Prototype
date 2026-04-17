@@ -24,8 +24,7 @@ from backend.services.analytics import capture_message as sentry_capture_message
 from backend.services.analytics import capture_exception as sentry_capture_exception
 from backend.services.email import send_payment_confirmation_email
 from backend.services.abuse_guard import record_payment as abuse_record_payment
-from backend.services.quote_guard import build_contract_content_hash, extract_client_ip, load_quote_context, load_upload_quote_context
-from backend.services.temp_uploads import get_temp_upload_path
+from backend.services.quote_guard import build_contract_content_hash, extract_client_ip, load_quote_context
 from backend.services.token_estimator import estimate_page_count_from_tokens
 
 logger = logging.getLogger(__name__)
@@ -42,30 +41,7 @@ WEBHOOK_PAYMENT_STATUS_MAP = {
 def _validate_quote_context(
     request: PaymentCreateRequest,
     quote_context: dict | None,
-    upload_quote_context: dict | None,
 ) -> None:
-    if request.quote_mode != "exact":
-        if not request.upload_token:
-            raise HTTPException(
-                status_code=409,
-                detail="Staged upload context missing. Please upload the contract again before payment.",
-            )
-        effective_context = upload_quote_context or quote_context
-        # Reject non-exact payments whose cached context has expired / is missing.
-        # Without a server-side context we cannot verify the submitted price_jpy
-        # or estimated_tokens, so a forged ¥1 body would otherwise reach KOMOJU.
-        if effective_context is None:
-            raise HTTPException(
-                status_code=409,
-                detail="Staged upload context expired. Please upload the contract again before payment.",
-            )
-        if effective_context.get("is_contract") is False:
-            raise HTTPException(
-                status_code=409,
-                detail="The uploaded content was identified as non-contract material. Please upload a contract before payment.",
-            )
-        _assert_client_price_matches_quote(request, effective_context)
-        return
     if not request.quote_token or quote_context is None:
         raise HTTPException(
             status_code=409,
@@ -96,11 +72,11 @@ def _assert_client_price_matches_quote(
     """Reject client-tampered price / token counts.
 
     The quote cache stores the server-computed price_jpy and estimated_tokens
-    keyed by quote_token / upload_token. If the client forges a smaller price
-    in the payment body, the order would be created (and KOMOJU billed) at the
-    forged amount. We re-validate both fields against the authoritative cached
-    values and 409 on any mismatch. Missing values in the cache (legacy entries)
-    are tolerated to avoid breaking in-flight quotes at deploy time.
+    keyed by quote_token. If the client forges a smaller price in the payment
+    body, the order would be created (and KOMOJU billed) at the forged amount.
+    We re-validate both fields against the authoritative cached values and 409
+    on any mismatch. Missing values in the cache (legacy entries) are tolerated
+    to avoid breaking in-flight quotes at deploy time.
     """
     # Defense-in-depth: callers must not pass None here (a missing context means
     # we cannot verify the quote at all and must 409 upstream), but assert it
@@ -129,9 +105,6 @@ def _ensure_retryable_contract_data(order: Order) -> None:
     if contract_text.strip():
         return
 
-    if order.temp_upload_token and get_temp_upload_path(order.temp_upload_token).exists():
-        return
-
     raise HTTPException(
         status_code=410,
         detail="This order can no longer be analyzed because the uploaded contract is no longer available. Please upload it again.",
@@ -155,8 +128,7 @@ async def create_payment(
     )
     redis = await get_redis()
     quote_context = await load_quote_context(redis, request.quote_token)
-    upload_quote_context = await load_upload_quote_context(redis, request.upload_token)
-    _validate_quote_context(request, quote_context, upload_quote_context)
+    _validate_quote_context(request, quote_context)
 
     # Validate and apply referral discount
     discount_jpy = 0
@@ -191,9 +163,6 @@ async def create_payment(
         price_jpy=final_price,
         quote_mode=request.quote_mode,
         estimate_source=request.estimate_source,
-        temp_upload_token=request.upload_token,
-        temp_upload_name=request.upload_name,
-        temp_upload_mime_type=request.upload_mime_type,
         target_language=request.target_language,
         referral_code_used=request.referral_code,
         client_ip=extract_client_ip(raw_request),

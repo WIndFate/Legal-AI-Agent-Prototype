@@ -35,9 +35,6 @@ class FakeOrder:
         self.price_jpy = kwargs.get("price_jpy", 299)
         self.quote_mode = kwargs.get("quote_mode", "exact")
         self.estimate_source = kwargs.get("estimate_source", "raw_text")
-        self.temp_upload_token = kwargs.get("temp_upload_token", None)
-        self.temp_upload_name = kwargs.get("temp_upload_name", None)
-        self.temp_upload_mime_type = kwargs.get("temp_upload_mime_type", None)
         self.target_language = kwargs.get("target_language", "ja")
         self.referral_code_used = kwargs.get("referral_code_used", None)
         self.payment_status = kwargs.get("payment_status", "pending")
@@ -105,7 +102,6 @@ def _mock_quote_context():
     with (
         patch("backend.routers.payment.get_redis", new_callable=AsyncMock, return_value=None),
         patch("backend.routers.payment.load_quote_context", new_callable=AsyncMock, return_value=None),
-        patch("backend.routers.payment.load_upload_quote_context", new_callable=AsyncMock, return_value=None),
         patch("backend.routers.payment.abuse_record_payment", new_callable=AsyncMock, return_value=None),
     ):
         yield
@@ -594,8 +590,8 @@ async def test_retry_payment_reopens_checkout_for_terminal_order():
 
 @pytest.mark.asyncio
 async def test_retry_payment_rejects_missing_contract_data():
-    """Retry should fail fast when neither contract_text nor staged upload is available anymore."""
-    order = FakeOrder(contract_text=None, temp_upload_token=None, payment_status="cancelled")
+    """Retry should fail fast when the contract text is no longer available."""
+    order = FakeOrder(contract_text=None, payment_status="cancelled")
     session = FakeSession(get_result=order)
 
     app.dependency_overrides[get_db] = _override_db(session)
@@ -603,25 +599,6 @@ async def test_retry_payment_rejects_missing_contract_data():
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
             resp = await client.post(f"/api/payment/{order.id}/retry")
-        assert resp.status_code == 410
-        assert "uploaded contract is no longer available" in resp.json()["detail"]
-    finally:
-        app.dependency_overrides.pop(get_db, None)
-
-
-@pytest.mark.asyncio
-async def test_retry_payment_rejects_missing_staged_file():
-    """Retry should fail before payment when staged OCR input has already been cleaned up."""
-    order = FakeOrder(contract_text=None, temp_upload_token="staged-upload.pdf", payment_status="pending")
-    session = FakeSession(get_result=order)
-
-    app.dependency_overrides[get_db] = _override_db(session)
-    try:
-        with patch("backend.routers.payment.get_temp_upload_path") as temp_path_mock:
-            temp_path_mock.return_value.exists.return_value = False
-            transport = ASGITransport(app=app)
-            async with AsyncClient(transport=transport, base_url="http://test") as client:
-                resp = await client.post(f"/api/payment/{order.id}/retry")
         assert resp.status_code == 410
         assert "uploaded contract is no longer available" in resp.json()["detail"]
     finally:

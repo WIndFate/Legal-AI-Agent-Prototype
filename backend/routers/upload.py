@@ -24,7 +24,6 @@ from backend.services.costing import (
 )
 from backend.services.ocr import (
     extract_text_from_image_with_snapshot,
-    extract_text_from_pdf_with_snapshot,
     extract_text_from_pdf_with_snapshot_using_page_count,
 )
 from backend.services.pdf_extractor import (
@@ -186,9 +185,6 @@ async def upload_contract(
     quote_mode = "exact"
     estimate_source = "raw_text"
     quote_token: str | None = None
-    upload_token: str | None = None
-    upload_name: str | None = None
-    upload_mime_type: str | None = None
     pii_warnings = []
     clause_preview: list[dict[str, str]] | None = None
     clause_count: int | None = None
@@ -221,8 +217,6 @@ async def upload_contract(
 
         # Page count precheck BEFORE any OCR (P0-1)
         page_count = precheck_pdf_pages(pdf_bytes)
-
-        upload_mime_type = actual_mime
 
         # Try text layer first (free — pypdf, no abuse guard needed)
         extracted_text, page_count = extract_text_from_pdf_text_layer(pdf_bytes)
@@ -275,8 +269,6 @@ async def upload_contract(
 
         # File size check (P0-1)
         check_upload_file_size(image_bytes, actual_mime, settings)
-
-        upload_mime_type = actual_mime
 
         # OCR cache check by raw file hash — same file = no new OCR cost, no waste recorded
         file_hash = build_file_hash(image_bytes)
@@ -358,7 +350,6 @@ async def upload_contract(
                 redis,
                 content_hash=content_hash,
                 quote_token=quote_token,
-                upload_token=upload_token,
                 payload={
                     "quote_token": quote_token,
                     "content_hash": content_hash,
@@ -376,6 +367,7 @@ async def upload_contract(
     if not contract_text.strip() and estimation["price_jpy"] == 0:
         return UploadResponse(
             contract_text="",
+            detected_input_type=input_type,
             estimated_tokens=0,
             price_jpy=0,
             quote_mode=quote_mode,
@@ -384,9 +376,6 @@ async def upload_contract(
             clause_preview=clause_preview,
             clause_count=clause_count,
             is_contract=is_contract,
-            upload_token=upload_token,
-            upload_name=upload_name,
-            upload_mime_type=upload_mime_type,
             pii_warnings=[],
         )
 
@@ -409,6 +398,7 @@ async def upload_contract(
 
     return UploadResponse(
         contract_text=contract_text,
+        detected_input_type=input_type,
         estimated_tokens=estimation["estimated_tokens"],
         price_jpy=estimation["price_jpy"],
         quote_mode=quote_mode,
@@ -417,8 +407,5 @@ async def upload_contract(
         clause_preview=clause_preview,
         clause_count=clause_count,
         is_contract=is_contract,
-        upload_token=upload_token,
-        upload_name=upload_name,
-        upload_mime_type=upload_mime_type,
         pii_warnings=pii_warnings,
     )

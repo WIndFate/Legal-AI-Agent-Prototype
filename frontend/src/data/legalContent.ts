@@ -85,7 +85,8 @@ const PRIVACY_JP: LegalSection[] = [
         content: [
           'KOMOJU株式会社 — 決済処理のため',
           'Resend, Inc. — レポートリンクのメール送信のため',
-          'OpenAI, Inc. — 契約書全文のAI分析処理のため（全文は分析完了後に削除されます）',
+          'Google LLC (Cloud Vision API) — 画像・スキャンPDFのOCR処理のため',
+          'OpenAI, Inc. — 契約書全文のAI分析・翻訳処理のため（全文は分析完了後に削除されます）',
         ],
       },
     ],
@@ -284,7 +285,8 @@ const PRIVACY_EN: LegalSection[] = [
         content: [
           'KOMOJU for payment processing.',
           'Resend for sending the report email.',
-          'OpenAI for OCR, translation, and contract analysis. Contract text is sent only for processing and is not kept as a permanent report copy by us.',
+          'Google Cloud Vision API for OCR of images and scanned PDFs.',
+          'OpenAI for contract analysis and translation. Contract text is sent only for processing and is not kept as a permanent report copy by us.',
         ],
       },
     ],
@@ -426,7 +428,7 @@ const PRIVACY_ZH_CN: LegalSection[] = [
     title: '4. 向第三方的提供',
     blocks: [
       { type: 'paragraph', content: ['我们不会出售个人信息。只有在提供服务所必需的范围内，才会向下列处理方提供有限数据。'] },
-      { type: 'list', content: ['KOMOJU：用于支付处理。', 'Resend：用于发送报告邮件。', 'OpenAI：用于 OCR、翻译和合同分析。合同文本仅用于处理。'] },
+      { type: 'list', content: ['KOMOJU：用于支付处理。', 'Resend：用于发送报告邮件。', 'Google Cloud Vision API：用于图片及扫描 PDF 的 OCR。', 'OpenAI：用于合同分析和翻译。合同文本仅用于处理。'] },
     ],
   },
   {
@@ -502,7 +504,7 @@ const PRIVACY_ZH_TW: LegalSection[] = [
     title: '4. 提供給第三方',
     blocks: [
       { type: 'paragraph', content: ['我們不販售個人資訊。僅在提供服務所必要的範圍內，向下列處理方提供有限資料。'] },
-      { type: 'list', content: ['KOMOJU：付款處理。', 'Resend：寄送報告電子郵件。', 'OpenAI：OCR、翻譯與合約分析。合約內容僅用於處理。'] },
+      { type: 'list', content: ['KOMOJU：付款處理。', 'Resend：寄送報告電子郵件。', 'Google Cloud Vision API：圖片與掃描 PDF 的 OCR。', 'OpenAI：合約分析與翻譯。合約內容僅用於處理。'] },
     ],
   },
   {
@@ -578,7 +580,7 @@ const PRIVACY_KO: LegalSection[] = [
     title: '4. 제3자 제공',
     blocks: [
       { type: 'paragraph', content: ['개인정보를 판매하지 않으며, 서비스 운영에 필요한 범위에서만 제한적으로 외부 처리자와 공유합니다.'] },
-      { type: 'list', content: ['KOMOJU: 결제 처리.', 'Resend: 보고서 이메일 발송.', 'OpenAI: OCR, 번역, 계약 분석 처리. 계약 텍스트는 처리 목적에 한해서만 전송됩니다.'] },
+      { type: 'list', content: ['KOMOJU: 결제 처리.', 'Resend: 보고서 이메일 발송.', 'Google Cloud Vision API: 이미지·스캔 PDF의 OCR 처리.', 'OpenAI: 계약 분석 및 번역 처리. 계약 텍스트는 처리 목적에 한해서만 전송됩니다.'] },
     ],
   },
   {
@@ -654,7 +656,7 @@ const PRIVACY_VI: LegalSection[] = [
     title: '4. Chia sẻ với bên thứ ba',
     blocks: [
       { type: 'paragraph', content: ['Chúng tôi không bán thông tin cá nhân. Dữ liệu chỉ được chia sẻ giới hạn với các đơn vị xử lý cần thiết để vận hành dịch vụ.'] },
-      { type: 'list', content: ['KOMOJU: xử lý thanh toán.', 'Resend: gửi email báo cáo.', 'OpenAI: OCR, dịch thuật và phân tích hợp đồng. Nội dung hợp đồng chỉ được gửi cho mục đích xử lý.'] },
+      { type: 'list', content: ['KOMOJU: xử lý thanh toán.', 'Resend: gửi email báo cáo.', 'Google Cloud Vision API: OCR hình ảnh và PDF quét.', 'OpenAI: dịch thuật và phân tích hợp đồng. Nội dung hợp đồng chỉ được gửi cho mục đích xử lý.'] },
     ],
   },
   {
@@ -730,7 +732,7 @@ const PRIVACY_ID: LegalSection[] = [
     title: '4. Berbagi dengan pihak ketiga',
     blocks: [
       { type: 'paragraph', content: ['Kami tidak menjual informasi pribadi. Data hanya dibagikan secara terbatas kepada pemroses yang diperlukan untuk menjalankan layanan.'] },
-      { type: 'list', content: ['KOMOJU: pemrosesan pembayaran.', 'Resend: pengiriman email laporan.', 'OpenAI: OCR, penerjemahan, dan analisis kontrak. Teks kontrak hanya dikirim untuk tujuan pemrosesan.'] },
+      { type: 'list', content: ['KOMOJU: pemrosesan pembayaran.', 'Resend: pengiriman email laporan.', 'Google Cloud Vision API: OCR gambar dan PDF hasil pindai.', 'OpenAI: penerjemahan dan analisis kontrak. Teks kontrak hanya dikirim untuk tujuan pemrosesan.'] },
     ],
   },
   {
@@ -806,7 +808,7 @@ const PRIVACY_PT_BR: LegalSection[] = [
     title: '4. Compartilhamento com terceiros',
     blocks: [
       { type: 'paragraph', content: ['Não vendemos informações pessoais. Compartilhamos dados limitados apenas com processadores necessários para operar o serviço.'] },
-      { type: 'list', content: ['KOMOJU: processamento de pagamento.', 'Resend: envio do email do relatório.', 'OpenAI: OCR, tradução e análise do contrato. O texto do contrato é enviado apenas para processamento.'] },
+      { type: 'list', content: ['KOMOJU: processamento de pagamento.', 'Resend: envio do email do relatório.', 'Google Cloud Vision API: OCR de imagens e PDFs digitalizados.', 'OpenAI: tradução e análise do contrato. O texto do contrato é enviado apenas para processamento.'] },
     ],
   },
   {
@@ -882,7 +884,7 @@ const PRIVACY_NE: LegalSection[] = [
     title: '४. तेस्रो पक्षसँग साझेदारी',
     blocks: [
       { type: 'paragraph', content: ['हामी व्यक्तिगत जानकारी बेच्दैनौं। सेवा सञ्चालनका लागि आवश्यक सीमित प्रोसेसरसँग मात्र जानकारी साझा गरिन्छ।'] },
-      { type: 'list', content: ['KOMOJU: भुक्तानी प्रक्रिया।', 'Resend: रिपोर्ट इमेल पठाउन।', 'OpenAI: OCR, अनुवाद र सम्झौता विश्लेषण। सम्झौता पाठ केवल प्रक्रिया उद्देश्यका लागि पठाइन्छ।'] },
+      { type: 'list', content: ['KOMOJU: भुक्तानी प्रक्रिया।', 'Resend: रिपोर्ट इमेल पठाउन।', 'Google Cloud Vision API: तस्बिर र स्क्यान गरिएको PDF को OCR।', 'OpenAI: सम्झौता विश्लेषण र अनुवाद। सम्झौता पाठ केवल प्रक्रिया उद्देश्यका लागि पठाइन्छ।'] },
     ],
   },
   {

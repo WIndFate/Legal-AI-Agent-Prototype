@@ -116,20 +116,12 @@ export default function HomePage() {
         body: JSON.stringify({
           email,
           contract_text: uploadResult.contract_text,
-          input_type:
-            inputMode === 'text'
-              ? 'text'
-              : uploadResult.upload_mime_type === 'application/pdf'
-                ? 'pdf'
-                : 'image',
+          input_type: uploadResult.detected_input_type,
           estimated_tokens: uploadResult.estimated_tokens,
           price_jpy: uploadResult.price_jpy,
           quote_mode: uploadResult.quote_mode,
           estimate_source: uploadResult.estimate_source,
           quote_token: uploadResult.quote_token,
-          upload_token: uploadResult.upload_token,
-          upload_name: uploadResult.upload_name,
-          upload_mime_type: uploadResult.upload_mime_type,
           target_language: i18n.language,
           referral_code: referralCode || undefined,
         }),

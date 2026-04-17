@@ -17,7 +17,6 @@ from backend.services.order_cost_estimate import (
     build_order_cost_comparison_snapshot,
     upsert_order_cost_estimate,
 )
-from backend.services.temp_uploads import delete_temp_upload
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
@@ -56,35 +55,6 @@ async def nullify_completed_contracts() -> int:
         if count:
             logger.info("Nullified contract_text for %d completed orders", count)
         return count
-
-
-async def cleanup_staged_uploads() -> int:
-    """Delete staged uploads once they are no longer needed."""
-    factory = get_session_factory()
-    cutoff = datetime.now(timezone.utc) - timedelta(hours=settings.REPORT_TTL_HOURS)
-    async with factory() as session:
-        result = await session.execute(
-            select(Order).where(
-                Order.temp_upload_token.isnot(None),
-                or_(
-                    Order.analysis_status == "completed",
-                    and_(
-                        Order.payment_status != "paid",
-                        Order.created_at < cutoff,
-                    ),
-                ),
-            )
-        )
-        orders = list(result.scalars().all())
-        for order in orders:
-            delete_temp_upload(order.temp_upload_token)
-            order.temp_upload_token = None
-            order.temp_upload_name = None
-            order.temp_upload_mime_type = None
-        await session.commit()
-        if orders:
-            logger.info("Deleted %d staged upload files", len(orders))
-        return len(orders)
 
 
 async def fail_stale_analysis_jobs() -> int:
@@ -165,4 +135,3 @@ async def run_cleanup() -> None:
     await cleanup_expired_reports()
     await cleanup_expired_analysis_events()
     await nullify_completed_contracts()
-    await cleanup_staged_uploads()
