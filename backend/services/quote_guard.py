@@ -31,9 +31,12 @@ def extract_client_ip(request: Request) -> str:
     if fly_client:
         return fly_client
     if settings.is_production:
+        logger.warning("fly_client_ip_missing_in_prod")
         return request.client.host if request.client else "unknown"
     forwarded_for = request.headers.get("x-forwarded-for", "")
     if forwarded_for:
+        # Development only: trust the leftmost entry so developers can simulate
+        # per-IP rate-limit behavior via curl -H "X-Forwarded-For: ...".
         return forwarded_for.split(",")[0].strip()
     return request.client.host if request.client else "unknown"
 

@@ -37,11 +37,28 @@ def test_extract_client_ip_prefers_fly_header():
 
 def test_extract_client_ip_ignores_xff_in_production_without_fly_header():
     req = _fake_request({"x-forwarded-for": "evil-spoof, 5.6.7.8, 9.10.11.12"})
-    with patch(
-        "backend.services.quote_guard.get_settings",
-        return_value=SimpleNamespace(is_production=True),
+    with (
+        patch(
+            "backend.services.quote_guard.get_settings",
+            return_value=SimpleNamespace(is_production=True),
+        ),
+        patch("backend.services.quote_guard.logger.warning") as mock_warning,
     ):
         assert extract_client_ip(req) == "10.0.0.1"
+    mock_warning.assert_called_once_with("fly_client_ip_missing_in_prod")
+
+
+def test_extract_client_ip_returns_unknown_when_prod_has_no_source():
+    req = _fake_request({}, peer=None)
+    with (
+        patch(
+            "backend.services.quote_guard.get_settings",
+            return_value=SimpleNamespace(is_production=True),
+        ),
+        patch("backend.services.quote_guard.logger.warning") as mock_warning,
+    ):
+        assert extract_client_ip(req) == "unknown"
+    mock_warning.assert_called_once_with("fly_client_ip_missing_in_prod")
 
 
 def test_extract_client_ip_uses_leftmost_xff_in_development():
