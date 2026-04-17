@@ -103,6 +103,7 @@ def _mock_quote_context():
         patch("backend.routers.payment.get_redis", new_callable=AsyncMock, return_value=None),
         patch("backend.routers.payment.load_quote_context", new_callable=AsyncMock, return_value=None),
         patch("backend.routers.payment.abuse_record_payment", new_callable=AsyncMock, return_value=None),
+        patch("backend.routers.payment.record_webhook_event", new_callable=AsyncMock, return_value=True),
     ):
         yield
 
@@ -720,6 +721,92 @@ async def test_webhook_invalid_signature_returns_401():
                     headers={"x-komoju-signature": "bad-sig"},
                 )
         assert resp.status_code == 401
+    finally:
+        app.dependency_overrides.pop(get_db, None)
+
+
+@pytest.mark.asyncio
+async def test_webhook_replay_is_acknowledged_without_side_effects():
+    """Replayed webhook events should return 200 but skip DB writes and email."""
+    order = FakeOrder(payment_status="pending")
+    order_id = str(order.id)
+    session = FakeSession(query_result=order)
+
+    webhook_body = {
+        "id": "evt_replay_123",
+        "type": "payment.captured",
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "data": {
+            "id": "komoju-pay-replay",
+            "metadata": {"order_id": order_id},
+        },
+    }
+
+    app.dependency_overrides[get_db] = _override_db(session)
+    try:
+        with (
+            patch(
+                "backend.routers.payment.verify_webhook",
+                new_callable=AsyncMock,
+                return_value=webhook_body,
+            ),
+            patch(
+                "backend.routers.payment.record_webhook_event",
+                new_callable=AsyncMock,
+                return_value=False,
+            ),
+            patch("backend.routers.payment.send_payment_confirmation_email", new_callable=AsyncMock) as send_email_mock,
+        ):
+            transport = ASGITransport(app=app)
+            async with AsyncClient(transport=transport, base_url="http://test") as client:
+                resp = await client.post(
+                    "/api/payment/webhook",
+                    content=json.dumps(webhook_body).encode(),
+                    headers={"x-komoju-signature": "test-sig"},
+                )
+        assert resp.status_code == 200
+        assert resp.json() == {"ok": True}
+        assert order.payment_status == "pending"
+        assert session.commit_count == 0
+        send_email_mock.assert_not_awaited()
+    finally:
+        app.dependency_overrides.pop(get_db, None)
+
+
+@pytest.mark.asyncio
+async def test_webhook_returns_503_when_replay_guard_unavailable():
+    """Webhook processing should fail closed when replay protection storage is unavailable."""
+    session = FakeSession()
+    webhook_body = {
+        "id": "evt_storage_123",
+        "type": "payment.captured",
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "data": {"id": "komoju-pay-123", "metadata": {"order_id": str(uuid.uuid4())}},
+    }
+
+    app.dependency_overrides[get_db] = _override_db(session)
+    try:
+        with (
+            patch(
+                "backend.routers.payment.verify_webhook",
+                new_callable=AsyncMock,
+                return_value=webhook_body,
+            ),
+            patch(
+                "backend.routers.payment.record_webhook_event",
+                new_callable=AsyncMock,
+                side_effect=RuntimeError("redis_down"),
+            ),
+        ):
+            transport = ASGITransport(app=app)
+            async with AsyncClient(transport=transport, base_url="http://test") as client:
+                resp = await client.post(
+                    "/api/payment/webhook",
+                    content=json.dumps(webhook_body).encode(),
+                    headers={"x-komoju-signature": "test-sig"},
+                )
+        assert resp.status_code == 503
+        assert resp.json()["detail"] == "Webhook replay protection unavailable"
     finally:
         app.dependency_overrides.pop(get_db, None)
 

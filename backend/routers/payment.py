@@ -15,6 +15,7 @@ from backend.schemas.payment import PaymentCreateRequest, PaymentCreateResponse,
 from backend.services.order_cost_estimate import build_order_cost_estimate_snapshot, upsert_order_cost_estimate
 from backend.services.payment import (
     create_payment_session,
+    record_webhook_event,
     verify_webhook,
     is_dev_payment_mode,
     resolve_frontend_base_url,
@@ -297,14 +298,27 @@ async def payment_webhook(
 
     event = await verify_webhook(body, signature)
     if event is None:
-        logger.warning("Payment webhook rejected: reason=invalid_signature")
-        posthog_capture("anonymous", "payment_webhook_rejected", {"reason": "invalid_signature"})
+        logger.warning("Payment webhook rejected: reason=invalid_or_stale_payload")
+        posthog_capture("anonymous", "payment_webhook_rejected", {"reason": "invalid_or_stale_payload"})
         sentry_capture_message(
-            "KOMOJU webhook signature rejected",
+            "KOMOJU webhook rejected",
             level="error",
-            tags={"component": "payment_webhook", "reason": "invalid_signature"},
+            tags={"component": "payment_webhook", "reason": "invalid_or_stale_payload"},
         )
         raise HTTPException(status_code=401, detail="Invalid webhook signature")
+
+    event_id = str(event.get("id") or "").strip()
+    try:
+        first_delivery = await record_webhook_event(redis, event_id)
+    except Exception as exc:
+        logger.error("Payment webhook replay guard unavailable: event_id=%s error=%s", event_id, exc)
+        sentry_capture_exception(exc, tags={"component": "payment_webhook", "event_id": event_id})
+        raise HTTPException(status_code=503, detail="Webhook replay protection unavailable")
+
+    if not first_delivery:
+        logger.info("Payment webhook replay ignored: event_id=%s", event_id)
+        posthog_capture("anonymous", "payment_webhook_ignored", {"reason": "replay", "event_id": event_id})
+        return {"ok": True}
 
     event_type = event.get("type", "")
     logger.info("Payment webhook received: %s", event_type)

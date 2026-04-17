@@ -2,14 +2,18 @@ import hashlib
 import hmac
 import json
 import logging
+from datetime import datetime, timedelta, timezone
 from urllib.parse import urlparse
 
 import httpx
+from redis.asyncio import Redis
 
 from backend.config import get_settings
 
 logger = logging.getLogger(__name__)
 INTERNAL_SERVICE_HOSTS = {"backend", "frontend", "postgres", "redis"}
+WEBHOOK_MAX_AGE = timedelta(minutes=5)
+WEBHOOK_REPLAY_TTL_SECONDS = 24 * 60 * 60
 
 
 def is_dev_payment_mode() -> bool:
@@ -120,7 +124,11 @@ async def verify_webhook(payload: bytes, signature: str) -> dict | None:
 
     if settings.is_development and not settings.KOMOJU_WEBHOOK_SECRET:
         # Local development accepts unsigned webhook payloads.
-        return json.loads(payload)
+        try:
+            return _validate_webhook_event(json.loads(payload))
+        except (TypeError, ValueError, json.JSONDecodeError):
+            logger.warning("Invalid KOMOJU webhook payload in development")
+            return None
 
     expected = hmac.HMAC(
         settings.KOMOJU_WEBHOOK_SECRET.encode(),
@@ -132,6 +140,67 @@ async def verify_webhook(payload: bytes, signature: str) -> dict | None:
         logger.warning("Invalid KOMOJU webhook signature")
         return None
 
-    return json.loads(payload)
+    try:
+        return _validate_webhook_event(json.loads(payload))
+    except (TypeError, ValueError, json.JSONDecodeError) as exc:
+        logger.warning("Invalid KOMOJU webhook payload: %s", exc)
+        return None
 
+
+def _validate_webhook_event(event: dict) -> dict:
+    """Validate minimal webhook metadata required for replay protection."""
+    if not isinstance(event, dict):
+        raise ValueError("event_payload_not_object")
+
+    event_id = str(event.get("id") or "").strip()
+    if not event_id:
+        raise ValueError("event_id_missing")
+
+    created_at_raw = str(event.get("created_at") or "").strip()
+    if not created_at_raw:
+        raise ValueError("event_created_at_missing")
+
+    created_at = _parse_iso8601_timestamp(created_at_raw)
+    if created_at is None:
+        raise ValueError("event_created_at_invalid")
+
+    now = datetime.now(timezone.utc)
+    if abs(now - created_at) > WEBHOOK_MAX_AGE:
+        raise ValueError("event_created_at_out_of_window")
+
+    return event
+
+
+def _parse_iso8601_timestamp(value: str) -> datetime | None:
+    """Parse an ISO 8601 timestamp into an aware UTC datetime."""
+    normalized = value.strip()
+    if not normalized:
+        return None
+    if normalized.endswith("Z"):
+        normalized = normalized[:-1] + "+00:00"
+    try:
+        parsed = datetime.fromisoformat(normalized)
+    except ValueError:
+        return None
+    if parsed.tzinfo is None:
+        return None
+    return parsed.astimezone(timezone.utc)
+
+
+def _webhook_replay_key(event_id: str) -> str:
+    return f"payment_webhook:seen:{event_id}"
+
+
+async def record_webhook_event(redis: Redis, event_id: str) -> bool:
+    """Mark a webhook event as seen. Returns False when the event is a replay."""
+    if not event_id:
+        raise ValueError("event_id_missing")
+    return bool(
+        await redis.set(
+            _webhook_replay_key(event_id),
+            "1",
+            ex=WEBHOOK_REPLAY_TTL_SECONDS,
+            nx=True,
+        )
+    )
 

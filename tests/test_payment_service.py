@@ -1,4 +1,8 @@
+import hashlib
+import hmac
+import json
 from types import SimpleNamespace
+from datetime import datetime, timedelta, timezone
 
 import pytest
 
@@ -59,3 +63,55 @@ async def test_create_payment_session_omits_payment_types(monkeypatch):
     assert posted["json"]["amount"] == 200
     assert posted["json"]["currency"] == "JPY"
     assert posted["json"]["metadata"] == {"order_id": "test-order-id"}
+
+
+@pytest.mark.asyncio
+async def test_verify_webhook_accepts_recent_signed_event(monkeypatch):
+    """A correctly signed, recent webhook should be accepted."""
+    event = {
+        "id": "evt_recent_123",
+        "type": "payment.captured",
+        "created_at": datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z"),
+        "data": {"metadata": {"order_id": "test-order-id"}},
+    }
+    payload = json.dumps(event).encode()
+    signature = hmac.new(b"whsec_test", payload, hashlib.sha256).hexdigest()
+
+    monkeypatch.setattr(
+        payment,
+        "get_settings",
+        lambda: SimpleNamespace(
+            KOMOJU_WEBHOOK_SECRET="whsec_test",
+            is_development=False,
+        ),
+    )
+
+    verified = await payment.verify_webhook(payload, signature)
+    assert verified == event
+
+
+@pytest.mark.asyncio
+async def test_verify_webhook_rejects_stale_event(monkeypatch):
+    """Webhook events older than the acceptance window should be rejected."""
+    event = {
+        "id": "evt_old_123",
+        "type": "payment.captured",
+        "created_at": (
+            datetime.now(timezone.utc) - timedelta(minutes=6)
+        ).replace(microsecond=0).isoformat().replace("+00:00", "Z"),
+        "data": {"metadata": {"order_id": "test-order-id"}},
+    }
+    payload = json.dumps(event).encode()
+    signature = hmac.new(b"whsec_test", payload, hashlib.sha256).hexdigest()
+
+    monkeypatch.setattr(
+        payment,
+        "get_settings",
+        lambda: SimpleNamespace(
+            KOMOJU_WEBHOOK_SECRET="whsec_test",
+            is_development=False,
+        ),
+    )
+
+    verified = await payment.verify_webhook(payload, signature)
+    assert verified is None
