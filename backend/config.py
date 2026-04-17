@@ -68,6 +68,7 @@ class Settings(BaseSettings):
 
     # App
     FRONTEND_URL: str = "http://localhost:5173"
+    ADMIN_API_TOKEN: str = ""
     REPORT_TTL_HOURS: int = 72
     MAX_UPLOAD_PAGES: int = 20
     MAX_UPLOAD_IMAGE_MB: int = 25
@@ -134,6 +135,7 @@ class Settings(BaseSettings):
             "KOMOJU_WEBHOOK_SECRET": self.KOMOJU_WEBHOOK_SECRET,
             "RESEND_API_KEY": self.RESEND_API_KEY,
             "GOOGLE_APPLICATION_CREDENTIALS_JSON": self.GOOGLE_APPLICATION_CREDENTIALS_JSON,
+            "ADMIN_API_TOKEN": self.ADMIN_API_TOKEN,
         }
         for field_name, value in required_fields.items():
             if not value:

@@ -1,11 +1,12 @@
 """Integration tests for /api/eval/* endpoints."""
 
-from unittest.mock import AsyncMock, patch, MagicMock
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
 
+from backend.config import get_settings
 from backend.routers.eval import router
 
 app = FastAPI()
@@ -27,6 +28,39 @@ def mock_db():
     app.dependency_overrides.clear()
 
 
+@pytest.fixture(autouse=True)
+def admin_token():
+    settings = get_settings()
+    original = settings.ADMIN_API_TOKEN
+    settings.ADMIN_API_TOKEN = "test-admin-token"
+    yield settings.ADMIN_API_TOKEN
+    settings.ADMIN_API_TOKEN = original
+
+
+def _admin_headers(token: str = "test-admin-token") -> dict[str, str]:
+    return {"X-Admin-Token": token}
+
+
+@pytest.mark.asyncio
+async def test_eval_endpoints_require_admin_token():
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        resp = await client.get("/api/eval/rag")
+
+    assert resp.status_code == 404
+    assert resp.json()["detail"] == "Not found"
+
+
+@pytest.mark.asyncio
+async def test_eval_endpoints_reject_invalid_admin_token():
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        resp = await client.get("/api/eval/rag", headers=_admin_headers("wrong-token"))
+
+    assert resp.status_code == 404
+    assert resp.json()["detail"] == "Not found"
+
+
 # ── GET /api/eval/rag ────────────────────────────────────────────
 
 @pytest.mark.asyncio
@@ -42,7 +76,7 @@ async def test_eval_rag_default_k(mock_eval):
 
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
-        resp = await client.get("/api/eval/rag")
+        resp = await client.get("/api/eval/rag", headers=_admin_headers())
 
     assert resp.status_code == 200
     body = resp.json()
@@ -64,7 +98,7 @@ async def test_eval_rag_custom_k(mock_eval):
 
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
-        resp = await client.get("/api/eval/rag?k=10")
+        resp = await client.get("/api/eval/rag?k=10", headers=_admin_headers())
 
     assert resp.status_code == 200
     assert resp.json()["k"] == 10
@@ -87,7 +121,7 @@ async def test_eval_costs_default_params(mock_load, mock_sources, mock_report, m
 
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
-        resp = await client.get("/api/eval/costs")
+        resp = await client.get("/api/eval/costs", headers=_admin_headers())
 
     assert resp.status_code == 200
     body = resp.json()
@@ -102,7 +136,8 @@ async def test_eval_costs_invalid_rates(mock_db):
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
         resp = await client.get(
-            "/api/eval/costs?payment_fee_rate=0.5&target_margin_rate=0.6"
+            "/api/eval/costs?payment_fee_rate=0.5&target_margin_rate=0.6",
+            headers=_admin_headers(),
         )
 
     assert resp.status_code == 422
@@ -121,7 +156,8 @@ async def test_eval_costs_custom_params(mock_load, mock_sources, mock_report, mo
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
         resp = await client.get(
-            "/api/eval/costs?limit=50&safety_multiplier=3.0"
+            "/api/eval/costs?limit=50&safety_multiplier=3.0",
+            headers=_admin_headers(),
         )
 
     assert resp.status_code == 200
@@ -146,7 +182,10 @@ async def test_eval_operations_dashboard(mock_load, mock_sources, mock_dashboard
 
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
-        resp = await client.get("/api/eval/operations?limit=50&recent_limit=10")
+        resp = await client.get(
+            "/api/eval/operations?limit=50&recent_limit=10",
+            headers=_admin_headers(),
+        )
 
     assert resp.status_code == 200
     body = resp.json()

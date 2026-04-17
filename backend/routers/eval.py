@@ -3,6 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.db.session import get_db
 from backend.eval.evaluator import run_rag_eval
+from backend.routers._helpers import require_admin
 from backend.services.cost_analysis import (
     build_ops_dashboard,
     build_cost_pricing_report,
@@ -10,7 +11,7 @@ from backend.services.cost_analysis import (
     summarize_sample_sources,
 )
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(require_admin)])
 
 
 @router.get("/api/eval/rag")
