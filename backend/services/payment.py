@@ -12,7 +12,7 @@ from backend.config import get_settings
 
 logger = logging.getLogger(__name__)
 INTERNAL_SERVICE_HOSTS = {"backend", "frontend", "postgres", "redis"}
-WEBHOOK_MAX_AGE = timedelta(minutes=5)
+WEBHOOK_MAX_FUTURE_SKEW = timedelta(minutes=5)
 WEBHOOK_REPLAY_TTL_SECONDS = 24 * 60 * 60
 
 
@@ -118,17 +118,18 @@ async def create_payment_session(order_id: str, amount_jpy: int, email: str, fro
         return data["session_url"]
 
 
-async def verify_webhook(payload: bytes, signature: str) -> dict | None:
-    """Verify KOMOJU webhook signature and return parsed event."""
+async def verify_webhook(payload: bytes, signature: str) -> tuple[dict | None, str | None]:
+    """Verify KOMOJU webhook signature and return parsed event plus rejection reason."""
     settings = get_settings()
 
     if settings.is_development and not settings.KOMOJU_WEBHOOK_SECRET:
         # Local development accepts unsigned webhook payloads.
         try:
-            return _validate_webhook_event(json.loads(payload))
-        except (TypeError, ValueError, json.JSONDecodeError):
-            logger.warning("Invalid KOMOJU webhook payload in development")
-            return None
+            return _validate_webhook_event(json.loads(payload)), None
+        except (TypeError, ValueError, json.JSONDecodeError) as exc:
+            reason = str(exc) if str(exc) else "invalid_payload"
+            logger.warning("Invalid KOMOJU webhook payload in development: %s", reason)
+            return None, reason
 
     expected = hmac.HMAC(
         settings.KOMOJU_WEBHOOK_SECRET.encode(),
@@ -138,13 +139,14 @@ async def verify_webhook(payload: bytes, signature: str) -> dict | None:
 
     if not hmac.compare_digest(expected, signature):
         logger.warning("Invalid KOMOJU webhook signature")
-        return None
+        return None, "invalid_signature"
 
     try:
-        return _validate_webhook_event(json.loads(payload))
+        return _validate_webhook_event(json.loads(payload)), None
     except (TypeError, ValueError, json.JSONDecodeError) as exc:
-        logger.warning("Invalid KOMOJU webhook payload: %s", exc)
-        return None
+        reason = str(exc) if str(exc) else "invalid_payload"
+        logger.warning("Invalid KOMOJU webhook payload: %s", reason)
+        return None, reason
 
 
 def _validate_webhook_event(event: dict) -> dict:
@@ -165,8 +167,8 @@ def _validate_webhook_event(event: dict) -> dict:
         raise ValueError("event_created_at_invalid")
 
     now = datetime.now(timezone.utc)
-    if abs(now - created_at) > WEBHOOK_MAX_AGE:
-        raise ValueError("event_created_at_out_of_window")
+    if created_at - now > WEBHOOK_MAX_FUTURE_SKEW:
+        raise ValueError("event_created_at_in_future")
 
     return event
 
@@ -203,4 +205,3 @@ async def record_webhook_event(redis: Redis, event_id: str) -> bool:
             nx=True,
         )
     )
-

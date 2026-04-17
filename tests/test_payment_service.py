@@ -1,8 +1,8 @@
 import hashlib
 import hmac
 import json
-from types import SimpleNamespace
 from datetime import datetime, timedelta, timezone
+from types import SimpleNamespace
 
 import pytest
 
@@ -86,18 +86,19 @@ async def test_verify_webhook_accepts_recent_signed_event(monkeypatch):
         ),
     )
 
-    verified = await payment.verify_webhook(payload, signature)
+    verified, reason = await payment.verify_webhook(payload, signature)
     assert verified == event
+    assert reason is None
 
 
 @pytest.mark.asyncio
-async def test_verify_webhook_rejects_stale_event(monkeypatch):
-    """Webhook events older than the acceptance window should be rejected."""
+async def test_verify_webhook_accepts_stale_event_for_replay_guard(monkeypatch):
+    """Older valid webhook events should be accepted and deduplicated by event id."""
     event = {
         "id": "evt_old_123",
         "type": "payment.captured",
         "created_at": (
-            datetime.now(timezone.utc) - timedelta(minutes=6)
+            datetime.now(timezone.utc) - timedelta(hours=2)
         ).replace(microsecond=0).isoformat().replace("+00:00", "Z"),
         "data": {"metadata": {"order_id": "test-order-id"}},
     }
@@ -113,5 +114,34 @@ async def test_verify_webhook_rejects_stale_event(monkeypatch):
         ),
     )
 
-    verified = await payment.verify_webhook(payload, signature)
+    verified, reason = await payment.verify_webhook(payload, signature)
+    assert verified == event
+    assert reason is None
+
+
+@pytest.mark.asyncio
+async def test_verify_webhook_rejects_event_far_in_future(monkeypatch):
+    """Webhook events too far in the future should still be rejected."""
+    event = {
+        "id": "evt_future_123",
+        "type": "payment.captured",
+        "created_at": (
+            datetime.now(timezone.utc) + timedelta(minutes=6)
+        ).replace(microsecond=0).isoformat().replace("+00:00", "Z"),
+        "data": {"metadata": {"order_id": "test-order-id"}},
+    }
+    payload = json.dumps(event).encode()
+    signature = hmac.new(b"whsec_test", payload, hashlib.sha256).hexdigest()
+
+    monkeypatch.setattr(
+        payment,
+        "get_settings",
+        lambda: SimpleNamespace(
+            KOMOJU_WEBHOOK_SECRET="whsec_test",
+            is_development=False,
+        ),
+    )
+
+    verified, reason = await payment.verify_webhook(payload, signature)
     assert verified is None
+    assert reason == "event_created_at_in_future"

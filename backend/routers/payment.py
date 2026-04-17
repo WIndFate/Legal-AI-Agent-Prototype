@@ -296,14 +296,15 @@ async def payment_webhook(
     body = await request.body()
     signature = request.headers.get("x-komoju-signature", "")
 
-    event = await verify_webhook(body, signature)
+    event, rejection_reason = await verify_webhook(body, signature)
     if event is None:
-        logger.warning("Payment webhook rejected: reason=invalid_or_stale_payload")
-        posthog_capture("anonymous", "payment_webhook_rejected", {"reason": "invalid_or_stale_payload"})
+        reason = rejection_reason or "invalid_webhook"
+        logger.warning("Payment webhook rejected: reason=%s", reason)
+        posthog_capture("anonymous", "payment_webhook_rejected", {"reason": reason})
         sentry_capture_message(
             "KOMOJU webhook rejected",
             level="error",
-            tags={"component": "payment_webhook", "reason": "invalid_or_stale_payload"},
+            tags={"component": "payment_webhook", "reason": reason},
         )
         raise HTTPException(status_code=401, detail="Invalid webhook signature")
 

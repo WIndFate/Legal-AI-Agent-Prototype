@@ -682,7 +682,7 @@ async def test_webhook_payment_captured_marks_order_paid():
             patch(
                 "backend.routers.payment.verify_webhook",
                 new_callable=AsyncMock,
-                return_value=webhook_body,
+                return_value=(webhook_body, None),
             ),
             patch("backend.routers.payment.send_payment_confirmation_email", new_callable=AsyncMock) as send_email_mock,
         ):
@@ -711,7 +711,7 @@ async def test_webhook_invalid_signature_returns_401():
         with patch(
             "backend.routers.payment.verify_webhook",
             new_callable=AsyncMock,
-            return_value=None,
+            return_value=(None, "invalid_signature"),
         ):
             transport = ASGITransport(app=app)
             async with AsyncClient(transport=transport, base_url="http://test") as client:
@@ -748,7 +748,7 @@ async def test_webhook_replay_is_acknowledged_without_side_effects():
             patch(
                 "backend.routers.payment.verify_webhook",
                 new_callable=AsyncMock,
-                return_value=webhook_body,
+                return_value=(webhook_body, None),
             ),
             patch(
                 "backend.routers.payment.record_webhook_event",
@@ -790,7 +790,7 @@ async def test_webhook_returns_503_when_replay_guard_unavailable():
             patch(
                 "backend.routers.payment.verify_webhook",
                 new_callable=AsyncMock,
-                return_value=webhook_body,
+                return_value=(webhook_body, None),
             ),
             patch(
                 "backend.routers.payment.record_webhook_event",
@@ -832,7 +832,7 @@ async def test_webhook_already_paid_order_is_ignored():
             patch(
                 "backend.routers.payment.verify_webhook",
                 new_callable=AsyncMock,
-                return_value=webhook_body,
+                return_value=(webhook_body, None),
             ),
             patch("backend.routers.payment.send_payment_confirmation_email", new_callable=AsyncMock) as send_email_mock,
         ):
@@ -879,7 +879,7 @@ async def test_webhook_terminal_events_update_payment_status(event_type: str, ex
         with patch(
             "backend.routers.payment.verify_webhook",
             new_callable=AsyncMock,
-            return_value=webhook_body,
+            return_value=(webhook_body, None),
         ):
             transport = ASGITransport(app=app)
             async with AsyncClient(transport=transport, base_url="http://test") as client:
@@ -917,7 +917,7 @@ async def test_webhook_terminal_events_do_not_downgrade_paid_order(event_type: s
         with patch(
             "backend.routers.payment.verify_webhook",
             new_callable=AsyncMock,
-            return_value=webhook_body,
+            return_value=(webhook_body, None),
         ):
             transport = ASGITransport(app=app)
             async with AsyncClient(transport=transport, base_url="http://test") as client:
