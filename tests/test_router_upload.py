@@ -564,6 +564,29 @@ async def test_upload_rejects_mime_mismatch():
 
 
 @pytest.mark.asyncio
+async def test_upload_accepts_detected_jpeg_despite_octet_stream_header():
+    """A valid JPEG should pass even when the client declares application/octet-stream."""
+    jpeg_bytes = b"\xff\xd8\xff\xe0" + b"\x00" * 100
+
+    with patch(
+        "backend.routers.upload.extract_text_from_image_with_snapshot",
+        new_callable=AsyncMock,
+        return_value=("第1条 業務委託", {"ocr_succeeded": True, "ocr_mime_type": "image/jpeg"}),
+    ) as mock_ocr:
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            resp = await client.post(
+                "/api/upload",
+                data={"input_type": "image"},
+                files={"file": ("contract.jpg", io.BytesIO(jpeg_bytes), "application/octet-stream")},
+            )
+
+    assert resp.status_code == 200
+    assert resp.json()["estimate_source"] == "vision_ocr"
+    mock_ocr.assert_awaited_once_with(jpeg_bytes, "image/jpeg")
+
+
+@pytest.mark.asyncio
 async def test_upload_text_too_long():
     """Text input over MAX_UPLOAD_TEXT_CHARS (80000) should be rejected with 413."""
     long_text = "第1条 " * 30000  # well over 80000 chars
