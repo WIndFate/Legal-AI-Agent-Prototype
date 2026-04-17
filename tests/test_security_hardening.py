@@ -28,18 +28,38 @@ def _fake_request(headers: dict[str, str], peer: str | None = "10.0.0.1") -> Sim
 
 def test_extract_client_ip_prefers_fly_header():
     req = _fake_request({"fly-client-ip": "203.0.113.5", "x-forwarded-for": "1.2.3.4, 5.6.7.8"})
-    assert extract_client_ip(req) == "203.0.113.5"
+    with patch(
+        "backend.services.quote_guard.get_settings",
+        return_value=SimpleNamespace(is_production=True),
+    ):
+        assert extract_client_ip(req) == "203.0.113.5"
 
 
-def test_extract_client_ip_uses_rightmost_xff_when_no_fly_header():
-    # Leftmost entry is client-controlled and was the previous (spoofable) behavior.
+def test_extract_client_ip_ignores_xff_in_production_without_fly_header():
     req = _fake_request({"x-forwarded-for": "evil-spoof, 5.6.7.8, 9.10.11.12"})
-    assert extract_client_ip(req) == "9.10.11.12"
+    with patch(
+        "backend.services.quote_guard.get_settings",
+        return_value=SimpleNamespace(is_production=True),
+    ):
+        assert extract_client_ip(req) == "10.0.0.1"
+
+
+def test_extract_client_ip_uses_leftmost_xff_in_development():
+    req = _fake_request({"x-forwarded-for": "203.0.113.9, 172.19.0.3"})
+    with patch(
+        "backend.services.quote_guard.get_settings",
+        return_value=SimpleNamespace(is_production=False),
+    ):
+        assert extract_client_ip(req) == "203.0.113.9"
 
 
 def test_extract_client_ip_falls_back_to_socket_peer():
     req = _fake_request({}, peer="127.0.0.1")
-    assert extract_client_ip(req) == "127.0.0.1"
+    with patch(
+        "backend.services.quote_guard.get_settings",
+        return_value=SimpleNamespace(is_production=False),
+    ):
+        assert extract_client_ip(req) == "127.0.0.1"
 
 
 @pytest.mark.asyncio

@@ -19,26 +19,22 @@ QUOTE_CACHE_VERSION = "v1"
 
 
 def extract_client_ip(request: Request) -> str:
-    """Return the client IP, preferring proxy-authoritative headers.
+    """Return the client IP from trusted sources only.
 
-    Order of trust:
-      1. `Fly-Client-IP` — set by Fly.io edge and not client-settable upstream.
-      2. Rightmost entry of `X-Forwarded-For` — this is the IP inserted by the
-         closest trusted proxy. The leftmost entry is client-controlled and was
-         historically used here, which let an attacker spoof any source IP
-         and bypass the per-IP OCR abuse counter by adding their own header.
-      3. `request.client.host` — direct socket peer.
-
-    Dev note: behind the Vite dev proxy the rightmost XFF entry resolves to
-    the container bridge IP, so all local developers share one abuse counter.
-    This is expected and does not affect production, which is fronted by Fly.
+    Production is fronted by Fly.io, so only `Fly-Client-IP` is trusted. The
+    user-supplied `X-Forwarded-For` header is ignored in production because it
+    can be forged to bypass per-IP abuse limits. Development keeps a permissive
+    XFF fallback for local proxy testing.
     """
+    settings = get_settings()
     fly_client = request.headers.get("fly-client-ip", "").strip()
     if fly_client:
         return fly_client
+    if settings.is_production:
+        return request.client.host if request.client else "unknown"
     forwarded_for = request.headers.get("x-forwarded-for", "")
     if forwarded_for:
-        return forwarded_for.split(",")[-1].strip()
+        return forwarded_for.split(",")[0].strip()
     return request.client.host if request.client else "unknown"
 
 

@@ -4,8 +4,8 @@ import io
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from fastapi import FastAPI, HTTPException
 from httpx import ASGITransport, AsyncClient
-from fastapi import FastAPI
 from redis.exceptions import RedisError
 
 from backend.routers.upload import _extract_clause_preview, preview_llm, router
