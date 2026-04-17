@@ -32,13 +32,23 @@ def _generate_token() -> str:
     return secrets.token_urlsafe(32)
 
 
-def upgrade() -> None:
-    op.add_column("orders", sa.Column("access_token", sa.String(length=64), nullable=True))
-    op.add_column("orders", sa.Column("share_token", sa.String(length=64), nullable=True))
+def _column_names(bind) -> set[str]:
+    inspector = sa.inspect(bind)
+    return {column["name"] for column in inspector.get_columns("orders")}
 
+
+def upgrade() -> None:
     bind = op.get_bind()
-    rows = bind.execute(sa.select(orders.c.id)).fetchall()
+    existing_columns = _column_names(bind)
+    if "access_token" not in existing_columns:
+        op.add_column("orders", sa.Column("access_token", sa.String(length=64), nullable=True))
+    if "share_token" not in existing_columns:
+        op.add_column("orders", sa.Column("share_token", sa.String(length=64), nullable=True))
+
+    rows = bind.execute(sa.select(orders.c.id, orders.c.access_token)).fetchall()
     for row in rows:
+        if row.access_token:
+            continue
         bind.execute(
             orders.update()
             .where(orders.c.id == row.id)
@@ -49,5 +59,9 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    op.drop_column("orders", "share_token")
-    op.drop_column("orders", "access_token")
+    bind = op.get_bind()
+    existing_columns = _column_names(bind)
+    if "share_token" in existing_columns:
+        op.drop_column("orders", "share_token")
+    if "access_token" in existing_columns:
+        op.drop_column("orders", "access_token")

@@ -4,8 +4,9 @@ import os
 from contextlib import asynccontextmanager
 
 from dotenv import load_dotenv
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware
 
 load_dotenv()
 logging.basicConfig(
@@ -110,6 +111,24 @@ app = FastAPI(
     version="1.0.0",
     lifespan=lifespan,
 )
+
+class SecurityHeadersMiddleware(BaseHTTPMiddleware):
+    """Inject baseline security response headers.
+
+    Referrer-Policy: no-referrer prevents the browser from sending the full
+    current URL (which may still contain a `#t=<token>` fragment that
+    sessionStorage hasn't stripped yet, or a `?s=<share_token>` query) to any
+    cross-origin asset, API, or tracker. This is our last line of defense if
+    the frontend's `history.replaceState` token-stripping runs late.
+    """
+
+    async def dispatch(self, request: Request, call_next):
+        response = await call_next(request)
+        response.headers.setdefault("Referrer-Policy", "no-referrer")
+        return response
+
+
+app.add_middleware(SecurityHeadersMiddleware)
 
 # CORS - restrict in production
 settings = get_settings()

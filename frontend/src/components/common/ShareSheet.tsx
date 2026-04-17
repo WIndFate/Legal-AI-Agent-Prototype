@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { generateShareCard } from '../../lib/shareCard';
+import { buildShareUrl, ownerHeaders } from '../../lib/orderAccess';
 
 export interface ReportSummary {
   overallRisk: string;
@@ -14,17 +15,19 @@ export interface ReportSummary {
 interface ShareSheetProps {
   open: boolean;
   onClose: () => void;
-  shareUrl: string;
   orderId: string;
   accessToken: string | null;
   reportSummary?: ReportSummary;
 }
 
-export default function ShareSheet({ open, onClose, shareUrl, orderId, accessToken, reportSummary }: ShareSheetProps) {
+export default function ShareSheet({ open, onClose, orderId, accessToken, reportSummary }: ShareSheetProps) {
   const { t } = useTranslation();
   const [copiedLink, setCopiedLink] = useState(false);
   const [referralLoading, setReferralLoading] = useState(false);
-  const [resolvedShareUrl, setResolvedShareUrl] = useState(shareUrl);
+  // Share URL is derived from the server-minted share_token and is null until
+  // the owner-authenticated `/share-link` call succeeds, so we never leak the
+  // owner URL as a fallback.
+  const [resolvedShareUrl, setResolvedShareUrl] = useState<string | null>(null);
   const [referralData, setReferralData] = useState<{
     referral_code: string;
     discount_jpy: number;
@@ -35,6 +38,7 @@ export default function ShareSheet({ open, onClose, shareUrl, orderId, accessTok
 
   const supportsNativeShare = useMemo(() => typeof navigator !== 'undefined' && !!navigator.share, []);
   const finalShareUrl = useMemo(() => {
+    if (!resolvedShareUrl) return null;
     try {
       const url = new URL(resolvedShareUrl, window.location.origin);
       if (referralData?.referral_code) {
@@ -69,23 +73,22 @@ export default function ShareSheet({ open, onClose, shareUrl, orderId, accessTok
     if (!open) return;
 
     setCopiedLink(false);
-    setResolvedShareUrl(shareUrl);
+    setResolvedShareUrl(null);
 
     const loadShareLink = async () => {
       if (!accessToken) return;
       try {
-        const res = await fetch(`/api/report/${orderId}/share-link?token=${encodeURIComponent(accessToken)}`, {
+        const res = await fetch(`/api/report/${orderId}/share-link`, {
           method: 'POST',
+          headers: ownerHeaders(accessToken),
         });
         if (!res.ok) return;
         const data = await res.json();
         if (typeof data.share_token === 'string' && data.share_token) {
-          const url = new URL(`/report/${orderId}`, window.location.origin);
-          url.searchParams.set('token', data.share_token);
-          setResolvedShareUrl(url.toString());
+          setResolvedShareUrl(buildShareUrl(orderId, data.share_token));
         }
       } catch {
-        setResolvedShareUrl(shareUrl);
+        setResolvedShareUrl(null);
       }
     };
     void loadShareLink();
@@ -107,8 +110,11 @@ export default function ShareSheet({ open, onClose, shareUrl, orderId, accessTok
       try {
         const res = await fetch('/api/referral/generate', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ order_id: orderId, access_token: accessToken }),
+          headers: {
+            'Content-Type': 'application/json',
+            ...ownerHeaders(accessToken),
+          },
+          body: JSON.stringify({ order_id: orderId }),
         });
         if (!res.ok) {
           throw new Error(`Referral failed: ${res.status}`);
@@ -125,11 +131,11 @@ export default function ShareSheet({ open, onClose, shareUrl, orderId, accessTok
     };
 
     void loadReferral();
-  }, [accessToken, open, orderId, shareUrl]);
+  }, [accessToken, open, orderId]);
 
   // Generate card preview when referral data + report summary are ready
   useEffect(() => {
-    if (!open || !reportSummary || !referralData) return;
+    if (!open || !reportSummary || !referralData || !finalShareUrl) return;
 
     const buildCard = async () => {
       setCardGenerating(true);
@@ -208,6 +214,7 @@ export default function ShareSheet({ open, onClose, shareUrl, orderId, accessTok
   };
 
   const copyLink = async () => {
+    if (!finalShareUrl) return;
     try {
       await navigator.clipboard.writeText(finalShareUrl);
       setCopiedLink(true);
@@ -218,7 +225,7 @@ export default function ShareSheet({ open, onClose, shareUrl, orderId, accessTok
   };
 
   const triggerNativeShare = async () => {
-    if (!navigator.share) return;
+    if (!navigator.share || !finalShareUrl) return;
     try {
       await navigator.share({
         title: 'ContractGuard',
@@ -294,6 +301,7 @@ export default function ShareSheet({ open, onClose, shareUrl, orderId, accessTok
               type="button"
               className={`share-v2-action-btn share-v2-action-copy${copiedLink ? ' is-copied' : ''}${!supportsNativeShare ? ' share-v2-action-full' : ''}`}
               onClick={() => void copyLink()}
+              disabled={!finalShareUrl}
             >
               {copiedLink ? (
                 <svg viewBox="0 0 20 20" focusable="false"><path d="M4 10l4 4 8-8" /></svg>
@@ -310,6 +318,7 @@ export default function ShareSheet({ open, onClose, shareUrl, orderId, accessTok
                 type="button"
                 className="share-v2-action-btn share-v2-action-native"
                 onClick={() => void triggerNativeShare()}
+                disabled={!finalShareUrl}
               >
                 <svg viewBox="0 0 20 20" focusable="false">
                   <path d="M10 3v9M7 6l3-3 3 3" />

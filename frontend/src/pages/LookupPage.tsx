@@ -2,7 +2,7 @@ import { FormEvent, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { fetchWithRetry } from '../lib/fetchWithRetry';
-import { appendOrderToken, getStoredOrderAccessToken } from '../lib/orderAccess';
+import { getStoredOrderAccessToken, withOwnerHeaders } from '../lib/orderAccess';
 
 const LOOKUP_TIMEOUT_MS = 12_000;
 const UUID_PATTERN =
@@ -50,13 +50,17 @@ export default function LookupPage() {
     try {
       const accessToken = getStoredOrderAccessToken(trimmed);
       const statusPath = accessToken
-        ? appendOrderToken(`/api/orders/${trimmed}/status`, accessToken)
+        ? `/api/orders/${trimmed}/status`
         : `/api/payment/status/${trimmed}`;
-      const statusRes = await fetchWithRetry(statusPath, undefined, {
-        timeoutMs: LOOKUP_TIMEOUT_MS,
-        retries: 2,
-        retryDelayMs: 700,
-      });
+      const statusRes = await fetchWithRetry(
+        statusPath,
+        accessToken ? withOwnerHeaders(accessToken) : undefined,
+        {
+          timeoutMs: LOOKUP_TIMEOUT_MS,
+          retries: 2,
+          retryDelayMs: 700,
+        },
+      );
       if (!statusRes.ok) {
         if (statusRes.status === 404) {
           setError(t('order.lookup_not_found'));
@@ -71,7 +75,7 @@ export default function LookupPage() {
 
       if (accessToken && (data.report_ready || data.analysis_status === 'completed')) {
         setStatusText(t('order.lookup_found_report'));
-        navigate(appendOrderToken(`/report/${trimmed}`, accessToken));
+        navigate(`/report/${trimmed}`);
         return;
       }
 
@@ -80,14 +84,14 @@ export default function LookupPage() {
         (data.analysis_status === 'failed' || data.analysis_status === 'queued' || data.analysis_status === 'processing')
       ) {
         setStatusText(t('order.lookup_found_processing'));
-        navigate(appendOrderToken(`/review/${trimmed}`, accessToken));
+        navigate(`/review/${trimmed}`);
         return;
       }
 
       if (data.payment_status === 'paid' || data.payment_status === 'captured') {
         if (accessToken) {
           setStatusText(t('order.lookup_found_processing'));
-          navigate(appendOrderToken(`/review/${trimmed}`, accessToken));
+          navigate(`/review/${trimmed}`);
           return;
         }
         setError(t('order.lookup_not_found'));

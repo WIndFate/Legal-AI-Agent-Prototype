@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { appendOrderToken, resolveOrderAccessToken } from '../lib/orderAccess';
+import { ownerHeaders, resolveOrderAccessToken, withOwnerHeaders } from '../lib/orderAccess';
 
 interface AnalysisEventItem {
   seq: number;
@@ -97,7 +97,7 @@ export default function ReviewPage() {
   }, [t]);
 
   const fetchOrderStatus = useCallback(async (): Promise<OrderStatusResponse> => {
-    const res = await fetch(appendOrderToken(`/api/orders/${orderId}/status`, accessToken));
+    const res = await fetch(`/api/orders/${orderId}/status`, withOwnerHeaders(accessToken));
     if (!res.ok) throw new Error(t('errors.review_failed'));
     return res.json();
   }, [accessToken, orderId, t]);
@@ -105,8 +105,11 @@ export default function ReviewPage() {
   const requestAnalysisStart = useCallback(async () => {
     const res = await fetch('/api/analysis/start', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ order_id: orderId, access_token: accessToken }),
+      headers: {
+        'Content-Type': 'application/json',
+        ...ownerHeaders(accessToken),
+      },
+      body: JSON.stringify({ order_id: orderId }),
     });
     if (!res.ok && res.status !== 409) {
       if (res.status === 402) {
@@ -227,7 +230,7 @@ export default function ReviewPage() {
         pushActivityEvent(evt);
         if (orderId) {
           completeTimeoutRef.current = window.setTimeout(() => {
-            navigate(appendOrderToken(`/report/${orderId}`, accessToken));
+            navigate(`/report/${orderId}`);
           }, 1200);
         }
         break;
@@ -244,7 +247,7 @@ export default function ReviewPage() {
   }, [accessToken, analysisFinishedAtMs, navigate, orderId, pushActivityEvent, resolveEventMessage, resolveReviewError, t]);
 
   const loadHistory = useCallback(async () => {
-    const res = await fetch(appendOrderToken(`/api/orders/${orderId}/events?after_seq=0`, accessToken));
+    const res = await fetch(`/api/orders/${orderId}/events?after_seq=0`, withOwnerHeaders(accessToken));
     if (!res.ok) throw new Error(t('errors.review_failed'));
     const data = await res.json();
     setActivityEvents([]);
@@ -260,10 +263,8 @@ export default function ReviewPage() {
 
     try {
       const res = await fetch(
-        appendOrderToken(`/api/orders/${orderId}/stream?after_seq=${lastSeqRef.current}`, accessToken),
-        {
-        signal: abortController.signal,
-        },
+        `/api/orders/${orderId}/stream?after_seq=${lastSeqRef.current}`,
+        withOwnerHeaders(accessToken, { signal: abortController.signal }),
       );
       if (!res.ok) {
         throw new Error(`Stream failed: ${res.status}`);

@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from backend.db.session import get_db
 from backend.models.order import Order
 from backend.models.referral import Referral
-from backend.routers._helpers import parse_order_id, require_order_token
+from backend.routers._helpers import owner_token_header, parse_order_id, require_owner_header
 from backend.config import get_settings
 
 logger = logging.getLogger(__name__)
@@ -19,12 +19,12 @@ router = APIRouter()
 
 class ReferralGenerateRequest(BaseModel):
     order_id: str
-    access_token: str
 
 
 @router.post("/api/referral/generate")
 async def generate_referral(
     request: ReferralGenerateRequest,
+    x_order_token: str | None = Depends(owner_token_header),
     db: AsyncSession = Depends(get_db),
 ):
     """Generate a referral code for a paid order."""
@@ -34,11 +34,7 @@ async def generate_referral(
     order = order_result.scalar_one_or_none()
     if order is None:
         raise HTTPException(status_code=404, detail="Order not found")
-    require_order_token(
-        provided_token=request.access_token,
-        access_token=order.access_token,
-        allow_share_token=False,
-    )
+    require_owner_header(order.access_token, x_order_token)
     if order.payment_status != "paid":
         raise HTTPException(status_code=409, detail="Referral link is available after payment")
 

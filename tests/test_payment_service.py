@@ -64,7 +64,9 @@ async def test_create_payment_session_omits_payment_types(monkeypatch):
     assert posted["json"]["amount"] == 200
     assert posted["json"]["currency"] == "JPY"
     assert posted["json"]["metadata"] == {"order_id": "test-order-id"}
-    assert posted["json"]["return_url"].endswith("/review/test-order-id?token=access-token-123")
+    # Access token is carried in the URL fragment (#t=...) so it stays out of
+    # server access logs and the Referer header when the browser lands there.
+    assert posted["json"]["return_url"].endswith("/review/test-order-id#t=access-token-123")
 
 
 @pytest.mark.asyncio

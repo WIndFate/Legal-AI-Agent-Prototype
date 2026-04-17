@@ -50,7 +50,8 @@ async def test_generate_referral(mock_settings, mock_db):
     async with AsyncClient(transport=transport, base_url="http://test") as client:
         resp = await client.post(
             "/api/referral/generate",
-            json={"order_id": oid, "access_token": "access-token-123"},
+            json={"order_id": oid},
+            headers={"X-Order-Token": "access-token-123"},
         )
 
     assert resp.status_code == 200
@@ -72,6 +73,26 @@ async def test_generate_referral_missing_order_id(mock_db):
         resp = await client.post("/api/referral/generate", json={})
 
     assert resp.status_code == 422
+
+
+@pytest.mark.asyncio
+async def test_generate_referral_rejects_missing_header(mock_db):
+    oid = str(uuid.uuid4())
+    order_mock = MagicMock()
+    order_mock.payment_status = "paid"
+    order_mock.access_token = "access-token-123"
+    order_result = MagicMock()
+    order_result.scalar_one_or_none.return_value = order_mock
+    mock_db.execute.return_value = order_result
+
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        resp = await client.post(
+            "/api/referral/generate",
+            json={"order_id": oid},
+        )
+
+    assert resp.status_code == 404
 
 
 # ── GET /api/referral/{code} — valid code ────────────────────────

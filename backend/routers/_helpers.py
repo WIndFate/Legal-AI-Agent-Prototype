@@ -47,3 +47,38 @@ def require_order_token(
     if allow_share_token and share_token and hmac.compare_digest(provided_token, share_token):
         return
     raise HTTPException(status_code=404, detail="Not found")
+
+
+def owner_token_header(
+    x_order_token: str | None = Header(default=None, alias="x-order-token"),
+) -> str | None:
+    """FastAPI dependency to read the owner access token from `X-Order-Token`.
+
+    Transported via header (not query) to keep it out of server access logs,
+    browser history, and Referer leakage. Routers combine the returned value
+    with `require_order_token()` to enforce access.
+    """
+    return x_order_token
+
+
+def require_owner_header(
+    access_token: str | None,
+    x_order_token: str | None,
+) -> None:
+    """Enforce owner-only access using `X-Order-Token` header."""
+    require_order_token(
+        provided_token=x_order_token,
+        access_token=access_token,
+        allow_share_token=False,
+    )
+
+
+def require_share_token(
+    share_token: str | None,
+    provided_share_token: str | None,
+) -> None:
+    """Enforce share-link access using the dedicated `?s=` token only."""
+    if not share_token or not provided_share_token:
+        raise HTTPException(status_code=404, detail="Not found")
+    if not hmac.compare_digest(provided_share_token, share_token):
+        raise HTTPException(status_code=404, detail="Not found")

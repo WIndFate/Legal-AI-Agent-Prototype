@@ -12,7 +12,7 @@ from backend.models.analysis_event import AnalysisEvent
 from backend.models.analysis_job import AnalysisJob
 from backend.models.order import Order
 from backend.models.report import Report
-from backend.routers._helpers import parse_order_id, require_order_token
+from backend.routers._helpers import owner_token_header, parse_order_id, require_owner_header
 from backend.schemas.analysis import (
     AnalysisEventItem,
     AnalysisEventsResponse,
@@ -31,17 +31,14 @@ router = APIRouter()
 @router.post("/api/analysis/start", response_model=AnalysisStartResponse)
 async def start_analysis(
     request: AnalysisStartRequest,
+    x_order_token: str | None = Depends(owner_token_header),
     db: AsyncSession = Depends(get_db),
 ):
     order_uuid = parse_order_id(request.order_id)
     order = await db.get(Order, order_uuid)
     if order is None:
         raise HTTPException(status_code=404, detail="Order not found")
-    require_order_token(
-        provided_token=request.access_token,
-        access_token=order.access_token,
-        allow_share_token=False,
-    )
+    require_owner_header(order.access_token, x_order_token)
     if order.payment_status != "paid":
         raise HTTPException(status_code=402, detail="Payment required")
 
@@ -69,18 +66,14 @@ async def start_analysis(
 @router.get("/api/orders/{order_id}/status", response_model=OrderStatusResponse)
 async def get_order_status(
     order_id: str,
-    token: str | None = Query(default=None),
+    x_order_token: str | None = Depends(owner_token_header),
     db: AsyncSession = Depends(get_db),
 ):
     order_uuid = parse_order_id(order_id)
     order = await db.get(Order, order_uuid)
     if order is None:
         raise HTTPException(status_code=404, detail="Order not found")
-    require_order_token(
-        provided_token=token,
-        access_token=order.access_token,
-        allow_share_token=False,
-    )
+    require_owner_header(order.access_token, x_order_token)
 
     job_result = await db.execute(select(AnalysisJob).where(AnalysisJob.order_id == order.id))
     job = job_result.scalar_one_or_none()
@@ -114,18 +107,14 @@ async def get_order_status(
 async def get_analysis_events(
     order_id: str,
     after_seq: int = Query(default=0, ge=0),
-    token: str | None = Query(default=None),
+    x_order_token: str | None = Depends(owner_token_header),
     db: AsyncSession = Depends(get_db),
 ):
     order_uuid = parse_order_id(order_id)
     order = await db.get(Order, order_uuid)
     if order is None:
         raise HTTPException(status_code=404, detail="Order not found")
-    require_order_token(
-        provided_token=token,
-        access_token=order.access_token,
-        allow_share_token=False,
-    )
+    require_owner_header(order.access_token, x_order_token)
     result = await db.execute(select(AnalysisJob).where(AnalysisJob.order_id == order.id))
     job = result.scalar_one_or_none()
     if job is None:
@@ -155,18 +144,14 @@ async def get_analysis_events(
 async def stream_analysis_events(
     order_id: str,
     after_seq: int = Query(default=0, ge=0),
-    token: str | None = Query(default=None),
+    x_order_token: str | None = Depends(owner_token_header),
     db: AsyncSession = Depends(get_db),
 ):
     order_uuid = parse_order_id(order_id)
     order = await db.get(Order, order_uuid)
     if order is None:
         raise HTTPException(status_code=404, detail="Order not found")
-    require_order_token(
-        provided_token=token,
-        access_token=order.access_token,
-        allow_share_token=False,
-    )
+    require_owner_header(order.access_token, x_order_token)
     result = await db.execute(select(AnalysisJob).where(AnalysisJob.order_id == order.id))
     job = result.scalar_one_or_none()
     if job is None:

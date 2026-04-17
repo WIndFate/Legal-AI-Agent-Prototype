@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 
 import OrderReminderDialog from '../components/common/OrderReminderDialog';
 import { fetchWithRetry } from '../lib/fetchWithRetry';
-import { appendOrderToken, resolveOrderAccessToken, storeOrderAccessToken } from '../lib/orderAccess';
+import { resolveOrderAccessToken, storeOrderAccessToken, withOwnerHeaders } from '../lib/orderAccess';
 
 type PaymentStatus = 'checking' | 'success' | 'failed' | 'pending' | 'timeout';
 type TerminalPaymentStatus = 'failed' | 'cancelled' | null;
@@ -123,13 +123,17 @@ export default function PaymentPage() {
 
       try {
         const statusPath = accessToken
-          ? appendOrderToken(`/api/orders/${orderId}/status`, accessToken)
+          ? `/api/orders/${orderId}/status`
           : `/api/payment/status/${orderId}`;
-        const statusRes = await fetchWithRetry(statusPath, undefined, {
-          timeoutMs: 10_000,
-          retries: 2,
-          retryDelayMs: 700,
-        });
+        const statusRes = await fetchWithRetry(
+          statusPath,
+          accessToken ? withOwnerHeaders(accessToken) : undefined,
+          {
+            timeoutMs: 10_000,
+            retries: 2,
+            retryDelayMs: 700,
+          },
+        );
         if (!statusRes.ok) {
           if (statusRes.status === 404) {
             setStatus('failed');
@@ -142,7 +146,7 @@ export default function PaymentPage() {
         if (accessToken && (data.report_ready || data.analysis_status === 'completed')) {
           setTerminalPaymentStatus(null);
           setStatus('success');
-          setNextRoute(appendOrderToken(`/report/${orderId}`, accessToken));
+          setNextRoute(`/report/${orderId}`);
           setShowOrderPrompt(true);
           return;
         }
@@ -150,7 +154,7 @@ export default function PaymentPage() {
         if (data.payment_status === 'paid' || data.payment_status === 'captured') {
           setTerminalPaymentStatus(null);
           setStatus('success');
-          setNextRoute(appendOrderToken(`/review/${orderId}`, accessToken));
+          setNextRoute(`/review/${orderId}`);
           setShowOrderPrompt(true);
           return;
         }

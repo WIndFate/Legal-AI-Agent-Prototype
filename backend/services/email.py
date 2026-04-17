@@ -1,6 +1,6 @@
 import logging
 from datetime import datetime, timezone
-from urllib.parse import urlencode
+from urllib.parse import quote, urlencode
 
 import httpx
 
@@ -70,13 +70,19 @@ def _wrap_email_shell(html_body: str, language: str) -> str:
 
 
 def _build_frontend_email_url(path: str, language: str, *, token: str | None = None) -> str:
-    """Build a frontend deep link with a one-visit language hint."""
+    """Build a frontend deep link with a one-visit language hint.
+
+    Owner access tokens are placed in the URL fragment (`#t=`) rather than the
+    query string so they do not reach the origin server's access logs or leak
+    via the Referer header. The frontend reads the fragment on load and strips
+    it from the address bar via history.replaceState.
+    """
     settings = get_settings()
     normalized_path = path if path.startswith("/") else f"/{path}"
-    params = {"lang": language}
+    base = f"{settings.FRONTEND_URL.rstrip('/')}{normalized_path}?{urlencode({'lang': language})}"
     if token:
-        params["token"] = token
-    return f"{settings.FRONTEND_URL.rstrip('/')}{normalized_path}?{urlencode(params)}"
+        return f"{base}#t={quote(token, safe='')}"
+    return base
 
 
 async def _send_email(

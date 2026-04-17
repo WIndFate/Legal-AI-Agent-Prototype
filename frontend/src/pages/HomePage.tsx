@@ -8,7 +8,7 @@ import HomeHeroSection from '../components/home/HomeHeroSection';
 import HomeUploadSection from '../components/home/HomeUploadSection';
 import type { InputMode, UploadResult } from '../components/home/types';
 import { exampleReports } from '../data/exampleReports';
-import { appendOrderToken, storeOrderAccessToken } from '../lib/orderAccess';
+import { storeOrderAccessToken } from '../lib/orderAccess';
 
 function detectFileInputType(file: File): 'image' | 'pdf' {
   if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
@@ -138,7 +138,8 @@ export default function HomePage() {
       } else {
         sessionStorage.setItem(`report-language:${data.order_id}`, i18n.language);
         // Dev mode: still show the payment-success handoff so users save the order ID first.
-        navigate(appendOrderToken(`/payment/${data.order_id}`, data.access_token));
+        // Owner token is already persisted in sessionStorage above; no need to append to URL.
+        navigate(`/payment/${data.order_id}`);
       }
     } catch (e) {
       setError(t('errors.payment_failed'));

@@ -5,10 +5,10 @@ from types import SimpleNamespace
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from fastapi import HTTPException
+from fastapi import FastAPI, HTTPException
 from httpx import ASGITransport, AsyncClient
 
-from backend.main import app
+from backend.main import SecurityHeadersMiddleware, app
 from backend.services.abuse_guard import (
     _uploads_key,
     check_ocr_allowed,
@@ -167,3 +167,42 @@ async def test_create_payment_rejects_tampered_price():
         assert "price" in resp.json()["detail"].lower()
     finally:
         app.dependency_overrides.pop(get_db, None)
+
+
+@pytest.mark.asyncio
+async def test_security_headers_middleware_sets_referrer_policy_no_referrer():
+    """Every response must carry `Referrer-Policy: no-referrer` so the browser
+    never ships `#t=<token>` or `?s=<share_token>` on outbound requests."""
+    probe = FastAPI()
+    probe.add_middleware(SecurityHeadersMiddleware)
+
+    @probe.get("/probe")
+    async def _probe():
+        return {"ok": True}
+
+    transport = ASGITransport(app=probe)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        resp = await client.get("/probe")
+
+    assert resp.status_code == 200
+    assert resp.headers["referrer-policy"] == "no-referrer"
+
+
+@pytest.mark.asyncio
+async def test_security_headers_middleware_preserves_route_referrer_policy():
+    """If a route sets its own Referrer-Policy (e.g., stricter), the middleware
+    must not stomp it — setdefault preserves route-level intent."""
+    probe = FastAPI()
+    probe.add_middleware(SecurityHeadersMiddleware)
+
+    @probe.get("/custom")
+    async def _custom():
+        from fastapi.responses import JSONResponse
+        return JSONResponse({"ok": True}, headers={"Referrer-Policy": "same-origin"})
+
+    transport = ASGITransport(app=probe)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        resp = await client.get("/custom")
+
+    assert resp.status_code == 200
+    assert resp.headers["referrer-policy"] == "same-origin"

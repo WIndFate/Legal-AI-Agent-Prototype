@@ -10,7 +10,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from backend.db.session import get_db
 from backend.models.order import Order
 from backend.models.report import Report
-from backend.routers._helpers import build_order_share_token, parse_order_id, require_order_token
+from backend.routers._helpers import (
+    build_order_share_token,
+    owner_token_header,
+    parse_order_id,
+    require_owner_header,
+    require_share_token,
+)
 from backend.services.analytics import capture as posthog_capture
 from backend.services.report_cache import get_cached_report
 from backend.services.report_pdf import renderer as report_pdf_renderer
@@ -53,28 +59,42 @@ async def _load_report_row(order_id: str, db: AsyncSession) -> Report:
     return report
 
 
-async def _load_accessible_order(order_id: str, token: str | None, db: AsyncSession) -> Order:
+async def _load_readable_order(
+    order_id: str,
+    *,
+    x_order_token: str | None,
+    share_token_query: str | None,
+    db: AsyncSession,
+) -> Order:
+    """Authorize a report read via owner header or share-token query."""
     order_uuid = parse_order_id(order_id)
     order = await db.get(Order, order_uuid)
     if order is None:
         raise HTTPException(status_code=404, detail="Not found")
-    require_order_token(
-        provided_token=token,
-        access_token=order.access_token,
-        share_token=order.share_token,
-        allow_share_token=True,
-    )
+    # Owner path: token via X-Order-Token header keeps it out of logs/Referer.
+    # Share path: `?s=` query accepts only the dedicated share token, never the
+    # owner access token.
+    if share_token_query is not None:
+        require_share_token(order.share_token, share_token_query)
+    else:
+        require_owner_header(order.access_token, x_order_token)
     return order
 
 
 @router.get("/api/report/{order_id}")
 async def get_report(
     order_id: str,
-    token: str | None = Query(default=None),
+    s: str | None = Query(default=None),
+    x_order_token: str | None = Depends(owner_token_header),
     db: AsyncSession = Depends(get_db),
 ):
     """Get analysis report by order ID. Checks Redis cache first, then DB."""
-    await _load_accessible_order(order_id, token, db)
+    await _load_readable_order(
+        order_id,
+        x_order_token=x_order_token,
+        share_token_query=s,
+        db=db,
+    )
     # Try Redis cache first
     cached = await get_cached_report(order_id)
     if cached and "report" in cached:
@@ -119,10 +139,16 @@ async def get_report(
 async def download_report_pdf(
     order_id: str,
     download: int = Query(default=1),
-    token: str | None = Query(default=None),
+    s: str | None = Query(default=None),
+    x_order_token: str | None = Depends(owner_token_header),
     db: AsyncSession = Depends(get_db),
 ):
-    await _load_accessible_order(order_id, token, db)
+    await _load_readable_order(
+        order_id,
+        x_order_token=x_order_token,
+        share_token_query=s,
+        db=db,
+    )
     report = await _load_report_row(order_id, db)
 
     pdf_bytes = report_pdf_renderer.build_pdf(
@@ -157,18 +183,15 @@ async def download_report_pdf(
 @router.post("/api/report/{order_id}/share-link")
 async def create_report_share_link(
     order_id: str,
-    token: str | None = Query(default=None),
+    x_order_token: str | None = Depends(owner_token_header),
     db: AsyncSession = Depends(get_db),
 ):
+    """Owner-only: lazily mint a stable share token for this order."""
     order_uuid = parse_order_id(order_id)
     order = await db.get(Order, order_uuid)
     if order is None:
         raise HTTPException(status_code=404, detail="Not found")
-    require_order_token(
-        provided_token=token,
-        access_token=order.access_token,
-        allow_share_token=False,
-    )
+    require_owner_header(order.access_token, x_order_token)
     if not order.share_token:
         order.share_token = build_order_share_token()
         await db.commit()
@@ -177,3 +200,28 @@ async def create_report_share_link(
         "order_id": str(order.id),
         "share_token": order.share_token,
     }
+
+
+@router.delete("/api/report/{order_id}/share-link")
+async def revoke_report_share_link(
+    order_id: str,
+    x_order_token: str | None = Depends(owner_token_header),
+    db: AsyncSession = Depends(get_db),
+):
+    """Owner-only: revoke the share token. Subsequent `?s=` reads will 404."""
+    order_uuid = parse_order_id(order_id)
+    order = await db.get(Order, order_uuid)
+    if order is None:
+        raise HTTPException(status_code=404, detail="Not found")
+    require_owner_header(order.access_token, x_order_token)
+    revoked = order.share_token is not None
+    if revoked:
+        order.share_token = None
+        await db.commit()
+    logger.info("Report share link revoke: order_id=%s revoked=%s", order_id, revoked)
+    posthog_capture(
+        "anonymous",
+        "report_share_link_revoked",
+        {"order_id": order_id, "had_token": revoked},
+    )
+    return {"order_id": str(order.id), "revoked": revoked}

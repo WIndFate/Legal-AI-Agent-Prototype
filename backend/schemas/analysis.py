@@ -5,7 +5,6 @@ from pydantic import BaseModel
 
 class AnalysisStartRequest(BaseModel):
     order_id: str
-    access_token: str
 
 
 class AnalysisStartResponse(BaseModel):

@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 
 import ShareSheet, { type ReportSummary } from '../components/common/ShareSheet';
 import { fetchWithRetry } from '../lib/fetchWithRetry';
-import { appendOrderToken, getStoredOrderAccessToken } from '../lib/orderAccess';
+import { resolveOrderAccessToken, withOwnerHeaders } from '../lib/orderAccess';
 interface ClauseAnalysis {
   clause_number: string;
   risk_level: string;
@@ -75,7 +75,13 @@ export default function ReportPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { t, i18n } = useTranslation();
-  const accessToken = searchParams.get('token') || getStoredOrderAccessToken(orderId ?? null);
+  // Share token is a separate credential that intentionally lives in the URL
+  // so the link can be forwarded. Owner access token must stay out of the URL:
+  // `resolveOrderAccessToken` reads it from `#t=` fragment or sessionStorage
+  // and strips any fragment/query entry point on arrival.
+  const shareToken = searchParams.get('s');
+  const ownerAccessToken = resolveOrderAccessToken(orderId ?? null, searchParams);
+  const accessToken = shareToken ? null : ownerAccessToken;
 
   const [data, setData] = useState<ReportData | null>(null);
   const [error, setError] = useState('');
@@ -98,14 +104,23 @@ export default function ReportPage() {
 
     try {
       setDownloadingPdf(true);
-      const pdfUrl = appendOrderToken(`/api/report/${data.order_id}/pdf?download=1`, accessToken);
+      // PDF auth must not leak into the URL; owner via header, share via ?s= query.
+      const pdfUrl = shareToken
+        ? `/api/report/${data.order_id}/pdf?download=1&s=${encodeURIComponent(shareToken)}`
+        : `/api/report/${data.order_id}/pdf?download=1`;
+      const init = shareToken ? undefined : withOwnerHeaders(accessToken);
+      const res = await fetch(pdfUrl, init);
+      if (!res.ok) throw new Error(`Failed: ${res.status}`);
+      const blob = await res.blob();
+      const objectUrl = URL.createObjectURL(blob);
       const link = document.createElement('a');
-      link.href = pdfUrl;
+      link.href = objectUrl;
       link.download = `contractguard-report-${data.order_id}.pdf`;
       link.rel = 'noopener';
       document.body.appendChild(link);
       link.click();
       link.remove();
+      URL.revokeObjectURL(objectUrl);
     } catch {
       setError(i18n.t('report.network_error'));
     } finally {
@@ -145,7 +160,11 @@ export default function ReportPage() {
         setError('');
         setExpired(false);
 
-        const res = await fetchWithRetry(appendOrderToken(`/api/report/${orderId}`, accessToken), undefined, {
+        const reportPath = shareToken
+          ? `/api/report/${orderId}?s=${encodeURIComponent(shareToken)}`
+          : `/api/report/${orderId}`;
+        const init = shareToken ? undefined : withOwnerHeaders(accessToken);
+        const res = await fetchWithRetry(reportPath, init, {
           timeoutMs: REPORT_TIMEOUT_MS,
           retries: 2,
           retryDelayMs: 700,
@@ -189,7 +208,7 @@ export default function ReportPage() {
     };
 
     void fetchReport();
-  }, [accessToken, i18n, orderId, reloadKey]);
+  }, [accessToken, shareToken, i18n, orderId, reloadKey]);
 
   useEffect(() => {
     if (!data?.expires_at) return;
@@ -356,7 +375,6 @@ export default function ReportPage() {
       <ShareSheet
         open={shareOpen}
         onClose={() => setShareOpen(false)}
-        shareUrl={appendOrderToken(`/report/${data.order_id}`, accessToken)}
         orderId={data.order_id}
         accessToken={accessToken}
         reportSummary={reportSummary}

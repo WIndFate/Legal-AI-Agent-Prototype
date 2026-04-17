@@ -3,7 +3,7 @@ import hmac
 import json
 import logging
 from datetime import datetime, timedelta, timezone
-from urllib.parse import urlencode, urlparse
+from urllib.parse import quote, urlencode, urlparse
 
 import httpx
 from redis.asyncio import Redis
@@ -83,8 +83,10 @@ def resolve_frontend_base_url(
 
 
 def _build_frontend_return_url(frontend_base_url: str, order_id: str, access_token: str) -> str:
-    query = urlencode({"token": access_token})
-    return f"{frontend_base_url}/review/{order_id}?{query}"
+    # Use URL fragment (`#t=`) so the token never reaches the origin server's
+    # access logs or leaks via Referer. The frontend reads the fragment on load
+    # and immediately strips it via history.replaceState.
+    return f"{frontend_base_url}/review/{order_id}#t={quote(access_token, safe='')}"
 
 
 async def create_payment_session(
@@ -99,9 +101,16 @@ async def create_payment_session(
     return_url = _build_frontend_return_url(frontend_base_url, order_id, access_token)
 
     if is_dev_payment_mode():
-        # Local development skips the external checkout page.
+        # Local development skips the external checkout page. Insert the
+        # dev_payment marker as a query (before the `#t=` fragment) so it
+        # still reaches the frontend query parser.
         logger.warning("KOMOJU_SECRET_KEY not set, returning placeholder payment URL")
-        return f"{return_url}&dev_payment=true"
+        fragment_idx = return_url.find("#")
+        if fragment_idx == -1:
+            return f"{return_url}?dev_payment=true"
+        base, fragment = return_url[:fragment_idx], return_url[fragment_idx:]
+        separator = "&" if "?" in base else "?"
+        return f"{base}{separator}dev_payment=true{fragment}"
 
     async with httpx.AsyncClient() as client:
         response = await client.post(

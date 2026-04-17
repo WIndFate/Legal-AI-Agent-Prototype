@@ -32,6 +32,10 @@ class FakeOrder:
         self.share_token = kwargs.get("share_token", "share-token-123")
 
 
+def _owner_headers(order: FakeOrder) -> dict:
+    return {"X-Order-Token": order.access_token}
+
+
 class FakeJob:
     def __init__(self, **kwargs):
         self.id = kwargs.get("id", uuid.uuid4())
@@ -145,7 +149,8 @@ async def test_start_analysis_creates_job_and_launches_executor():
         async with AsyncClient(transport=transport, base_url="http://test") as client:
             response = await client.post(
                 "/api/analysis/start",
-                json={"order_id": str(order.id), "access_token": order.access_token},
+                json={"order_id": str(order.id)},
+                headers=_owner_headers(order),
             )
         assert response.status_code == 200
         payload = response.json()
@@ -153,6 +158,42 @@ async def test_start_analysis_creates_job_and_launches_executor():
         assert payload["status"] == "queued"
         assert session.job is not None
         assert session.commit_count == 1
+    finally:
+        app.dependency_overrides.pop(get_db, None)
+
+
+@pytest.mark.asyncio
+async def test_start_analysis_rejects_missing_header():
+    order = FakeOrder()
+    session = FakeSession(order=order)
+    app.dependency_overrides[get_db] = _override_db(session)
+    try:
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            response = await client.post(
+                "/api/analysis/start",
+                json={"order_id": str(order.id)},
+            )
+        assert response.status_code == 404
+    finally:
+        app.dependency_overrides.pop(get_db, None)
+
+
+@pytest.mark.asyncio
+async def test_start_analysis_rejects_share_token():
+    """Share token must not unlock writes — the /start endpoint is owner-only."""
+    order = FakeOrder()
+    session = FakeSession(order=order)
+    app.dependency_overrides[get_db] = _override_db(session)
+    try:
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            response = await client.post(
+                "/api/analysis/start",
+                json={"order_id": str(order.id)},
+                headers={"X-Order-Token": order.share_token},
+            )
+        assert response.status_code == 404
     finally:
         app.dependency_overrides.pop(get_db, None)
 
@@ -167,7 +208,8 @@ async def test_start_analysis_unpaid_order_returns_402():
         async with AsyncClient(transport=transport, base_url="http://test") as client:
             response = await client.post(
                 "/api/analysis/start",
-                json={"order_id": str(order.id), "access_token": order.access_token},
+                json={"order_id": str(order.id)},
+                headers=_owner_headers(order),
             )
         assert response.status_code == 402
     finally:
@@ -190,7 +232,9 @@ async def test_order_status_prefers_analysis_job_snapshot():
     try:
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
-            response = await client.get(f"/api/orders/{order.id}/status?token={order.access_token}")
+            response = await client.get(
+                f"/api/orders/{order.id}/status", headers=_owner_headers(order)
+            )
         assert response.status_code == 200
         payload = response.json()
         assert payload["analysis_status"] == "processing"
@@ -211,7 +255,10 @@ async def test_get_analysis_events_returns_history():
     try:
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
-            response = await client.get(f"/api/orders/{order.id}/events?after_seq=0&token={order.access_token}")
+            response = await client.get(
+                f"/api/orders/{order.id}/events?after_seq=0",
+                headers=_owner_headers(order),
+            )
         assert response.status_code == 200
         payload = response.json()
         assert payload["order_id"] == str(order.id)
@@ -230,7 +277,10 @@ async def test_order_status_rejects_non_uuid_order_id_as_404():
     try:
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
-            response = await client.get("/api/orders/not-a-uuid/status?token=access-token-123")
+            response = await client.get(
+                "/api/orders/not-a-uuid/status",
+                headers={"X-Order-Token": "access-token-123"},
+            )
         assert response.status_code == 404
     finally:
         app.dependency_overrides.pop(get_db, None)
@@ -246,7 +296,10 @@ async def test_stream_analysis_events_replays_terminal_history_only():
     try:
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
-            response = await client.get(f"/api/orders/{order.id}/stream?after_seq=0&token={order.access_token}")
+            response = await client.get(
+                f"/api/orders/{order.id}/stream?after_seq=0",
+                headers=_owner_headers(order),
+            )
         assert response.status_code == 200
         assert response.headers["content-type"].startswith("text/event-stream")
         data_lines = [line for line in response.text.splitlines() if line.startswith("data: ")]
@@ -280,7 +333,27 @@ async def test_order_status_rejects_share_token():
     try:
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
-            response = await client.get(f"/api/orders/{order.id}/status?token={order.share_token}")
+            response = await client.get(
+                f"/api/orders/{order.id}/status",
+                headers={"X-Order-Token": order.share_token},
+            )
+        assert response.status_code == 404
+    finally:
+        app.dependency_overrides.pop(get_db, None)
+
+
+@pytest.mark.asyncio
+async def test_order_status_rejects_legacy_query_token():
+    """Legacy `?token=` must no longer work — owner path is header-only."""
+    order = FakeOrder()
+    session = FakeSession(order=order)
+    app.dependency_overrides[get_db] = _override_db(session)
+    try:
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            response = await client.get(
+                f"/api/orders/{order.id}/status?token={order.access_token}"
+            )
         assert response.status_code == 404
     finally:
         app.dependency_overrides.pop(get_db, None)
