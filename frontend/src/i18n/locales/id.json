@@ -226,6 +226,13 @@
     "upload_text_too_long": "Teks terlalu panjang（maks. 80.000 karakter）.",
     "upload_banned": "Anda telah mencapai batas unggah hari ini. Coba lagi setelah 24 jam atau tempel teks kontrak untuk melanjutkan. Hubungi support@contractguard.jp jika ada pertanyaan.",
     "upload_rate_limited": "Terlalu banyak permintaan unggah dalam waktu singkat. Tunggu sebentar dan coba lagi."
+    ,
+    "google_vision_not_configured": "OCR gambar / PDF belum dikonfigurasi dengan benar saat ini. Untuk sementara gunakan teks kontrak yang ditempel atau hubungi dukungan.",
+    "google_vision_billing_disabled": "OCR gambar / PDF sementara tidak tersedia karena penagihan Google Cloud belum diaktifkan.",
+    "google_vision_api_disabled": "OCR gambar / PDF sementara tidak tersedia karena Google Vision API belum diaktifkan.",
+    "google_vision_permission_denied": "OCR gambar / PDF sementara tidak tersedia karena akun layanan Google Vision tidak memiliki izin yang cukup.",
+    "google_vision_auth_failed": "Autentikasi Google Vision gagal. Silakan coba lagi nanti.",
+    "google_vision_unavailable": "OCR gambar / PDF sementara tidak tersedia. Silakan coba lagi nanti atau tempel teks kontrak."
   },
   "footer": {
     "disclaimer": "Layanan ini bukan konsultasi hukum. Silakan berkonsultasi dengan pengacara untuk keputusan hukum tertentu.",

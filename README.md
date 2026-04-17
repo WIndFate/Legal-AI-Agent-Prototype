@@ -115,10 +115,20 @@ Setup:
 ```bash
 cp .env.example .env
 # fill OPENAI_API_KEY in .env
+# fill GOOGLE_APPLICATION_CREDENTIALS_JSON with base64(service-account.json)
+# fill GOOGLE_VISION_PROJECT_ID / DAILY_COST_BUDGET_JPY / GOOGLE_VISION_COST_PER_PAGE_JPY
 # keep APP_ENV=development for local Docker runs
 
 docker compose up --build
 ```
+
+Google Vision rollout checks:
+
+- Enable billing on the target GCP project.
+- Enable the `vision.googleapis.com` API.
+- Provision a service account that can call Vision OCR.
+- Rotate any leaked service-account key immediately; do not keep using a key that was pasted into chat or logs.
+- If OCR setup is broken, `/api/upload` now returns explicit 503 business error codes such as `google_vision_not_configured`, `google_vision_billing_disabled`, `google_vision_api_disabled`, `google_vision_permission_denied`, `google_vision_auth_failed`, or `google_vision_unavailable`.
 
 Docker note:
 

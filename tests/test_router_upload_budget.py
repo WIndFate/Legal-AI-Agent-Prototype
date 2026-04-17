@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 from fastapi import FastAPI
+from fastapi import HTTPException
 from httpx import ASGITransport, AsyncClient
 
 from backend.routers.upload import router
@@ -73,3 +74,31 @@ async def test_upload_succeeds_when_budget_allows_image_ocr():
 
     assert resp.status_code == 200
     assert resp.json()["price_jpy"] > 0
+
+
+@pytest.mark.asyncio
+async def test_upload_returns_google_vision_business_error_when_ocr_not_configured():
+    fake_image_bytes = b"\x89PNG\r\n\x1a\n" + b"\x00" * 100
+
+    with (
+        patch(
+            "backend.routers.upload.check_budget_allowed",
+            new_callable=AsyncMock,
+            return_value=True,
+        ),
+        patch(
+            "backend.routers.upload.extract_text_from_image_with_snapshot",
+            new_callable=AsyncMock,
+            side_effect=HTTPException(status_code=503, detail="google_vision_not_configured"),
+        ),
+    ):
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            resp = await client.post(
+                "/api/upload",
+                data={"input_type": "image"},
+                files={"file": ("contract.png", io.BytesIO(fake_image_bytes), "image/png")},
+            )
+
+    assert resp.status_code == 503
+    assert resp.json()["detail"] == "google_vision_not_configured"

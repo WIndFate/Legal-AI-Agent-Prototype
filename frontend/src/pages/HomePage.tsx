@@ -77,6 +77,13 @@ export default function HomePage() {
           code === 'upload_text_too_long' ? 'errors.upload_text_too_long' :
           code === 'upload_banned' ? 'errors.upload_banned' :
           code === 'upload_rate_limited' ? 'errors.upload_rate_limited' :
+          code === 'google_vision_not_configured' ? 'errors.google_vision_not_configured' :
+          code === 'google_vision_billing_disabled' ? 'errors.google_vision_billing_disabled' :
+          code === 'google_vision_api_disabled' ? 'errors.google_vision_api_disabled' :
+          code === 'google_vision_permission_denied' ? 'errors.google_vision_permission_denied' :
+          code === 'google_vision_auth_failed' ? 'errors.google_vision_auth_failed' :
+          code === 'google_vision_unavailable' ? 'errors.google_vision_unavailable' :
+          code === 'daily_budget_exhausted' ? 'errors.daily_budget_exhausted' :
           'errors.upload_failed';
         // Pick the correct max size based on the actual file type being uploaded
         const isPdf = file

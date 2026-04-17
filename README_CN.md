@@ -109,10 +109,20 @@ RAG：
 ```bash
 cp .env.example .env
 # 在 .env 中填写 OPENAI_API_KEY
+# 把 service-account.json 做 base64 后写入 GOOGLE_APPLICATION_CREDENTIALS_JSON
+# 配置 GOOGLE_VISION_PROJECT_ID / DAILY_COST_BUDGET_JPY / GOOGLE_VISION_COST_PER_PAGE_JPY
 # 本地 Docker 保持 APP_ENV=development
 
 docker compose up --build
 ```
+
+Google Vision 上线检查：
+
+- 目标 GCP 项目必须已启用 Billing。
+- 必须启用 `vision.googleapis.com`。
+- 必须为调用 Vision OCR 的 service account 配好权限。
+- 任何发到聊天、日志或其他不受控位置的 service-account key 都要立刻轮换，不要继续使用。
+- 如果 OCR 配置异常，`/api/upload` 现在会明确返回 503 业务错误码：`google_vision_not_configured`、`google_vision_billing_disabled`、`google_vision_api_disabled`、`google_vision_permission_denied`、`google_vision_auth_failed`、`google_vision_unavailable`。
 
 Docker 说明：
 

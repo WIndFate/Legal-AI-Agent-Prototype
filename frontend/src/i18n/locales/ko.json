@@ -226,6 +226,13 @@
     "upload_text_too_long": "텍스트가 너무 깁니다（최대 80,000자）.",
     "upload_banned": "오늘의 업로드 한도에 도달했습니다. 24시간 후에 다시 시도하거나 텍스트를 붙여넣어 이용해 주세요. 문의 사항은 support@contractguard.jp로 연락해 주세요.",
     "upload_rate_limited": "짧은 시간에 업로드 요청이 너무 많습니다. 잠시 후 다시 시도해 주세요."
+    ,
+    "google_vision_not_configured": "이미지 / PDF OCR 설정이 아직 완료되지 않았습니다. 당분간 계약 텍스트를 붙여넣어 이용하거나 지원팀에 문의해 주세요.",
+    "google_vision_billing_disabled": "Google Cloud 결제가 활성화되지 않아 이미지 / PDF OCR을 일시적으로 사용할 수 없습니다.",
+    "google_vision_api_disabled": "Google Vision API가 활성화되지 않아 이미지 / PDF OCR을 일시적으로 사용할 수 없습니다.",
+    "google_vision_permission_denied": "Google Vision 서비스 계정 권한이 부족하여 이미지 / PDF OCR을 일시적으로 사용할 수 없습니다.",
+    "google_vision_auth_failed": "Google Vision 인증에 실패했습니다. 잠시 후 다시 시도해 주세요.",
+    "google_vision_unavailable": "이미지 / PDF OCR을 일시적으로 사용할 수 없습니다. 잠시 후 다시 시도하거나 계약 텍스트를 붙여넣어 주세요."
   },
   "footer": {
     "disclaimer": "본 서비스는 법률 상담이 아닙니다. 구체적인 법적 판단은 변호사에게 상담해 주세요.",

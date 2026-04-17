@@ -109,10 +109,20 @@ RAG:
 ```bash
 cp .env.example .env
 # .env に OPENAI_API_KEY を設定
+# service-account.json を base64 化して GOOGLE_APPLICATION_CREDENTIALS_JSON に設定
+# GOOGLE_VISION_PROJECT_ID / DAILY_COST_BUDGET_JPY / GOOGLE_VISION_COST_PER_PAGE_JPY も設定
 # ローカル Docker 実行では APP_ENV=development のままにする
 
 docker compose up --build
 ```
+
+Google Vision のリリース前チェック:
+
+- 対象 GCP プロジェクトで Billing を有効化すること。
+- `vision.googleapis.com` を有効化すること。
+- Vision OCR を呼ぶ service account に必要権限を付与すること。
+- chat やログなど管理外へ出た service-account key は漏えい扱いにして即ローテーションすること。
+- OCR 設定が壊れている場合、`/api/upload` は `google_vision_not_configured`、`google_vision_billing_disabled`、`google_vision_api_disabled`、`google_vision_permission_denied`、`google_vision_auth_failed`、`google_vision_unavailable` などの明示的な 503 business error code を返します。
 
 Docker メモ:
 

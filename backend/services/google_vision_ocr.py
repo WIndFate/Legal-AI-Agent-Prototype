@@ -3,7 +3,11 @@ from __future__ import annotations
 import asyncio
 import io
 import logging
+import os
 
+from fastapi import HTTPException
+from google.api_core import exceptions as google_exceptions
+from google.auth.exceptions import DefaultCredentialsError
 from google.cloud import vision
 from pdf2image import convert_from_bytes
 
@@ -11,6 +15,40 @@ from backend.config import get_settings
 from backend.services.costing import USD_TO_JPY_RATE
 
 logger = logging.getLogger(__name__)
+
+
+def _ensure_google_vision_configured() -> None:
+    settings = get_settings()
+    if settings.GOOGLE_APPLICATION_CREDENTIALS_JSON.strip():
+        return
+    if os.getenv("GOOGLE_APPLICATION_CREDENTIALS", "").strip():
+        return
+    raise HTTPException(status_code=503, detail="google_vision_not_configured")
+
+
+def _classify_google_vision_error(message: str) -> str:
+    normalized = (message or "").lower()
+    if "billing" in normalized and "enable" in normalized:
+        return "google_vision_billing_disabled"
+    if "service has not been used" in normalized or "api has not been used" in normalized:
+        return "google_vision_api_disabled"
+    if "permission denied" in normalized or "does not have permission" in normalized:
+        return "google_vision_permission_denied"
+    if "unauthenticated" in normalized or "authentication" in normalized:
+        return "google_vision_auth_failed"
+    if "credentials" in normalized and (
+        "determine" in normalized or "not found" in normalized or "invalid" in normalized
+    ):
+        return "google_vision_not_configured"
+    return "google_vision_unavailable"
+
+
+def _raise_google_vision_http_error(message: str, *, cause: Exception | None = None) -> None:
+    error_code = _classify_google_vision_error(message)
+    logger.warning("Google Vision OCR failed with %s: %s", error_code, message)
+    if cause is not None:
+        raise HTTPException(status_code=503, detail=error_code) from cause
+    raise HTTPException(status_code=503, detail=error_code)
 
 
 def _build_vision_snapshot(*, pages: int, text: str, mime_type: str) -> dict:
@@ -30,11 +68,24 @@ def _build_vision_snapshot(*, pages: int, text: str, mime_type: str) -> dict:
 
 
 def _extract_text_from_image_sync(image_bytes: bytes) -> str:
-    client = vision.ImageAnnotatorClient()
+    _ensure_google_vision_configured()
+    try:
+        client = vision.ImageAnnotatorClient()
+    except DefaultCredentialsError as exc:
+        _raise_google_vision_http_error(str(exc), cause=exc)
+
     image = vision.Image(content=image_bytes)
-    response = client.document_text_detection(image=image)
+    try:
+        response = client.document_text_detection(image=image)
+    except (
+        google_exceptions.PermissionDenied,
+        google_exceptions.Unauthenticated,
+        google_exceptions.GoogleAPICallError,
+    ) as exc:
+        _raise_google_vision_http_error(str(exc), cause=exc)
+
     if response.error.message:
-        raise RuntimeError(f"Google Vision OCR failed: {response.error.message}")
+        _raise_google_vision_http_error(response.error.message)
     return (response.full_text_annotation.text or "").strip()
 
 

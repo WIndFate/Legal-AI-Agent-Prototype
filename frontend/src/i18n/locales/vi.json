@@ -226,6 +226,13 @@
     "upload_text_too_long": "Văn bản quá dài（tối đa 80.000 ký tự）.",
     "upload_banned": "Bạn đã đạt giới hạn tải lên trong ngày. Vui lòng thử lại sau 24 giờ hoặc dán văn bản hợp đồng để tiếp tục. Liên hệ support@contractguard.jp nếu cần hỗ trợ.",
     "upload_rate_limited": "Có quá nhiều yêu cầu tải lên trong thời gian ngắn. Vui lòng đợi một lát rồi thử lại."
+    ,
+    "google_vision_not_configured": "OCR ảnh / PDF hiện chưa được cấu hình đúng. Tạm thời hãy dán văn bản hợp đồng hoặc liên hệ hỗ trợ.",
+    "google_vision_billing_disabled": "OCR ảnh / PDF tạm thời không khả dụng vì chưa bật thanh toán Google Cloud.",
+    "google_vision_api_disabled": "OCR ảnh / PDF tạm thời không khả dụng vì Google Vision API chưa được bật.",
+    "google_vision_permission_denied": "OCR ảnh / PDF tạm thời không khả dụng vì tài khoản dịch vụ Google Vision không có đủ quyền.",
+    "google_vision_auth_failed": "Xác thực Google Vision thất bại. Vui lòng thử lại sau.",
+    "google_vision_unavailable": "OCR ảnh / PDF tạm thời không khả dụng. Vui lòng thử lại sau hoặc dán văn bản hợp đồng."
   },
   "footer": {
     "disclaimer": "Dịch vụ này không phải là tư vấn pháp lý. Vui lòng tham khảo ý kiến luật sư cho các quyết định pháp lý cụ thể.",
