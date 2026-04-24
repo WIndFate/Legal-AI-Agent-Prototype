@@ -2,16 +2,13 @@
 
 This file is mirrored in `AGENTS.md` for tool compatibility. **Keep the two files in sync on every edit.**
 
-This document contains **behavior rules for AI agents** working in this repo. Implementation status, file trees, and feature catalogs live in the files below — do not duplicate them here.
+This document contains **behavior rules for AI agents** working in this repo. Keep implementation details in the README files and source code; do not duplicate long status snapshots here.
 
 ---
 
-## 必读文档（开始任何任务前）
+## 开始任务前
 
-1. **`DESIGN.md`** — 产品设计（目标用户、定价、路线图）。回答 **WHAT / WHY**。产品决策以此为准。
-2. **`SPEC.md`** — 技术规格与**当前实现状态快照**。回答 **HOW**。技术决策与进度以此为准。
-
-本文件 (`CLAUDE.md`) 只写规则，不复述 SPEC.md 的实现进度。
+先读 `README.md` 和与任务直接相关的源码 / 测试。`CLAUDE.md` / `AGENTS.md` 只写行为规则，不保存产品路线图、进度快照或审计清单。
 
 ---
 
@@ -58,12 +55,11 @@ scripts/run_backend_pytests.sh   # 后端 pytest
 
 ## 文档同步纪律
 
-功能**里程碑**（完整模块完成）时，同步更新 `CLAUDE.md` + `AGENTS.md` + `SPEC.md` + `README.md` + `README_CN.md` + `README_JA.md`。日常微小提交**不需要**每次都更新全部 6 个文档。
+功能**里程碑**（完整模块完成）时，同步更新 `README.md` + `README_CN.md` + `README_JA.md`，必要时同步 `CLAUDE.md` + `AGENTS.md`。日常微小提交**不需要**每次都更新全部文档。
 
 分工底线：
-- 实现进度 / 功能清单 → **SPEC.md**
-- 产品决策 → **DESIGN.md**
 - AI 行为规则 → **CLAUDE.md + AGENTS.md**（镜像）
+- 开源项目说明 / 运行方式 / 架构摘要 → **README.md + README_CN.md + README_JA.md**
 
 ---
 
@@ -86,7 +82,7 @@ scripts/run_backend_pytests.sh   # 后端 pytest
 
 ---
 
-## 产品硬约束（来自 DESIGN.md，不可改）
+## 产品硬约束（不可改）
 
 - **无用户注册 / 登录** — 支付邮箱即身份。
 - **无历史页** — 报告链接通过邮件发送。

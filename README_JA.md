@@ -244,5 +244,3 @@ docker compose up -d backend postgres redis
 - [`frontend/src/components/common/OrderReminderDialog.tsx`](./frontend/src/components/common/OrderReminderDialog.tsx): 注文番号保存を促すダイアログ
 - [`frontend/src/components/common/ShareSheet.tsx`](./frontend/src/components/common/ShareSheet.tsx): 専用共有パネル（紹介リンク生成、強いヘッダー階層、大きめプレビューカード、保存 / コピー / 共有導線）
 - [`tests/`](./tests/): 全 7 API ルーターの統合テスト + ユニットテスト
-- [`SPEC.md`](./SPEC.md): 詳細な進捗、未完了項目、リスク
-- [`DESIGN.md`](./DESIGN.md): プロダクト設計とビジネス方針

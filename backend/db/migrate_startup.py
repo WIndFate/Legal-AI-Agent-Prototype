@@ -169,7 +169,7 @@ async def enforce_rls_on_public_tables(conn: asyncpg.Connection) -> None:
 
     Idempotent — safe to run on every boot. Skips alembic_version since it is
     migration metadata, not user data, and alembic needs unrestricted access
-    to it. Background: docs/PRE_LAUNCH_AUDIT.md appendix D, INC-2026-04-13.
+    to it. Background: production hardening incident INC-2026-04-13.
     """
     await conn.execute(
         """
@@ -234,4 +234,3 @@ async def run_startup_migrations() -> None:
             await release_migration_lock(conn, settings.MIGRATION_LOCK_ID)
         finally:
             await conn.close()
-

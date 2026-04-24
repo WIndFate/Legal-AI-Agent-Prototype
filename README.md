@@ -250,5 +250,3 @@ docker compose up -d backend postgres redis
 - [`frontend/src/components/common/OrderReminderDialog.tsx`](./frontend/src/components/common/OrderReminderDialog.tsx): modal prompting users to save order details
 - [`frontend/src/components/common/ShareSheet.tsx`](./frontend/src/components/common/ShareSheet.tsx): custom share panel with referral-aware sharing, a stronger header + preview hierarchy, and a tighter tiered save/copy/share action stack
 - [`tests/`](./tests/): integration tests for all 7 API routers + unit tests
-- [`SPEC.md`](./SPEC.md): detailed implementation status, pending work, and risks
-- [`DESIGN.md`](./DESIGN.md): product rationale and go-to-market plan

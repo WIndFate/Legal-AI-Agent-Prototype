@@ -245,5 +245,3 @@ docker compose up -d backend postgres redis
 - [`frontend/src/components/common/OrderReminderDialog.tsx`](./frontend/src/components/common/OrderReminderDialog.tsx)：订单号保存提醒弹层
 - [`frontend/src/components/common/ShareSheet.tsx`](./frontend/src/components/common/ShareSheet.tsx)：自定义分享面板（推荐链接、更强标题层级、大预览卡、保存/复制/系统分享动作）
 - [`tests/`](./tests/)：全部 7 个 API 路由的集成测试 + 单元测试
-- [`SPEC.md`](./SPEC.md)：详细进度、待办和风险
-- [`DESIGN.md`](./DESIGN.md)：产品设计和商业定位
