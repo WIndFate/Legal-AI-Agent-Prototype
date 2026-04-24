@@ -14,7 +14,7 @@ This document contains **behavior rules for AI agents** working in this repo. Ke
 
 ## 项目一句话
 
-面向在日外国人的按次付费合同风险分析 SaaS。技术栈：LangGraph + pgvector + FastAPI + React/Vite + Redis + KOMOJU。定价 `¥75 / 1000 tokens`，最低 `¥200`。合同分析后立即删除，报告 Redis 缓存 72h。
+面向日文合同风险分析场景的开源 AI 工程案例。技术栈：LangGraph + pgvector + FastAPI + React/Vite + Redis + KOMOJU reference implementation。合同分析后立即删除，报告 Redis 缓存 72h。
 
 ---
 
@@ -82,13 +82,14 @@ scripts/run_backend_pytests.sh   # 后端 pytest
 
 ---
 
-## 产品硬约束（不可改）
+## 工程与合规硬约束（不可改）
 
-- **无用户注册 / 登录** — 支付邮箱即身份。
-- **无历史页** — 报告链接通过邮件发送。
-- **移动端 Web 优先**，V1 无原生 App。
+- **Reference implementation 定位** — UI 和 README 必须明确说明这不是 live service，不得写成正在运营或招募用户的产品。
+- **无用户注册 / 登录** — reference workflow 只保留邮箱 / 订单号路径。
+- **无历史页** — 报告链接 / 订单号恢复只作为本地参考流程。
+- **移动端 Web 优先**，无原生 App。
 - **9 语言 UI**：`ja`(默认/fallback) / `en` / `zh-CN` / `zh-TW` / `pt-BR` / `id` / `ko` / `vi` / `ne`。报告按付款时锁定的语言生成。
-- **只按次付费**，不做订阅。
+- **KOMOJU / Resend / pricing policy 均为参考实现** — 文档和 UI 不得暗示当前可购买、可付费试用或仍在商业运营。
 - **合同永不持久化** — 分析后立即删除；报告缓存 72h 自动清理。允许在 72h 报告内保留 clause 级原文片段用于对照。
 - **每页必须带法律免责**：「本サービスは法律相談ではありません。具体的な法的判断は弁護士にご相談ください」。
 - **禁止断言性法律表述**：不得使用「违法」「无效」等词；只能用「可能存在风险」「建议确认」「建议咨询专业人士」。
@@ -98,8 +99,8 @@ scripts/run_backend_pytests.sh   # 后端 pytest
 ## 环境与安全
 
 - `APP_ENV ∈ {development, production}`，默认 `development`。
-- 生产启动必须校验：KOMOJU / Resend / Google Vision 凭据齐全、`FRONTEND_URL` 非 localhost、CORS 仅允许 `FRONTEND_URL`。
-- 生产下 RAG 加载失败 = 启动失败（硬错误）。
+- production-like 启动必须校验：KOMOJU / Resend / Google Vision 凭据齐全、`FRONTEND_URL` 非 localhost、CORS 仅允许 `FRONTEND_URL`。
+- production-like 环境下 RAG 加载失败 = 启动失败（硬错误）。
 - Dev payment bypass 仅在 `development` 且 KOMOJU 未配置时允许。
 
 ---

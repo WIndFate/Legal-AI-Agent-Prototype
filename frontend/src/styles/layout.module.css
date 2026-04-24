@@ -167,6 +167,17 @@
   font-size: 0.78rem;
 }
 
+.referenceBanner {
+  padding: 8px 16px;
+  text-align: center;
+  color: #664d03;
+  background: #fff3cd;
+  border-bottom: 1px solid rgba(102, 77, 3, 0.18);
+  font-family: "Avenir Next", "Helvetica Neue", "Noto Sans JP", sans-serif;
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
 .mobileMenuBackdrop {
   display: none;
 }
@@ -340,6 +351,12 @@
     text-align: left;
   }
 
+  .referenceBanner {
+    padding: 8px 12px;
+    font-size: 0.7rem;
+    text-align: center;
+  }
+
   .mobileMenuBackdrop {
     display: block;
     position: fixed;
@@ -381,6 +398,7 @@
 @media print {
   .header,
   .footer,
+  .referenceBanner,
   .disclaimerBanner,
   .mobileMenuPanel,
   .mobileMenuBackdrop,

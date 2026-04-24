@@ -134,6 +134,10 @@ export default function Layout({ children }: LayoutProps) {
         </div>
       </header>
 
+      <div className={styles.referenceBanner}>
+        ⚠ Reference implementation — not a live service. 本アプリは技術リファレンスです。商用運用は停止しています。 本应用为技术参考实装，非商业服务。
+      </div>
+
       {mobileMenuOpen && (
         <>
           <button

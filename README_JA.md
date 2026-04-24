@@ -1,5 +1,9 @@
 # ContractGuard
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](./LICENSE)
+![Python 3.11+](https://img.shields.io/badge/Python-3.11%2B-blue.svg)
+![LangGraph](https://img.shields.io/badge/LangGraph-agentic%20workflow-purple.svg)
+
 日本語契約リスク分析を題材にした production-grade AI engineering case study です。LangGraph agent、RAG grounding、OCR ingestion、復元可能な SSE フロー、LLMOps のコスト管理を含む実装を、オープンソースの reference implementation として保存しています。
 
 > This is a technical engineering case study, not a legal service. 本プロジェクトは技術デモであり、法律事務の取扱い・法律相談には使用できません。 本项目是技术工程案例，不是法律服务，也不能用于法律咨询。
@@ -44,11 +48,11 @@ flowchart LR
 
 ## Demo
 
-合成した日本語の業務委託契約から生成した静的スクリーンショットを同梱しています。
+合成した日本語契約から生成したスクリーンショットを同梱しています。
 
-![ContractGuard demo screenshot](./docs/demo-screenshot.png)
-
-面接で使う前に、ローカル Docker フローを実行し、自分の合成契約で review progress page と final report page を撮り直すことを推奨します。
+![ContractGuard home page](./docs/demo-home.png)
+![ContractGuard review progress](./docs/demo-review-progress.png)
+![ContractGuard report page](./docs/demo-report.png)
 
 ## Design Decisions
 

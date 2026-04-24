@@ -1,5 +1,9 @@
 # ContractGuard
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](./LICENSE)
+![Python 3.11+](https://img.shields.io/badge/Python-3.11%2B-blue.svg)
+![LangGraph](https://img.shields.io/badge/LangGraph-agentic%20workflow-purple.svg)
+
 面向日文合同风险分析场景的 production-grade AI 工程案例。这个仓库以开源 reference implementation 的形式保留了 LangGraph Agent、RAG grounding、OCR ingestion、可恢复 SSE 流程以及 LLMOps 成本控制等完整工程实践。
 
 > This is a technical engineering case study, not a legal service. 本プロジェクトは技術デモであり、法律事務の取扱い・法律相談には使用できません。 本项目是技术工程案例，不是法律服务，也不能用于法律咨询。
@@ -44,11 +48,11 @@ flowchart LR
 
 ## Demo
 
-仓库包含一张基于合成业务委托合同生成的静态截图：
+仓库包含三张基于合成日文合同生成的运行截图：
 
-![ContractGuard demo screenshot](./docs/demo-screenshot.png)
-
-用于面试展示前，建议用本地 Docker 流程和自己的合成合同重新截取 review 进度页与最终 report 页。
+![ContractGuard 首页](./docs/demo-home.png)
+![ContractGuard 分析进度页](./docs/demo-review-progress.png)
+![ContractGuard 报告页](./docs/demo-report.png)
 
 ## Design Decisions
 
