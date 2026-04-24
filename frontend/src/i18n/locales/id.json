@@ -225,8 +225,7 @@
     "upload_corrupt_pdf": "Tidak dapat membaca file PDF. Pastikan file tidak rusak.",
     "upload_text_too_long": "Teks terlalu panjang（maks. 80.000 karakter）.",
     "upload_banned": "Anda telah mencapai batas unggah hari ini. Coba lagi setelah 24 jam atau tempel teks kontrak untuk melanjutkan. Hubungi support@contractguard.jp jika ada pertanyaan.",
-    "upload_rate_limited": "Terlalu banyak permintaan unggah dalam waktu singkat. Tunggu sebentar dan coba lagi."
-    ,
+    "upload_rate_limited": "Terlalu banyak permintaan unggah dalam waktu singkat. Tunggu sebentar dan coba lagi.",
     "google_vision_not_configured": "OCR gambar / PDF belum dikonfigurasi dengan benar saat ini. Untuk sementara gunakan teks kontrak yang ditempel atau hubungi dukungan.",
     "google_vision_billing_disabled": "OCR gambar / PDF sementara tidak tersedia karena penagihan Google Cloud belum diaktifkan.",
     "google_vision_api_disabled": "OCR gambar / PDF sementara tidak tersedia karena Google Vision API belum diaktifkan.",
@@ -238,7 +237,6 @@
     "disclaimer": "Layanan ini bukan konsultasi hukum. Silakan berkonsultasi dengan pengacara untuk keputusan hukum tertentu.",
     "privacy": "Kebijakan Privasi",
     "terms": "Ketentuan Layanan",
-    "commercial": "UU Transaksi Komersial",
     "copyright": "© 2026 ContractGuard"
   },
   "share": {
@@ -339,11 +337,6 @@
     "parttime_c1_suggestion": "Klausul ini ilegal. Minta diubah menjadi: 'Premi lembur minimal 25% dibayarkan untuk semua jam yang melebihi jam kerja resmi.'",
     "parttime_c2_reason": "Mengharuskan karyawan mengganti kerugian penuh biasanya dibatasi oleh pengadilan, yang umumnya hanya memberikan tanggung jawab sebagian. Selain itu, pemotongan dari gaji memerlukan persetujuan tertulis pekerja — jika tidak, melanggar prinsip pembayaran gaji penuh.",
     "parttime_c2_suggestion": "Konfirmasi apakah perusahaan memiliki asuransi tanggung jawab bisnis, dan minta agar 'pemotongan gaji memerlukan persetujuan tertulis karyawan' dinyatakan secara eksplisit."
-  },
-  "commercial": {
-    "page_title": "Informasi Berdasarkan UU Transaksi Komersial",
-    "summary": "Informasi penyedia layanan yang diungkapkan sesuai dengan Undang-Undang Transaksi Komersial Tertentu Jepang.",
-    "last_updated": "Terakhir diperbarui: {{date}}"
   },
   "not_found": {
     "title": "Halaman tidak ditemukan",

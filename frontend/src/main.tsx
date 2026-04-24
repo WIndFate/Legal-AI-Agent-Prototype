@@ -21,7 +21,6 @@ const ReviewPage = lazy(() => import('./pages/ReviewPage'));
 const ReportPage = lazy(() => import('./pages/ReportPage'));
 const PrivacyPage = lazy(() => import('./pages/PrivacyPage'));
 const TermsPage = lazy(() => import('./pages/TermsPage'));
-const CommercialPage = lazy(() => import('./pages/CommercialPage'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
 
 function RouteFallback() {
@@ -117,7 +116,6 @@ function AppRoutes() {
             <Route path="/report/:orderId" element={<ReportPage />} />
             <Route path="/privacy" element={<PrivacyPage />} />
             <Route path="/terms" element={<TermsPage />} />
-            <Route path="/commercial" element={<CommercialPage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </Suspense>

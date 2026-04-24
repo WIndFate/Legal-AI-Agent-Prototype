@@ -225,8 +225,7 @@
     "upload_corrupt_pdf": "Không thể đọc tệp PDF. Vui lòng kiểm tra xem tệp có bị hỏng không.",
     "upload_text_too_long": "Văn bản quá dài（tối đa 80.000 ký tự）.",
     "upload_banned": "Bạn đã đạt giới hạn tải lên trong ngày. Vui lòng thử lại sau 24 giờ hoặc dán văn bản hợp đồng để tiếp tục. Liên hệ support@contractguard.jp nếu cần hỗ trợ.",
-    "upload_rate_limited": "Có quá nhiều yêu cầu tải lên trong thời gian ngắn. Vui lòng đợi một lát rồi thử lại."
-    ,
+    "upload_rate_limited": "Có quá nhiều yêu cầu tải lên trong thời gian ngắn. Vui lòng đợi một lát rồi thử lại.",
     "google_vision_not_configured": "OCR ảnh / PDF hiện chưa được cấu hình đúng. Tạm thời hãy dán văn bản hợp đồng hoặc liên hệ hỗ trợ.",
     "google_vision_billing_disabled": "OCR ảnh / PDF tạm thời không khả dụng vì chưa bật thanh toán Google Cloud.",
     "google_vision_api_disabled": "OCR ảnh / PDF tạm thời không khả dụng vì Google Vision API chưa được bật.",
@@ -238,7 +237,6 @@
     "disclaimer": "Dịch vụ này không phải là tư vấn pháp lý. Vui lòng tham khảo ý kiến luật sư cho các quyết định pháp lý cụ thể.",
     "privacy": "Chính sách bảo mật",
     "terms": "Điều khoản dịch vụ",
-    "commercial": "Luật giao dịch thương mại",
     "copyright": "© 2026 ContractGuard"
   },
   "share": {
@@ -339,11 +337,6 @@
     "parttime_c1_suggestion": "Điều khoản này bất hợp pháp. Yêu cầu sửa thành: 'Phụ cấp làm thêm ít nhất 25% sẽ được trả cho tất cả giờ vượt quá giờ làm việc luật định.'",
     "parttime_c2_reason": "Yêu cầu nhân viên bồi thường toàn bộ thiệt hại thường bị tòa án hạn chế, thường chỉ phán quyết trách nhiệm một phần. Ngoài ra, khấu trừ từ lương đòi hỏi sự đồng ý bằng văn bản của người lao động — nếu không sẽ vi phạm nguyên tắc thanh toán lương đầy đủ.",
     "parttime_c2_suggestion": "Xác nhận xem công ty có bảo hiểm trách nhiệm kinh doanh không, và yêu cầu ghi rõ 'khấu trừ lương cần có sự đồng ý bằng văn bản của nhân viên'."
-  },
-  "commercial": {
-    "page_title": "Thông tin theo Luật giao dịch thương mại",
-    "summary": "Thông tin nhà cung cấp dịch vụ được công bố theo Luật giao dịch thương mại đặc biệt của Nhật Bản.",
-    "last_updated": "Cập nhật lần cuối: {{date}}"
   },
   "not_found": {
     "title": "Không tìm thấy trang",
