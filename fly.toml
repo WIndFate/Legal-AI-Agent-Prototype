@@ -1,3 +1,5 @@
+# Service decommissioned; retained as deployment reference for the open-source case study.
+
 app = "contractguard-prod"
 primary_region = "nrt"  # Tokyo — closest to Japan users
 

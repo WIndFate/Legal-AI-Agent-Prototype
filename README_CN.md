@@ -1,100 +1,71 @@
 # ContractGuard
 
-面向在日外国人的日文合同风险分析服务。用户可以上传文本、图片或 PDF 合同，按次付费，通过可恢复的事件流查看分析进度，并在 72 小时内取回报告。
+面向日文合同风险分析场景的 production-grade AI 工程案例。这个仓库以开源 reference implementation 的形式保留了 LangGraph Agent、RAG grounding、OCR ingestion、可恢复 SSE 流程以及 LLMOps 成本控制等完整工程实践。
 
-[English](./README.md) | [日本語ドキュメント](./README_JA.md)
+> This is a technical engineering case study, not a legal service. 本プロジェクトは技術デモであり、法律事務の取扱い・法律相談には使用できません。 本项目是技术工程案例，不是法律服务，也不能用于法律咨询。
+
+[English](./README.md) | [日本語ドキュメント](./README_JA.md) | [License](./LICENSE)
 
 ## 当前状态
 
-截至 2026-04-17，本地 Docker MVP 流程已经跑通，生产环境也已完成一部分配置：
+Reached launch-ready state after solo development; declined commercial launch after assessing 弁護士法 Art. 72 compliance implications; cloud infrastructure intentionally decommissioned; codebase preserved as open-source engineering reference. Full local Docker flow remains functional with only an OpenAI API key. 如需测试图片 / 扫描 PDF OCR，可额外配置 Google Cloud Vision。
 
-- `upload -> payment/create -> analysis/start -> orders/{id}/status + events/stream -> report -> 合同文本删除`
-- 文本和可提取文本 PDF 会在付款前直接按文本估价；图片 / 扫描 PDF 现在也会在 `/api/upload` 阶段直接运行 Google Cloud Vision OCR，因此所有成功识别的上传都会统一走 exact 报价
-- OCR 现已切到 Google Cloud Vision `DOCUMENT_TEXT_DETECTION`，并增加 Redis 驱动的每日 OCR 预算熔断，防止匿名图片/PDF 上传把预付费成本刷穿
-- 文本和可提取文本 PDF 的报价现在还会返回轻量级条款结构预览，让用户在付款前先确认系统确实读懂了合同结构
-- exact 报价现在还会生成 `quote_token`，并按标准化后的合同内容哈希缓存条款预览；同一份合同重复上传时会直接复用上次的预览和付款前成本快照
-- 所有 exact 报价现在都会返回 `is_contract`；只要提取到了非空文本，就会先做合同判定，而 clause preview 仅在文本足够长、能够推断结构时才返回。如果上传内容被判断为非合同，首页会直接阻断支付区，`/api/payment/create` 也会在服务端拒绝这类支付请求，避免先付款后才发现不是合同。
-- 上传请求和条款预览生成现在都带有 Redis 的按 IP 速率限制，避免匿名脚本反复刷 clause preview 成本
-- `pgvector` RAG 已运行在 PostgreSQL 中，覆盖 10 个法律类别共 331+ 条法律条文（租赁、劳动、兼职、业务委托、买卖等）
-- 前端 9 语言界面已实现，包含品牌标识（ContractGuard）、隐私政策/服务条款页面、独立案例画廊与报告样张展示
-- 现已新增 `/commercial` 页面，用于公示日本《特定商取引法》要求的经营者信息，并从站点页脚 / 首页法律导航直接可达，满足支付渠道审核前置要求
-- 独立 `/examples` 案例页已升级为横向策展式章节切换，报告样张的版式也进一步贴近真实报告页
-- 首页信任区现已明确展示支持的合同类型，支付区补充了可点击的隐私说明入口；隐私页也增加了“上传→分析→删除”的数据流程和适用/不适用场景说明
-- 案例区现已提供“查看完整示例报告”入口，示例报告本身也更接近真实保存报告，而不只是简短预览
-- 移动端 UI 现已采用更紧凑的顶部结构：左侧更多菜单、居中 Logo、徽章式语言切换、直接显示的 reveal 内容，以及点击案例后自动把新报告滚动到可视区；同时补齐了安全边距、防横向溢出和输入框不再触发 iOS 自动放大
-- 首页上传入口现已简化为“上传文件 / 粘贴文本”两种模式，图片与 PDF 统一通过一个文件选择器接入，并明确提示支持格式
-- 首页“开始分析”按钮在生成报价时现在会显示真实加载动效；支付区也会在付款前明确确认“最终报告会按当前语言生成”，避免用户误以为付款后还能切换报告正文语言
-- 审查页现在只承担“处理中”体验；分析结束后会直接跳转到已保存的 `/report/{orderId}` 报告页，不再重复显示一套结果页
-- 分析页现已重构为更清晰的三区结构：顶部阶段头、中部三段进度条、底部用户可理解的活动流和已用时，不再保留旧的重复面板 / badge / spinner 叠加
-- 分析页现在还会显示条款量化进度，把失败信息保留在同一张进度卡片内，进度条标签更短，并在移动端与 reduced-motion 场景下进一步收紧动效与活动列表
-- 分析页活动流现已改为基于原始事件实时本地化，因此用户在分析过程中切换站点语言时，活动流会立即跟着刷新
-- 如果 parse 阶段判断上传内容并不是合同，分析现在会立刻终止，并在审查页展示明确提示，而不会继续跑完整风险分析
-- 订单状态快照接口现在会同时返回机器可读的 `error_code` 和面向人的 `error_message`，ReviewPage 不再依赖本地化字符串比较来识别非合同错误态
-- 报告页已支持按高/中/低风险筛选条款，顶部统计在桌面端压缩为更紧凑的单排结构，条款卡留白也进一步收紧
-- 分享面板现已进一步打磨为更完整的成果分享结构：顶部是更清晰的标题层级，中间用更大的预览卡作为主视觉，下方再提供分级的保存卡片、复制链接和系统分享动作；带推荐码的报告链接仍在内部自动生成
-- 前端已加入路由级懒加载和延迟分析初始化，降低首屏 bundle 压力
-- 仅当 `APP_ENV=development` 且 `KOMOJU_SECRET_KEY` 为空时，本地开发可走自动支付
-- 部署配置已就绪：`fly.toml`（Fly 应用名 `contractguard-prod`、NRT 东京区域、强制 HTTPS）+ `vercel.json`（API 代理 + 安全头）
-- 集成测试套件：7 个路由测试文件，覆盖当前运行态的全部 API 端点
-- 分析页现已建立在持久化分析任务之上：后端保存 `analysis_jobs` / `analysis_events`，前端会先恢复历史进度，再订阅新的事件更新
-- `docker compose` 现已补充 postgres、redis、backend 的健康检查，本地启动时 frontend 会等待真正 healthy 的 backend，避免代理抢跑
-- report / payment / lookup 已接入轻量重试封装，用于本地 Docker 冷启动窗口和弱网下的短暂请求失败
-- 首页已拆分为独立子组件（Hero、Flow、Upload），案例展示已迁移到独立 `/examples` 画廊页
-- RAG embedding 批量化，减少 API 调用次数
-- 死代码已清理（移除未使用的 `analyze_risks_streaming`）
-- 数据库已为常用查询路径添加索引（email、payment_status、expires_at、analysis_status）
-- CSS 部分迁移到 CSS Modules：layout、home、examples、legal 组件使用作用域模块 + `clsx`；report/review 因跨页面共享保持全局
-- 生产基础设施已有进展：Supabase 项目已创建并启用 `pgvector`，Upstash Redis 已创建，前端正式域名已切到 `https://contractguard.jp`，后端 API 正式域名已切到 `https://api.contractguard.jp`，且生产链路上的前后端 `/api/health` 现在都已返回 200
-- 生产邮件路由现已拆分：Google Workspace 负责接收 `support@contractguard.jp` 的真人回复，Resend 负责从 `noreply@mail.contractguard.jp` 发送系统邮件，并设置 `Reply-To: support@contractguard.jp`
-- Fly / Vercel / KOMOJU / Resend / Sentry 的大部分生产密钥已经配置完成，包括 KOMOJU test keys、webhook secret、`FRONTEND_URL` 和后端观测配置
-- 支付状态现在采用双层防御来兜底用户中断 KOMOJU 支付页的场景：前端在 5 分钟后退出无限轮询，切到带“复制订单号 / 前往 lookup”出口的“支付未确认”可恢复状态；后端也会把 `payment.failed` / `payment.cancelled` / `payment.expired` webhook 映射为终态支付状态
-- 失败或取消的支付现在还能通过 `POST /api/payment/{order_id}/retry` 在同一个订单上重新拉起 KOMOJU checkout，不会新建重复订单，也不会打断 lookup / review / report 的订单语义
-- 同一个 retry 端点现在还会在支付前检查合同数据是否仍可恢复：如果订单文本已空且 staged upload 文件也已被清理，会直接要求用户重新上传，避免“重新付款后才发现无法分析”
-- `.env` / Fly secrets 还应配置 `EMAIL_FROM_ADDRESS`、`EMAIL_FROM_NAME`、`EMAIL_REPLY_TO`，让报告链接邮件走已验证的 Resend 子域，同时把用户回复导入 Google Workspace 客服邮箱
-- Supabase 全新数据库上的启动迁移问题已在代码中修复：asyncpg + SSL DSN 兼容已补齐，startup migration 也会为新库预创建 / 扩容 `alembic_version.version_num` 到 255
-- 创建 KOMOJU checkout session 时现在不再发送 `payment_types`；结账页直接展示当前 merchant 账号已审核通过的支付方式，而 `backend/data/komoju_payment_methods.json` 仅保留为区域上线参考文档
-
-仓库外仍待完成：
-
-- 第三方真实联调：KOMOJU sandbox/production 支付链路、merchant 账户支付方式开通确认、webhook 回调、Resend 送达、Vercel -> Fly SSE 稳定性
-- 真机拍照和跨设备手动测试
-- 用户反馈收集机制（P2）
-- 分享文案与更强的增长闭环（P2）
-- report/review 页面 CSS 模块化（因跨页面共享保持全局）
+`fly.toml` 和 `vercel.json` 仅作为部署拓扑参考保留。它们展示曾经搭好的生产基础设施形态，但线上服务已主动下线，不代表当前仍在运营或招募用户。
 
 ## 架构
 
-```text
-React/Vite 前端
-  -> FastAPI 后端
-  -> LangGraph 流程：
-     parse_contract
-     -> analyze_risks
-     -> generate_report
-
-RAG：
-  PostgreSQL pgvector + OpenAI embeddings
-
-持久化：
-  PostgreSQL 保存 orders/reports/referrals
-  Redis 缓存 72 小时报告
-
-第三方：
-  GPT-4o / GPT-4o-mini
-  KOMOJU
-  Resend
-  PostHog
-  Sentry
+```mermaid
+flowchart LR
+  U[React/Vite UI<br/>文本、PDF、图片上传] --> API[FastAPI routers]
+  API --> Q[估算 + PII + OCR 预算守卫]
+  Q --> PAY[KOMOJU checkout<br/>参考实现]
+  PAY --> JOB[持久化分析任务]
+  JOB --> SSE[可恢复 SSE<br/>status + events + after_seq]
+  JOB --> LG[LangGraph pipeline]
+  LG --> P[parse_contract]
+  P --> A[逐条 clause 风险分析]
+  A --> T[tool call: analyze_clause_risk]
+  T --> RAG[(PostgreSQL pgvector<br/>331 条日文法令)]
+  A --> S[tool call: generate_suggestion<br/>仅中/高风险触发]
+  S --> REP[报告生成 + 翻译]
+  REP --> CACHE[(Redis 72h report cache)]
+  REP --> DB[(PostgreSQL orders/reports/costs)]
 ```
+
+## Engineering Highlights
+
+- **Multi-step LangGraph Agent**：`backend/agent/graph.py` 将合同解析、逐条风险分析、报告生成拆成明确节点。
+- **Tool-calling pattern**：`backend/agent/tools.py` 把 RAG 检索封装在 `analyze_clause_risk()` 内部，`generate_suggestion()` 只服务中/高风险条款。
+- **RAG grounding**：PostgreSQL `pgvector` 存储 331 条公开 e-Gov 日文法条，用户合同永不进入向量库。
+- **可恢复流式体验**：`analysis_jobs` / `analysis_events` 持久化进度，再通过 `status`、`events`、`stream?after_seq=` 恢复。
+- **LLMOps**：成本追踪、estimate-vs-actual 快照、RAG eval、模型签名日志、PII 检测、OCR 预算守卫。
+- **Enterprise hardening**：RLS、webhook replay protection、rate limiting、UUID guard、fail-closed OCR、启动迁移锁、结构化观测。
+- **9 语言前端**：React/i18next 多语言 UI，报告壳层本地化，引用法条保持日文原文。
+
+## Demo
+
+仓库包含一张基于合成业务委托合同生成的静态截图：
+
+![ContractGuard demo screenshot](./docs/demo-screenshot.png)
+
+用于面试展示前，建议用本地 Docker 流程和自己的合成合同重新截取 review 进度页与最终 report 页。
+
+## Design Decisions
+
+- **合规优先**：项目达到 launch-ready 深度后，因评估弁護士法 Art. 72 相关影响，主动放弃商业上线。这是该项目最重要的产品判断信号。
+- **隐私优先架构**：完整合同正文分析后删除，报告 72 小时过期，向量库只保存公开法令知识。
+- **真实工程闭环**：虽然现在是开源参考项目，代码仍保留 checkout、邮件、成本核算、重试、观测和部署配置等工程接口。
+- **持久化事件流**：审查流程不是一次性 POST SSE，而是可恢复任务 + 事件回放，能承受刷新和短暂断网。
 
 ## 技术栈
 
 - 后端：FastAPI、SQLAlchemy async、Alembic、Redis、APScheduler
-- Agent：LangGraph、按条款逐条分析的审查流水线
+- Agent：LangGraph、OpenAI tool calling、逐条 clause 分析
 - OCR：Google Cloud Vision `DOCUMENT_TEXT_DETECTION`、`pdf2image`、`poppler-utils`
-- RAG：PostgreSQL `pgvector`、`text-embedding-3-small`
+- RAG：PostgreSQL `pgvector`、OpenAI embeddings
 - 前端：React、Vite、TypeScript、React Router、i18next
-- 基础设施：Docker Compose、Fly.io 配置、Vercel 配置
+- 参考集成：KOMOJU checkout、Resend email、PostHog、Sentry
+- 基础设施参考：Docker Compose、Fly.io config、Vercel config
 
 ## 快速开始
 
@@ -102,42 +73,49 @@ RAG：
 
 - Docker Desktop / Docker Engine
 - OpenAI API Key
-- Google Cloud Vision 服务账号 JSON（base64 写入 `GOOGLE_APPLICATION_CREDENTIALS_JSON`，用于图片/扫描 PDF OCR）
 
 启动：
 
 ```bash
 cp .env.example .env
-# 在 .env 中填写 OPENAI_API_KEY
-# 把 service-account.json 做 base64 后写入 GOOGLE_APPLICATION_CREDENTIALS_JSON
-# 配置 GOOGLE_VISION_PROJECT_ID / DAILY_COST_BUDGET_JPY / GOOGLE_VISION_COST_PER_PAGE_JPY
-# 本地 Docker 保持 APP_ENV=development
+# 在 .env 中填写 OPENAI_API_KEY。
+# 本地 Docker 保持 APP_ENV=development。
+# KOMOJU keys 留空即可走本地 checkout bypass。
 
 docker compose up --build
 ```
 
-Google Vision 上线检查：
-
-- 目标 GCP 项目必须已启用 Billing。
-- 必须启用 `vision.googleapis.com`。
-- 必须为调用 Vision OCR 的 service account 配好权限。
-- 任何发到聊天、日志或其他不受控位置的 service-account key 都要立刻轮换，不要继续使用。
-- 如果 OCR 配置异常，`/api/upload` 现在会明确返回 503 业务错误码：`google_vision_not_configured`、`google_vision_billing_disabled`、`google_vision_api_disabled`、`google_vision_permission_denied`、`google_vision_auth_failed`、`google_vision_unavailable`。
-
-Docker 说明：
-
-- 本地进入已启动服务时优先使用 `docker compose exec`，不要默认使用 `docker compose run`。
-- `docker compose run` 容易留下 `*-run-*` 临时容器，导致 `docker compose down` 时 network 无法释放。
-- 图片与扫描 PDF 现在会在 `/api/upload` 阶段直接调用 Google Cloud Vision OCR，因此只要识别成功，付款前就会返回 exact 报价。
-- Compose 现已基于健康检查编排启动顺序：`backend` 等待健康的 `postgres` / `redis`，`frontend` 等待健康的 `backend`。
-
-访问地址：
+本地地址：
 
 - 前端：`http://localhost:5173`
 - 后端：`http://localhost:8000`
 - 健康检查：`http://localhost:8000/api/health`
 
-本地回归脚本：
+可选 OCR 配置：
+
+- `GOOGLE_APPLICATION_CREDENTIALS_JSON` 写入 base64 后的 service-account JSON。
+- 配置 `GOOGLE_VISION_PROJECT_ID`。
+- 在目标 GCP 项目启用 Billing 和 `vision.googleapis.com`。
+
+## 本地参考流程
+
+1. 上传或粘贴一份合成日文合同。
+2. upload route 执行文本提取、PII 检测、token 估算、非合同判定和可选 OCR 预算守卫。
+3. checkout reference path 创建订单；开发环境下 KOMOJU 凭据为空会走本地 bypass。
+4. `/review/:orderId` 启动或恢复持久化分析任务，并接收可恢复进度事件。
+5. LangGraph 解析条款、逐条执行 RAG-grounded tool call，并只对必要条款生成建议。
+6. `/report/:orderId` 展示报告、条款摘录、风险筛选和 PDF 生成动作。
+
+## 数据与安全模型
+
+- 用户合同正文永不写入向量数据库。
+- 分析完成后 `orders.contract_text` 置为 `NULL`。
+- 72 小时报告只保留理解报告所需的 clause 级原文摘录。
+- Redis / PostgreSQL 报告保存模型围绕 72 小时过期设计。
+- OCR 和 preview 路径有 Redis 速率限制与日级预算守卫。
+- production-like 环境中关键凭据、RAG 加载或安全配置异常会 fail closed。
+
+## 验证
 
 ```bash
 docker compose up -d backend postgres redis
@@ -147,101 +125,22 @@ docker compose up -d backend postgres redis
 ./scripts/run_backend_pytests.sh
 ```
 
-## 本地体验流程
-
-1. 打开前端并上传文本、图片或 PDF 合同。
-2. 查看应付价格、PII 提示，以及 exact 报价返回的付款前合同判断结果（`is_contract`）。
-3. 创建支付订单。exact 报价必须携带仍然有效的 `quote_token`；如果预览已过期、合同内容不匹配，或预览已判断为非合同，服务端会直接拒绝创建订单。
-4. 本地开发时如果 `APP_ENV=development` 且 `KOMOJU_SECRET_KEY` 为空，订单会自动标记为已支付并跳到审查页。
-5. 在 `/review/:orderId` 启动或恢复持久化分析任务，先加载历史事件，再接收新的进度更新。
-6. 如果 parse 阶段判断上传内容不是合同，审查页会立刻显示专用提示，并引导用户返回首页重新上传；状态/事件接口会通过 `error_code=non_contract_document` 暴露这一失败态。
-7. 在 `/report/:orderId` 获取已保存报告。
-8. 流式审查阶段现在展示的是面向用户的进度文案，不再直接暴露内部工具/方法名。
-9. 分析完成后，页面会直接跳转到 `/report/:orderId`，不再在审查页重复展示报告。
-10. 报告页支持按风险级别筛选条款，便于在长报告中只阅读高风险、中风险或组合结果，并且底部提供由后端真实生成的 PDF 下载入口。
-11. 报告正文会固定为支付时选择的语言；之后切换站点语言只影响页面壳层文案。
-12. 在 72 小时报告有效期内，每条分析都可以就地展开对应原条款摘录进行对照；重新打开报告链接或分享链接时也能继续查看。
-13. 展开后的条款对照已针对阅读体验优化：移动端保持纵向阅读，大屏下会并排展示原条款与分析内容。
-14. 首页包含交互式示例展示，提供三种合同场景（租房、劳动、兼职），每种场景的条款分析均支持全部 9 种语言。
-15. 隐私政策 (`/privacy`) 和服务条款 (`/terms`) 页面现在会按当前界面语言显示完整说明，同时保留可展开查看的日语正式版正文；如有差异，以日语版为准。
-16. 报告中的参考法条 (`referenced_law`) 始终保持日语原文，不随用户选择的语言翻译。
-17. 保存后的报告页已进一步做成更像正式审阅文档的版式，并支持在同一 72 小时有效期内直接下载由后端生成的正式 PDF 报告。
-18. 首页中的“首页 / 案例展示”现在都会滚动到明确锚点位置，首屏价格文案也不再硬编码展示可见最高价。
-19. 路由切换到隐私政策或服务条款等页面时，会自动回到页面顶部，而不是保留上一页的滚动位置。
-20. 报告页顶部四个统计卡仍然是主要筛选器，PC 和移动端都保持可点击，并针对两位数计数做了更稳定的紧凑布局。
-
-## 关键实现说明
-
-- 用户合同文本不会写入向量数据库。
-- 分析完成后，`orders.contract_text` 会被置为 `NULL`。
-- 图片和扫描 PDF 现在会在付款前短期暂存原文件；分析完成后或未支付超时后，定时清理会删除这些临时文件。
-- 报告会缓存到 Redis 72 小时，并在 PostgreSQL 中保存带过期时间的记录。
-- `backend/services/costing.py` 现在会为正式 OCR、parse、analyze、suggestion、translation 输出结构化成本日志。
-- embedding 请求现在也会输出成本日志，review 完成时还会记录一份包含报价模式、输入类型和条款统计的订单级成本摘要。
-- 这份订单级成本摘要现在也会持久化到 `reports.cost_summary`，后续排查成本时不再只依赖日志。
-- 如果分析中途失败，失败前已经发生的 AI 成本也会落到 `analysis_jobs.cost_summary`，后续排查失败单时不再只能看日志。
-- `GET /api/eval/costs` 现在会基于 `reports.cost_summary` 聚合真实样本成本；当真实样本还不够时，会自动从 `backend/data/cost_samples_seed.json` 补足到 10 条基线样本。
-- 每笔已支付订单现在还会单独写入一条 `order_cost_estimates`：先保存支付时的 `estimate_snapshot`，分析完成或失败后再补齐 `actual_snapshot` 和 `comparison_snapshot`。
-- 上传期的 Vision OCR 与 exact 报价阶段的条款预览成本都会作为 `prepayment_snapshot` 写进 `order_cost_estimates`，并合并到最终的预测/实际总成本中。
-- `/api/payment/create` 现在统一依赖 exact `quote_token` + `content_hash` 做服务端校验；如果上传已被判断为 `is_contract == false`，后端会在创建订单前直接拒绝支付。
-- 这些快照会同时记录模型计划和实际模型使用情况（`ocr / parse / analyze / suggestion / translation / embedding`），这样后续切换模型时，就能直接比较对毛利的影响，而不只是看总成本。
-- `GET /api/eval/costs` 现在还会按 `estimate_version` 和模型签名聚合 estimate-vs-actual 偏差，方便长期追踪定价模型和模型更换后的经营表现。
-- `GET /api/eval/operations` 是一个只读运营接口，只统计真实订单，不混入 seed 样本；它会输出收入、实际成本、实际毛利、估算偏差、最近订单，以及按定价模型、已支付价格带、输入类型、报价模式、语言、估算版本、模型签名的聚合结果。
-- 运行时定价现在从 `backend/data/pricing_policy.json` 读取，不再把价格硬编码在 Python 里。当前线上策略改为线性计价：`每 1000 tokens 收费 ¥75`，最低 `¥200`。
-- KOMOJU session 创建时不再发送 `payment_types`；支付方式现在完全由 merchant 账号当前已开通的能力决定，因此某个新方式审核通过后会自动出现在 checkout 页面，无需改代码。
-- 订单表现在通过 `orders.pricing_model` 保存当前定价策略；旧的 `price_tier` 字段已经退役，容器启动时的自动迁移会兼容并升级旧 Docker volume。
-- `/api/eval/costs` 现在会同时返回“成本底线建议价”和“目标毛利建议价”，默认目标毛利率 `target_margin_rate=0.75`，方便区分“不能低于多少”和“商业上该卖多少”。
-- `PARSE_MODEL` 和 `SUGGESTION_MODEL` 现在已经可配置，默认切到 `gpt-4o-mini`；OCR 已切到 Google Cloud Vision，逐条风险判断默认仍保持 `gpt-4o`。
-- `analyze_risks` 已改为按条款逐条分析，不再维护一段不断膨胀的整合同多轮 tool-calling 会话，因此单单成本和上下文压力都明显下降。
-- `analyze_clause_risk` 现在返回的是压缩后的 RAG 审查摘要，而不是把长篇知识片段原样塞回分类 prompt。
-- `generate_suggestion` 现在会根据风险级别控制长度：中风险建议更短，高风险建议允许更具体。
-- backend 容器启动时现在会先自动执行 `alembic upgrade head`，再启动 Uvicorn。这个启动链路带有 PostgreSQL advisory lock 和 legacy schema 校正 / stamp 逻辑，因此旧 Docker volume 也能安全升级，不再要求手动迁移作为常规路径。
-- 生产环境如果缺少 KOMOJU / Resend 关键配置，或 `FRONTEND_URL` 仍指向 `localhost`，启动会直接失败。
-- 支付、审查、邮件、报告读取路径现在会输出结构化应用日志，并补充 PostHog 埋点，便于联调定位问题。
-- 前端页面采用路由懒加载，分析相关 SDK 改为异步初始化，避免把 observability 依赖塞进首屏主 chunk。
-- `frontend/index.html` 现已补充静态 OG / Twitter 元标签，`frontend/public/og-image.svg` 提供了轻量品牌分享图。
-- 前端无 hash 的页面跳转现在会自动滚动到顶部，避免法律页等跨页阅读从旧滚动位置开始。
-- 前端现在新增了 `RevealSection`、`OrderReminderDialog`、`ShareSheet` 三类通用 UX 组件，分别用于滚动显现、订单号提醒弹层和自定义分享面板；其中分享面板现已补齐更有层次的成果展示、专属推荐链接生成、预览卡保存、复制与原生分享。
-- `frontend/src/lib/fetchWithRetry.ts` 统一封装了关键页面的超时与轻量重试逻辑，用于后端刚 ready 的瞬间和短时弱网抖动。
-- `/api/report/{order_id}` 在 Redis 命中和 PostgreSQL fallback 两种情况下，现在都会返回一致的 payload 结构。
-- `analyze_clause_risk` 工具内部直接做 RAG 检索，没有单独的 retrieval node。
-- `scripts/smoke_local_flow.sh` 现已切到新的持久化分析链路，会按 `health -> upload -> payment -> analysis/start -> orders/{id}/stream -> report -> contract deletion` 做完整本地回归。
-- 完整合同正文在分析后不会持久化；但 72 小时报告会保留和风险点对应的条款原文摘录，因此重新打开报告链接、分享链接和邮件链接时仍可查看逐条对照。
-- `scripts/check_locale_keys.sh` 会检查 9 个语言文件是否与 `ja.json` 保持相同键集合。
-- 后端现在会在启动时加载 `backend/data/egov_laws.json` 中的官方 e-Gov 法条语料，覆盖 10 个法律类别共 331+ 条文。当前本地评估集已扩展到 20 条人工标注样本，覆盖损害赔偿、竞业禁止、单方解约、NDA、租赁等场景。
-- `scripts/check_rag_eval.sh` 会检查 `/api/eval/rag` 是否满足当前本地基线阈值（`Recall@5 >= 0.45`、`MRR >= 0.45`）。
-- `scripts/run_backend_pytests.sh` 会在 Docker 内安装 backend dev 依赖并执行完整 `tests/` 回归单测。
-- 集成测试覆盖全部 7 个 API 路由（health、upload、payment、analysis、report、referral、eval）。
-- `frontend/src/pages/HomePage.tsx` 现在只作为容器页，首屏、流程、上传/支付区域已拆到独立的首页组件中（`HomeHeroSection`、`HomeFlowSection`、`HomeUploadSection`）；案例展示已独立为 `/examples` 页面。
-- 首页在生成报价后会自动滚动到支付区域，并对支付卡片做短暂高亮，避免用户点击“开始分析”后误以为页面没有反应。
-- 现在新增 `/lookup` 结果查询页，用户输入订单号即可重新进入付款状态页、分析页或最终报告页。
-- 支付成功和分析完成后，前端会弹出订单提醒框，引导用户截图或复制订单号。
-- 报告页分享按钮现在会先打开重构后的自定义分享面板：内部自动生成带推荐码的报告链接，并以标题区、大预览卡和三级动作区来组织内容。
-- 推荐链接现在会以 `?ref=` 的形式回到首页，并自动带入支付表单中的推荐码。
-- 查询页和报告页现在会更明确地区分订单号格式错误、弱网、离线和可重试失败状态。
-- 分析流程现在通过统一状态快照接口、可回放历史事件和增量事件流驱动，而不再由单个 SSE POST 请求直接启动执行。
-- RAG embedding 请求已批量化，通过 `_get_embeddings_batch_sync()` 和 `search_batch()` 减少 API 调用。
+- `scripts/smoke_local_flow.sh`：覆盖 upload、checkout reference、analysis stream、report、contract deletion。
+- `scripts/check_locale_keys.sh`：检查 9 语言 locale key 与日文 fallback 一致。
+- `scripts/check_rag_eval.sh`：检查 RAG Recall@5 / MRR 基线。
+- `scripts/run_backend_pytests.sh`：在 Docker 内运行后端测试。
 
 ## 仓库入口
 
-- [`backend/main.py`](./backend/main.py)：应用启动、路由注册、Sentry/PostHog、清理任务
-- [`backend/routers/analysis.py`](./backend/routers/analysis.py)：分析启动、状态快照、历史事件、增量事件流
-- [`backend/services/analysis_executor.py`](./backend/services/analysis_executor.py)：进程内持久化分析执行器与事件落库
-- [`backend/rag/store.py`](./backend/rag/store.py)：pgvector 存储与检索
-- [`backend/eval/evaluator.py`](./backend/eval/evaluator.py)：RAG 评估指标与数据集执行入口
-- [`backend/data/komoju_payment_methods.json`](./backend/data/komoju_payment_methods.json)：KOMOJU 支付方式的区域/语言参考清单，仅作产品规划参考，不参与运行时加载
-- [`scripts/smoke_local_flow.sh`](./scripts/smoke_local_flow.sh)：端到端本地 smoke/regression 脚本
-- [`scripts/check_locale_keys.sh`](./scripts/check_locale_keys.sh)：多语言 key 一致性检查
-- [`scripts/check_rag_eval.sh`](./scripts/check_rag_eval.sh)：本地 RAG 指标回归检查
-- [`scripts/run_backend_pytests.sh`](./scripts/run_backend_pytests.sh)：Docker 内 backend pytest 运行脚本
-- [`frontend/src/main.tsx`](./frontend/src/main.tsx)：前端路由、i18n、懒加载与延迟分析初始化
-- [`frontend/src/lib/fetchWithRetry.ts`](./frontend/src/lib/fetchWithRetry.ts)：关键前端 API 请求的超时与重试封装
-- [`frontend/src/components/home/HomeHeroSection.tsx`](./frontend/src/components/home/HomeHeroSection.tsx)：首页 hero 区域组件
-- [`frontend/src/components/home/HomeFlowSection.tsx`](./frontend/src/components/home/HomeFlowSection.tsx)：首页流程步骤组件
-- [`frontend/src/components/home/HomeExamplesSection.tsx`](./frontend/src/components/home/HomeExamplesSection.tsx)：首页案例展示组件
-- [`frontend/src/components/home/HomeUploadSection.tsx`](./frontend/src/components/home/HomeUploadSection.tsx)：首页上传界面组件
-- [`frontend/src/pages/ExamplesPage.tsx`](./frontend/src/pages/ExamplesPage.tsx)：独立案例画廊 / 报告样张页
-- [`frontend/src/pages/LookupPage.tsx`](./frontend/src/pages/LookupPage.tsx)：订单号结果查询页
-- [`frontend/src/components/common/OrderReminderDialog.tsx`](./frontend/src/components/common/OrderReminderDialog.tsx)：订单号保存提醒弹层
-- [`frontend/src/components/common/ShareSheet.tsx`](./frontend/src/components/common/ShareSheet.tsx)：自定义分享面板（推荐链接、更强标题层级、大预览卡、保存/复制/系统分享动作）
-- [`tests/`](./tests/)：全部 7 个 API 路由的集成测试 + 单元测试
+- [`backend/agent/graph.py`](./backend/agent/graph.py)：LangGraph pipeline。
+- [`backend/agent/tools.py`](./backend/agent/tools.py)：RAG 风险分析与建议生成工具。
+- [`backend/routers/analysis.py`](./backend/routers/analysis.py)：分析启动、状态快照、历史事件和增量事件流。
+- [`backend/services/analysis_executor.py`](./backend/services/analysis_executor.py)：持久化分析执行器。
+- [`backend/rag/store.py`](./backend/rag/store.py)：pgvector 存储与检索。
+- [`backend/eval/evaluator.py`](./backend/eval/evaluator.py)：RAG 评估。
+- [`backend/data/egov_laws.json`](./backend/data/egov_laws.json)：公开日文法令语料。
+- [`backend/data/pricing_policy.json`](./backend/data/pricing_policy.json)：checkout reference path 使用的成本策略参考数据。
+- [`backend/data/komoju_payment_methods.json`](./backend/data/komoju_payment_methods.json)：区域 checkout method 参考数据，运行时不加载。
+- [`frontend/src/pages/ReviewPage.tsx`](./frontend/src/pages/ReviewPage.tsx)：可恢复分析进度 UI。
+- [`frontend/src/pages/ReportPage.tsx`](./frontend/src/pages/ReportPage.tsx)：报告、风险筛选和 PDF 动作。
+- [`tests/`](./tests/)：后端集成测试与单元测试。

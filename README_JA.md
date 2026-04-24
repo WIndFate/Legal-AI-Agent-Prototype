@@ -1,143 +1,121 @@
 # ContractGuard
 
-在日外国人向けの日本語契約リスク分析サービスです。ユーザーはテキスト、画像、PDF の契約書をアップロードし、従量課金で復元可能なイベントストリームから分析進捗を確認しつつ、72 時間以内にレポートを取得できます。
+日本語契約リスク分析を題材にした production-grade AI engineering case study です。LangGraph agent、RAG grounding、OCR ingestion、復元可能な SSE フロー、LLMOps のコスト管理を含む実装を、オープンソースの reference implementation として保存しています。
 
-[English](./README.md) | [中文文档](./README_CN.md)
+> This is a technical engineering case study, not a legal service. 本プロジェクトは技術デモであり、法律事務の取扱い・法律相談には使用できません。 本项目是技术工程案例，不是法律服务，也不能用于法律咨询。
 
-## 現在の状況
+[English](./README.md) | [中文文档](./README_CN.md) | [License](./LICENSE)
 
-2026-04-17 時点で、ローカル Docker 上の MVP フローは動作確認済みで、本番環境の下準備も一部完了しています。
+## 現在の状態
 
-- `upload -> payment/create -> analysis/start -> orders/{id}/status + events/stream -> report -> 契約本文削除`
-- テキスト入力とテキスト抽出可能な PDF は支払い前にそのまま見積もりし、画像 / スキャン PDF も `/api/upload` 時点で Google Cloud Vision OCR を実行するため、認識成功時はすべて exact 見積もりに統一されています
-- OCR は Google Cloud Vision `DOCUMENT_TEXT_DETECTION` へ移行済みで、Redis ベースの日次予算ガードにより、支払い前の画像/PDF OCR コストが一日単位で上限管理されます
-- テキスト入力とテキスト抽出可能な PDF の見積もりでは、支払い前に軽量な条項構造プレビューも返し、契約構造を読み取れたことを示します
-- exact 見積もりでは `quote_token` も生成され、正規化した契約本文ハッシュ単位で条項プレビューを Redis にキャッシュするため、同じ契約を再アップロードしてもプレビューと事前コストを再利用できます
-- exact 見積もりでは `is_contract` も返します。空でない抽出テキストがあれば先に契約判定を行い、clause preview は条項構造を推定できるだけの長さがある場合にのみ返します。アップロードが契約書ではないと判断された場合はホームで支払い UI を止め、`/api/payment/create` でもサーバー側で決済リクエストを拒否します。
-- アップロードと条項プレビュー生成には Redis ベースの IP 単位レート制限も入り、匿名スクリプトによるプレビューコストの連打を抑えます
-- `pgvector` RAG は PostgreSQL 上で稼働し、10 法令カテゴリ・331 件超の法条（賃貸借・労働・パート・業務委託・売買等）を収録
-- フロントエンドの 9 言語 UI は実装済み。ブランド（ContractGuard）、プライバシーポリシー/利用規約ページ、独立した事例ギャラリーとレポート見本表示を含みます
-- `/commercial` ページも追加され、特定商取引法に基づく表記を公開しています。サイトの footer / ホームから直接遷移でき、決済事業者審査の前提条件を満たす構成です
-- 独立 `/examples` ページは横方向のキュレーション型シナリオ切り替えに刷新され、レポート見本の版面も実際のレポートページにより近づけています
-- ホームの信頼表現では、対応している契約タイプを明示し、支払いパネルからプライバシー説明へ直接遷移できるようになりました。プライバシーページには「アップロード→分析→削除」の流れと適用 / 非適用ケースも追加されています
-- 事例セクションには「完全なサンプルレポートを見る」導線が追加され、サンプル自体も短い抜粋ではなく、保存済みレポートに近い構成になりました
-- モバイル UI は、左側メニュー + 中央ロゴ + バッジ型の言語切替を持つよりコンパクトな header に更新され、reveal の即時表示、ケース切替後の自動スクロール、左右余白の最適化、横スクロール防止、iPhone 入力ズーム抑止まで整えました
-- ホームページのアップロード導線は `ファイルをアップロード / テキストを貼り付け` の 2 モードに整理され、画像と PDF は 1 つのファイルピッカーで受け付けるようになりました
-- ホームの「分析を開始」ボタンは見積もり生成中にボタン内スピナーで即時フィードバックを返すようになり、決済パネルでは「最終レポートは現在の表示言語で生成される」ことを支払い前に明示確認します
-- review ページは現在「処理中」の体験に専念し、分析完了後は保存済みの `/report/{orderId}` へ直接遷移して結果画面を二重表示しません
-- review ページは「ステージヘッダー + 3 分割進捗バー + ユーザー向け活動フィード + 経過時間」の 3 ゾーン構成に再設計され、重複していた面板 / バッジ / 独立 spinner は廃止されました
-- review ページでは条項の定量進捗も表示し、失敗時も同じ進捗カード内にエラーを保持しつつ、短い進捗ラベルとモバイル / reduced-motion 向けの軽量化も加えました
-- review の活動フィードは生イベントから都度ローカライズされるため、分析途中でサイト言語を切り替えても、その場で表示言語が追従します
-- parse 段階でアップロード内容が契約書ではないと判断された場合、分析は即座に停止し、review ページに専用メッセージを表示してホームへ戻せるようになりました
-- 注文ステータス API は人向けの `error_message` と別に機械可読な `error_code` も返すようになり、ReviewPage はローカライズ済み文字列比較に頼らず失敗状態を判定します
-- report ページは高/中/低リスクで条項を絞り込めるようになり、デスクトップでは統計サマリーも 1 行でより密に表示されます
-- 共有パネルはさらに磨き込みが進み、小さなキッカー付きヘッダーと大きめのプレビューカードを軸に、紹介コード付き URL を内部生成しつつ保存 / コピー / 端末共有を段階的に提示します
-- ルート単位の遅延読み込みと分析 SDK の遅延初期化により、初期フロントエンド bundle を軽量化
-- `APP_ENV=development` かつ `KOMOJU_SECRET_KEY` 未設定の場合のみ、ローカル開発では自動的に支払い済み扱いになります
-- デプロイ設定済み: `fly.toml`（Fly アプリ名 `contractguard-prod`、NRT リージョン、HTTPS 強制）+ `vercel.json`（API プロキシ + セキュリティヘッダー）
-- 統合テストスイート: 7 つのルーターテストファイルで、現行ランタイムの全 API エンドポイントをカバー
-- 分析ページは持続化された分析タスク上に再構築され、バックエンドが `analysis_jobs` / `analysis_events` を保持し、フロントエンドは履歴イベント復元後に新しい更新を購読します
-- `docker compose` には postgres・redis・backend API の healthcheck が入り、ローカル起動時に frontend が準備前の backend へ先に当たりにくくなりました
-- report / payment / lookup には軽量リトライラッパーを入れ、Docker 起動直後や一時的な弱回線時の取得失敗を吸収します
-- ホームページを独立コンポーネントに分割（Hero / Flow / Upload）し、事例紹介は独立 `/examples` ギャラリーページへ移動
-- RAG embedding バッチ化により API 呼び出し回数を削減
-- 不要コードのクリーンアップ完了（未使用の `analyze_risks_streaming` を削除）
-- よく使うクエリパスにデータベースインデックスを追加（email, payment_status, expires_at, analysis_status）
-- CSS を部分的に CSS Modules へ移行: layout / home / examples / legal はスコープ付きモジュール + `clsx`、report / review はページ間共有のためグローバル維持
-- 本番インフラの進捗として、Supabase プロジェクト作成と `pgvector` 有効化、Upstash Redis 作成、フロントエンド正式ドメイン `https://contractguard.jp` とバックエンド API 正式ドメイン `https://api.contractguard.jp` への切り替えまで完了しており、本番経路の frontend / backend `/api/health` も 200 を返す状態です
-- 本番メール経路も分離済みです。Google Workspace が `support@contractguard.jp` の有人返信を受け、Resend は `noreply@mail.contractguard.jp` からシステムメールを送信しつつ `Reply-To: support@contractguard.jp` を付与します
-- Fly / Vercel / KOMOJU / Resend / Sentry の主要シークレットも概ね設定済みで、KOMOJU テストキー、webhook secret、`FRONTEND_URL`、観測系設定まで入りました
-- 決済状態には二段構えの保護を追加しました。KOMOJU checkout を途中で閉じても、フロントエンドは 5 分後に無限ポーリングを抜けて「支払い未確認」状態へ遷移し、注文 ID コピーや `/lookup` への退避導線を出し、バックエンド側も `payment.failed` / `payment.cancelled` / `payment.expired` webhook を終端ステータスへ反映します
-- 失敗 / キャンセル済みの決済は `POST /api/payment/{order_id}/retry` で同じ注文 ID のまま KOMOJU checkout を再生成できるようになり、再決済のたびに重複注文を増やさずに済みます
-- 同じ retry エンドポイントでは、注文テキストも staged upload も残っていない注文を事前に拒否するようにしました。分析不能な注文に対して再度支払わせるのではなく、先に再アップロードを促します
-- `.env` / Fly secrets には `EMAIL_FROM_ADDRESS`、`EMAIL_FROM_NAME`、`EMAIL_REPLY_TO` も設定し、レポートリンクメールを検証済み Resend サブドメインから送りつつ返信先を Google Workspace の support inbox に統一します
-- Supabase fresh database 向けの起動 migration 問題もコード上で解消済みです。asyncpg + SSL DSN 互換を補い、新規 DB では `alembic_version.version_num` を 255 で事前作成 / 拡張するようにしています
-- KOMOJU checkout session 作成時には `payment_types` を送らない構成に変更し、checkout に表示される決済手段は merchant アカウント側で承認済みのものに一本化しました。`backend/data/komoju_payment_methods.json` は地域別の導入計画を残すための参考資料としてのみ保持しています
+Reached launch-ready state after solo development; declined commercial launch after assessing 弁護士法 Art. 72 compliance implications; cloud infrastructure intentionally decommissioned; codebase preserved as open-source engineering reference. Full local Docker flow remains functional with only an OpenAI API key. 画像 / スキャン PDF OCR を確認する場合のみ、Google Cloud Vision を追加設定できます。
 
-リポジトリ外で未完了の項目:
-
-- KOMOJU sandbox / production の実決済確認、merchant アカウントでの決済手段有効化確認、webhook コールバック、Resend 配信、Vercel -> Fly SSE の実地検証
-- モバイル撮影と実機での手動テスト
-- ユーザーフィードバック収集機能（P2）
-- 共有文言やより強い成長導線（P2）
-- report/review ページの CSS モジュール化（ページ間共有のためグローバル維持）
+`fly.toml` と `vercel.json` はデプロイ構成の参考として残しています。過去に構築した production topology を示すためのもので、ホストされたサービスは意図的に停止済みです。
 
 ## アーキテクチャ
 
-```text
-React/Vite フロントエンド
-  -> FastAPI バックエンド
-  -> LangGraph パイプライン:
-     parse_contract
-     -> analyze_risks
-     -> generate_report
-
-RAG:
-  PostgreSQL pgvector + OpenAI embeddings
-
-永続化:
-  PostgreSQL: orders / reports / referrals
-  Redis: 72時間レポートキャッシュ
-
-外部連携:
-  GPT-4o / GPT-4o-mini
-  KOMOJU
-  Resend
-  PostHog
-  Sentry
+```mermaid
+flowchart LR
+  U[React/Vite UI<br/>text, PDF, image upload] --> API[FastAPI routers]
+  API --> Q[estimate + PII + OCR budget guards]
+  Q --> PAY[KOMOJU checkout<br/>reference implementation]
+  PAY --> JOB[persistent analysis job]
+  JOB --> SSE[recoverable SSE<br/>status + events + after_seq]
+  JOB --> LG[LangGraph pipeline]
+  LG --> P[parse_contract]
+  P --> A[clause-by-clause risk analysis]
+  A --> T[tool call: analyze_clause_risk]
+  T --> RAG[(PostgreSQL pgvector<br/>331 Japanese legal articles)]
+  A --> S[tool call: generate_suggestion<br/>medium/high risks only]
+  S --> REP[report generation + translation]
+  REP --> CACHE[(Redis 72h report cache)]
+  REP --> DB[(PostgreSQL orders/reports/costs)]
 ```
+
+## Engineering Highlights
+
+- **Multi-step LangGraph Agent**: `backend/agent/graph.py` が parse、risk analysis、report generation を明示的な graph node として構成します。
+- **Tool-calling pattern**: `backend/agent/tools.py` は RAG lookup を `analyze_clause_risk()` 内に閉じ込め、`generate_suggestion()` を中/高リスク条項だけに使います。
+- **RAG grounding**: PostgreSQL `pgvector` に e-Gov 由来の公開法令 331 条を保存し、ユーザー契約は embedding しません。
+- **Recoverable streaming UX**: `analysis_jobs` / `analysis_events` に進捗を永続化し、`status`、`events`、`stream?after_seq=` で復元します。
+- **LLMOps controls**: cost tracking、estimate-vs-actual snapshots、RAG evaluation、model signature logging、PII detection、OCR budget guards。
+- **Enterprise hardening**: RLS enforcement、webhook replay protection、rate limiting、UUID guards、fail-closed OCR、startup migration locks、structured observability。
+- **Multilingual frontend**: 9 言語 React/i18next UI。レポートの UI は翻訳しつつ、引用法令は日本語原文を保持します。
+
+## Demo
+
+合成した日本語の業務委託契約から生成した静的スクリーンショットを同梱しています。
+
+![ContractGuard demo screenshot](./docs/demo-screenshot.png)
+
+面接で使う前に、ローカル Docker フローを実行し、自分の合成契約で review progress page と final report page を撮り直すことを推奨します。
+
+## Design Decisions
+
+- **Compliance-first product call**: launch-ready まで作り込んだ後、弁護士法 Art. 72 の含意を評価し、commercial launch を止めました。これは本プロジェクトの重要な product judgment signal です。
+- **Privacy by architecture**: 契約全文は分析後に削除し、レポートは 72 時間で期限切れ、ベクトル DB には公開法令だけを保存します。
+- **Operational realism**: 現在はオープンソース参考実装ですが、checkout、email、cost accounting、retry、observability、deployment config まで実運用前提で設計しています。
+- **Resumable analysis**: 一回限りの POST SSE ではなく、永続化 job/event と event replay で refresh や一時的な接続断に耐えます。
 
 ## 技術スタック
 
-- バックエンド: FastAPI, SQLAlchemy async, Alembic, Redis, APScheduler
-- Agent: LangGraph, 条項単位の審査パイプライン
+- Backend: FastAPI, SQLAlchemy async, Alembic, Redis, APScheduler
+- Agent: LangGraph, OpenAI tool calling, clause-level analysis
 - OCR: Google Cloud Vision `DOCUMENT_TEXT_DETECTION`, `pdf2image`, `poppler-utils`
-- RAG: PostgreSQL `pgvector`, `text-embedding-3-small`
-- フロントエンド: React, Vite, TypeScript, React Router, i18next
-- インフラ: Docker Compose, Fly.io 設定, Vercel 設定
+- RAG: PostgreSQL `pgvector`, OpenAI embeddings
+- Frontend: React, Vite, TypeScript, React Router, i18next
+- Reference integrations: KOMOJU checkout, Resend email, PostHog, Sentry
+- Infrastructure reference: Docker Compose, Fly.io config, Vercel config
 
 ## クイックスタート
 
 前提:
 
 - Docker Desktop / Docker Engine
-- OpenAI API Key
-- 画像 / スキャン PDF OCR 用の Google Cloud Vision サービスアカウント JSON（base64 を `GOOGLE_APPLICATION_CREDENTIALS_JSON` に設定）
+- OpenAI API key
 
 起動:
 
 ```bash
 cp .env.example .env
-# .env に OPENAI_API_KEY を設定
-# service-account.json を base64 化して GOOGLE_APPLICATION_CREDENTIALS_JSON に設定
-# GOOGLE_VISION_PROJECT_ID / DAILY_COST_BUDGET_JPY / GOOGLE_VISION_COST_PER_PAGE_JPY も設定
-# ローカル Docker 実行では APP_ENV=development のままにする
+# .env に OPENAI_API_KEY を設定します。
+# ローカル Docker では APP_ENV=development のままにします。
+# KOMOJU keys を空にすると local checkout bypass を使います。
 
 docker compose up --build
 ```
 
-Google Vision のリリース前チェック:
-
-- 対象 GCP プロジェクトで Billing を有効化すること。
-- `vision.googleapis.com` を有効化すること。
-- Vision OCR を呼ぶ service account に必要権限を付与すること。
-- chat やログなど管理外へ出た service-account key は漏えい扱いにして即ローテーションすること。
-- OCR 設定が壊れている場合、`/api/upload` は `google_vision_not_configured`、`google_vision_billing_disabled`、`google_vision_api_disabled`、`google_vision_permission_denied`、`google_vision_auth_failed`、`google_vision_unavailable` などの明示的な 503 business error code を返します。
-
-Docker メモ:
-
-- 起動中サービスの中でコマンドを実行する場合は、`docker compose run` ではなく `docker compose exec` を優先してください。
-- `docker compose run` は一時的な `*-run-*` コンテナを残し、`docker compose down` 時に network 解放を妨げることがあります。
-- 画像とスキャン PDF は `/api/upload` 時点で Google Cloud Vision OCR を実行するため、OCR に成功したアップロードは支払い前に exact 見積もりを返します。
-- Compose の起動順も healthcheck ベースに変更され、`backend` は healthy な `postgres` / `redis` を待ち、`frontend` は healthy な `backend` を待つ構成です。
-
-エンドポイント:
+ローカル URL:
 
 - Frontend: `http://localhost:5173`
 - Backend: `http://localhost:8000`
 - Health: `http://localhost:8000/api/health`
 
-ローカル回帰スクリプト:
+任意の OCR 設定:
+
+- `GOOGLE_APPLICATION_CREDENTIALS_JSON` に service-account JSON の base64 を設定。
+- `GOOGLE_VISION_PROJECT_ID` を設定。
+- 対象 GCP project で Billing と `vision.googleapis.com` を有効化。
+
+## ローカル参考フロー
+
+1. 合成した日本語契約をアップロード、またはテキスト貼り付けします。
+2. upload route が text extraction、PII check、token estimate、non-contract detection、任意の OCR budget guard を実行します。
+3. checkout reference path が order を作成します。development で KOMOJU credentials が空の場合は local bypass になります。
+4. `/review/:orderId` が persistent analysis job を開始または復元し、進捗 event を受け取ります。
+5. LangGraph が clause を解析し、RAG-grounded tool call で条項ごとに分析し、必要な場合だけ suggestion を生成します。
+6. `/report/:orderId` が report、clause excerpts、risk filter、PDF action を表示します。
+
+## データと安全性
+
+- ユーザー契約本文は vector database に保存しません。
+- 分析完了後、`orders.contract_text` は `NULL` になります。
+- 72 時間 report には読解に必要な clause-level excerpt だけを保持します。
+- Redis / PostgreSQL の report retention は 72 時間 expiry を前提に設計されています。
+- OCR / preview path は Redis rate limit と daily budget guard で保護します。
+- production-like environment では、重要 credential、RAG loading、security config が不安全な場合に fail closed します。
+
+## 検証
 
 ```bash
 docker compose up -d backend postgres redis
@@ -147,100 +125,22 @@ docker compose up -d backend postgres redis
 ./scripts/run_backend_pytests.sh
 ```
 
-## ローカル確認フロー
-
-1. フロントエンドでテキスト、画像、または PDF 契約書をアップロードします。
-2. 支払い金額、PII 警告、そして exact 見積もりでは支払い前の契約判定（`is_contract`）を確認します。
-3. 支払い注文を作成します。exact 見積もりでは有効な `quote_token` が必須で、見積もり失効・契約本文不一致・非契約判定のいずれかならサーバー側で注文作成を拒否します。
-4. ローカル開発では `APP_ENV=development` かつ `KOMOJU_SECRET_KEY` が空なら自動的に支払い済みになります。
-5. `/review/:orderId` では持続化された分析タスクを開始または再開し、履歴イベントを読み込んだ後に新しい進捗更新を受け取ります。
-6. parse が「契約書ではない」と判定した場合、review ページはその時点で専用メッセージを表示し、ホームへ戻って再アップロードできます。この失敗状態は status / event API 上では `error_code=non_contract_document` として公開されます。
-7. `/report/:orderId` で保存済みレポートを取得します。
-8. ストリーミング審査中は内部ツール名ではなく、ユーザー向けの進捗文言を表示します。
-9. 分析が終わると UI はそのまま `/report/:orderId` へ遷移し、保存済みレポートを表示します。
-10. report ページでは必要に応じてリスクレベル別に条項を絞り込め、下部からバックエンド生成の正式 PDF をそのままダウンロードできます。
-11. レポート本文の言語は支払い時に選択した言語で固定され、後からサイト言語を切り替えても本文自体は再翻訳されません。
-12. 72時間のレポート有効期間中は、各分析カード内で対応する元条項の抜粋をその場で展開して比較できます。再オープンしたレポートリンクや共有リンクでも同じ対照を確認できます。
-13. 展開後の条項比較は読みやすさを重視しており、モバイルでは縦積み、大きな画面では元条項と分析内容を横並びで表示します。
-14. ホームページには3つの契約シナリオ（賃貸・雇用・アルバイト）のインタラクティブなサンプルレポート展示があり、各条項分析は9言語すべてで表示されます。
-15. プライバシーポリシー (`/privacy`) と利用規約 (`/terms`) ページは、現在のUI言語での完整な説明文を表示しつつ、日本語の正式本文を折りたたみ表示で保持します。差異がある場合は日本語版が優先されます。
-16. レポート内の参照法令 (`referenced_law`) はユーザーの選択言語にかかわらず、常に日本語原文のまま表示されます。
-17. 保存済みレポートページは、より正式な審査レポートらしい版面に寄せており、同じ 72 時間の保存期間内でバックエンド生成の正式 PDF も直接ダウンロードできます。
-18. ホームページの「ホーム / サンプル」導線は明示的なアンカー位置へスクロールするようになり、hero の価格文言も固定の見かけ上限を表示しない形に調整されています。
-19. プライバシーポリシーや利用規約など別ページへ移動した場合は、自動でページ先頭へ戻るようになりました。
-20. report ページ上部の4つの集計カードはそのまま主要フィルターとして機能し、PC / モバイルともに2桁件数でも崩れにくい密度に調整されています。
-
-## 実装上の重要点
-
-- ユーザー契約本文はベクトル DB に保存しません。
-- 分析完了後、`orders.contract_text` は `NULL` に更新されます。
-- 画像 / スキャン PDF は支払い前に短期間だけ元ファイルを保持し、解析完了後または未払い期限切れ後のクリーンアップで削除されます。
-- レポートは Redis に 72 時間キャッシュされ、PostgreSQL に期限付きで保存されます。
-- `backend/services/costing.py` により、正式 OCR・parse・analyze・suggestion・translation の構造化コストログが出力されます。
-- embedding リクエストもコストログを出力し、review 完了時には見積もりモード・入力種別・条項数を含む注文単位のコスト要約ログも出力されます。
-- この注文単位のコスト要約は、ログだけでなく `reports.cost_summary` にも保存されるようになりました。
-- 分析が途中で失敗した場合でも、その時点までに発生した AI コスト要約は `analysis_jobs.cost_summary` に保存され、失敗注文も後から監査できます。
-- `GET /api/eval/costs` は `reports.cost_summary` を集計し、実データが不足している間は `backend/data/cost_samples_seed.json` で 10 サンプル基準まで補完します。
-- 各支払い済み注文では、これとは別に `order_cost_estimates` レコードも保存され、支払い時点の `estimate_snapshot`、分析完了または失敗後の `actual_snapshot`、そして差分用の `comparison_snapshot` が残ります。
-- アップロード時の Vision OCR と exact 見積もり時の条項プレビューコストは `prepayment_snapshot` として `order_cost_estimates` に保存され、予測総コスト / 実総コストへ合算されます。
-- `/api/payment/create` は exact `quote_token` + `content_hash` でサーバー検証を行い、アップロードが `is_contract == false` と判定されていれば注文作成前に支払いを拒否します。
-- これらのスナップショットには、計画上のモデル構成と実際に使われたモデル構成（`ocr / parse / analyze / suggestion / translation / embedding`）の両方が含まれるため、将来モデルを入れ替えた際の粗利影響を追跡できます。
-- `GET /api/eval/costs` は estimate-vs-actual の差分を `estimate_version` とモデルシグネチャ別にも集計するようになり、価格ロジック更新やモデル変更の効果を後から比較できます。
-- `GET /api/eval/operations` は seed サンプルを混ぜない読み取り専用の運用 API で、売上・実コスト・実粗利・見積もり偏差・最近の注文一覧に加えて、価格モデル / 支払価格帯 / 入力種別 / 見積もり方式 / 言語 / estimate version / モデルシグネチャ別の集計を返します。
-- 実行時の価格設定は Python の固定値ではなく `backend/data/pricing_policy.json` から読み込まれます。現在の運用ポリシーは線形課金で、`1000 tokens あたり ¥75`、最低料金は `¥200` です。
-- 注文テーブルでは現在の課金方式を `orders.pricing_model` に保持し、旧 `price_tier` カラムは廃止されました。コンテナ起動時の自動 migration は古い Docker volume もこの形へ安全に前進させます。
-- `/api/eval/costs` は「コスト下限の推奨価格」と「目標粗利込みの推奨価格」を両方返します。既定の `target_margin_rate` は `0.75` です。
-- `PARSE_MODEL` と `SUGGESTION_MODEL` は設定可能になり、デフォルトでは `gpt-4o-mini` を使います。OCR は Google Cloud Vision に移行済みで、条項ごとのリスク判定は引き続きデフォルトで `gpt-4o` のままです。
-- `analyze_risks` は、膨張し続ける全契約の多段 tool-calling 会話ではなく、条項ごとの分析に変更されました。これによりコストとコンテキスト圧迫が大きく下がります。
-- `analyze_clause_risk` は、長い法令断片をそのまま返す代わりに、圧縮した RAG 要約を返します。
-- `generate_suggestion` はリスクレベルに応じて長さを変え、中リスクは短く、高リスクはより具体的に出力します。
-- backend コンテナ起動時には、Uvicorn を立ち上げる前に `alembic upgrade head` が自動実行されます。この起動フローは PostgreSQL advisory lock と legacy schema の補正 / stamp を含むため、古い Docker volume も手動 migration なしで安全に前進できます。
-- 本番環境で KOMOJU / Resend の必須設定が不足している場合、または `FRONTEND_URL` が `localhost` のままの場合は起動時に失敗します。
-- 支払い、審査、メール、レポート取得の主要経路では、構造化アプリケーションログと PostHog イベントを出力し、外部連携時の切り分けをしやすくしています。
-- フロントエンドはルート単位で lazy load され、分析系 SDK も非同期初期化されるため、observability 依存が初期 main chunk を膨らませません。
-- `frontend/index.html` には静的な OG / Twitter メタデータが入り、`frontend/public/og-image.svg` が軽量なブランド共有画像として使われます。
-- hash を伴わない画面遷移ではフロントエンドが自動で先頭へスクロールし、前ページのスクロール位置を引き継がないようにしています。
-- フロントエンドには `RevealSection`、`OrderReminderDialog`、`ShareSheet` の共通 UX コンポーネントが追加され、スクロール演出、注文番号保存の促し、専用共有パネルを実装しています。共有パネルは内部で紹介コード付き URL を組み立てつつ、見た目も「成果を共有する画面」として再設計され、報酬要約・リスク概要・密度を上げたプレビューカード・保存 / コピー / 共有のアクション列を備えています。
-- `frontend/src/lib/fetchWithRetry.ts` で、重要ページの API 取得に対するタイムアウト付き軽量リトライを共通化しています。
-- `/api/report/{order_id}` は Redis キャッシュ命中時と PostgreSQL fallback 時で同じ payload 形を返すように統一されています。
-- `analyze_clause_risk` ツールが内部で直接 RAG 検索を行うため、独立した retrieval node はありません。
-- `scripts/smoke_local_flow.sh` は現在の持続化分析フローに合わせて更新済みで、`health -> upload -> payment -> analysis/start -> orders/{id}/stream -> report -> contract deletion` を通しで確認します。
-- 契約書全文は分析後に保持しませんが、72時間レポートには指摘と対応する元条項の抜粋だけを保存します。そのため、再オープンしたレポートリンク、共有リンク、メールリンクでも条項対照を確認できます。
-- `scripts/check_locale_keys.sh` は 9 言語の locale ファイルが `ja.json` と同じキー集合を保っているかを確認します。
-- バックエンドは起動時に `backend/data/egov_laws.json` の公式 e-Gov 法令コーパスを読み込みます。10 法令カテゴリ・331 件超の法条を収録。ローカル評価データセットも 20 件のラベル付きサンプルに拡張されています（損害賠償、競業禁止、解約、NDA、賃貸借等をカバー）。
-- `scripts/check_rag_eval.sh` は `/api/eval/rag` を現在のローカル基準値（`Recall@5 >= 0.45`、`MRR >= 0.45`）でチェックします。
-- `scripts/run_backend_pytests.sh` は Docker 内で backend の dev 依存を入れた上で、完全な `tests/` 回帰テストを実行します。
-- 統合テストは全 7 API ルーター（health、upload、payment、analysis、report、referral、eval）をカバーしています。
-- `frontend/src/pages/HomePage.tsx` は現在コンテナページとして振る舞い、hero / flow / upload-payment を個別コンポーネント（`HomeHeroSection`、`HomeFlowSection`、`HomeUploadSection`）に委譲します。事例紹介は `/examples` の独立ページに切り出されています。
-- 見積もり生成後、ホームページは自動で支払いパネルまでスクロールし、短時間ハイライトして次の導線を見失いにくくしています。
-- `/lookup` 結果照会ページが追加され、注文番号から支払い状態ページ・分析中ページ・完成レポートを再オープンできます。
-- 支払い完了時と分析完了時には、注文番号をスクリーンショット保存またはコピーするよう促すダイアログを表示します。
-- レポート共有は直接 Web Share API を呼ぶのではなく、紹介コード付きレポート URL を内部で生成したうえで、キッカー付きヘッダー、大きなプレビューカード、段階分けした保存 / コピー / 共有アクションを備えた専用共有パネルを先に開きます。
-- 紹介リンクは `?ref=` 付きでホームに戻り、次のユーザーの支払いフォームへ紹介コードを自動入力します。
-- 結果照会ページとレポートページは、注文番号形式エラー、弱い回線、オフライン、再試行可能な失敗状態をより明確に表示します。
-- 分析フローは、単一の SSE POST リクエストで実行を開始するのではなく、状態スナップショット、再生可能な履歴イベント、増分イベントストリームで駆動されます。
-- RAG embedding リクエストは `_get_embeddings_batch_sync()` と `search_batch()` によりバッチ化され、API 呼び出し回数を削減しています。
+- `scripts/smoke_local_flow.sh`: upload、checkout reference、analysis stream、report、contract deletion を通します。
+- `scripts/check_locale_keys.sh`: 9 言語 locale key が Japanese fallback と一致するか確認します。
+- `scripts/check_rag_eval.sh`: RAG Recall@5 / MRR baseline を確認します。
+- `scripts/run_backend_pytests.sh`: Docker 内で backend tests を実行します。
 
 ## 主要ファイル
 
-- [`backend/main.py`](./backend/main.py): 起動処理、ルーター登録、Sentry/PostHog、クリーンアップ
-- [`backend/routers/analysis.py`](./backend/routers/analysis.py): 分析開始、状態スナップショット、履歴イベント、増分イベントストリーム
-- [`backend/services/analysis_executor.py`](./backend/services/analysis_executor.py): プロセス内の持続化分析実行器とイベント永続化
-- [`backend/rag/store.py`](./backend/rag/store.py): pgvector 保存と検索
-- [`backend/eval/evaluator.py`](./backend/eval/evaluator.py): RAG 評価指標とデータセット実行
-- [`backend/data/komoju_payment_methods.json`](./backend/data/komoju_payment_methods.json): 地域・言語ごとの決済手段導入計画を残すための参考資料（ランタイムでは読み込まれません）
-- [`scripts/smoke_local_flow.sh`](./scripts/smoke_local_flow.sh): ローカル end-to-end smoke/regression スクリプト
-- [`scripts/check_locale_keys.sh`](./scripts/check_locale_keys.sh): locale キー整合性チェック
-- [`scripts/check_rag_eval.sh`](./scripts/check_rag_eval.sh): ローカル RAG 回帰チェック
-- [`scripts/run_backend_pytests.sh`](./scripts/run_backend_pytests.sh): Docker ベースの backend pytest 実行スクリプト
-- [`frontend/src/main.tsx`](./frontend/src/main.tsx): ルーター、i18n、遅延読み込み、分析初期化
-- [`frontend/src/lib/fetchWithRetry.ts`](./frontend/src/lib/fetchWithRetry.ts): 主要 API 取得向けのタイムアウト + リトライラッパー
-- [`frontend/src/components/home/HomeHeroSection.tsx`](./frontend/src/components/home/HomeHeroSection.tsx): ホームページ hero セクション
-- [`frontend/src/components/home/HomeFlowSection.tsx`](./frontend/src/components/home/HomeFlowSection.tsx): ホームページフローステップ
-- [`frontend/src/components/home/HomeExamplesSection.tsx`](./frontend/src/components/home/HomeExamplesSection.tsx): ホームページサンプル展示
-- [`frontend/src/components/home/HomeUploadSection.tsx`](./frontend/src/components/home/HomeUploadSection.tsx): ホームページアップロード
-- [`frontend/src/pages/ExamplesPage.tsx`](./frontend/src/pages/ExamplesPage.tsx): 独立した事例ギャラリー / レポート見本ページ
-- [`frontend/src/pages/LookupPage.tsx`](./frontend/src/pages/LookupPage.tsx): 注文番号ベースの結果照会ページ
-- [`frontend/src/components/common/OrderReminderDialog.tsx`](./frontend/src/components/common/OrderReminderDialog.tsx): 注文番号保存を促すダイアログ
-- [`frontend/src/components/common/ShareSheet.tsx`](./frontend/src/components/common/ShareSheet.tsx): 専用共有パネル（紹介リンク生成、強いヘッダー階層、大きめプレビューカード、保存 / コピー / 共有導線）
-- [`tests/`](./tests/): 全 7 API ルーターの統合テスト + ユニットテスト
+- [`backend/agent/graph.py`](./backend/agent/graph.py): LangGraph pipeline。
+- [`backend/agent/tools.py`](./backend/agent/tools.py): RAG risk analysis と suggestion の tool 実装。
+- [`backend/routers/analysis.py`](./backend/routers/analysis.py): analysis start、status snapshots、historical events、incremental stream。
+- [`backend/services/analysis_executor.py`](./backend/services/analysis_executor.py): persistent analysis executor。
+- [`backend/rag/store.py`](./backend/rag/store.py): pgvector storage and search。
+- [`backend/eval/evaluator.py`](./backend/eval/evaluator.py): RAG evaluation。
+- [`backend/data/egov_laws.json`](./backend/data/egov_laws.json): 公開日本法令 corpus。
+- [`backend/data/pricing_policy.json`](./backend/data/pricing_policy.json): checkout reference path 用の cost policy reference data。
+- [`backend/data/komoju_payment_methods.json`](./backend/data/komoju_payment_methods.json): regional checkout-method reference data。runtime では読み込みません。
+- [`frontend/src/pages/ReviewPage.tsx`](./frontend/src/pages/ReviewPage.tsx): recoverable analysis progress UI。
+- [`frontend/src/pages/ReportPage.tsx`](./frontend/src/pages/ReportPage.tsx): report、risk filter、PDF action。
+- [`tests/`](./tests/): backend integration / unit tests。

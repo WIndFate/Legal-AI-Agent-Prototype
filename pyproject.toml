@@ -1,7 +1,7 @@
 [project]
-name = "legal-contract-agent"
+name = "contractguard"
 version = "0.1.0"
-description = "Legal Contract Review AI Agent with LangGraph, RAG, and MCP"
+description = "Open-source AI engineering case study with LangGraph, RAG, and FastAPI"
 requires-python = ">=3.11"
 dependencies = [
     "langgraph>=0.2.0",

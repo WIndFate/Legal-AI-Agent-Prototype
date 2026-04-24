@@ -7,7 +7,7 @@ from backend.agent.graph import run_review
 from backend.rag.store import get_store
 from backend.rag.loader import load_legal_knowledge
 
-mcp = FastMCP("Legal Contract Review Agent")
+mcp = FastMCP("ContractGuard Engineering Reference")
 
 
 @mcp.tool()
