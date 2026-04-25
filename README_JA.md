@@ -4,17 +4,17 @@
 ![Python 3.11+](https://img.shields.io/badge/Python-3.11%2B-blue.svg)
 ![LangGraph](https://img.shields.io/badge/LangGraph-agentic%20workflow-purple.svg)
 
-日本語契約リスク分析を題材にした production-grade AI engineering case study です。LangGraph agent、RAG grounding、OCR ingestion、復元可能な SSE フロー、LLMOps のコスト管理を含む実装を、オープンソースの reference implementation として保存しています。
+日本語契約のリスク分析を題材にした AI engineering case study —— LangGraph workflow + pgvector RAG + マルチモーダル入力 + 復元可能なストリーミング UX。
 
-> This is a technical engineering case study, not a legal service. 本プロジェクトは技術デモであり、法律事務の取扱い・法律相談には使用できません。 本项目是技术工程案例，不是法律服务，也不能用于法律咨询。
+> ⚠️ **法律サービスではありません。** 本リポジトリは商用サービスとして運用された実績はありません —— 弁護士法第 72 条が有償の法律相談を弁護士の独占業務と定めているため、本プロジェクトはオープンソースの技術 artifact として公開しているのみです。出力は法的見解ではありません。
 
 [English](./README.md) | [中文文档](./README_CN.md) | [License](./LICENSE)
 
-## 現在の状態
+## ステータス
 
-Reached launch-ready state after solo development; declined commercial launch after assessing 弁護士法 Art. 72 compliance implications; cloud infrastructure intentionally decommissioned; codebase preserved as open-source engineering reference. Full local Docker flow remains functional with only an OpenAI API key. 画像 / スキャン PDF OCR を確認する場合のみ、Google Cloud Vision を追加設定できます。
+production-ready レベルのオープンソース reference implementation です。**フロントエンド、バックエンド、OCR、決済、メール、Postgres、Redis、エラートラッキング** —— スタック全体が実 integration で接続済みで、いつでもデプロイ可能な状態です。ただし弁護士法第 72 条の制約により、商用ローンチは一度も実施していません（by design）。
 
-`fly.toml` と `vercel.json` はデプロイ構成の参考として残しています。過去に構築した production topology を示すためのもので、ホストされたサービスは意図的に停止済みです。
+[`docs/samples/`](./docs/samples/) に合成日本語契約サンプルを同梱しているため、clone 直後に end-to-end フローを試せます。
 
 ## アーキテクチャ
 
@@ -36,115 +36,82 @@ flowchart LR
   REP --> DB[(PostgreSQL orders/reports/costs)]
 ```
 
-## Engineering Highlights
-
-- **Multi-step LangGraph Agent**: `backend/agent/graph.py` が parse、risk analysis、report generation を明示的な graph node として構成します。
-- **Tool-calling pattern**: `backend/agent/tools.py` は RAG lookup を `analyze_clause_risk()` 内に閉じ込め、`generate_suggestion()` を中/高リスク条項だけに使います。
-- **RAG grounding**: PostgreSQL `pgvector` に e-Gov 由来の公開法令 331 条を保存し、ユーザー契約は embedding しません。
-- **Recoverable streaming UX**: `analysis_jobs` / `analysis_events` に進捗を永続化し、`status`、`events`、`stream?after_seq=` で復元します。
-- **LLMOps controls**: cost tracking、estimate-vs-actual snapshots、RAG evaluation、model signature logging、PII detection、OCR budget guards。
-- **Enterprise hardening**: RLS enforcement、webhook replay protection、rate limiting、UUID guards、fail-closed OCR、startup migration locks、structured observability。
-- **Multilingual frontend**: 9 言語 React/i18next UI。レポートの UI は翻訳しつつ、引用法令は日本語原文を保持します。
-
-## Demo
-
-合成した日本語契約から生成したスクリーンショットを同梱しています。
-
-![ContractGuard home page](./docs/demo-home.png)
-![ContractGuard review progress](./docs/demo-review-progress.png)
-![ContractGuard report page](./docs/demo-report.png)
-
-## Design Decisions
-
-- **Compliance-first product call**: launch-ready まで作り込んだ後、弁護士法 Art. 72 の含意を評価し、commercial launch を止めました。これは本プロジェクトの重要な product judgment signal です。
-- **Privacy by architecture**: 契約全文は分析後に削除し、レポートは 72 時間で期限切れ、ベクトル DB には公開法令だけを保存します。
-- **Operational realism**: 現在はオープンソース参考実装ですが、checkout、email、cost accounting、retry、observability、deployment config まで実運用前提で設計しています。
-- **Resumable analysis**: 一回限りの POST SSE ではなく、永続化 job/event と event replay で refresh や一時的な接続断に耐えます。
-
 ## 技術スタック
 
-- Backend: FastAPI, SQLAlchemy async, Alembic, Redis, APScheduler
-- Agent: LangGraph, OpenAI tool calling, clause-level analysis
-- OCR: Google Cloud Vision `DOCUMENT_TEXT_DETECTION`, `pdf2image`, `poppler-utils`
-- RAG: PostgreSQL `pgvector`, OpenAI embeddings
-- Frontend: React, Vite, TypeScript, React Router, i18next
-- Reference integrations: KOMOJU checkout, Resend email, PostHog, Sentry
-- Infrastructure reference: Docker Compose, Fly.io config, Vercel config
+| レイヤー | スタック |
+|---|---|
+| Frontend | React, Vite, TypeScript, i18next（9 言語） |
+| Backend | FastAPI, SQLAlchemy async, Alembic, APScheduler |
+| AI workflow | LangGraph + OpenAI tool calling, MCP server |
+| RAG | PostgreSQL `pgvector`、331 条 公開 e-Gov 日本法令 |
+| OCR | Google Cloud Vision（`DOCUMENT_TEXT_DETECTION`） |
+| ストレージ | PostgreSQL（orders / reports / events）、Redis（72h cache + rate limiting） |
+| 決済 | KOMOJU checkout |
+| メール | Resend |
+| 観測 | Sentry + PostHog |
+| インフラ | Docker Compose（ローカル）、Fly.io + Vercel（デプロイ参考） |
 
-## クイックスタート
+## ローカル起動
 
-前提:
-
-- Docker Desktop / Docker Engine
-- OpenAI API key
-
-起動:
+ローカル実行に必要なのは **OpenAI API key** だけです。
 
 ```bash
 cp .env.example .env
-# .env に OPENAI_API_KEY を設定します。
-# ローカル Docker では APP_ENV=development のままにします。
-# KOMOJU keys を空にすると local checkout bypass を使います。
-
+# .env を編集：OPENAI_API_KEY を設定
 docker compose up --build
 ```
 
-ローカル URL:
+続いて <http://localhost:5173> を開き、[`docs/samples/sample-contract-ja.txt`](./docs/samples/sample-contract-ja.txt) をアップロードするだけで試せます。
 
-- Frontend: `http://localhost:5173`
-- Backend: `http://localhost:8000`
-- Health: `http://localhost:8000/api/health`
+最小構成で動くもの:
 
-任意の OCR 設定:
+- ✅ プレーンテキスト契約と**テキスト型 PDF**（テキスト選択可能な PDF）が end-to-end で動作。
+- ❌ **画像 / スキャン PDF の OCR** は無効化されています。利用するには `GOOGLE_APPLICATION_CREDENTIALS_JSON` と `GOOGLE_VISION_PROJECT_ID` を設定してください。
+- dev モードで KOMOJU / Resend は自動 bypass —— 実課金もメール送信もありません。
 
-- `GOOGLE_APPLICATION_CREDENTIALS_JSON` に service-account JSON の base64 を設定。
-- `GOOGLE_VISION_PROJECT_ID` を設定。
-- 対象 GCP project で Billing と `vision.googleapis.com` を有効化。
+## 本番セットアップ
 
-## ローカル参考フロー
+本リポジトリは production デプロイ可能な形に仕上がっており、`APP_ENV=production` を指定したうえで各外部サービスの認証情報を設定するだけで動きます。
 
-1. 合成した日本語契約をアップロード、またはテキスト貼り付けします。
-2. upload route が text extraction、PII check、token estimate、non-contract detection、任意の OCR budget guard を実行します。
-3. checkout reference path が order を作成します。development で KOMOJU credentials が空の場合は local bypass になります。
-4. `/review/:orderId` が persistent analysis job を開始または復元し、進捗 event を受け取ります。
-5. LangGraph が clause を解析し、RAG-grounded tool call で条項ごとに分析し、必要な場合だけ suggestion を生成します。
-6. `/report/:orderId` が report、clause excerpts、risk filter、PDF action を表示します。
+| サービス | 必須の環境変数 |
+|---|---|
+| OpenAI | `OPENAI_API_KEY` |
+| Google Cloud Vision（OCR） | `GOOGLE_APPLICATION_CREDENTIALS_JSON`、`GOOGLE_VISION_PROJECT_ID` |
+| KOMOJU（決済） | `KOMOJU_SECRET_KEY`、`KOMOJU_PUBLISHABLE_KEY`、`KOMOJU_WEBHOOK_SECRET` |
+| Resend（メール） | `RESEND_API_KEY` |
+| Sentry | `SENTRY_DSN`、`VITE_SENTRY_DSN` |
+| PostHog | `POSTHOG_API_KEY`、`VITE_POSTHOG_KEY` |
+| DB / キャッシュ | `DATABASE_URL`（managed Postgres + pgvector）、`REDIS_URL`（managed Redis） |
+| アプリ | `FRONTEND_URL`（localhost 不可）、`ADMIN_API_TOKEN` |
 
-## データと安全性
+`APP_ENV=production` のとき、上記いずれかが空、または `FRONTEND_URL` が localhost のままの場合、アプリは**起動を拒否**します。厳格な検証ロジックは [`backend/config.py`](./backend/config.py) の `validate_runtime()` を参照。
 
-- ユーザー契約本文は vector database に保存しません。
-- 分析完了後、`orders.contract_text` は `NULL` になります。
-- 72 時間 report には読解に必要な clause-level excerpt だけを保持します。
-- Redis / PostgreSQL の report retention は 72 時間 expiry を前提に設計されています。
-- OCR / preview path は Redis rate limit と daily budget guard で保護します。
-- production-like environment では、重要 credential、RAG loading、security config が不安全な場合に fail closed します。
+`fly.toml` と `vercel.json` は開発時に使用したデプロイ topology の参考です。現在 hosted されているサービスはありません。
 
-## 検証
+## フロー
 
-```bash
-docker compose up -d backend postgres redis
-./scripts/smoke_local_flow.sh
-./scripts/check_locale_keys.sh
-./scripts/check_rag_eval.sh
-./scripts/run_backend_pytests.sh
-```
+1. 契約をアップロード（テキスト / PDF / 画像）。upload route が text extraction、PII チェック、token 見積、non-contract 判定、OCR 予算ガードを実行。
+2. checkout 参考フローが order を作成。dev で KOMOJU credentials が空ならローカル bypass。
+3. `/review/:orderId` が persistent analysis job を開始または再開し、ページ refresh に耐える進捗 event を流す。
+4. LangGraph が条項を解析し、RAG-grounded tool call で条項ごとに分析、必要な箇所のみ suggestion を生成。
+5. `/report/:orderId` が report、clause excerpts、リスクフィルタ、PDF 出力を表示（72 時間保持）。
 
-- `scripts/smoke_local_flow.sh`: upload、checkout reference、analysis stream、report、contract deletion を通します。
-- `scripts/check_locale_keys.sh`: 9 言語 locale key が Japanese fallback と一致するか確認します。
-- `scripts/check_rag_eval.sh`: RAG Recall@5 / MRR baseline を確認します。
-- `scripts/run_backend_pytests.sh`: Docker 内で backend tests を実行します。
+ユーザー契約本文は分析後に削除されます。vector store には公開 e-Gov 法令のみを格納し、ユーザー契約は embedding しません。
 
-## 主要ファイル
+## Demo
 
-- [`backend/agent/graph.py`](./backend/agent/graph.py): LangGraph pipeline。
-- [`backend/agent/tools.py`](./backend/agent/tools.py): RAG risk analysis と suggestion の tool 実装。
-- [`backend/routers/analysis.py`](./backend/routers/analysis.py): analysis start、status snapshots、historical events、incremental stream。
-- [`backend/services/analysis_executor.py`](./backend/services/analysis_executor.py): persistent analysis executor。
-- [`backend/rag/store.py`](./backend/rag/store.py): pgvector storage and search。
-- [`backend/eval/evaluator.py`](./backend/eval/evaluator.py): RAG evaluation。
-- [`backend/data/egov_laws.json`](./backend/data/egov_laws.json): 公開日本法令 corpus。
-- [`backend/data/pricing_policy.json`](./backend/data/pricing_policy.json): checkout reference path 用の cost policy reference data。
-- [`backend/data/komoju_payment_methods.json`](./backend/data/komoju_payment_methods.json): regional checkout-method reference data。runtime では読み込みません。
-- [`frontend/src/pages/ReviewPage.tsx`](./frontend/src/pages/ReviewPage.tsx): recoverable analysis progress UI。
-- [`frontend/src/pages/ReportPage.tsx`](./frontend/src/pages/ReportPage.tsx): report、risk filter、PDF action。
-- [`tests/`](./tests/): backend integration / unit tests。
+![home](./docs/demo-home.png)
+![review progress](./docs/demo-review-progress.png)
+![report](./docs/demo-report.png)
+
+## リポジトリマップ
+
+- [`backend/agent/graph.py`](./backend/agent/graph.py) —— LangGraph pipeline。
+- [`backend/agent/tools.py`](./backend/agent/tools.py) —— RAG-grounded tool calls。
+- [`backend/services/analysis_executor.py`](./backend/services/analysis_executor.py) —— persistent analysis job + event sourcing。
+- [`backend/rag/store.py`](./backend/rag/store.py) —— pgvector ストレージと検索。
+- [`backend/config.py`](./backend/config.py) —— ランタイム設定と厳格検証。
+- [`frontend/src/pages/ReviewPage.tsx`](./frontend/src/pages/ReviewPage.tsx) —— 復元可能な進捗 UI。
+- [`frontend/src/pages/ReportPage.tsx`](./frontend/src/pages/ReportPage.tsx) —— レポート UI（リスクフィルタ、PDF 出力）。
+- [`tests/`](./tests/) —— backend pytest スイート。
+- [`scripts/smoke_local_flow.sh`](./scripts/smoke_local_flow.sh) —— end-to-end ローカルスモークテスト。

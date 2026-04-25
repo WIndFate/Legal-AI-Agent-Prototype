@@ -4,17 +4,17 @@
 ![Python 3.11+](https://img.shields.io/badge/Python-3.11%2B-blue.svg)
 ![LangGraph](https://img.shields.io/badge/LangGraph-agentic%20workflow-purple.svg)
 
-面向日文合同风险分析场景的 production-grade AI 工程案例。这个仓库以开源 reference implementation 的形式保留了 LangGraph Agent、RAG grounding、OCR ingestion、可恢复 SSE 流程以及 LLMOps 成本控制等完整工程实践。
+面向日文合同风险分析的 AI 工程案例 —— LangGraph workflow + pgvector RAG + 多模态输入 + 可恢复流式 UX。
 
-> This is a technical engineering case study, not a legal service. 本プロジェクトは技術デモであり、法律事務の取扱い・法律相談には使用できません。 本项目是技术工程案例，不是法律服务，也不能用于法律咨询。
+> ⚠️ **不是法律服务。** 本仓库从未作为商业服务运营 —— 日本《弁護士法》第 72 条规定有偿法律咨询仅限持证律师从事。本项目作为开源技术案例发布，输出不构成法律意见。
 
-[English](./README.md) | [日本語ドキュメント](./README_JA.md) | [License](./LICENSE)
+[English](./README.md) | [日本語](./README_JA.md) | [License](./LICENSE)
 
-## 当前状态
+## 项目状态
 
-Reached launch-ready state after solo development; declined commercial launch after assessing 弁護士法 Art. 72 compliance implications; cloud infrastructure intentionally decommissioned; codebase preserved as open-source engineering reference. Full local Docker flow remains functional with only an OpenAI API key. 如需测试图片 / 扫描 PDF OCR，可额外配置 Google Cloud Vision。
+production-ready 级别的开源参考实现。整套技术栈 —— **前端、后端、OCR、支付、邮件、Postgres、Redis、错误追踪** —— 都接通了真实集成，随时可部署。只是因为律师法 72 条限制，从未投入商业运营（by design）。
 
-`fly.toml` 和 `vercel.json` 仅作为部署拓扑参考保留。它们展示曾经搭好的生产基础设施形态，但线上服务已主动下线，不代表当前仍在运营或招募用户。
+仓库内置 [`docs/samples/`](./docs/samples/) 合成日文合同样本，clone 后即可一键跑通端到端流程。
 
 ## 架构
 
@@ -24,7 +24,7 @@ flowchart LR
   API --> Q[估算 + PII + OCR 预算守卫]
   Q --> PAY[KOMOJU checkout<br/>参考实现]
   PAY --> JOB[持久化分析任务]
-  JOB --> SSE[可恢复 SSE<br/>status + events + after_seq]
+  JOB --> SSE[可恢复 SSE 流<br/>status + events + after_seq]
   JOB --> LG[LangGraph pipeline]
   LG --> P[parse_contract]
   P --> A[逐条 clause 风险分析]
@@ -32,119 +32,86 @@ flowchart LR
   T --> RAG[(PostgreSQL pgvector<br/>331 条日文法令)]
   A --> S[tool call: generate_suggestion<br/>仅中/高风险触发]
   S --> REP[报告生成 + 翻译]
-  REP --> CACHE[(Redis 72h report cache)]
+  REP --> CACHE[(Redis 72h 报告缓存)]
   REP --> DB[(PostgreSQL orders/reports/costs)]
 ```
 
-## Engineering Highlights
-
-- **Multi-step LangGraph Agent**：`backend/agent/graph.py` 将合同解析、逐条风险分析、报告生成拆成明确节点。
-- **Tool-calling pattern**：`backend/agent/tools.py` 把 RAG 检索封装在 `analyze_clause_risk()` 内部，`generate_suggestion()` 只服务中/高风险条款。
-- **RAG grounding**：PostgreSQL `pgvector` 存储 331 条公开 e-Gov 日文法条，用户合同永不进入向量库。
-- **可恢复流式体验**：`analysis_jobs` / `analysis_events` 持久化进度，再通过 `status`、`events`、`stream?after_seq=` 恢复。
-- **LLMOps**：成本追踪、estimate-vs-actual 快照、RAG eval、模型签名日志、PII 检测、OCR 预算守卫。
-- **Enterprise hardening**：RLS、webhook replay protection、rate limiting、UUID guard、fail-closed OCR、启动迁移锁、结构化观测。
-- **9 语言前端**：React/i18next 多语言 UI，报告壳层本地化，引用法条保持日文原文。
-
-## Demo
-
-仓库包含三张基于合成日文合同生成的运行截图：
-
-![ContractGuard 首页](./docs/demo-home.png)
-![ContractGuard 分析进度页](./docs/demo-review-progress.png)
-![ContractGuard 报告页](./docs/demo-report.png)
-
-## Design Decisions
-
-- **合规优先**：项目达到 launch-ready 深度后，因评估弁護士法 Art. 72 相关影响，主动放弃商业上线。这是该项目最重要的产品判断信号。
-- **隐私优先架构**：完整合同正文分析后删除，报告 72 小时过期，向量库只保存公开法令知识。
-- **真实工程闭环**：虽然现在是开源参考项目，代码仍保留 checkout、邮件、成本核算、重试、观测和部署配置等工程接口。
-- **持久化事件流**：审查流程不是一次性 POST SSE，而是可恢复任务 + 事件回放，能承受刷新和短暂断网。
-
 ## 技术栈
 
-- 后端：FastAPI、SQLAlchemy async、Alembic、Redis、APScheduler
-- Agent：LangGraph、OpenAI tool calling、逐条 clause 分析
-- OCR：Google Cloud Vision `DOCUMENT_TEXT_DETECTION`、`pdf2image`、`poppler-utils`
-- RAG：PostgreSQL `pgvector`、OpenAI embeddings
-- 前端：React、Vite、TypeScript、React Router、i18next
-- 参考集成：KOMOJU checkout、Resend email、PostHog、Sentry
-- 基础设施参考：Docker Compose、Fly.io config、Vercel config
+| 层 | 选型 |
+|---|---|
+| 前端 | React、Vite、TypeScript、i18next（9 语言） |
+| 后端 | FastAPI、SQLAlchemy async、Alembic、APScheduler |
+| AI 工作流 | LangGraph + OpenAI tool calling、MCP server |
+| RAG | PostgreSQL `pgvector`、331 条公开 e-Gov 日文法令 |
+| OCR | Google Cloud Vision（`DOCUMENT_TEXT_DETECTION`） |
+| 存储 | PostgreSQL（订单 / 报告 / 事件）、Redis（72h 缓存 + 速率限制） |
+| 支付 | KOMOJU checkout |
+| 邮件 | Resend |
+| 观测 | Sentry + PostHog |
+| 基础设施 | Docker Compose（本地）、Fly.io + Vercel（部署参考） |
 
-## 快速开始
+## 本地启动
 
-前置条件：
-
-- Docker Desktop / Docker Engine
-- OpenAI API Key
-
-启动：
+本地运行只需要 **OpenAI API Key**。
 
 ```bash
 cp .env.example .env
-# 在 .env 中填写 OPENAI_API_KEY。
-# 本地 Docker 保持 APP_ENV=development。
-# KOMOJU keys 留空即可走本地 checkout bypass。
-
+# 编辑 .env：填入 OPENAI_API_KEY
 docker compose up --build
 ```
 
-本地地址：
+然后打开 <http://localhost:5173>，上传 [`docs/samples/sample-contract-ja.txt`](./docs/samples/sample-contract-ja.txt) 即可测试。
 
-- 前端：`http://localhost:5173`
-- 后端：`http://localhost:8000`
-- 健康检查：`http://localhost:8000/api/health`
+最简模式下：
 
-可选 OCR 配置：
+- ✅ 纯文本合同和**文本型 PDF**（可选中文字的 PDF）端到端可用。
+- ❌ **图片 / 扫描 PDF 的 OCR** 不可用。如需启用，配置 `GOOGLE_APPLICATION_CREDENTIALS_JSON` 与 `GOOGLE_VISION_PROJECT_ID`。
+- 开发模式下 KOMOJU / Resend 自动 bypass —— 不会真实扣款，也不会真实发邮件。
 
-- `GOOGLE_APPLICATION_CREDENTIALS_JSON` 写入 base64 后的 service-account JSON。
-- 配置 `GOOGLE_VISION_PROJECT_ID`。
-- 在目标 GCP 项目启用 Billing 和 `vision.googleapis.com`。
+## 生产部署
 
-## 本地参考流程
+仓库已具备生产部署形态，只需将 `APP_ENV=production` 并配置以下外部服务凭据：
 
-1. 上传或粘贴一份合成日文合同。
-2. upload route 执行文本提取、PII 检测、token 估算、非合同判定和可选 OCR 预算守卫。
-3. checkout reference path 创建订单；开发环境下 KOMOJU 凭据为空会走本地 bypass。
-4. `/review/:orderId` 启动或恢复持久化分析任务，并接收可恢复进度事件。
-5. LangGraph 解析条款、逐条执行 RAG-grounded tool call，并只对必要条款生成建议。
-6. `/report/:orderId` 展示报告、条款摘录、风险筛选和 PDF 生成动作。
+| 服务 | 必需的环境变量 |
+|---|---|
+| OpenAI | `OPENAI_API_KEY` |
+| Google Cloud Vision（OCR） | `GOOGLE_APPLICATION_CREDENTIALS_JSON`、`GOOGLE_VISION_PROJECT_ID` |
+| KOMOJU（支付） | `KOMOJU_SECRET_KEY`、`KOMOJU_PUBLISHABLE_KEY`、`KOMOJU_WEBHOOK_SECRET` |
+| Resend（邮件） | `RESEND_API_KEY` |
+| Sentry | `SENTRY_DSN`、`VITE_SENTRY_DSN` |
+| PostHog | `POSTHOG_API_KEY`、`VITE_POSTHOG_KEY` |
+| 数据库 / 缓存 | `DATABASE_URL`（托管 Postgres + pgvector）、`REDIS_URL`（托管 Redis） |
+| 应用 | `FRONTEND_URL`（非 localhost）、`ADMIN_API_TOKEN` |
 
-## 数据与安全模型
+`APP_ENV=production` 时，应用会**拒绝启动**如果上述任一必需变量为空，或 `FRONTEND_URL` 仍指向 localhost。严格校验逻辑见 [`backend/config.py`](./backend/config.py) 的 `validate_runtime()`。
 
-- 用户合同正文永不写入向量数据库。
-- 分析完成后 `orders.contract_text` 置为 `NULL`。
-- 72 小时报告只保留理解报告所需的 clause 级原文摘录。
-- Redis / PostgreSQL 报告保存模型围绕 72 小时过期设计。
-- OCR 和 preview 路径有 Redis 速率限制与日级预算守卫。
-- production-like 环境中关键凭据、RAG 加载或安全配置异常会 fail closed。
+`fly.toml` 与 `vercel.json` 描述了开发期使用的部署拓扑。当前未托管运行。
 
-## 验证
+## 运行流程
 
-```bash
-docker compose up -d backend postgres redis
-./scripts/smoke_local_flow.sh
-./scripts/check_locale_keys.sh
-./scripts/check_rag_eval.sh
-./scripts/run_backend_pytests.sh
-```
+1. 上传合同（文本、PDF 或图片）。upload route 执行文本提取、PII 检测、token 估算、非合同判定、OCR 预算守卫。
+2. checkout 参考链路创建订单。开发环境 KOMOJU 凭据为空时走本地 bypass。
+3. `/review/:orderId` 启动或恢复持久化分析任务，进度事件可承受页面刷新。
+4. LangGraph 解析条款、逐条 RAG-grounded tool call 分析、仅在必要条款生成建议。
+5. `/report/:orderId` 展示报告、条款摘录、风险筛选、PDF 导出，72 小时保留。
 
-- `scripts/smoke_local_flow.sh`：覆盖 upload、checkout reference、analysis stream、report、contract deletion。
-- `scripts/check_locale_keys.sh`：检查 9 语言 locale key 与日文 fallback 一致。
-- `scripts/check_rag_eval.sh`：检查 RAG Recall@5 / MRR 基线。
-- `scripts/run_backend_pytests.sh`：在 Docker 内运行后端测试。
+用户合同正文在分析后删除。向量库只保存公开 e-Gov 法令，用户合同永不写入向量库。
 
-## 仓库入口
+## Demo
 
-- [`backend/agent/graph.py`](./backend/agent/graph.py)：LangGraph pipeline。
-- [`backend/agent/tools.py`](./backend/agent/tools.py)：RAG 风险分析与建议生成工具。
-- [`backend/routers/analysis.py`](./backend/routers/analysis.py)：分析启动、状态快照、历史事件和增量事件流。
-- [`backend/services/analysis_executor.py`](./backend/services/analysis_executor.py)：持久化分析执行器。
-- [`backend/rag/store.py`](./backend/rag/store.py)：pgvector 存储与检索。
-- [`backend/eval/evaluator.py`](./backend/eval/evaluator.py)：RAG 评估。
-- [`backend/data/egov_laws.json`](./backend/data/egov_laws.json)：公开日文法令语料。
-- [`backend/data/pricing_policy.json`](./backend/data/pricing_policy.json)：checkout reference path 使用的成本策略参考数据。
-- [`backend/data/komoju_payment_methods.json`](./backend/data/komoju_payment_methods.json)：区域 checkout method 参考数据，运行时不加载。
-- [`frontend/src/pages/ReviewPage.tsx`](./frontend/src/pages/ReviewPage.tsx)：可恢复分析进度 UI。
-- [`frontend/src/pages/ReportPage.tsx`](./frontend/src/pages/ReportPage.tsx)：报告、风险筛选和 PDF 动作。
-- [`tests/`](./tests/)：后端集成测试与单元测试。
+![home](./docs/demo-home.png)
+![review progress](./docs/demo-review-progress.png)
+![report](./docs/demo-report.png)
+
+## 仓库地图
+
+- [`backend/agent/graph.py`](./backend/agent/graph.py) —— LangGraph pipeline。
+- [`backend/agent/tools.py`](./backend/agent/tools.py) —— RAG-grounded tool calls。
+- [`backend/services/analysis_executor.py`](./backend/services/analysis_executor.py) —— 持久化分析任务 + 事件溯源。
+- [`backend/rag/store.py`](./backend/rag/store.py) —— pgvector 存储与检索。
+- [`backend/config.py`](./backend/config.py) —— 运行时配置与严格校验。
+- [`frontend/src/pages/ReviewPage.tsx`](./frontend/src/pages/ReviewPage.tsx) —— 可恢复分析进度 UI。
+- [`frontend/src/pages/ReportPage.tsx`](./frontend/src/pages/ReportPage.tsx) —— 报告页 UI、风险筛选、PDF 导出。
+- [`tests/`](./tests/) —— 后端 pytest 测试套件。
+- [`scripts/smoke_local_flow.sh`](./scripts/smoke_local_flow.sh) —— 端到端本地冒烟测试。

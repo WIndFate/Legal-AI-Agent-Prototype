@@ -4,17 +4,17 @@
 ![Python 3.11+](https://img.shields.io/badge/Python-3.11%2B-blue.svg)
 ![LangGraph](https://img.shields.io/badge/LangGraph-agentic%20workflow-purple.svg)
 
-Production-grade AI engineering case study for Japanese contract risk analysis. This repository preserves the implementation as an open-source reference for LangGraph agents, RAG grounding, OCR ingestion, resilient SSE workflows, and LLMOps cost controls.
+Japanese contract risk analysis built as an AI engineering case study — LangGraph workflow + pgvector RAG + multi-modal ingestion + recoverable streaming UX.
 
-> This is a technical engineering case study, not a legal service. 本プロジェクトは技術デモであり、法律事務の取扱い・法律相談には使用できません。 本项目是技术工程案例，不是法律服务，也不能用于法律咨询。
+> ⚠️ **Not a legal service.** This repository has never been operated commercially — Japan Attorney Act §72 (弁護士法第72条) reserves paid legal advice for licensed attorneys. The codebase is published as an open-source technical artifact only. Outputs are not legal opinions.
 
-[中文文档](./README_CN.md) | [日本語ドキュメント](./README_JA.md) | [License](./LICENSE)
+[中文文档](./README_CN.md) | [日本語](./README_JA.md) | [License](./LICENSE)
 
 ## Status
 
-Reached launch-ready state after solo development; declined commercial launch after assessing 弁護士法 Art. 72 compliance implications; cloud infrastructure intentionally decommissioned; codebase preserved as open-source engineering reference. Full local Docker flow remains functional with only an OpenAI API key. Google Cloud Vision can be configured separately for image/scanned-PDF OCR scenarios.
+Production-ready open-source reference implementation. The full stack — **frontend, backend, OCR, payment, email, Postgres, Redis, error tracking** — is wired with real integrations and ready to deploy. It has simply never been launched, by design (Attorney Act §72).
 
-The Fly.io and Vercel configuration files remain in the repository as deployment references only. They describe the production topology that was built, but the hosted service has been intentionally decommissioned.
+A synthetic Japanese contract sits in [`docs/samples/`](./docs/samples/) so the local flow can be exercised end-to-end immediately after clone.
 
 ## Architecture
 
@@ -36,116 +36,82 @@ flowchart LR
   REP --> DB[(PostgreSQL orders/reports/costs)]
 ```
 
-## Engineering Highlights
-
-- **Multi-step LangGraph agent**: `backend/agent/graph.py` coordinates parse, risk analysis, and report generation as explicit graph nodes.
-- **Tool-calling pattern**: `backend/agent/tools.py` keeps RAG lookup inside `analyze_clause_risk()` and reserves `generate_suggestion()` for medium/high-risk clauses.
-- **RAG grounding**: PostgreSQL `pgvector` stores 331 Japanese legal articles from public e-Gov law data; user contracts are never embedded.
-- **Recoverable streaming UX**: analysis progress is persisted through `analysis_jobs` / `analysis_events`, then replayed through `status`, `events`, and `stream?after_seq=` APIs.
-- **LLMOps controls**: cost tracking, estimate-vs-actual snapshots, RAG evaluation, model signature logging, PII detection, and OCR budget guards.
-- **Enterprise hardening**: RLS enforcement, webhook replay protection, rate limiting, UUID parsing guards, fail-closed OCR, startup migration locks, and structured observability hooks.
-- **Multilingual frontend**: 9-language React/i18next UI with localized report shells and Japanese law citations preserved in the original text.
-
-## Demo
-
-The repository includes screenshots generated from a synthetic Japanese contract:
-
-![ContractGuard home page](./docs/demo-home.png)
-![ContractGuard review progress](./docs/demo-review-progress.png)
-![ContractGuard report page](./docs/demo-report.png)
-
-## Design Decisions
-
-- **Compliance-first product call**: the system reached launch-ready depth, then the commercial launch was intentionally stopped after evaluating Japanese lawyer-law compliance risk. This is the strongest product judgment signal in the project.
-- **Privacy by architecture**: full contract text is deleted after analysis, reports expire after 72 hours, and the vector database stores only public legal knowledge.
-- **Operational realism**: the codebase models payment checkout, report email, cost accounting, retries, observability, and infrastructure even though those parts are now retained as reference implementations.
-- **Resumable analysis over one-shot SSE**: the review flow is driven by persisted jobs/events instead of a single POST-triggered stream, so browser refreshes and network interruptions can recover state.
-
 ## Tech Stack
 
-- Backend: FastAPI, SQLAlchemy async, Alembic, Redis, APScheduler
-- Agent: LangGraph, OpenAI tool calling, clause-level analysis
-- OCR: Google Cloud Vision `DOCUMENT_TEXT_DETECTION`, `pdf2image`, `poppler-utils`
-- RAG: PostgreSQL `pgvector`, OpenAI embeddings
-- Frontend: React, Vite, TypeScript, React Router, i18next
-- Reference integrations: KOMOJU checkout, Resend email, PostHog, Sentry
-- Infrastructure reference: Docker Compose, Fly.io config, Vercel config
+| Layer | Stack |
+|---|---|
+| Frontend | React, Vite, TypeScript, i18next (9 languages) |
+| Backend | FastAPI, SQLAlchemy async, Alembic, APScheduler |
+| AI workflow | LangGraph + OpenAI tool calling, MCP server |
+| RAG | PostgreSQL `pgvector`, 331 public e-Gov Japanese statutes |
+| OCR | Google Cloud Vision (`DOCUMENT_TEXT_DETECTION`) |
+| Storage | PostgreSQL (orders / reports / events), Redis (72h cache + rate limiting) |
+| Payment | KOMOJU checkout |
+| Email | Resend |
+| Observability | Sentry + PostHog |
+| Infra | Docker Compose (local), Fly.io + Vercel (deployment reference) |
 
-## Quick Start
+## Quick Start (local)
 
-Prerequisites:
-
-- Docker Desktop / Docker Engine
-- OpenAI API key
-
-Setup:
+Local run only requires an **OpenAI API key**.
 
 ```bash
 cp .env.example .env
-# Fill OPENAI_API_KEY in .env.
-# Keep APP_ENV=development for local Docker runs.
-# Leave KOMOJU keys empty to use the local checkout bypass.
-
+# Edit .env: set OPENAI_API_KEY
 docker compose up --build
 ```
 
-Local endpoints:
+Then open <http://localhost:5173> and upload [`docs/samples/sample-contract-ja.txt`](./docs/samples/sample-contract-ja.txt).
 
-- Frontend: `http://localhost:5173`
-- Backend: `http://localhost:8000`
-- Health: `http://localhost:8000/api/health`
+In this minimal mode:
 
-Optional OCR setup:
+- ✅ Plain-text contracts and **text-based PDFs** (selectable text) work end-to-end.
+- ❌ **Image / scanned-PDF OCR** is disabled. To enable it, add `GOOGLE_APPLICATION_CREDENTIALS_JSON` and `GOOGLE_VISION_PROJECT_ID`.
+- KOMOJU / Resend auto-bypass in dev — no real payment, no real email.
 
-- Set `GOOGLE_APPLICATION_CREDENTIALS_JSON` to base64-encoded service-account JSON.
-- Set `GOOGLE_VISION_PROJECT_ID`.
-- Enable billing and `vision.googleapis.com` in the target GCP project.
+## Production Setup
 
-## Local Reference Flow
+The repository is shaped to deploy to production by setting `APP_ENV=production` and supplying credentials for each external service:
 
-1. Upload or paste a synthetic Japanese contract.
-2. The upload route runs text extraction, PII checks, token estimation, non-contract detection, and optional OCR budget guards.
-3. The checkout reference path creates an order. In development, empty KOMOJU credentials trigger a local bypass.
-4. `/review/:orderId` starts or resumes the persistent analysis job and streams recoverable progress events.
-5. LangGraph parses clauses, analyzes each clause with RAG-grounded tool calls, and generates suggestions only where risk warrants it.
-6. `/report/:orderId` displays the saved report, clause excerpts, filters, and PDF generation within the 72-hour retention model.
+| Service | Required env vars |
+|---|---|
+| OpenAI | `OPENAI_API_KEY` |
+| Google Cloud Vision (OCR) | `GOOGLE_APPLICATION_CREDENTIALS_JSON`, `GOOGLE_VISION_PROJECT_ID` |
+| KOMOJU (payment) | `KOMOJU_SECRET_KEY`, `KOMOJU_PUBLISHABLE_KEY`, `KOMOJU_WEBHOOK_SECRET` |
+| Resend (email) | `RESEND_API_KEY` |
+| Sentry | `SENTRY_DSN`, `VITE_SENTRY_DSN` |
+| PostHog | `POSTHOG_API_KEY`, `VITE_POSTHOG_KEY` |
+| Database / Cache | `DATABASE_URL` (managed Postgres + pgvector), `REDIS_URL` (managed Redis) |
+| App | `FRONTEND_URL` (non-localhost), `ADMIN_API_TOKEN` |
 
-## Data And Safety Model
+When `APP_ENV=production`, the app **refuses to boot** if any of the above is missing or `FRONTEND_URL` still points at localhost. Strict-validation logic lives in [`backend/config.py`](./backend/config.py) (`validate_runtime()`).
 
-- User contract text is never stored in the vector database.
-- `orders.contract_text` is set to `NULL` after analysis.
-- Saved reports keep only clause-level excerpts needed for report readability.
-- Redis and PostgreSQL report retention are designed around a 72-hour expiry.
-- OCR and preview work are protected by Redis-backed rate limits and daily budget guards.
-- Startup validation fails closed in production-like environments when required credentials or RAG loading are unsafe.
+`fly.toml` and `vercel.json` describe the deployment topology used during development. The service is not currently hosted.
 
-## Evaluation And Regression
+## Flow
 
-```bash
-docker compose up -d backend postgres redis
-./scripts/smoke_local_flow.sh
-./scripts/check_locale_keys.sh
-./scripts/check_rag_eval.sh
-./scripts/run_backend_pytests.sh
-```
+1. Upload a contract (text, PDF, or image). The upload route runs text extraction, PII checks, token estimation, non-contract detection, and OCR budget guards.
+2. Checkout reference path creates an order. Empty KOMOJU credentials trigger a local bypass in dev.
+3. `/review/:orderId` starts or resumes the persistent analysis job and streams progress events that survive page refresh.
+4. LangGraph parses clauses, analyzes each clause with RAG-grounded tool calls, and generates suggestions only where the risk warrants it.
+5. `/report/:orderId` shows the saved report, clause excerpts, risk filters, and PDF export — retained for 72 hours.
 
-- `scripts/smoke_local_flow.sh`: end-to-end local flow through upload, checkout reference, analysis stream, report, and contract deletion.
-- `scripts/check_locale_keys.sh`: verifies that all 9 locale files match the Japanese fallback key set.
-- `scripts/check_rag_eval.sh`: checks RAG Recall@5 / MRR against the local baseline.
-- `scripts/run_backend_pytests.sh`: runs backend tests inside Docker.
+User contract text is deleted after analysis. The vector store contains only public e-Gov statutes; user contracts are never embedded.
+
+## Demo
+
+![home](./docs/demo-home.png)
+![review progress](./docs/demo-review-progress.png)
+![report](./docs/demo-report.png)
 
 ## Repository Map
 
-- [`backend/agent/graph.py`](./backend/agent/graph.py): LangGraph pipeline definition.
-- [`backend/agent/tools.py`](./backend/agent/tools.py): tool-calling implementation for RAG risk analysis and suggestions.
-- [`backend/routers/analysis.py`](./backend/routers/analysis.py): analysis start, status snapshots, historical events, and incremental event stream.
-- [`backend/services/analysis_executor.py`](./backend/services/analysis_executor.py): persistent analysis executor and event persistence.
-- [`backend/rag/store.py`](./backend/rag/store.py): pgvector storage and search.
-- [`backend/eval/evaluator.py`](./backend/eval/evaluator.py): RAG evaluation metrics and dataset runner.
-- [`backend/data/egov_laws.json`](./backend/data/egov_laws.json): public Japanese legal corpus used for RAG.
-- [`backend/data/pricing_policy.json`](./backend/data/pricing_policy.json): cost policy reference data used by the checkout reference path.
-- [`backend/data/komoju_payment_methods.json`](./backend/data/komoju_payment_methods.json): regional checkout-method reference data; not loaded at runtime.
-- [`frontend/src/main.tsx`](./frontend/src/main.tsx): router entry, i18n, lazy route loading, deferred analytics bootstrap.
-- [`frontend/src/pages/ReviewPage.tsx`](./frontend/src/pages/ReviewPage.tsx): recoverable analysis progress UI.
-- [`frontend/src/pages/ReportPage.tsx`](./frontend/src/pages/ReportPage.tsx): saved report UI, risk filters, PDF action.
-- [`tests/`](./tests/): backend integration and unit tests.
+- [`backend/agent/graph.py`](./backend/agent/graph.py) — LangGraph pipeline.
+- [`backend/agent/tools.py`](./backend/agent/tools.py) — RAG-grounded tool calls.
+- [`backend/services/analysis_executor.py`](./backend/services/analysis_executor.py) — persistent analysis job + event sourcing.
+- [`backend/rag/store.py`](./backend/rag/store.py) — pgvector storage and search.
+- [`backend/config.py`](./backend/config.py) — runtime configuration and strict validation.
+- [`frontend/src/pages/ReviewPage.tsx`](./frontend/src/pages/ReviewPage.tsx) — recoverable analysis progress UI.
+- [`frontend/src/pages/ReportPage.tsx`](./frontend/src/pages/ReportPage.tsx) — report UI with risk filters and PDF export.
+- [`tests/`](./tests/) — backend pytest suites.
+- [`scripts/smoke_local_flow.sh`](./scripts/smoke_local_flow.sh) — end-to-end local smoke test.
